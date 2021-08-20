@@ -2,7 +2,6 @@ use ares::crack;
 use clap::Clap;
 
 mod cli_input_parser;
-use cli_input_parser::testing;
 
 /// This doc string acts as a help message when the user runs '--help'
 /// as do all doc strings on fields
@@ -20,8 +19,5 @@ struct Opts {
 
 fn main() {
     let opts: Opts = Opts::parse();
-    println!("{:?}", opts.text);
-    println!("{:?}", opts.verbose);
-    crack();
-    testing();
+    crack(&opts.text);
 }
