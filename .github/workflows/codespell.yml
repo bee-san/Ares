@@ -1,0 +1,23 @@
+on:
+    - pull_request
+
+jobs:
+    spellcheck:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out the repository
+            - uses: actions/checkout@v2
+
+            - name: Set up Python
+              uses: actions/setup-python@v2
+              with:
+                  python-version: 3.8
+
+            - name: Install codespell with pip
+              run: pip install codespell
+
+            - name: Fix typos
+              run: codespell ./ -w
+
+            - name: Push changes
+              uses: EndBug/add-and-commit@v7
