@@ -5,7 +5,3 @@ When the user provides CLI input, we need to parse it for:
 
 and so on.
 */
-
-pub fn testing () {
-    println!("Hello, world!");
-}
