@@ -2,7 +2,6 @@ use ares::perform_cracking;
 use clap::Clap;
 
 mod cli_input_parser;
-use cli_input_parser::testing;
 
 /// This doc string acts as a help message when the user runs '--help'
 /// as do all doc strings on fields
@@ -23,5 +22,4 @@ fn main() {
     println!("{:?}", opts.text);
     println!("{:?}", opts.verbose);
     perform_cracking(&opts.text);
-    testing();
 }

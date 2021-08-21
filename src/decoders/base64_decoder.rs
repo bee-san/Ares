@@ -2,6 +2,14 @@
 ///! Performs error handling and returns a string
 ///! Call base64_decoder.crack to use. It returns option<String> and check with
 ///! `result.is_some()` to see if it returned okay.
+/// 
+/// Ideally the struct object would contain
+/// * Tags
+/// * Name
+/// * Expected run time
+/// * Likelyhood (how likely we are to see this, taken from the API)
+/// * Popularity rating
+/// 
 
 use log::{trace};
 use crate::decoders::interface::Crack;
