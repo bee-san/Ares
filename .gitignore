@@ -15,6 +15,7 @@ Cargo.lock
 
 /target
 
+doc/
 
 # Added by cargo
 #
