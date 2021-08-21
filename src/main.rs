@@ -1,4 +1,4 @@
-use ares::crack;
+use ares::perform_cracking;
 use clap::Clap;
 
 mod cli_input_parser;
@@ -22,6 +22,6 @@ fn main() {
     let opts: Opts = Opts::parse();
     println!("{:?}", opts.text);
     println!("{:?}", opts.verbose);
-    crack();
+    perform_cracking(&opts.text);
     testing();
 }
