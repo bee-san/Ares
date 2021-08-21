@@ -1,10 +1,11 @@
 //! Ares is an automatic decoding and cracking tool.
 
-#[path = "decoders/base64_decoder.rs"] mod base64_decoder;
+mod decoders;
+use crate::decoders::base64_decoder::{Base64Decoder};
 
-pub fn crack() {
-    println!("Test");
-    base64_decoder::decode_base64("dGVzdA==");
+pub fn perform_cracking(text: &str) {
+    let base64_decoder = Base64Decoder::new();
+    println!("{:?}", base64_decoder.Crack(text).unwrap());
 }
 
 #[cfg(test)]
