@@ -1,4 +1,4 @@
-# Ciphey2
+# Project Ares
 A spike exploring implementing Ciphey in Rust
 
 This has minimal features, see the epics here:
