@@ -15,10 +15,10 @@ use log::{trace};
 use crate::decoders::interface::Crack;
 
 pub struct Base64Decoder {
-    name: String,
-    description: String,
-    link: String,
-    tags: Vec<String>,
+    name: &'static str,
+    description: &'static str,
+    link: &'static str,
+    tags: Vec<&'static str>,
     /// We get expectedRuntime this by bench marking the code
     expected_runtime: f32,
     /// We get popularity by eye-balling it or using the API's data
@@ -40,10 +40,10 @@ pub struct Base64Decoder {
 impl Base64Decoder {
     pub fn new() -> Self {
         Self {
-            name: "base64".to_string(), // TODO clean this up
-            description: "Base64 decoding schema".to_string(),
-            link: "https://en.wikipedia.org/wiki/Base64".to_string(),
-            tags: vec!["base64".to_string(), "decoder".to_string(), "baser".to_string()], // TODO clean this up
+            name: "base64", // TODO clean this up
+            description: "Base64 decoding schema",
+            link: "https://en.wikipedia.org/wiki/Base64",
+            tags: vec!["base64", "decoder", "baser"], // TODO clean this up
             expected_runtime: 0.01,
             expected_success: 1.0,
             failure_runtime: 0.01,
