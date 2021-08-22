@@ -5,7 +5,7 @@ use crate::decoders::base64_decoder::{Base64Decoder};
 
 pub fn perform_cracking(text: &str) {
     let base64_decoder = Base64Decoder::new();
-    println!("{:?}", base64_decoder.Crack(text).unwrap());
+    println!("{:?}", base64_decoder.crack(text).unwrap());
 }
 
 #[cfg(test)]
