@@ -6,7 +6,7 @@
 
 on: [push, pull_request]
 
-name: Quickstart
+name: Test
 
 jobs:
   check:
@@ -31,6 +31,10 @@ jobs:
 
   test:
     name: Test Suite
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout sources
