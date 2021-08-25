@@ -1,15 +1,14 @@
+use super::interface::Crack;
+use super::interface::Decoder;
 ///! Decode a base64 string
 ///! Performs error handling and returns a string
 ///! Call base64_decoder.crack to use. It returns option<String> and check with
 ///! `result.is_some()` to see if it returned okay.
-
-use log::{trace};
-use super::interface::Decoder;
-
+use log::trace;
 
 /// .decoder is never used, so Rust considers this dead code
-/// Really it's just a coreference to the Decoder in `interface.rs`
-#[allow(dead_code)] 
+/// Really it's just a co-reference to the Decoder in `interface.rs`
+#[allow(dead_code)]
 pub struct Base64Decoder {
     decoder: Decoder,
 }
@@ -49,11 +48,13 @@ impl Base64Decoder {
         let ascii_string = String::from_utf8(bytes).unwrap();
         Ok(ascii_string)
     }
+}
 
+impl Crack for Base64Decoder {
     /// This function does the actual decoding
     /// It returns an Option<string> if it was successful
     /// Else the Option returns nothing and the error is logged in Trace
-    pub fn crack(&self, text: &str) -> Option<String> {
+    fn crack(&self, text: &str) -> Option<String> {
         trace!("Trying Base64 with text {:?}", text);
         let result = Base64Decoder::decode_base64_no_error_handling(text);
         match result {
@@ -61,14 +62,15 @@ impl Base64Decoder {
             Err(_) => {
                 trace!("Failed to decode base64.");
                 None
-                }
             }
         }
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::decoders::base64_decoder::{Base64Decoder};
+    use super::Base64Decoder;
+    use crate::decoders::interface::Crack;
 
     #[test]
     fn it_works() {
@@ -78,14 +80,14 @@ mod tests {
     }
 
     #[test]
-    fn successful_decoding(){
+    fn successful_decoding() {
         let base64_decoder = Base64Decoder::new();
         let result = base64_decoder.crack("aGVsbG8gd29ybGQ=").unwrap();
         assert_eq!(result, "hello world");
     }
 
     #[test]
-    fn base64_decode_empty_string(){
+    fn base64_decode_empty_string() {
         let base64_decoder = Base64Decoder::new();
         let result = base64_decoder.crack("").unwrap();
         assert_eq!(result, "");
@@ -97,9 +99,7 @@ mod tests {
         let result = base64_decoder.crack("hello my name is panicky mc panic face!");
         if result.is_some() {
             panic!("Decode_base64 did not return an option with Some<t>.")
-            
-        }
-        else {
+        } else {
             // If we get here, the test passed
             // Because the base64_decoder.crack function returned None
             // as it should do for the input
@@ -120,8 +120,8 @@ mod tests {
     fn base64_work_if_string_not_base64() {
         // You can base64 decode a string that is not base64
         // This string decodes to:
-        // .ée¢
-        // (uÖ²
+        // ```.ée¢
+        // (uÖ²```
         // https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)&input=aGVsbG8gZ29vZCBkYXkh
         let base64_decoder = Base64Decoder::new();
         let result = base64_decoder.crack("hello good day!");
@@ -138,5 +138,4 @@ mod tests {
             assert_eq!(true, true);
         }
     }
-
 }

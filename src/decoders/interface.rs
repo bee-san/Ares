@@ -1,4 +1,3 @@
-
 ///! The Interface defines what the struct for each decoder looks like
 pub struct Decoder {
     pub name: &'static str,
@@ -24,4 +23,12 @@ pub struct Decoder {
     // This allows us to decide whether it's worth decoding
     // If current text has entropy 9, it's unlikey to be base64
     pub normalised_entropy: Vec<f32>,
+}
+
+/// All decoders will share the same Crack trait
+/// Which let's us put them into a vector and iterate over them,
+/// Running `.crack()` on each of them.
+/// Relevant docs: https://docs.rs/crack/0.3.0/crack/trait.Crack.html
+pub trait Crack {
+    fn crack(&self, text: &str) -> Option<String>;
 }
