@@ -2,7 +2,7 @@
 
 mod decoders;
 mod filtration_system;
-use crate::decoders::base64_decoder::{Base64Decoder};
+use crate::filtration_system::filter_and_get_decoders;
 
 /// The main function to call which performs the cracking.
 /// ```rust
@@ -10,15 +10,25 @@ use crate::decoders::base64_decoder::{Base64Decoder};
 /// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu");
 /// assert!(true, true)
 /// ```
-pub fn perform_cracking(text: &str) {
-    let base64_decoder = Base64Decoder::new();
-    println!("{:?}", base64_decoder.crack(text).unwrap());
+pub fn perform_cracking(text: &str) -> Vec<Option<String>> {
+    let decoders = filter_and_get_decoders();
+    let y = decoders.run(text);
+    println!("{:?}", y);
+    // TODO should it return here or later?
+    y
 }
 
 #[cfg(test)]
 mod tests {
+    use super::perform_cracking;
+
     #[test]
     fn it_works() {
         assert_eq!(2 + 2, 4);
+    }
+
+    #[test]
+    fn test_perform_cracking_returns() {
+        perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh");
     }
 }
