@@ -4,6 +4,8 @@
 use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::interface::Crack;
 
+use rayon::prelude::*;
+
 /// The struct which contains all of the decoders
 /// Where decoders is crackers, decryptors, etc.
 /// This contains a public attribute Components
@@ -11,7 +13,7 @@ use crate::decoders::interface::Crack;
 /// the Decoders for the Crack trait in action.
 /// Relevant docs: https://doc.rust-lang.org/book/ch17-02-trait-objects.html
 pub struct Decoders {
-    pub components: Vec<Box<dyn Crack>>,
+    pub components: Vec<Box<dyn Crack + Sync>>,
 }
 
 impl Decoders {
@@ -24,10 +26,9 @@ impl Decoders {
     /// But each struct shares the same `.crack()` method, so it's fine.
     pub fn run(&self, text: &str) -> Vec<Option<String>> {
         self.components
-            .iter()
+            .into_par_iter() // <--- Change into_iter() into into_par_iter()
             .map(|i| i.crack(text))
-            .into_iter()
-            .collect::<Vec<_>>()
+            .collect()
     }
 }
 
