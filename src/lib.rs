@@ -4,6 +4,8 @@ mod decoders;
 mod filtration_system;
 use crate::filtration_system::filter_and_get_decoders;
 
+use log::info;
+
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ares::perform_cracking;
@@ -11,6 +13,7 @@ use crate::filtration_system::filter_and_get_decoders;
 /// assert!(true, true)
 /// ```
 pub fn perform_cracking(text: &str) -> Vec<Option<String>> {
+    info!("Perform_Cracking was called with text {:?}", text);
     let decoders = filter_and_get_decoders();
     let y = decoders.run(text);
     println!("{:?}", y);
