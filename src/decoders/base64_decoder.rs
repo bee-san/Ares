@@ -1,10 +1,12 @@
-use super::interface::Crack;
-use super::interface::Decoder;
 ///! Decode a base64 string
 ///! Performs error handling and returns a string
 ///! Call base64_decoder.crack to use. It returns option<String> and check with
 ///! `result.is_some()` to see if it returned okay.
-use log::trace;
+///
+use super::interface::Crack;
+use super::interface::Decoder;
+
+use log::{info, trace};
 
 /// .decoder is never used, so Rust considers this dead code
 /// Really it's just a co-reference to the Decoder in `interface.rs`
@@ -57,10 +59,11 @@ impl Crack for Base64Decoder {
     fn crack(&self, text: &str) -> Option<String> {
         trace!("Trying Base64 with text {:?}", text);
         let result = Base64Decoder::decode_base64_no_error_handling(text);
+        trace!("Successfully decoded Base64");
         match result {
             Ok(x) => Some(x),
             Err(_) => {
-                trace!("Failed to decode base64.");
+                info!("Failed to decode base64.");
                 None
             }
         }
