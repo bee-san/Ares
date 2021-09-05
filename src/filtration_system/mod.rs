@@ -4,6 +4,7 @@
 use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::interface::Crack;
 
+use log::trace;
 use rayon::prelude::*;
 
 /// The struct which contains all of the decoders
@@ -25,8 +26,9 @@ impl Decoders {
     /// Which allows us to have multiple different structs in the same vector
     /// But each struct shares the same `.crack()` method, so it's fine.
     pub fn run(&self, text: &str) -> Vec<Option<String>> {
+        trace!("Running .crack() on all decoders");
         self.components
-            .into_par_iter() // <--- Change into_iter() into into_par_iter()
+            .into_par_iter()
             .map(|i| i.crack(text))
             .collect()
     }
@@ -34,6 +36,7 @@ impl Decoders {
 
 /// Currently takes no args as this is just a spike to get all the basic functionality working
 pub fn filter_and_get_decoders() -> Decoders {
+    trace!("Filtering and getting all decoders");
     let base64 = Base64Decoder::new();
     Decoders {
         components: vec![Box::new(base64)],
