@@ -1,7 +1,8 @@
 use ares::perform_cracking;
-use clap::Clap;
-
 mod cli_input_parser;
+
+use clap::Clap;
+use log::trace;
 
 /// This doc string acts as a help message when the user runs '--help'
 /// as do all doc strings on fields
@@ -18,8 +19,11 @@ struct Opts {
 }
 
 fn main() {
+    trace!("Program was called with CLI 😉");
     let opts: Opts = Opts::parse();
+    trace!("Parsed the arguments");
     println!("{:?}", opts.text);
     println!("{:?}", opts.verbose);
     perform_cracking(&opts.text);
+    trace!("Cracking was performed.")
 }
