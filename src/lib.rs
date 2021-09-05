@@ -2,7 +2,8 @@
 
 mod decoders;
 mod filtration_system;
-use crate::filtration_system::filter_and_get_decoders;
+mod searchers;
+use crate::searchers::Tree;
 
 /// The main function to call which performs the cracking.
 /// ```rust
@@ -11,11 +12,12 @@ use crate::filtration_system::filter_and_get_decoders;
 /// assert!(true, true)
 /// ```
 pub fn perform_cracking(text: &str) -> Vec<Option<String>> {
-    let decoders = filter_and_get_decoders();
-    let y = decoders.run(text);
-    println!("{:?}", y);
-    // TODO should it return here or later?
-    y
+    // Build a new search tree
+    // This starts us with a node with no parents
+    let search_tree = Tree::new(text.to_string());
+    // Perform the search algorithm
+    // It will either return a failure or success.
+    search_tree.bfs()
 }
 
 #[cfg(test)]

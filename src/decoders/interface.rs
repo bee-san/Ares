@@ -1,4 +1,5 @@
 ///! The Interface defines what the struct for each decoder looks like
+// TODO rename this file
 pub struct Decoder {
     pub name: &'static str,
     /// A description, you can take the first line from Wikipedia
