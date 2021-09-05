@@ -5,6 +5,8 @@ mod filtration_system;
 mod searchers;
 use crate::searchers::Tree;
 
+use log::info;
+
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ares::perform_cracking;
@@ -18,7 +20,7 @@ pub fn perform_cracking(text: &str) -> Vec<Option<String>> {
     // Perform the search algorithm
     // It will either return a failure or success.
     search_tree.bfs()
-}
+ }
 
 #[cfg(test)]
 mod tests {
