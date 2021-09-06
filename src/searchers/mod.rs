@@ -7,7 +7,9 @@ use crate::searchers;
 use crate::filtration_system::filter_and_get_decoders;
 
 pub struct Tree {
-    parent: Option<Tree>,
+    // Wrap in a box because
+    // https://doc.rust-lang.org/error-index.html#E0072
+    parent: Box<Option<Tree>>,
     value: String
 }
 
@@ -16,7 +18,7 @@ impl Tree {
         return Tree {
             // The root node does not have a parent
             // Therefore this becomes None.
-            parent: None,
+            parent: Box::new(None),
             value: value,
         }
     }
@@ -30,7 +32,7 @@ impl Tree {
     /// We can return an Option? An Enum? And then match on that
     /// So if we return CrackSuccess we return
     /// Else if we return an array, we add it to the children and go again.
-    fn bfs(&self) -> Option<String>{
+    pub fn bfs(&self) -> Option<String>{
         let mut q = VecDeque::new();
         // TODO I am not sure where self is coming from ?
         q.push_back(self);
