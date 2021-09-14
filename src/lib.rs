@@ -3,7 +3,6 @@
 mod decoders;
 mod filtration_system;
 mod searchers;
-use crate::searchers::search::Node;
 
 /// The main function to call which performs the cracking.
 /// ```rust
@@ -11,13 +10,13 @@ use crate::searchers::search::Node;
 /// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu");
 /// assert!(true, true)
 /// ```
-pub fn perform_cracking(text: &str) -> Option<String> {
+pub fn perform_cracking(text: &str) -> Option<String>{
     // Build a new search tree
     // This starts us with a node with no parents
-    let search_tree = Tree::new(text.to_string());
+    // let search_tree = searchers::Tree::new(text.to_string());
     // Perform the search algorithm
     // It will either return a failure or success.
-    search_tree.bfs()
+    searchers::search_for_plaintext(text)
  }
 
 #[cfg(test)]
@@ -32,5 +31,17 @@ mod tests {
     #[test]
     fn test_perform_cracking_returns() {
         perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh");
+    }
+
+    #[test]
+    fn test_perform_cracking_returns_successful() {
+        let result = perform_cracking("Q0FOQVJZOiBoZWxsbw==");
+        assert!(result.is_some());
+        assert!(result.unwrap() == "CANARY: hello")
+    }
+    #[test]
+    fn test_perform_cracking_returns_failure() {
+        let result = perform_cracking("");
+        assert!(result.is_none());
     }
 }

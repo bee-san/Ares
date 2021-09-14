@@ -24,6 +24,10 @@ fn main() {
     trace!("Parsed the arguments");
     println!("{:?}", opts.text);
     println!("{:?}", opts.verbose);
-    perform_cracking(&opts.text);
-    trace!("Cracking was performed.")
+
+    let result = perform_cracking(&opts.text);
+    match result {
+        Some(result) => println!("SUCCESSFUL {:?}", result),
+        None => println!("FAILED 😭"),
+    }
 }

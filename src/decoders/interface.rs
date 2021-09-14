@@ -33,3 +33,16 @@ pub struct Decoder {
 pub trait Crack {
     fn crack(&self, text: &str) -> Option<String>;
 }
+
+/// Returns a boolean of True if the string is successfully changed
+/// So empty strings fail, but non-empty strings succeed
+/// and only if the string is different from the original text.
+pub fn check_string_success(decoded_text: &str, original_text: &str) -> bool {
+    if decoded_text != "" {
+        return true;
+    }
+    else if decoded_text != original_text {
+        return true;
+    }
+    return false;
+}

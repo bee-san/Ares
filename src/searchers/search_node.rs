@@ -2,7 +2,7 @@
 ///! At each level, we have a node with some text, T.
 ///! And then the edges of that node are the decryption modules.
 
-struct Nodes<V> {
+/*struct Nodes<V> {
     /// When we expand the node, we generate children node
     /// This is an vector of children.
     children: Vec<Nodes<V>>,
@@ -14,3 +14,4 @@ struct Nodes<V> {
     /// started from base64, then base32, and finally rot13.
     edges_so_far: Vec<&str>
 }
+*/
