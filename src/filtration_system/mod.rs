@@ -45,7 +45,7 @@ pub fn filter_and_get_decoders() -> Decoders {
 
 #[cfg(test)]
 mod tests {
-    // TODO when we add a proper filtration system
+    // TODO: when we add a proper filtration system
     // We need to test that.
     use super::filter_and_get_decoders;
 
