@@ -12,7 +12,7 @@ pub fn bfs(input: &str) -> Option<String> {
         // runs the decodings and puts it into 
         let new_strings: Vec<_> = current_strings.into_iter()
             .flat_map(|current_string| super::perform_decoding(&current_string))
-            .filter_map(|elem| elem)
+            .flatten()
             .filter(|elem| seen_strings.insert(elem.to_string()))
             .collect();
 
