@@ -1,3 +1,5 @@
+use crate::decoders::interface::check_string_success;
+
 ///! Decode a base64 string
 ///! Performs error handling and returns a string
 ///! Call base64_decoder.crack to use. It returns option<String> and check with
@@ -6,7 +8,7 @@
 use super::interface::Crack;
 use super::interface::Decoder;
 
-use log::{info, trace};
+use log::{info, trace, debug};
 
 /// .decoder is never used, so Rust considers this dead code
 /// Really it's just a co-reference to the Decoder in `interface.rs`
@@ -43,12 +45,12 @@ impl Base64Decoder {
         }
     }
 
-    fn decode_base64_no_error_handling(text: &str) -> Result<String, base64::DecodeError> {
+    fn decode_base64_no_error_handling(text: &str) -> Option<String>{
         // Runs the code to decode base64
         // Doesn't perform error handling, call from_base64
-        let bytes = base64::decode(text)?;
-        let ascii_string = String::from_utf8(bytes).unwrap();
-        Ok(ascii_string)
+        base64::decode(text.as_bytes())
+        .ok()
+        .map(|inner| String::from_utf8(inner).ok())?
     }
 }
 
@@ -58,15 +60,20 @@ impl Crack for Base64Decoder {
     /// Else the Option returns nothing and the error is logged in Trace
     fn crack(&self, text: &str) -> Option<String> {
         trace!("Trying Base64 with text {:?}", text);
-        let result = Base64Decoder::decode_base64_no_error_handling(text);
-        trace!("Successfully decoded Base64");
-        match result {
-            Ok(x) => Some(x),
-            Err(_) => {
-                info!("Failed to decode base64.");
-                None
-            }
+        let decoded_text = Base64Decoder::decode_base64_no_error_handling(text);
+        
+        if decoded_text.is_none() {
+            debug!("Failed to decode base64 because Base64Decoder::decode_base64_no_error_handling returned None");
+            return None;
         }
+
+        let decoded_text = decoded_text.unwrap();
+        if !check_string_success(&decoded_text, text) {
+            info!("Failed to decode base64 because check_string_success returned false on string {}", decoded_text);
+            return None;
+        }
+
+        return Some(decoded_text);
     }
 }
 
@@ -91,9 +98,11 @@ mod tests {
 
     #[test]
     fn base64_decode_empty_string() {
+        // Bsae64 returns an empty string, this is a valid base64 string
+        // but returns False on check_string_success
         let base64_decoder = Base64Decoder::new();
-        let result = base64_decoder.crack("").unwrap();
-        assert_eq!(result, "");
+        let result = base64_decoder.crack("");
+        assert!(result.is_none());
     }
 
     #[test]
