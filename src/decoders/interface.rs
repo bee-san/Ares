@@ -38,11 +38,11 @@ pub trait Crack {
 /// So empty strings fail, but non-empty strings succeed
 /// and only if the string is different from the original text.
 pub fn check_string_success(decoded_text: &str, original_text: &str) -> bool {
-    if decoded_text != "" {
-        return true;
+    if decoded_text.is_empty() {
+        return false;
     }
     else if decoded_text != original_text {
         return true;
     }
-    return false;
+    false
 }
