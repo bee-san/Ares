@@ -33,14 +33,14 @@ impl Base64Decoder {
         Self {
             decoder: Decoder {
                 name: "base64",
-                description: " Base64 is a group of binary-to-text encoding schemes that represent binary data (more specifically, a sequence of 8-bit bytes) in an ASCII string format by translating the data into a radix-64 representation.",
+                description: "Base64 is a group of binary-to-text encoding schemes that represent binary data (more specifically, a sequence of 8-bit bytes) in an ASCII string format by translating the data into a radix-64 representation.",
                 link: "https://en.wikipedia.org/wiki/Base64",
-                tags: vec!["base64", "decoder", "baser"],
+                tags: vec!["base64", "decoder", "base"],
                 expected_runtime: 0.01,
                 expected_success: 1.0,
                 failure_runtime: 0.01,
                 normalised_entropy: vec![1.0, 10.0],
-                popularity: 1.1,
+                popularity: 1.0,
             },
         }
     }
@@ -73,7 +73,7 @@ impl Crack for Base64Decoder {
             return None;
         }
 
-        return Some(decoded_text);
+        Some(decoded_text)
     }
 }
 
