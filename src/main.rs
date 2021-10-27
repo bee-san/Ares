@@ -1,12 +1,12 @@
 use ares::perform_cracking;
 mod cli_input_parser;
 
-use clap::Clap;
+use clap::{Parser};
 use log::trace;
 
 /// This doc string acts as a help message when the user runs '--help'
 /// as do all doc strings on fields
-#[derive(Clap)]
+#[derive(Parser)]
 #[clap(version = "1.0", author = "Bee <bee@skerritt.blog>")]
 struct Opts {
     /// Some input. Because this isn't an Option<T> it's required to be used
