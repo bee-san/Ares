@@ -1,7 +1,9 @@
 use ares::perform_cracking;
 mod cli_input_parser;
 
-use clap::{Parser};
+use clap::Parser;
+use env_logger;
+
 use log::trace;
 
 /// This doc string acts as a help message when the user runs '--help'
@@ -19,8 +21,17 @@ struct Opts {
 }
 
 fn main() {
-    trace!("Program was called with CLI 😉");
     let opts: Opts = Opts::parse();
+    let min_log_level = match opts.verbose {
+        0 => "Warn",
+        1 => "Info",
+        2 => "Debug",
+        3 | _ => "Trace",
+    };
+    env_logger::init_from_env(
+        env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, min_log_level),
+    );
+    trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
     println!("{:?}", opts.text);
     println!("{:?}", opts.verbose);
