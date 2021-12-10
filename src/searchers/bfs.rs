@@ -4,13 +4,14 @@ pub fn bfs(input: &str) -> Option<String> {
     let mut seen_strings = HashSet::new();
     // all strings to search through
     let mut current_strings = vec![input.to_string()];
-    
+
     // loop through all of the strings in the vec
     while !current_strings.is_empty() {
         println!("Number of potential decodings: {}", current_strings.len());
-        
-        // runs the decodings and puts it into 
-        let new_strings: Vec<_> = current_strings.into_iter()
+
+        // runs the decodings and puts it into
+        let new_strings: Vec<_> = current_strings
+            .into_iter()
             .flat_map(|current_string| super::perform_decoding(&current_string))
             .flatten()
             .filter(|elem| seen_strings.insert(elem.to_string()))
@@ -27,15 +28,14 @@ pub fn bfs(input: &str) -> Option<String> {
         current_strings = new_strings;
         println!("Refreshed the vector, {:?}", current_strings);
     }
-    
+
     None
 }
-
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn bfs_succeeds() {
         let result = bfs("Q0FOQVJZOiBoZWxsbw==");
