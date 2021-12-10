@@ -14,7 +14,7 @@ name = "ares"
 path = "src/main.rs"
 
 [dependencies]
-clap = "3.0.0-beta.2"
+clap = {version = "3.0.0-beta.2", features = ["derive"]}
 log = "0.4"
 env_logger = "0.9.0"
 base64 = "0.13.0"

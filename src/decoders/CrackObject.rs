@@ -1,9 +1,9 @@
 ///! This module contains CrackSuccess and CrackFailure
-/// 
+///
 
 /// Every cracker returns this object which
 /// Either indicates success or failure among other things.
-struct CrackObject{
+struct CrackObject {
     /// If our checkers return success, we change this bool to True
     success: bool,
     /// Encrypted text is the text _before_ we decrypt it.
@@ -20,10 +20,10 @@ struct CrackObject{
     link: &'static str,
 }
 
-impl CrackObject{
+impl CrackObject {
     /// This function returns a new CrackObject
-    fn new(){
-        CrackObject{
+    fn new() {
+        CrackObject {
             success: false,
             encrypted_text: "",
             unencrypted_text: "",
@@ -32,5 +32,5 @@ impl CrackObject{
             description: "",
             link: "",
         }
-    } 
+    }
 }

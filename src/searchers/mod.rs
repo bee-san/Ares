@@ -39,11 +39,7 @@ fn perform_decoding(text: &str) -> Vec<Option<String>> {
 // https://github.com/bee-san/Ares/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
 fn exit_condition(input: &str) -> bool {
     // Uses lemmeknow to check if any regexes match
-    if to_json(&identify_text(input)) != "[]" {
-        return true;
-    } else {
-        return false;
-    }
+    to_json(&identify_text(input)) != "[]"
 }
 
 #[cfg(test)]
@@ -53,25 +49,25 @@ mod tests {
     #[test]
     fn exit_condition_succeeds() {
         let result = exit_condition("https://www.google.com");
-        assert_eq!(result, true);
+        assert!(result);
     }
     #[test]
     fn exit_condition_fails() {
         let result = exit_condition("vjkrerkdnxhrfjekfdjexk");
-        assert_eq!(result, false);
+        assert!(!result);
     }
 
     #[test]
     fn perform_decoding_succeeds() {
         let result = perform_decoding("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==");
-        assert!(result.len() > 0);
-        assert!(result.iter().next().is_some());
+        assert!(!result.is_empty());
+        assert!(result.get(0).is_some());
         //TODO assert that the plaintext is correct by looping over the vector
     }
     #[test]
     fn perform_decoding_succeeds_empty_string() {
         // Some decoders like base64 return even when the string is empty.
         let result = perform_decoding("");
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
     }
 }

@@ -10,23 +10,18 @@ mod searchers;
 /// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu");
 /// assert!(true, true)
 /// ```
-pub fn perform_cracking(text: &str) -> Option<String>{
+pub fn perform_cracking(text: &str) -> Option<String> {
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
     // Perform the search algorithm
     // It will either return a failure or success.
     searchers::search_for_plaintext(text)
- }
+}
 
 #[cfg(test)]
 mod tests {
     use super::perform_cracking;
-
-    #[test]
-    fn it_works() {
-        assert_eq!(2 + 2, 4);
-    }
 
     #[test]
     fn test_perform_cracking_returns() {

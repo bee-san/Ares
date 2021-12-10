@@ -2,8 +2,8 @@
 ///! Given a filter object, return an array of decoders/crackers which have been filtered
 ///
 use crate::decoders::base64_decoder::Base64Decoder;
-use crate::decoders::reverse_decoder::ReverseDecoder;
 use crate::decoders::interface::Crack;
+use crate::decoders::reverse_decoder::ReverseDecoder;
 
 use log::trace;
 use rayon::prelude::*;
