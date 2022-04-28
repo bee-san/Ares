@@ -6,7 +6,7 @@
 use super::interface::Crack;
 use super::interface::Decoder;
 
-use log::{trace};
+use log::trace;
 
 /// .decoder is never used, so Rust considers this dead code
 /// Really it's just a co-reference to the Decoder in `interface.rs`
@@ -54,23 +54,16 @@ mod tests {
     use crate::decoders::interface::Crack;
 
     #[test]
-    fn it_works() {
-        let base64_decoder = ReverseDecoder::new();
-        let _result = base64_decoder.crack("stac").unwrap();
-        assert_eq!(true, true);
-    }
-    
-    #[test]
     fn returns_success() {
-        let base64_decoder = ReverseDecoder::new();
-        let result = base64_decoder.crack("stac").unwrap();
+        let reverse_decoder = ReverseDecoder::new();
+        let result = reverse_decoder.crack("stac").unwrap();
         assert_eq!(result, "cats");
     }
 
     #[test]
     fn returns_nothing() {
-        let base64_decoder = ReverseDecoder::new();
-        let result = base64_decoder.crack("");
+        let reverse_decoder = ReverseDecoder::new();
+        let result = reverse_decoder.crack("");
         assert!(result.is_none());
     }
 }
