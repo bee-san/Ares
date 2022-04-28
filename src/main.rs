@@ -25,7 +25,7 @@ fn main() {
         0 => "Warn",
         1 => "Info",
         2 => "Debug",
-        3 | _ => "Trace",
+        _ => "Trace",
     };
     env_logger::init_from_env(
         env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, min_log_level),
