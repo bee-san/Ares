@@ -1,9 +1,9 @@
 //! Ares is an automatic decoding and cracking tool.
 
+mod checkers;
 mod decoders;
 mod filtration_system;
 mod searchers;
-mod checkers;
 mod storage;
 
 /// The main function to call which performs the cracking.

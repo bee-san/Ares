@@ -3,8 +3,8 @@
 //! Click here to find out more:
 //! https://broadleaf-angora-7db.notion.site/Search-Nodes-Edges-What-should-they-look-like-b74c43ca7ac341a1a5cfdbeb84a7eef0
 
-use crate::filtration_system::filter_and_get_decoders;
 use crate::checkers;
+use crate::filtration_system::filter_and_get_decoders;
 mod bfs;
 
 /*pub struct Tree <'a> {
@@ -41,7 +41,6 @@ fn exit_condition(input: &str) -> bool {
     // use mod.rs from checkers module
     // call check(input)
     checkers::check(input)
-
 }
 
 #[cfg(test)]
