@@ -1,14 +1,21 @@
 // import storage
 use crate::storage;
+use crate::checkers::checkerObject::{CheckObject};
 
 // given an input, check every item in the array and return true if any of them match
-pub fn check_english(input: &str) -> Option<&str> {
+pub fn check_english(input: &str) -> Option<CheckObject> {
     if let Some(result) = storage::DICTIONARIES
         .iter()
         .find(|(_, words)| words.contains(input))
     {
         // result.0 is filename
-        return Some(result.0);
+        return Some(CheckObject{
+            is_identified: true,
+            text: input,
+            checker: "Dictionary",
+            description: result.0,
+            link: "https://en.wikipedia.org/wiki/List_of_English_words",
+        });
     }
     None
 }

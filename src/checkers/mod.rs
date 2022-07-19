@@ -1,5 +1,6 @@
 mod english;
 mod lemmeknow;
+mod checkerObject;
 
 pub fn check(input: &str) -> bool {
     // Uses lemmeknow to check if any regexes match
