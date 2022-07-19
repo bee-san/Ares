@@ -10,12 +10,7 @@ use super::interface::Decoder;
 
 use log::{debug, info, trace};
 
-/// .decoder is never used, so Rust considers this dead code
-/// Really it's just a co-reference to the Decoder in `interface.rs`
-#[allow(dead_code)]
-pub struct Base64Decoder {
-    decoder: Decoder,
-}
+pub struct Base64Decoder;
 
 /// The Base64 decoder, call:
 /// `let base64_decoder = Base64Decoder.new()` to create a new instance
@@ -29,10 +24,9 @@ pub struct Base64Decoder {
 /// assert_eq!(result, "hello world");
 /// ```
 impl Base64Decoder {
-    pub fn new() -> Self {
-        Self {
-            decoder: Decoder {
-                name: "base64",
+    pub fn new() -> Decoder<Base64Decoder> {
+        Decoder {
+                decoder: Base64Decoder,
                 description: "Base64 is a group of binary-to-text encoding schemes that represent binary data (more specifically, a sequence of 8-bit bytes) in an ASCII string format by translating the data into a radix-64 representation.",
                 link: "https://en.wikipedia.org/wiki/Base64",
                 tags: vec!["base64", "decoder", "base"],
@@ -41,8 +35,7 @@ impl Base64Decoder {
                 failure_runtime: 0.01,
                 normalised_entropy: vec![1.0, 10.0],
                 popularity: 1.0,
-            },
-        }
+            }
     }
 
     fn decode_base64_no_error_handling(text: &str) -> Option<String> {

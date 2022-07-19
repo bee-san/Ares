@@ -2,7 +2,7 @@
 ///! Given a filter object, return an array of decoders/crackers which have been filtered
 ///
 use crate::decoders::base64_decoder::Base64Decoder;
-use crate::decoders::interface::Crack;
+use crate::decoders::interface::{Crack, Decoder};
 use crate::decoders::reverse_decoder::ReverseDecoder;
 
 use log::trace;
@@ -38,8 +38,9 @@ impl Decoders {
 /// Currently takes no args as this is just a spike to get all the basic functionality working
 pub fn filter_and_get_decoders() -> Decoders {
     trace!("Filtering and getting all decoders");
-    let base64 = Base64Decoder::new();
-    let reversedecoder = ReverseDecoder::new();
+    let base64: Decoder<Base64Decoder> = Base64Decoder::new();
+    let reversedecoder: Decoder<ReverseDecoder> = ReverseDecoder::new();
+
     Decoders {
         components: vec![Box::new(base64), Box::new(reversedecoder)],
     }

@@ -1,14 +1,16 @@
 //! Ares is an automatic decoding and cracking tool.
 
+mod checkers;
 mod decoders;
 mod filtration_system;
 mod searchers;
+mod storage;
 
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ares::perform_cracking;
 /// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu");
-/// assert!(true, true)
+/// assert!(true)
 /// ```
 pub fn perform_cracking(text: &str) -> Option<String> {
     // Build a new search tree
