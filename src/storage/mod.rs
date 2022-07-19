@@ -1,5 +1,5 @@
-use include_dir::Dir;
 use include_dir::include_dir;
+use include_dir::Dir;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::collections::HashSet;

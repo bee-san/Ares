@@ -3,9 +3,12 @@ use crate::storage;
 
 // given an input, check every item in the array and return true if any of them match
 pub fn check_english(input: &str) -> Option<&str> {
-    if let Some(result) = storage::DICTIONARIES.iter().find(|(_, words)| words.contains(input)) {
+    if let Some(result) = storage::DICTIONARIES
+        .iter()
+        .find(|(_, words)| words.contains(input))
+    {
         // result.0 is filename
-        return Some(result.0)
+        return Some(result.0);
     }
     None
 }
