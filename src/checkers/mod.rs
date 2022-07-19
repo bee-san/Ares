@@ -8,7 +8,7 @@ pub fn check(input: &str) -> bool {
         return true;
     }
 
-    if english::check_english(input) {
+    if english::check_english(input).is_some() {
         return true;
     }
 
