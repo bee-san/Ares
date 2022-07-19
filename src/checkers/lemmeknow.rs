@@ -1,5 +1,6 @@
 use lemmeknow::Identify;
 use crate::checkers::checkerObject::{CheckObject};
+use lemmeknow::Data;
 
 pub fn check_lemmeknow(input: &str) -> Option<CheckObject> {
     // Uses lemmeknow to check if any regexes match
@@ -8,12 +9,26 @@ pub fn check_lemmeknow(input: &str) -> Option<CheckObject> {
     if !lemmeKnowResult.is_empty(){
         return Some(CheckObject{
             is_identified: true,
-            text: input,
+            text: &input.to_owned(),
             checker: "LemmeKnow",
             // Returns a vector of matches
-            description: lemmeKnowResult[0].data,
+            description: formatDataResult(lemmeKnowResult[0].data),
             link: "https://swanandx.github.io/lemmeknow-frontend/",
         });
     }
     None
+}
+
+fn formatDataResult(input: Data) -> &'static str{
+    /*
+    Input contains these:
+        println!("{}", input.Name);
+    println!("{}", input.Regex);
+    println!("{}", input.plural_name);
+    println!("{}", input.Description);
+    println!("{}", input.Rarity);
+    println!("{}", input.URL);
+    println!("{:?}", input.Tags);
+    In the future we'd want to include more advanced things like URL. */
+    &format!("The plaintext is {}", input.Name).to_string()
 }

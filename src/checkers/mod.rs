@@ -5,7 +5,7 @@ mod checkerObject;
 pub fn check(input: &str) -> bool {
     // Uses lemmeknow to check if any regexes match
     // import and call lemmeknow.rs
-    if lemmeknow::check_lemmeknow(input) {
+    if lemmeknow::check_lemmeknow(input).is_some() {
         return true;
     }
 
