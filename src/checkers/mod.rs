@@ -4,11 +4,11 @@ mod english;
 pub fn check(input: &str) -> bool {
     // Uses lemmeknow to check if any regexes match
     // import and call lemmeknow.rs
-    if lemmeknow::CheckLemmeKnow(input) {
+    if lemmeknow::check_lemmeknow(input) {
         return true;
     }
 
-    if english::CheckEnglish(input) {
+    if english::check_english(input) {
         return true;
     }
 
@@ -21,7 +21,7 @@ mod tests {
     use crate::checkers::check;
 
     #[test]
-    fn test_check_IP_address() {
+    fn test_check_ip_address() {
         assert_eq!(true, check("192.168.0.1"));
     }
 }

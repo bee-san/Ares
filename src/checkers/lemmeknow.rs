@@ -1,6 +1,7 @@
-use lemmeknow::{identify_text, to_json};
+use lemmeknow::Identify;
 
-pub fn CheckLemmeKnow(input: &str) -> bool {
+pub fn check_lemmeknow(input: &str) -> bool {
     // Uses lemmeknow to check if any regexes match
-    !identify_text(input).is_empty()
+    let identifier = Identify::default();
+    !identifier.identify(input).is_empty()
 }
