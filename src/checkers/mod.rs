@@ -4,7 +4,15 @@ mod english;
 pub fn check(input: &str) -> bool {
     // Uses lemmeknow to check if any regexes match
     // import and call lemmeknow.rs
-    lemmeknow::check(input)
+    if lemmeknow::CheckLemmeKnow(input) {
+        return true;
+    }
+
+    if english::CheckEnglish(input) {
+        return true;
+    }
+
+    false
 }
 
 // test
