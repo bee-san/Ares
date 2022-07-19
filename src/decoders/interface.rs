@@ -1,7 +1,8 @@
 ///! The Interface defines what the struct for each decoder looks like
 //TODO: rename this file
-pub struct Decoder {
-    pub name: &'static str,
+
+pub struct Decoder<T: Crack> {
+    pub decoder: T,
     /// A description, you can take the first line from Wikipedia
     /// Sometimes our decoders do not exist on Wikipedia so we write our own.
     pub description: &'static str,
@@ -19,10 +20,10 @@ pub struct Decoder {
     /// Expected is how long we expect, if it fails completely
     /// This is how long it'll take to fail.
     pub failure_runtime: f32,
-    // normalised_entropy is the range of entropy for this
-    // So base64's normalised entropy might be between 2.5 and 3
-    // This allows us to decide whether it's worth decoding
-    // If current text has entropy 9, it's unlikey to be base64
+    /// normalised_entropy is the range of entropy for this
+    /// So base64's normalised entropy might be between 2.5 and 3
+    /// This allows us to decide whether it's worth decoding
+    /// If current text has entropy 9, it's unlikey to be base64
     pub normalised_entropy: Vec<f32>,
 }
 
@@ -32,6 +33,12 @@ pub struct Decoder {
 /// Relevant docs: https://docs.rs/crack/0.3.0/crack/trait.Crack.html
 pub trait Crack {
     fn crack(&self, text: &str) -> Option<String>;
+}
+
+impl<T: Crack> Crack for Decoder<T> {
+    fn crack(&self, text: &str) -> Option<String> {
+        self.decoder.crack(text)
+    }
 }
 
 /// Returns a boolean of True if the string is successfully changed
