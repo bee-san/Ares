@@ -11,10 +11,10 @@ pub fn check_english(input: &str) -> Option<CheckObject> {
         // result.0 is filename
         return Some(CheckObject{
             is_identified: true,
-            text: input,
-            checker: "Dictionary",
-            description: result.0,
-            link: "https://en.wikipedia.org/wiki/List_of_English_words",
+            text: input.to_string(),
+            checker: "Dictionary".to_string(),
+            description: result.0.to_string(),
+            link: "https://en.wikipedia.org/wiki/List_of_English_words".to_string(),
         });
     }
     None
