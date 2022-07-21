@@ -3,7 +3,7 @@ mod cli_input_parser;
 
 use clap::Parser;
 
-use log::trace;
+use log::{trace, debug};
 
 /// This doc string acts as a help message when the user runs '--help'
 /// as do all doc strings on fields
@@ -32,8 +32,8 @@ fn main() {
     );
     trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
-    println!("{:?}", opts.text);
-    println!("{:?}", opts.verbose);
+    debug!("{:?}", opts.text);
+    debug!("{:?}", opts.verbose);
 
     let result = perform_cracking(&opts.text);
     match result {

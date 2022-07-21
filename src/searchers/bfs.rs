@@ -1,4 +1,6 @@
 use std::collections::HashSet;
+use log::trace;
+
 
 pub fn bfs(input: &str) -> Option<String> {
     let mut seen_strings = HashSet::new();
@@ -7,7 +9,7 @@ pub fn bfs(input: &str) -> Option<String> {
 
     // loop through all of the strings in the vec
     while !current_strings.is_empty() {
-        println!("Number of potential decodings: {}", current_strings.len());
+        trace!("Number of potential decodings: {}", current_strings.len());
 
         // runs the decodings and puts it into
         let new_strings: Vec<_> = current_strings
@@ -21,12 +23,11 @@ pub fn bfs(input: &str) -> Option<String> {
         // technically this won't check if the initial string matches our exit condition
         // but this is a demo and i'll be lazy :P
         if let Some(exit_str) = new_strings.iter().find(|elem| super::exit_condition(elem)) {
-            println!("Found exit string: {}", exit_str);
+            trace!("Found exit string: {}", exit_str);
             return Some(exit_str.to_string());
         }
-        println!("{:?}", new_strings);
         current_strings = new_strings;
-        println!("Refreshed the vector, {:?}", current_strings);
+        trace!("Refreshed the vector, {:?}", current_strings);
     }
 
     None
