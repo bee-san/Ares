@@ -10,23 +10,13 @@ trait GeneralChecker {
 pub fn check(input: &str) -> bool {
     // Uses lemmeknow to check if any regexes match
     // import and call lemmeknow.rs
-    let lemmeknow_result = lemmeknow_checker::check_lemmeknow(input);
-    if lemmeknow_result.is_some() {
-        return true;
-        // TODO get human checker to work
-        /*if humanChecker::human_checker(lemmeKnowResult.unwrap()) {
-            return true;
-        */
-    }
+    if let Some(lemmeknow_result) = lemmeknow_checker::check_lemmeknow(input) {
+        return human_checker::human_checker(&lemmeknow_result);
+    };
 
-    let english_result = english::check_english(input);
-    if english_result.is_some() {
-        return true;
-        // TODO get human checker to work
-        /*if humanChecker(englishResult.unwrap()) {
-            return true;
-        }*/
-    }
+    if let Some(english_result) = english::check_english(input) {
+        return human_checker::human_checker(&english_result);
+    };
 
     false
 }
@@ -38,11 +28,11 @@ mod tests {
 
     #[test]
     fn test_check_ip_address() {
-        assert_eq!(true, check("192.168.0.1"));
+        assert!(check("192.168.0.1"));
     }
 
     #[test]
     fn test_check_goes_to_dictionary() {
-        assert_eq!(true, check("and"));
+        assert!(check("and"));
     }
 }
