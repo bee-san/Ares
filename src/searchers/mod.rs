@@ -3,8 +3,8 @@
 //! Click here to find out more:
 //! https://broadleaf-angora-7db.notion.site/Search-Nodes-Edges-What-should-they-look-like-b74c43ca7ac341a1a5cfdbeb84a7eef0
 
+use crate::checkers;
 use crate::filtration_system::filter_and_get_decoders;
-use lemmeknow::{identify_text, to_json};
 mod bfs;
 
 /*pub struct Tree <'a> {
@@ -38,8 +38,9 @@ fn perform_decoding(text: &str) -> Vec<Option<String>> {
 
 // https://github.com/bee-san/Ares/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
 fn exit_condition(input: &str) -> bool {
-    // Uses lemmeknow to check if any regexes match
-    to_json(&identify_text(input)) != "[]"
+    // use mod.rs from checkers module
+    // call check(input)
+    checkers::check(input)
 }
 
 #[cfg(test)]
