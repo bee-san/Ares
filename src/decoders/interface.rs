@@ -40,8 +40,7 @@ pub trait Crack {
 pub fn check_string_success(decoded_text: &str, original_text: &str) -> bool {
     if decoded_text.is_empty() {
         return false;
-    }
-    else if decoded_text != original_text {
+    } else if decoded_text != original_text {
         return true;
     }
     false
