@@ -41,4 +41,11 @@ mod tests {
         let result = perform_cracking("");
         assert!(result.is_none());
     }
+
+    #[test]
+    fn test_perform_cracking_returns_successful_base64_reverse() {
+        let result = perform_cracking("b2xsZWg=");
+        assert!(result.is_some());
+        assert!(result.unwrap() == "hello")
+    }
 }
