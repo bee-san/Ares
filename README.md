@@ -3,7 +3,7 @@
  <br><br>
 ➡️
 <a href="http://discord.skerritt.blog">Discord</a> | 
-<a href="https://broadleaf-angora-7db.notion.site/Ciphey2-32d5eea5d38b40c5b95a9442b4425710">Documentation 
+<a href="https://broadleaf-angora-7db.notion.site/Ciphey2-32d5eea5d38b40c5b95a9442b4425710">Documentation </a>
  ⬅️
 </p>
 
