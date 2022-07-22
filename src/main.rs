@@ -3,7 +3,7 @@ mod cli_input_parser;
 
 use clap::Parser;
 
-use log::{trace, debug};
+use log::{debug, trace};
 
 /// This doc string acts as a help message when the user runs '--help'
 /// as do all doc strings on fields
