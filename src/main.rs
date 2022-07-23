@@ -1,5 +1,4 @@
 use ares::perform_cracking;
-mod cli_input_parser;
 
 use clap::Parser;
 

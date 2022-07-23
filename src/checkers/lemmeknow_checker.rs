@@ -1,6 +1,12 @@
-use crate::checkers::checker_object::CheckObject;
-use lemmeknow::Data;
-use lemmeknow::Identify;
+use crate::checkers::checker_result::CheckResult;
+use lemmeknow::{Data, Identify};
+
+
+#[derive(Default)]
+struct SomeOptions {
+    foo: i32,
+    bar: f32,
+}
 
 const IDENTIFIER: Identify = Identify {
     min_rarity: None,
@@ -11,11 +17,15 @@ const IDENTIFIER: Identify = Identify {
     boundaryless: false,
 };
 
-pub fn check_lemmeknow(input: &str) -> Option<CheckObject> {
+fn main() {
+    let options: SomeOptions = Default::default();
+}
+
+pub fn check_lemmeknow(input: &str) -> Option<CheckResult> {
     // Uses lemmeknow to check if any regexes match
     let lemmeknow_result = IDENTIFIER.identify(input);
     if !lemmeknow_result.is_empty() {
-        let return_object = CheckObject {
+        let return_object = CheckResult {
             is_identified: true,
             text: input,
             checker: "LemmeKnow",

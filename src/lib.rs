@@ -5,6 +5,8 @@ mod decoders;
 mod filtration_system;
 mod searchers;
 mod storage;
+mod cli_input_parser;
+mod api_library_input_struct;
 
 /// The main function to call which performs the cracking.
 /// ```rust

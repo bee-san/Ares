@@ -1,7 +1,9 @@
-mod checker_object;
+mod checker_result;
 mod english;
-pub mod human_checker;
 mod lemmeknow_checker;
+pub mod human_checker;
+pub mod default_checker;
+pub mod checker_type;
 
 trait GeneralChecker {
     fn check(&self, input: &str) -> bool;

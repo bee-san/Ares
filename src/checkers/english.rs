@@ -1,15 +1,39 @@
 // import storage
-use crate::checkers::checker_object::CheckObject;
+use crate::checkers::checker_result::CheckResult;
 use crate::storage;
+use log::{debug, info, trace};
+
+use crate::checkers::checker_type::CheckerType;
+
+pub struct EnglishChecker {
+    pub checker_type: CheckerType,
+}
+
+impl EnglishChecker {
+    pub fn new() -> EnglishChecker {
+        EnglishChecker {
+            name: "English Checker",
+            description: "This checker checks if the text is english looping over a dictionary",
+            link: "https://en.wikipedia.org/wiki/English_language",
+            tags: vec!["english", "dictionary"],
+            /// Expected runtime is higher as this is a O(n) checker
+            expected_runtime: 0.3,
+            /// Popularity is max because English is the most popular
+            /// Plaintext language in the world.
+            popularity: 1.0,
+            ..Default::default()
+        }
+    }
+}
 
 // given an input, check every item in the array and return true if any of them match
-pub fn check_english(input: &str) -> Option<CheckObject> {
+pub fn check_english(input: &str) -> Option<CheckResult> {
     if let Some(result) = storage::DICTIONARIES
         .iter()
         .find(|(_, words)| words.contains(input))
     {
         // result.0 is filename
-        return Some(CheckObject {
+        return Some(CheckResult {
             is_identified: true,
             text: input,
             checker: "Dictionary",
