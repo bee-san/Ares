@@ -10,8 +10,6 @@ use super::interface::Decoder;
 
 use log::{debug, info, trace};
 
-pub struct Base64Decoder;
-
 /// The Base64 decoder, call:
 /// `let base64_decoder = Decoder::<Base64Decoder>::new()` to create a new instance
 /// And then call:
@@ -24,6 +22,7 @@ pub struct Base64Decoder;
 /// let result = decode_base64.crack("aGVsbG8gd29ybGQ=").unwrap();
 /// assert_eq!(result, "hello world");
 /// ```
+pub struct Base64Decoder;
 
 impl Crack for Decoder<Base64Decoder> {
     fn new() -> Decoder<Base64Decoder> {
