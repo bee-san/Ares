@@ -1,0 +1,9 @@
+on: [pull_request]
+name: benchmark pull requests
+jobs:
+  runBenchmark:
+    name: run benchmark
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - uses: boa-dev/criterion-compare-action@v3.0.0
