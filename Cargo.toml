@@ -26,3 +26,8 @@ lemmeknow = { version = "0.5", default-features = false }
 include_dir = "0.7.2"
 once_cell = "1.13.0"
 text_io = "0.1.10"
+
+[profile.release]
+lto = "fat"
+panic = "abort"
+strip = "symbols"

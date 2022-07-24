@@ -1,6 +1,6 @@
 ///! The Interface defines what the struct for each decoder looks like
 //TODO: rename this file
-pub struct Decoder {
+pub struct Decoder<Type> {
     pub name: &'static str,
     /// A description, you can take the first line from Wikipedia
     /// Sometimes our decoders do not exist on Wikipedia so we write our own.
@@ -24,6 +24,8 @@ pub struct Decoder {
     // This allows us to decide whether it's worth decoding
     // If current text has entropy 9, it's unlikey to be base64
     pub normalised_entropy: Vec<f32>,
+    // we don't use the Type, so we use PhantomData to mark it!
+    pub phantom: std::marker::PhantomData<Type>,
 }
 
 /// All decoders will share the same Crack trait
@@ -31,6 +33,9 @@ pub struct Decoder {
 /// Running `.crack()` on each of them.
 /// Relevant docs: https://docs.rs/crack/0.3.0/crack/trait.Crack.html
 pub trait Crack {
+    fn new() -> Self
+    where
+        Self: Sized;
     fn crack(&self, text: &str) -> Option<String>;
 }
 
