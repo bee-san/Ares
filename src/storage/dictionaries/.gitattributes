@@ -1,1 +1,2 @@
 rockyou_utf16.txt filter=lfs diff=lfs merge=lfs -text
+rockyou.txt filter=lfs diff=lfs merge=lfs -text
