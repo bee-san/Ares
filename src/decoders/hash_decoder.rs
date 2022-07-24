@@ -1,11 +1,11 @@
-use log::{debug, info, trace};
-use serde_json::{Result, Value};
+use log::{debug, trace};
+
 use std::collections::HashMap;
 
 use super::interface::Crack;
 use super::interface::Decoder;
 
-use crate::decoders::interface::check_string_success;
+
 
 use serde::Deserialize;
 use serde::Serialize;
@@ -56,21 +56,21 @@ fn decode_hash_no_error_handling(text: &str) -> Option<String> {
 
     // .json(&PostRequest{ hash: text })
 
-    #[derive(Deserialize, Debug)]
+    #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Data {
-        status_code: u16,
+        // status_code: u16,
         body: std::collections::HashMap<String, Body>,
     }
 
-    #[derive(Deserialize, Debug)]
+    #[derive(Deserialize)]
     #[serde(rename_all = "PascalCase")]
     struct Body {
         #[serde(rename = "Type")]
-        type_: String,
+        // type_: String,
         plaintext: String,
-        hash: String,
-        verified: bool,
+        // hash: String,
+        // verified: bool,
     }
 
     let mut data = HashMap::new();
