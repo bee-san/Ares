@@ -8,5 +8,7 @@ jobs:
       - uses: actions/checkout@master
       - uses: boa-dev/criterion-compare-action@v3.0.0
         with:
+          # Needed. The name of the branch to compare with. This default uses the branch which is being pulled against
+          branchName: ${{ github.base_ref }}
           # Optional. Default is `${{ github.token }}`.
           token: ${{ secrets.PERSONAL_TOKEN }}
