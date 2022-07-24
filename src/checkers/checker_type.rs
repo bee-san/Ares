@@ -33,7 +33,7 @@ pub struct CheckerType {
 /// Which checks the given text to see if its plaintext
 /// and returns CheckResult, which is our results object.
 pub trait Check {
-    fn check(&self, text: &'static str, checker: CheckerType) -> CheckResult;
+    fn check(text: &'static str, checker: CheckerType) -> CheckResult;
 }
 
 /// The default checker is used to check if the text is plaintext

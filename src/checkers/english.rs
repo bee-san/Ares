@@ -30,7 +30,7 @@ impl EnglishChecker {
 
 /// given an input, check every item in the array and return true if any of them match
 impl Check for EnglishChecker {
-    fn check(&self, input: &'static str, checker: CheckerType) -> CheckResult {
+    fn check(input: &'static str, checker: CheckerType) -> CheckResult {
         let mut plaintext_found = false;
         if let Some(result) = storage::DICTIONARIES
         .iter()
@@ -49,11 +49,12 @@ impl Check for EnglishChecker {
 
 #[cfg(test)]
 mod tests {
-    use crate::checkers::english::check_english;
+    use crate::checkers::{english::EnglishChecker, checker_type::Check};
 
     #[test]
     fn test_check_basic() {
-        assert!(check_english("preinterview").is_some());
+        let checker = EnglishChecker::new();
+        assert!(EnglishChecker::check("preinterview", checker).is_some());
     }
 
     #[test]
