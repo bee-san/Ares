@@ -6,5 +6,6 @@
 //! you will also need to make it a public module in this file.
 
 pub mod base64_decoder;
+pub mod hash_decoder;
 pub mod interface;
 pub mod reverse_decoder;
