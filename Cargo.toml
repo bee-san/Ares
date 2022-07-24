@@ -36,4 +36,6 @@ strip = "symbols"
 [[bench]]
 name = "benchmark_crackers"
 harness = false
+
+[lib]
 bench = false
