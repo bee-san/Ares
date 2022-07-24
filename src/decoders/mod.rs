@@ -8,3 +8,4 @@
 pub mod base64_decoder;
 pub mod interface;
 pub mod reverse_decoder;
+pub mod hash_decoder;
