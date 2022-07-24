@@ -10,14 +10,14 @@ use lemmeknow::Identify;
 /// at runtime.
 pub struct CheckerType {
     /// The name of the checker
-    pub name: String,
+    pub name: &'static str,
     /// The description of the checker
     /// you can take the first line from Wikipedia
     /// Sometimes our checkers do not exist on Wikipedia so we write our own.
-    pub description: String,
+    pub description: &'static str,
     /// The link to the checker's website
     /// Wikipedia link, articles, github etc
-    pub link: String,
+    pub link: &'static str,
     /// The tags of the checker
     pub tags: Vec<&'static str>,
     /// The expected runtime of the checker
@@ -33,7 +33,7 @@ pub struct CheckerType {
 /// Which checks the given text to see if its plaintext
 /// and returns CheckResult, which is our results object.
 pub trait Check {
-    fn check(&self, text: &str) -> CheckResult;
+    fn check(&self, text: &'static str, checker: CheckerType) -> CheckResult;
 }
 
 /// The default checker is used to check if the text is plaintext
@@ -41,9 +41,9 @@ pub trait Check {
 impl Default for CheckerType{
     fn default() -> CheckerType {
         CheckerType {
-            name: String::new(),
-            description: String::new(),
-            link: String::new(),
+            name: "Template checker",
+            description: "This is a default template checker. If you're seeing this, it's an error. Please contact us on Discord http://discord.skerritt.blog",
+            link: "http://discord.skerritt.blog",
             tags: vec![],
             expected_runtime: 0.0,
             popularity: 0.0,

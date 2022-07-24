@@ -3,45 +3,48 @@ use crate::checkers::checker_result::CheckResult;
 use crate::storage;
 use log::{debug, info, trace};
 
-use crate::checkers::checker_type::CheckerType;
+use crate::checkers::checker_type::{CheckerType, Check};
 
 pub struct EnglishChecker {
-    pub checker_type: CheckerType,
+    english_checker: CheckerType,
 }
 
 impl EnglishChecker {
-    pub fn new() -> EnglishChecker {
-        EnglishChecker {
-            name: "English Checker",
-            description: "This checker checks if the text is english looping over a dictionary",
-            link: "https://en.wikipedia.org/wiki/English_language",
-            tags: vec!["english", "dictionary"],
-            /// Expected runtime is higher as this is a O(n) checker
-            expected_runtime: 0.3,
-            /// Popularity is max because English is the most popular
-            /// Plaintext language in the world.
-            popularity: 1.0,
-            ..Default::default()
+    pub fn new() -> Self {
+        Self {
+            english_checker: CheckerType {
+                name: "English Checker",
+                description: "This checker checks if the text is english looping over a dictionary",
+                link: "https://en.wikipedia.org/wiki/English_language",
+                tags: vec!["english", "dictionary"],
+                /// Expected runtime is higher as this is a O(n) checker
+                expected_runtime: 0.01,
+                /// Popularity is max because English is the most popular
+                /// Plaintext language in the world.
+                popularity: 1.0,
+                ..Default::default()
+            }
         }
     }
 }
 
-// given an input, check every item in the array and return true if any of them match
-pub fn check_english(input: &str) -> Option<CheckResult> {
-    if let Some(result) = storage::DICTIONARIES
+/// given an input, check every item in the array and return true if any of them match
+impl Check for EnglishChecker {
+    fn check(&self, input: &'static str, checker: CheckerType) -> CheckResult {
+        let mut plaintext_found = false;
+        if let Some(result) = storage::DICTIONARIES
         .iter()
         .find(|(_, words)| words.contains(input))
-    {
-        // result.0 is filename
-        return Some(CheckResult {
-            is_identified: true,
+        {
+            plaintext_found = true;
+        }
+
+        CheckResult{
+            is_identified: plaintext_found,
             text: input,
-            checker: "Dictionary",
-            description: result.0.to_string(),
-            link: "https://en.wikipedia.org/wiki/List_of_English_words",
-        });
+            checker,
+        }
     }
-    None
 }
 
 #[cfg(test)]
