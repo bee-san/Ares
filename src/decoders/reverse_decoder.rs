@@ -8,34 +8,26 @@ use super::interface::Decoder;
 
 use log::trace;
 
-/// .decoder is never used, so Rust considers this dead code
-/// Really it's just a co-reference to the Decoder in `interface.rs`
-#[allow(dead_code)]
-pub struct ReverseDecoder {
-    decoder: Decoder,
-}
+pub struct ReverseDecoder;
 
-impl ReverseDecoder {
-    pub fn new() -> Self {
-        Self {
-            decoder: Decoder {
-                name: "Reverse",
-                description: "Reverses a string. stac -> cats",
-                link: "http://string-functions.com/reverse.aspx",
-                tags: vec!["reverse", "decoder"],
-                expected_runtime: 0.01,
-                expected_success: 1.0,
-                failure_runtime: 0.01,
-                normalised_entropy: vec![1.0, 10.0],
-                // I have never seen a reversed string in a CTF
-                // or otherwise
-                popularity: 0.2,
-            },
+impl Crack for Decoder<ReverseDecoder> {
+    fn new() -> Decoder<ReverseDecoder> {
+        Decoder {
+            name: "Reverse",
+            description: "Reverses a string. stac -> cats",
+            link: "http://string-functions.com/reverse.aspx",
+            tags: vec!["reverse", "decoder"],
+            expected_runtime: 0.01,
+            expected_success: 1.0,
+            failure_runtime: 0.01,
+            normalised_entropy: vec![1.0, 10.0],
+            // I have never seen a reversed string in a CTF
+            // or otherwise
+            popularity: 0.2,
+            phantom: std::marker::PhantomData,
         }
     }
-}
 
-impl Crack for ReverseDecoder {
     /// This function does the actual decoding
     /// It returns an Option<string> if it was successful
     /// Else the Option returns nothing and the error is logged in Trace
@@ -55,14 +47,14 @@ mod tests {
 
     #[test]
     fn returns_success() {
-        let reverse_decoder = ReverseDecoder::new();
+        let reverse_decoder = Decoder::<ReverseDecoder>::new();
         let result = reverse_decoder.crack("stac").unwrap();
         assert_eq!(result, "cats");
     }
 
     #[test]
     fn returns_nothing() {
-        let reverse_decoder = ReverseDecoder::new();
+        let reverse_decoder = Decoder::<ReverseDecoder>::new();
         let result = reverse_decoder.crack("");
         assert!(result.is_none());
     }
