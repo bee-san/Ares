@@ -5,8 +5,6 @@ use std::collections::HashMap;
 use super::interface::Crack;
 use super::interface::Decoder;
 
-
-
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -59,18 +57,23 @@ fn decode_hash_no_error_handling(text: &str) -> Option<String> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Data {
-        // status_code: u16,
+        #[allow(unused)]
+        status_code: u16,
         body: std::collections::HashMap<String, Body>,
     }
 
     #[derive(Deserialize)]
     #[serde(rename_all = "PascalCase")]
+    #[allow(unused)]
     struct Body {
         #[serde(rename = "Type")]
-        // type_: String,
+        #[allow(unused)]
+        r#type: String,
         plaintext: String,
-        // hash: String,
-        // verified: bool,
+        #[allow(unused)]
+        hash: String,
+        #[allow(unused)]
+        verified: bool,
     }
 
     let mut data = HashMap::new();
