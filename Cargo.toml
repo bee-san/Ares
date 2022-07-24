@@ -10,6 +10,7 @@ license = "MIT"
 [lib]
 name = "ares"
 path = "src/lib.rs"
+bench = false
 
 [[bin]]
 name = "ares"
@@ -36,6 +37,3 @@ strip = "symbols"
 [[bench]]
 name = "benchmark_crackers"
 harness = false
-
-[lib]
-bench = false
