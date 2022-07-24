@@ -85,7 +85,7 @@ fn decode_hash_no_error_handling(text: &str) -> Option<String> {
 
     println!("{resp:?}");
 
-    return match resp.status() {
+    match resp.status() {
         reqwest::StatusCode::OK => {
             let mut hash_out: Data = resp.json().ok()?;
 
