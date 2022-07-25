@@ -1,76 +1,90 @@
 // import storage
 use crate::checkers::checker_result::CheckResult;
 use crate::storage;
-use log::{debug, info, trace};
+use lemmeknow::Identify;
+// use log::{debug, info, trace}; unused imports
 
-use crate::checkers::checker_type::{CheckerType, Check};
+use crate::checkers::checker_type::{Check, Checker};
 
-pub struct EnglishChecker {
-    english_checker: CheckerType,
-}
-
-impl EnglishChecker {
-    pub fn new() -> Self {
-        Self {
-            english_checker: CheckerType {
-                name: "English Checker",
-                description: "This checker checks if the text is english looping over a dictionary",
-                link: "https://en.wikipedia.org/wiki/English_language",
-                tags: vec!["english", "dictionary"],
-                /// Expected runtime is higher as this is a O(n) checker
-                expected_runtime: 0.01,
-                /// Popularity is max because English is the most popular
-                /// Plaintext language in the world.
-                popularity: 1.0,
-                ..Default::default()
-            }
-        }
-    }
-}
+pub struct EnglishChecker;
 
 /// given an input, check every item in the array and return true if any of them match
-impl Check for EnglishChecker {
-    fn check(input: &'static str, checker: CheckerType) -> CheckResult {
+impl Check for Checker<EnglishChecker> {
+    fn new() -> Self {
+        Checker {
+            // TODO: Update fields with proper values
+            name: "English Checker",
+            description: "Checks for english words",
+            link: "https://en.wikipedia.org/wiki/List_of_English_words",
+            tags: vec!["english"],
+            expected_runtime: 0.0,
+            popularity: 0.7,
+            lemmeknow_config: Identify::default(),
+            _phatom: std::marker::PhantomData,
+        }
+    }
+
+    fn check(&self, input: &str) -> CheckResult {
         let mut plaintext_found = false;
+        let mut filename = "";
         if let Some(result) = storage::DICTIONARIES
-        .iter()
-        .find(|(_, words)| words.contains(input))
+            .iter()
+            .find(|(_, words)| words.contains(input))
         {
             plaintext_found = true;
+            filename = result.0;
         }
 
-        CheckResult{
+        // for (filename, words) in DICTIONARIES.iter() {
+        //     if words.contains(input) {
+
+        //     }
+        // }
+
+        CheckResult {
             is_identified: plaintext_found,
-            text: input,
-            checker,
+            text: input.to_string(),
+            checker_name: self.name,
+            checker_description: self.description,
+            description: filename.to_string(),
+            link: self.link,
         }
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use crate::checkers::{english::EnglishChecker, checker_type::Check};
+    use crate::checkers::{
+        checker_type::{Check, Checker},
+        english::EnglishChecker,
+    };
 
     #[test]
     fn test_check_basic() {
-        let checker = EnglishChecker::new();
-        assert!(EnglishChecker::check("preinterview", checker).is_some());
+        let checker = Checker::<EnglishChecker>::new();
+        assert!(checker.check("preinterview").is_identified);
     }
 
     #[test]
     fn test_check_basic2() {
-        assert!(check_english("and").is_some());
+        let checker = Checker::<EnglishChecker>::new();
+        assert!(checker.check("and").is_identified);
     }
 
     #[test]
     fn test_check_multiple_words() {
-        assert!(check_english("and woody").is_none());
+        let checker = Checker::<EnglishChecker>::new();
+        assert_eq!(checker.check("and woody").is_identified, false);
     }
 
     #[test]
     fn test_check_non_dictionary_word() {
-        assert!(
-            check_english("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBabyShark").is_none()
+        let checker = Checker::<EnglishChecker>::new();
+        assert_eq!(
+            checker
+                .check("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBabyShark")
+                .is_identified,
+            false
         );
     }
 }

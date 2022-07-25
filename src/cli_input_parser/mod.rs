@@ -11,5 +11,5 @@ and so on.
 use crate::api_library_input_struct::LibraryInput;
 
 fn main() {
-    let options: LibraryInput = Default::default();
+    let options = LibraryInput::default();
 }

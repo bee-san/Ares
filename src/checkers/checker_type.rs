@@ -1,14 +1,12 @@
 /// Checker_type is a type used to define checkers
 /// This means that we can standardise the way we check for plaintext
-
-use crate::checkers::checker_result::CheckResult; 
-use lemmeknow::Identify; 
-
+use crate::checkers::checker_result::CheckResult;
+use lemmeknow::Identify;
 
 /// Every checker is of type CheckerType
 /// This will let us pick & choose which checkers to use
 /// at runtime.
-pub struct CheckerType {
+pub struct Checker<Type> {
     /// The name of the checker
     pub name: &'static str,
     /// The description of the checker
@@ -27,27 +25,13 @@ pub struct CheckerType {
     pub popularity: f32,
     /// lemmeknow config object
     pub lemmeknow_config: Identify,
+    pub _phatom: std::marker::PhantomData<Type>,
 }
 
 /// Every checker must implement this trait
 /// Which checks the given text to see if its plaintext
 /// and returns CheckResult, which is our results object.
 pub trait Check {
-    fn check(text: &'static str, checker: CheckerType) -> CheckResult;
-}
-
-/// The default checker is used to check if the text is plaintext
-/// Based on what the Ares team has found to be the best checker.
-impl Default for CheckerType{
-    fn default() -> CheckerType {
-        CheckerType {
-            name: "Template checker",
-            description: "This is a default template checker. If you're seeing this, it's an error. Please contact us on Discord http://discord.skerritt.blog",
-            link: "http://discord.skerritt.blog",
-            tags: vec![],
-            expected_runtime: 0.0,
-            popularity: 0.0,
-            lemmeknow_config: Identify::default(),
-        }
-    }
+    fn new() -> Self;
+    fn check(&self, text: &str) -> CheckResult;
 }

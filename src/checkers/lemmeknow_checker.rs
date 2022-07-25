@@ -1,12 +1,7 @@
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::{Data, Identify};
 
-
-#[derive(Default)]
-struct SomeOptions {
-    foo: i32,
-    bar: f32,
-}
+use super::checker_type::{Check, Checker};
 
 const IDENTIFIER: Identify = Identify {
     min_rarity: None,
@@ -17,25 +12,42 @@ const IDENTIFIER: Identify = Identify {
     boundaryless: false,
 };
 
-fn main() {
-    let options: SomeOptions = Default::default();
-}
+pub struct LemmeKnow;
 
-pub fn check_lemmeknow(input: &str) -> Option<CheckResult> {
-    // Uses lemmeknow to check if any regexes match
-    let lemmeknow_result = IDENTIFIER.identify(input);
-    if !lemmeknow_result.is_empty() {
-        let return_object = CheckResult {
-            is_identified: true,
-            text: input,
-            checker: "LemmeKnow",
-            // Returns a vector of matches
-            description: format_data_result(&lemmeknow_result[0].data),
+impl Check for Checker<LemmeKnow> {
+    fn new() -> Self {
+        Checker {
+            // TODO: Update fields with proper values
+            name: "Lemmeknow Checker",
+            description: "Checks for mathces in lemmeknow",
             link: "https://swanandx.github.io/lemmeknow-frontend/",
-        };
-        return Some(return_object);
+            tags: vec!["lemmeknow", "regex"],
+            expected_runtime: 0.0,
+            popularity: 0.5,
+            lemmeknow_config: Identify::default(),
+            _phatom: std::marker::PhantomData,
+        }
     }
-    None
+
+    fn check(&self, text: &str) -> CheckResult {
+        let lemmeknow_result = IDENTIFIER.identify(text);
+        let mut is_identified = false;
+        let mut description = "".to_string();
+        if !lemmeknow_result.is_empty() {
+            is_identified = true;
+            description = format_data_result(&lemmeknow_result[0].data)
+        }
+
+        CheckResult {
+            is_identified,
+            text: text.to_owned(),
+            checker_name: self.name,
+            checker_description: self.description,
+            // Returns a vector of matches
+            description,
+            link: "https://swanandx.github.io/lemmeknow-frontend/",
+        }
+    }
 }
 
 fn format_data_result(input: &Data) -> String {

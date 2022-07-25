@@ -1,11 +1,10 @@
 /// import general checker
-use crate::checkers::checker_type::CheckerType;
-use lemmeknow::Identify; 
-
+use crate::checkers::{checker_type::Checker, default_checker::DefaultChecker};
+use lemmeknow::Identify;
 
 /// Library input is the default API input
 /// The CLI turns its arguments into a LibraryInput struct
-pub struct LibraryInput {
+pub struct LibraryInput<Type> {
     /// The input to be decoded.
     /// Given to us by the user.
     encoded_text: String,
@@ -13,12 +12,12 @@ pub struct LibraryInput {
     /// How much we print in logs.
     verbose: i32,
     /// The checker to use
-    checker: CheckerType,
+    checker: Checker<Type>,
     /// The lemmeknow config to use
     lemmeknow_config: Identify,
 }
 
-const lemme_know_default_config: Identify = Identify {
+const LEMMEKNOW_DEFAULT_CONFIG: Identify = Identify {
     min_rarity: None,
     max_rarity: None,
     tags: vec![],
@@ -27,13 +26,13 @@ const lemme_know_default_config: Identify = Identify {
     boundaryless: false,
 };
 
-impl Default for LibraryInput {
-    fn default() -> LibraryInput {
+impl Default for LibraryInput<DefaultChecker> {
+    fn default() -> Self {
         LibraryInput {
             encoded_text: String::new(),
-            checker: CheckerType::default(),
+            checker: Checker::default(),
             verbose: 0,
-            lemmeknow_config: lemme_know_default_config,
+            lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG,
         }
     }
 }
