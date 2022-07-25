@@ -1,4 +1,4 @@
-on: [pull_request, push, pull_request_target]
+on: [pull_request, pull_request_target]
 name: benchmark pull requests
 jobs:
   runBenchmark:
@@ -6,6 +6,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: boa-dev/criterion-compare-action@v3.0.0
         with:
           # Optional. Features activated in the benchmark
