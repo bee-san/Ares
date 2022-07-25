@@ -6,7 +6,6 @@ use super::interface::Crack;
 use super::interface::Decoder;
 
 use serde::Deserialize;
-use serde::Serialize;
 
 pub struct HashDecoder;
 
@@ -46,34 +45,21 @@ fn decode_hash_no_error_handling(text: &str) -> Option<String> {
     // Runs the code to decode hash
     // Doesn't perform error handling
 
-    #[derive(Serialize)]
-    #[serde(rename_all = "PascalCase")]
-    struct PostRequest<'a> {
-        hash: &'a str,
-    }
-
-    // .json(&PostRequest{ hash: text })
-
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Data {
-        #[allow(unused)]
-        status_code: u16,
+        // status_code: u16,
         body: std::collections::HashMap<String, Body>,
     }
 
     #[derive(Deserialize)]
     #[serde(rename_all = "PascalCase")]
-    #[allow(unused)]
     struct Body {
-        #[serde(rename = "Type")]
-        #[allow(unused)]
-        r#type: String,
+        // #[serde(rename = "Type")]
+        // r#type: String,
         plaintext: String,
-        #[allow(unused)]
-        hash: String,
-        #[allow(unused)]
-        verified: bool,
+        // hash: String,
+        // verified: bool,
     }
 
     let mut data = HashMap::new();
