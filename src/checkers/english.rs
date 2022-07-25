@@ -32,14 +32,8 @@ impl Check for Checker<EnglishChecker> {
             .find(|(_, words)| words.contains(input))
         {
             plaintext_found = true;
-            filename = result.0;
+            filename = result.0; // result.0 is the filename
         }
-
-        // for (filename, words) in DICTIONARIES.iter() {
-        //     if words.contains(input) {
-
-        //     }
-        // }
 
         CheckResult {
             is_identified: plaintext_found,
