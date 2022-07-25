@@ -14,6 +14,6 @@ jobs:
           # Optional. Features activated in the benchmark
           features: "rayon"
           # Needed. The name of the branch to compare with. This default uses the branch which is being pulled against
-          branchName: main
+          branchName: ${{ github.base_ref }}
           # Optional. Default is `${{ github.token }}`.
           token: ${{ secrets.GITHUB_TOKEN }}
