@@ -1,7 +1,6 @@
 use log::trace;
 use std::collections::HashSet;
 
-
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
 pub fn bfs(input: &str) -> Option<String> {
