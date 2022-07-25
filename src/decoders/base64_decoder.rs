@@ -65,7 +65,7 @@ impl Crack for Decoder<Base64Decoder> {
     }
 }
 
-// helper function
+/// helper function
 fn decode_base64_no_error_handling(text: &str) -> Option<String> {
     // Runs the code to decode base64
     // Doesn't perform error handling, call from_base64

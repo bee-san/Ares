@@ -9,12 +9,23 @@
     clippy::missing_panics_doc
 )]
 
+/// The main crate for the Ares project.
+/// This provides the library API interface for Ares.
 mod api_library_input_struct;
-mod checkers;
+/// Checkers is a module that contains the functions that check if the input is plaintext
+pub mod checkers;
+/// CLI Input Parser parses the input from the CLI and returns a struct.
 mod cli_input_parser;
+/// Decoders are the functions that actually perform the decodings.
 pub mod decoders;
+/// The filtration system builds what decoders to use at runtime
+/// By default it will use them all.
 mod filtration_system;
+/// The searcher is the thing which searches for the plaintext
+/// It is the core of the program.
 mod searchers;
+/// The storage module contains all the dictionaries and provides
+/// storage of data to our decoderrs and checkers.
 mod storage;
 
 /// The main function to call which performs the cracking.
