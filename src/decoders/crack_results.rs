@@ -3,7 +3,7 @@
 
 /// Every cracker returns this object which
 /// Either indicates success or failure among other things.
-struct CrackObject {
+struct CrackResult {
     /// If our checkers return success, we change this bool to True
     success: bool,
     /// Encrypted text is the text _before_ we decrypt it.
@@ -20,10 +20,10 @@ struct CrackObject {
     link: &'static str,
 }
 
-impl CrackObject {
-    /// This function returns a new CrackObject
+impl CrackResult {
+    /// This function returns a new CrackResult
     fn new() {
-        CrackObject {
+        CrackResult {
             success: false,
             encrypted_text: "",
             unencrypted_text: "",
