@@ -12,13 +12,13 @@ pub struct EnglishChecker;
 impl Check for Checker<EnglishChecker> {
     fn new() -> Self {
         Checker {
-            // TODO: Update fields with proper values
             name: "English Checker",
             description: "Checks for english words",
             link: "https://en.wikipedia.org/wiki/List_of_English_words",
             tags: vec!["english"],
-            expected_runtime: 0.0,
-            popularity: 0.7,
+            expected_runtime: 0.1,
+            /// English is the most popular language
+            popularity: 1.0,
             lemmeknow_config: Identify::default(),
             _phatom: std::marker::PhantomData,
         }

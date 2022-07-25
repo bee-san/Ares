@@ -18,12 +18,12 @@ impl Check for Checker<LemmeKnow> {
     fn new() -> Self {
         Checker {
             // TODO: Update fields with proper values
-            name: "Lemmeknow Checker",
-            description: "Checks for mathces in lemmeknow",
+            name: "LemmeKnow Checker",
+            description: "Uses LemmeKnow to check for regex matches",
             link: "https://swanandx.github.io/lemmeknow-frontend/",
             tags: vec!["lemmeknow", "regex"],
-            expected_runtime: 0.0,
-            popularity: 0.5,
+            expected_runtime: 0.01,
+            popularity: 1.0,
             lemmeknow_config: Identify::default(),
             _phatom: std::marker::PhantomData,
         }
