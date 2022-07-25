@@ -1,4 +1,13 @@
 //! Ares is an automatic decoding and cracking tool.
+//! https://github.com/bee-san/ares
+
+// Warns in case we forget to include documentation
+#![warn(
+    missing_docs,
+    clippy::missing_docs_in_private_items,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc
+)]
 
 mod api_library_input_struct;
 mod checkers;
