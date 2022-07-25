@@ -6,12 +6,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: boa-dev/criterion-compare-action@v3.0.0
+      - uses: boa-dev/criterion-compare-action@v3.2.2
         with:
           # Needed. The name of the branch to compare with. This default uses the branch which is being pulled against
           branchName: ${{ github.base_ref }}
-          # Optional. Default is `${{ github.token }}`.
-          token: ${{ secrets.GITHUB_TOKEN }}
