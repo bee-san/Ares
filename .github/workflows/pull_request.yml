@@ -5,14 +5,12 @@ jobs:
     name: run benchmark
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - uses: boa-dev/criterion-compare-action@v3.0.0
         with:
-          # Optional. Features activated in the benchmark
-          features: "rayon"
           # Needed. The name of the branch to compare with. This default uses the branch which is being pulled against
           branchName: ${{ github.base_ref }}
           # Optional. Default is `${{ github.token }}`.
