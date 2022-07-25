@@ -10,10 +10,12 @@ license = "MIT"
 [lib]
 name = "ares"
 path = "src/lib.rs"
+bench = false
 
 [[bin]]
 name = "ares"
 path = "src/main.rs"
+bench = false
 
 [dependencies]
 clap = {version = "3.0.0-beta.2", features = ["derive"]}
@@ -27,7 +29,14 @@ include_dir = "0.7.2"
 once_cell = "1.13.0"
 text_io = "0.1.10"
 
+[dev-dependencies]
+criterion = "0.3.6"
+
 [profile.release]
 lto = "fat"
 panic = "abort"
 strip = "symbols"
+
+[[bench]]
+name = "benchmark_crackers"
+harness = false
