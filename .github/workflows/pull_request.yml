@@ -1,4 +1,4 @@
-on: [pull_request, push]
+on: [pull_request, push, pull_request_target]
 name: benchmark pull requests
 jobs:
   runBenchmark:
@@ -11,6 +11,6 @@ jobs:
           # Optional. Features activated in the benchmark
           features: "rayon"
           # Needed. The name of the branch to compare with. This default uses the branch which is being pulled against
-          branchName: ${{ github.base_ref }}
+          branchName: main
           # Optional. Default is `${{ github.token }}`.
           token: ${{ secrets.GITHUB_TOKEN }}
