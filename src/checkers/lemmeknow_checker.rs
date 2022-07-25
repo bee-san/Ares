@@ -45,7 +45,7 @@ impl Check for Checker<LemmeKnow> {
             checker_description: self.description,
             // Returns a vector of matches
             description,
-            link: "https://swanandx.github.io/lemmeknow-frontend/",
+            link: self.link,
         }
     }
 }
