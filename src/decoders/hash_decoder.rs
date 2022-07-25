@@ -16,11 +16,11 @@ impl Crack for Decoder<HashDecoder> {
             description: "A cryptographic hash function is a hash function which takes an input (or 'message') and returns a fixed-size string of bytes. The string is called the 'hash value', 'message digest', 'digital fingerprint', 'digest' or 'checksum'.",
             link: "https://en.wikipedia.org/wiki/Hash_function",
             tags: vec!["hash", "decoder"],
-            expected_runtime: 1.0,
-            expected_success: 1.0,
-            failure_runtime: 1.0,
+            expected_runtime: 0.8,
+            expected_success: 0.8,
+            failure_runtime: 0.8,
             normalised_entropy: vec![1.0, 10.0],
-            popularity: 1.0,
+            popularity: 0.4,
             phantom: std::marker::PhantomData,
         }
     }
@@ -48,18 +48,13 @@ fn decode_hash_no_error_handling(text: &str) -> Option<String> {
     #[derive(Deserialize)]
     #[serde(rename_all = "camelCase")]
     struct Data {
-        // status_code: u16,
         body: std::collections::HashMap<String, Body>,
     }
 
     #[derive(Deserialize)]
     #[serde(rename_all = "PascalCase")]
     struct Body {
-        // #[serde(rename = "Type")]
-        // r#type: String,
         plaintext: String,
-        // hash: String,
-        // verified: bool,
     }
 
     let mut data = HashMap::new();
