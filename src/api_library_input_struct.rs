@@ -1,5 +1,8 @@
 /// import general checker
-use crate::checkers::{checker_type::{Checker, Check}, default_checker::DefaultChecker};
+use crate::checkers::{
+    checker_type::{Check, Checker},
+    default_checker::DefaultChecker,
+};
 use lemmeknow::Identify;
 
 /// Library input is the default API input

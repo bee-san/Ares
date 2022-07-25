@@ -1,6 +1,9 @@
 use lemmeknow::Identify;
 
-use super::{checker_type::{Checker, Check}, checker_result::CheckResult};
+use super::{
+    checker_result::CheckResult,
+    checker_type::{Check, Checker},
+};
 
 /// The default checker is used to check if the text is plaintext
 /// Based on what the Ares team has found to be the best checker.
@@ -29,7 +32,9 @@ impl Check for Checker<DefaultChecker> {
 #[cfg(test)]
 mod tests {
     use crate::checkers::{
-        checker_type::{Checker, Check}, default_checker::DefaultChecker, checker_result::CheckResult,
+        checker_result::CheckResult,
+        checker_type::{Check, Checker},
+        default_checker::DefaultChecker,
     };
 
     #[test]
