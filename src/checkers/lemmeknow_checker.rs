@@ -3,6 +3,7 @@ use lemmeknow::{Data, Identify};
 
 use super::checker_type::{Check, Checker};
 
+/// The Lemmeknow checker configuration struct
 const IDENTIFIER: Identify = Identify {
     min_rarity: None,
     max_rarity: None,
@@ -12,6 +13,8 @@ const IDENTIFIER: Identify = Identify {
     boundaryless: false,
 };
 
+/// The LemmeKnow Checker checks if the text matches a known Regex pattern.
+/// This is the struct for it.
 pub struct LemmeKnow;
 
 impl Check for Checker<LemmeKnow> {
@@ -50,6 +53,8 @@ impl Check for Checker<LemmeKnow> {
     }
 }
 
+/// Formats the data result to a string
+/// This is used to display the result in the UI
 fn format_data_result(input: &Data) -> String {
     /*
     Input contains these:

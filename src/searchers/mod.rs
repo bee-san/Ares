@@ -5,6 +5,8 @@
 
 use crate::checkers;
 use crate::filtration_system::filter_and_get_decoders;
+/// This module provides access to the breadth first search
+/// which searches for the plaintext.
 mod bfs;
 
 /*pub struct Tree <'a> {
@@ -28,15 +30,15 @@ pub fn search_for_plaintext(input: &str) -> Option<String> {
     bfs::bfs(input)
 }
 
-// Performs the decodings by getting all of the decoders
-// and calling `.run` which in turn loops through them and calls
-// `.crack()`.
+/// Performs the decodings by getting all of the decoders
+/// and calling `.run` which in turn loops through them and calls
+/// `.crack()`.
 fn perform_decoding(text: &str) -> Vec<Option<String>> {
     let decoders = filter_and_get_decoders();
     decoders.run(text)
 }
 
-// https://github.com/bee-san/Ares/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
+/// https://github.com/bee-san/Ares/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
 fn exit_condition(input: &str) -> bool {
     // use mod.rs from checkers module
     // call check(input)

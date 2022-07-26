@@ -20,6 +20,7 @@ pub struct LibraryInput<Type> {
     pub lemmeknow_config: Identify,
 }
 
+/// Creates a default lemmeknow config
 const LEMMEKNOW_DEFAULT_CONFIG: Identify = Identify {
     min_rarity: None,
     max_rarity: None,
