@@ -26,7 +26,10 @@ pub struct Checker<Type> {
     /// lemmeknow config object
     pub lemmeknow_config: Identify,
     /// https://doc.rust-lang.org/std/marker/struct.PhantomData.html
-    /// Let's us save code lines when we don't need to use a type parameter
+    /// Let's us save memory by telling the compiler that our type
+    /// acts like a type <T> even though it doesn't.
+    /// Stops the compiler complaining, else we'd need to implement
+    /// some magic to make it work.
     pub _phatom: std::marker::PhantomData<Type>,
 }
 
