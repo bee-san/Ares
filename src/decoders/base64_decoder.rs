@@ -1,5 +1,7 @@
+use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
 
+use super::crack_results::CrackResult;
 ///! Decode a base64 string
 ///! Performs error handling and returns a string
 ///! Call base64_decoder.crack to use. It returns option<String> and check with
@@ -43,13 +45,14 @@ impl Crack for Decoder<Base64Decoder> {
     /// This function does the actual decoding
     /// It returns an Option<string> if it was successful
     /// Else the Option returns nothing and the error is logged in Trace
-    fn crack(&self, text: &str) -> Option<String> {
+    fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying Base64 with text {:?}", text);
         let decoded_text = decode_base64_no_error_handling(text);
+        let mut results = CrackResult::new(self, text.to_string());
 
         if decoded_text.is_none() {
             debug!("Failed to decode base64 because Base64Decoder::decode_base64_no_error_handling returned None");
-            return None;
+            return results;
         }
 
         let decoded_text = decoded_text.unwrap();
@@ -58,10 +61,15 @@ impl Crack for Decoder<Base64Decoder> {
                 "Failed to decode base64 because check_string_success returned false on string {}",
                 decoded_text
             );
-            return None;
+            return results;
         }
 
-        Some(decoded_text)
+        let checker_result = checker.check(&decoded_text);
+        results.unencrypted_text = Some(decoded_text);
+
+        results.update_checker(&checker_result);
+
+        results
     }
 }
 
@@ -82,6 +90,7 @@ mod tests {
     #[test]
     fn successful_decoding() {
         let base64_decoder = Decoder::<Base64Decoder>::new();
+        
         let result = base64_decoder.crack("aGVsbG8gd29ybGQ=").unwrap();
         assert_eq!(result, "hello world");
     }

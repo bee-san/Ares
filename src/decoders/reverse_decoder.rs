@@ -1,3 +1,6 @@
+use crate::checkers::CheckerTypes;
+
+use super::crack_results::CrackResult;
 ///! Reverses the input string
 ///! Performs error handling and returns a string
 ///! Call reverse_decoder.crack to use. It returns option<String> and check with
@@ -31,12 +34,18 @@ impl Crack for Decoder<ReverseDecoder> {
     /// This function does the actual decoding
     /// It returns an Option<string> if it was successful
     /// Else the Option returns nothing and the error is logged in Trace
-    fn crack(&self, text: &str) -> Option<String> {
+    fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Running reverse string");
+        let mut result = CrackResult::new(self, text.to_string());
         if text.is_empty() {
-            return None;
+            return result;
         }
-        Some(text.chars().rev().collect())
+        let rev_str: String = text.chars().rev().collect();
+        let checker_res = checker.check(&rev_str);
+
+        result.unencrypted_text = Some(rev_str);
+        result.update_checker(&checker_res);
+        result
     }
 }
 

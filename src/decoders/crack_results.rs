@@ -1,36 +1,53 @@
+use crate::checkers::checker_result::CheckResult;
+
+use super::interface::Decoder;
+
 ///! This module contains CrackSuccess and CrackFailure
 ///
 
 /// Every cracker returns this object which
 /// Either indicates success or failure among other things.
-struct CrackResult {
+pub struct CrackResult {
     /// If our checkers return success, we change this bool to True
-    success: bool,
+    pub success: bool,
     /// Encrypted text is the text _before_ we decrypt it.
-    encrypted_text: &'static str,
+    pub encrypted_text: String,
     /// Unencrypted text is what it looks like after.
-    unencrypted_text: &'static str,
+    /// if decoder failed, this will be None
+    pub unencrypted_text: Option<String>,
     /// Deocder is the function we used to decode the text
-    decoder: &'static str,
+    pub decoder: &'static str,
+    /// Checker which identified the text
+    pub checker_name: &'static str,
+    /// Description is a short description of the checker
+    pub checker_description: &'static str,
     /// Key is optional as decoders do not use keys.
-    key: Option<&'static str>,
+    pub key: Option<&'static str>,
     /// Description is a short description of the decoder
-    description: &'static str,
+    pub description: &'static str,
     /// Link is a link to more info about the decoder
-    link: &'static str,
+    pub link: &'static str,
 }
 
 impl CrackResult {
     /// This function returns a new CrackResult
-    fn new() {
+    pub fn new<T>(decoder_used: &Decoder<T>, text: String) -> Self {
         CrackResult {
             success: false,
-            encrypted_text: "",
-            unencrypted_text: "",
-            decoder: "",
+            encrypted_text: text,
+            unencrypted_text: None,
+            decoder: decoder_used.name,
+            checker_name: "",
+            checker_description: "",
             key: None,
-            description: "",
-            link: "",
+            description: decoder_used.description,
+            link: decoder_used.link,
         }
+    }
+
+    pub fn update_checker(&mut self, checker_result: &CheckResult) {
+        self.checker_name = checker_result.checker_name;
+        self.checker_description = checker_result.checker_description;
+        self.success = checker_result.is_identified;
     }
 }

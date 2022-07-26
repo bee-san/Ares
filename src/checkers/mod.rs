@@ -1,36 +1,51 @@
 use self::{
+    athena::Athena,
+    checker_result::CheckResult,
     checker_type::{Check, Checker},
     english::EnglishChecker,
     lemmeknow_checker::LemmeKnow,
 };
 
-mod checker_result;
+pub mod athena;
+pub mod checker_result;
 pub mod checker_type;
 pub mod default_checker;
-mod english;
+pub mod english;
 pub mod human_checker;
-mod lemmeknow_checker;
+pub mod lemmeknow_checker;
 
-trait GeneralChecker {
-    fn check(&self, input: &str) -> bool;
+pub enum CheckerTypes {
+    CheckLemmeKnow(Checker<LemmeKnow>),
+    CheckEnglish(Checker<EnglishChecker>),
+    CheckAthena(Checker<Athena>),
 }
 
-pub fn check(input: &str) -> bool {
-    // Uses lemmeknow to check if any regexes match
-    // import and call lemmeknow.rs
-
-    let lemmeknow_result = Checker::<LemmeKnow>::new().check(input);
-    if lemmeknow_result.is_identified {
-        return human_checker::human_checker(&lemmeknow_result);
+impl CheckerTypes {
+    pub fn check(&self, text: &str) -> CheckResult {
+        match self {
+            CheckerTypes::CheckLemmeKnow(lemmeknow_checker) => lemmeknow_checker.check(text),
+            CheckerTypes::CheckEnglish(english_checker) => english_checker.check(text),
+            CheckerTypes::CheckAthena(athena_checker) => athena_checker.check(text),
+        }
     }
-
-    let english_result = Checker::<EnglishChecker>::new().check(input);
-    if english_result.is_identified {
-        return human_checker::human_checker(&english_result);
-    }
-
-    false
 }
+
+// pub fn check(input: &str) -> bool {
+//     // Uses lemmeknow to check if any regexes match
+//     // import and call lemmeknow.rs
+
+//     let lemmeknow_result = Checker::<LemmeKnow>::new().check(input);
+//     if lemmeknow_result.is_identified {
+//         return human_checker::human_checker(&lemmeknow_result);
+//     }
+
+//     let english_result = Checker::<EnglishChecker>::new().check(input);
+//     if english_result.is_identified {
+//         return human_checker::human_checker(&english_result);
+//     }
+
+//     false
+// }
 
 // test
 #[cfg(test)]

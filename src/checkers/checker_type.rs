@@ -32,6 +32,8 @@ pub struct Checker<Type> {
 /// Which checks the given text to see if its plaintext
 /// and returns CheckResult, which is our results object.
 pub trait Check {
-    fn new() -> Self;
+    fn new() -> Self
+    where
+        Self: Sized;
     fn check(&self, text: &str) -> CheckResult;
 }

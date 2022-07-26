@@ -1,7 +1,9 @@
+use crate::checkers::CheckerTypes;
 ///! Proposal: https://broadleaf-angora-7db.notion.site/Filtration-System-7143b36a42f1466faea3077bfc7e859e
 ///! Given a filter object, return an array of decoders/crackers which have been filtered
 ///
 use crate::decoders::base64_decoder::Base64Decoder;
+use crate::decoders::crack_results::CrackResult;
 use crate::decoders::interface::{Crack, Decoder};
 use crate::decoders::reverse_decoder::ReverseDecoder;
 
@@ -26,11 +28,11 @@ impl Decoders {
     /// https://doc.rust-lang.org/book/ch17-02-trait-objects.html
     /// Which allows us to have multiple different structs in the same vector
     /// But each struct shares the same `.crack()` method, so it's fine.
-    pub fn run(&self, text: &str) -> Vec<Option<String>> {
+    pub fn run(&self, text: &str, checker: CheckerTypes) -> Vec<CrackResult> {
         trace!("Running .crack() on all decoders");
         self.components
             .into_par_iter()
-            .map(|i| i.crack(text))
+            .map(|i| i.crack(text, &checker))
             .collect()
     }
 }

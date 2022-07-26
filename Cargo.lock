@@ -374,8 +374,7 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 [[package]]
 name = "lemmeknow"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "01d9e8a3779c5bb53ae995ddf3a1162e6752f18bd4727176b2e4b23b6e28385b"
+source = "git+https://github.com/swanandx/lemmeknow?rev=9ca641d284b57dc1512eb3b6a99f8ee6a2ff0a6e#9ca641d284b57dc1512eb3b6a99f8ee6a2ff0a6e"
 dependencies = [
  "fancy-regex",
  "rayon",
