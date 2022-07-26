@@ -49,6 +49,12 @@ pub fn filter_and_get_decoders() -> Decoders {
 
 #[cfg(test)]
 mod tests {
+    use crate::checkers::{
+        athena::Athena,
+        checker_type::{Check, Checker},
+        CheckerTypes,
+    };
+
     // TODO: when we add a proper filtration system
     // We need to test that.
     use super::filter_and_get_decoders;
@@ -62,7 +68,9 @@ mod tests {
     #[test]
     fn decoders_can_call_dot_run() {
         let decoders = filter_and_get_decoders();
-        decoders.run("TXIgUm9ib3QgaXMgZ3JlYXQ=");
+        let athena_checker = Checker::<Athena>::new();
+        let checker = CheckerTypes::CheckAthena(athena_checker);
+        decoders.run("TXIgUm9ib3QgaXMgZ3JlYXQ=", checker);
         assert_eq!(true, true);
     }
 }

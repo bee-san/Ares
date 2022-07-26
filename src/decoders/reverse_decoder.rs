@@ -52,19 +52,37 @@ impl Crack for Decoder<ReverseDecoder> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::decoders::interface::Crack;
+    use crate::{
+        checkers::{
+            athena::Athena,
+            checker_type::{Check, Checker},
+        },
+        decoders::interface::Crack,
+    };
+
+    // helper for tests
+    fn get_athena_checker() -> CheckerTypes {
+        let athena_checker = Checker::<Athena>::new();
+        let checker = CheckerTypes::CheckAthena(athena_checker);
+        checker
+    }
 
     #[test]
     fn returns_success() {
         let reverse_decoder = Decoder::<ReverseDecoder>::new();
-        let result = reverse_decoder.crack("stac").unwrap();
+        let result = reverse_decoder
+            .crack("stac", &get_athena_checker())
+            .unencrypted_text
+            .expect("No unencrypted string for reverse decoder");
         assert_eq!(result, "cats");
     }
 
     #[test]
     fn returns_nothing() {
         let reverse_decoder = Decoder::<ReverseDecoder>::new();
-        let result = reverse_decoder.crack("");
+        let result = reverse_decoder
+            .crack("", &get_athena_checker())
+            .unencrypted_text;
         assert!(result.is_none());
     }
 }

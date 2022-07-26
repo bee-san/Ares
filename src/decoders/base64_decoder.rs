@@ -85,14 +85,31 @@ fn decode_base64_no_error_handling(text: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::Base64Decoder;
-    use crate::decoders::interface::{Crack, Decoder};
+    use crate::{
+        checkers::{
+            athena::Athena,
+            checker_type::{Check, Checker},
+            CheckerTypes,
+        },
+        decoders::interface::{Crack, Decoder},
+    };
+
+    // helper for tests
+    fn get_athena_checker() -> CheckerTypes {
+        let athena_checker = Checker::<Athena>::new();
+        let checker = CheckerTypes::CheckAthena(athena_checker);
+        checker
+    }
 
     #[test]
     fn successful_decoding() {
         let base64_decoder = Decoder::<Base64Decoder>::new();
-        
-        let result = base64_decoder.crack("aGVsbG8gd29ybGQ=").unwrap();
-        assert_eq!(result, "hello world");
+
+        let result = base64_decoder.crack("aGVsbG8gd29ybGQ=", &get_athena_checker());
+        let decoded_str = &result
+            .unencrypted_text
+            .expect("No unencrypted text for base64");
+        assert_eq!(decoded_str, "hello world");
     }
 
     #[test]
@@ -100,14 +117,21 @@ mod tests {
         // Bsae64 returns an empty string, this is a valid base64 string
         // but returns False on check_string_success
         let base64_decoder = Decoder::<Base64Decoder>::new();
-        let result = base64_decoder.crack("");
+        let result = base64_decoder
+            .crack("", &get_athena_checker())
+            .unencrypted_text;
         assert!(result.is_none());
     }
 
     #[test]
     fn base64_decode_handles_panics() {
         let base64_decoder = Decoder::<Base64Decoder>::new();
-        let result = base64_decoder.crack("hello my name is panicky mc panic face!");
+        let result = base64_decoder
+            .crack(
+                "hello my name is panicky mc panic face!",
+                &get_athena_checker(),
+            )
+            .unencrypted_text;
         if result.is_some() {
             panic!("Decode_base64 did not return an option with Some<t>.")
         } else {
@@ -121,7 +145,9 @@ mod tests {
     #[test]
     fn base64_handle_panic_if_empty_string() {
         let base64_decoder = Decoder::<Base64Decoder>::new();
-        let result = base64_decoder.crack("");
+        let result = base64_decoder
+            .crack("", &get_athena_checker())
+            .unencrypted_text;
         if result.is_some() {
             assert_eq!(true, true);
         }
@@ -135,7 +161,9 @@ mod tests {
         // (uÖ²```
         // https://gchq.github.io/CyberChef/#recipe=From_Base64('A-Za-z0-9%2B/%3D',true)&input=aGVsbG8gZ29vZCBkYXkh
         let base64_decoder = Decoder::<Base64Decoder>::new();
-        let result = base64_decoder.crack("hello good day!");
+        let result = base64_decoder
+            .crack("hello good day!", &get_athena_checker())
+            .unencrypted_text;
         if result.is_some() {
             assert_eq!(true, true);
         }
@@ -144,7 +172,9 @@ mod tests {
     #[test]
     fn base64_handle_panic_if_emoji() {
         let base64_decoder = Decoder::<Base64Decoder>::new();
-        let result = base64_decoder.crack("😂");
+        let result = base64_decoder
+            .crack("😂", &get_athena_checker())
+            .unencrypted_text;
         if result.is_some() {
             assert_eq!(true, true);
         }

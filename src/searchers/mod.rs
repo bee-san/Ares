@@ -41,16 +41,19 @@ fn perform_decoding(text: &str) -> Vec<CrackResult> {
     decoders.run(text, checker)
 }
 
-// // https://github.com/bee-san/Ares/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
-// fn exit_condition(input: &str) -> bool {
-//     // use mod.rs from checkers module
-//     // call check(input)
-//     checkers::check(input)
-// }
-
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    // https://github.com/bee-san/Ares/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
+    // Only used for tests!
+    fn exit_condition(input: &str) -> bool {
+        // use Athena Checker from checkers module
+        // call check(input)
+        let athena_checker = Checker::<Athena>::new();
+        let checker = CheckerTypes::CheckAthena(athena_checker);
+        checker.check(input).is_identified
+    }
 
     #[test]
     fn exit_condition_succeeds() {
