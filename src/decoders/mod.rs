@@ -8,6 +8,9 @@
 /// The base64_decoder module decodes base64
 /// It is public as we use it in some tests.
 pub mod base64_decoder;
+/// The crack_results module defines the CrackResult
+/// Each and every decoder return same CrackResult
+pub mod crack_results;
 
 /// The interface module defines the interface for decoders
 /// Each and every decoder has the same struct & traits

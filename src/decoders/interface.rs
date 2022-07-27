@@ -1,3 +1,7 @@
+use crate::checkers::CheckerTypes;
+
+use super::crack_results::CrackResult;
+
 ///! The Interface defines what the struct for each decoder looks like
 //TODO: rename this file
 pub struct Decoder<Type> {
@@ -44,7 +48,7 @@ pub trait Crack {
     where
         Self: Sized;
     /// Crack is the function that actually does the decoding
-    fn crack(&self, text: &str) -> Option<String>;
+    fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult;
 }
 
 /// Returns a boolean of True if the string is successfully changed

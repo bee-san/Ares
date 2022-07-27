@@ -30,7 +30,7 @@ pub struct Checker<Type> {
     /// acts like a type <T> even though it doesn't.
     /// Stops the compiler complaining, else we'd need to implement
     /// some magic to make it work.
-    pub _phatom: std::marker::PhantomData<Type>,
+    pub _phantom: std::marker::PhantomData<Type>,
 }
 
 /// Every checker must implement this trait
@@ -38,7 +38,9 @@ pub struct Checker<Type> {
 /// and returns CheckResult, which is our results object.
 pub trait Check {
     /// Returns a new struct of type CheckerType
-    fn new() -> Self;
+    fn new() -> Self
+    where
+        Self: Sized;
     /// Checks the given text to see if its plaintext
     fn check(&self, text: &str) -> CheckResult;
 }
