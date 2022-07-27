@@ -42,23 +42,6 @@ impl CheckerTypes {
     }
 }
 
-// pub fn check(input: &str) -> bool {
-//     // Uses lemmeknow to check if any regexes match
-//     // import and call lemmeknow.rs
-
-//     let lemmeknow_result = Checker::<LemmeKnow>::new().check(input);
-//     if lemmeknow_result.is_identified {
-//         return human_checker::human_checker(&lemmeknow_result);
-//     }
-
-//     let english_result = Checker::<EnglishChecker>::new().check(input);
-//     if english_result.is_identified {
-//         return human_checker::human_checker(&english_result);
-//     }
-
-//     false
-// }
-
 // test
 #[cfg(test)]
 mod tests {
