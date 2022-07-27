@@ -45,7 +45,7 @@ impl Check for Checker<EnglishChecker> {
             // We should probably just use a single dictionary and assign the filenames to the values in the dictionary.
             // Like {"hello": "English.txt"} etc.
             // If we're using muiltiple dictionaries we may also have duplicated words which is inefficient.
-            if storage::DICTIONARIES.iter().find(|(_, words)| words.contains(word)).is_some() {
+            if storage::DICTIONARIES.iter().any(|(_, words)| words.contains(word)) {
                 trace!("Found word {} in English", word);
                 words_found += 1.0;
             }
