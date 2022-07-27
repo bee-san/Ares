@@ -90,8 +90,8 @@ mod tests {
     fn returns_nothing() {
         let reverse_decoder = Decoder::<ReverseDecoder>::new();
         let result = reverse_decoder
-            .crack("", &get_athena_checker())
-            .unencrypted_text;
+        .crack("", &get_athena_checker())
+        .unencrypted_text;
         assert!(result.is_none());
     }
 }
