@@ -1,3 +1,5 @@
+use std::sync::mpsc::channel;
+
 use crate::checkers::CheckerTypes;
 ///! Proposal: https://broadleaf-angora-7db.notion.site/Filtration-System-7143b36a42f1466faea3077bfc7e859e
 ///! Given a filter object, return an array of decoders/crackers which have been filtered
@@ -30,10 +32,20 @@ impl Decoders {
     /// But each struct shares the same `.crack()` method, so it's fine.
     pub fn run(&self, text: &str, checker: CheckerTypes) -> Vec<CrackResult> {
         trace!("Running .crack() on all decoders");
+        let (sender, receiver) = channel();
         self.components
             .into_par_iter()
-            .map(|i| i.crack(text, &checker))
-            .collect()
+            .try_for_each_with(sender, |s, i| {
+                let results = i.crack(text, &checker);
+                if results.success {
+                    s.send(results).expect("expected no send error!");
+                    return None;
+                }
+                s.send(results).expect("expected no send error!");
+                Some(())
+            });
+
+        receiver.iter().collect()
     }
 }
 

@@ -1,6 +1,8 @@
 use log::trace;
 use std::collections::HashSet;
 
+use crate::decoders::crack_results::CrackResult;
+
 pub fn bfs(input: &str) -> Option<String> {
     let mut seen_strings = HashSet::new();
     // all strings to search through
@@ -10,24 +12,38 @@ pub fn bfs(input: &str) -> Option<String> {
     while !current_strings.is_empty() {
         trace!("Number of potential decodings: {}", current_strings.len());
 
-        // runs the decodings and puts it into
-        let all_results: Vec<_> = current_strings
+        let mut exit_result: Option<CrackResult> = None;
+
+        // have capacity to avoid reallocatoins
+        let mut all_results = Vec::with_capacity(current_strings.len());
+
+        current_strings
             .into_iter()
             .flat_map(|current_string| super::perform_decoding(&current_string))
-            .filter(|elem| seen_strings.insert(elem.unencrypted_text.clone()))
-            .collect();
+            .try_for_each(|elem| {
+                if elem.success {
+                    exit_result = Some(elem);
+                    // short-circuit if we met exit condition
+                    return None;
+                }
+
+                if seen_strings.insert(elem.unencrypted_text.clone()) {
+                    all_results.push(elem);
+                }
+                Some(())
+            });
 
         // if we find an element that matches our exit condition, return it!
         // technically this won't check if the initial string matches our exit condition
         // but this is a demo and i'll be lazy :P
-        if let Some(exit_res) = all_results.iter().find(|elem| elem.success) {
+        if let Some(exit_res) = exit_result {
             let exit_str = exit_res
                 .unencrypted_text
-                .clone()
                 .expect("No unencrypted text even after checker succeed!");
             trace!("Found exit string: {}", exit_str);
             return Some(exit_str);
         }
+
         current_strings = all_results
             .iter()
             .filter_map(|res| res.unencrypted_text.clone())
