@@ -41,6 +41,6 @@ mod tests {
     fn default_checker_works() {
         let checker = Checker::<DefaultChecker>::new();
         let checker_result = CheckResult::new(&checker);
-        assert_eq!(checker_result.is_identified, false);
+        assert!(!checker_result.is_identified);
     }
 }

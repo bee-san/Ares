@@ -14,9 +14,15 @@ use log::trace;
 /// ```rust
 /// use ares::decoders::reverse_decoder::ReverseDecoder;
 /// use ares::decoders::interface::{Crack, Decoder};
+/// use ares::checkers::{athena::Athena, CheckerTypes, checker_type::{Check, Checker}};
+///
 /// let reversedecoder = Decoder::<ReverseDecoder>::new();
-/// let result = reversedecoder.crack("stac").unwrap();
-/// assert_eq!(result, "cats");
+/// let athena_checker = Checker::<Athena>::new();
+/// let checker = CheckerTypes::CheckAthena(athena_checker);
+///
+/// let result = reversedecoder.crack("stac", &checker).unencrypted_text;
+/// assert!(result.is_some());
+/// assert_eq!(result.unwrap(), "cats");
 /// ```
 pub struct ReverseDecoder;
 
@@ -72,8 +78,7 @@ mod tests {
     // helper for tests
     fn get_athena_checker() -> CheckerTypes {
         let athena_checker = Checker::<Athena>::new();
-        let checker = CheckerTypes::CheckAthena(athena_checker);
-        checker
+        CheckerTypes::CheckAthena(athena_checker)
     }
 
     #[test]
