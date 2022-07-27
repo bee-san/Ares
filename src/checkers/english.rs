@@ -21,7 +21,7 @@ impl Check for Checker<EnglishChecker> {
             /// English is the most popular language
             popularity: 1.0,
             lemmeknow_config: Identify::default(),
-            _phatom: std::marker::PhantomData,
+            _phantom: std::marker::PhantomData,
         }
     }
 

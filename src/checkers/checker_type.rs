@@ -30,7 +30,7 @@ pub struct Checker<Type> {
     /// acts like a type <T> even though it doesn't.
     /// Stops the compiler complaining, else we'd need to implement
     /// some magic to make it work.
-    pub _phatom: std::marker::PhantomData<Type>,
+    pub _phantom: std::marker::PhantomData<Type>,
 }
 
 /// Every checker must implement this trait

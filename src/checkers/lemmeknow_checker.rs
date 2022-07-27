@@ -28,7 +28,7 @@ impl Check for Checker<LemmeKnow> {
             expected_runtime: 0.01,
             popularity: 1.0,
             lemmeknow_config: Identify::default(),
-            _phatom: std::marker::PhantomData,
+            _phantom: std::marker::PhantomData,
         }
     }
 
