@@ -25,7 +25,7 @@ pub struct Checker<Type> {
     pub popularity: f32,
     /// lemmeknow config object
     pub lemmeknow_config: Identify,
-    pub _phatom: std::marker::PhantomData<Type>,
+    pub _phantom: std::marker::PhantomData<Type>,
 }
 
 /// Every checker must implement this trait

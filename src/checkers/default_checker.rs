@@ -20,7 +20,7 @@ impl Check for Checker<DefaultChecker> {
             expected_runtime: 0.0,
             popularity: 0.0,
             lemmeknow_config: Identify::default(),
-            _phatom: std::marker::PhantomData,
+            _phantom: std::marker::PhantomData,
         }
     }
 
