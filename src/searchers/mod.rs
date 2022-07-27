@@ -6,7 +6,6 @@
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
-use crate::decoders::crack_results::CrackResult;
 use crate::filtration_system::filter_and_get_decoders;
 mod bfs;
 
@@ -34,7 +33,7 @@ pub fn search_for_plaintext(input: &str) -> Option<String> {
 // Performs the decodings by getting all of the decoders
 // and calling `.run` which in turn loops through them and calls
 // `.crack()`.
-fn perform_decoding(text: &str) -> Vec<CrackResult> {
+fn perform_decoding(text: &str) -> crate::filtration_system::MyResults {
     let decoders = filter_and_get_decoders();
     let athena_checker = Checker::<Athena>::new();
     let checker = CheckerTypes::CheckAthena(athena_checker);
@@ -43,6 +42,7 @@ fn perform_decoding(text: &str) -> Vec<CrackResult> {
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
 
     // https://github.com/bee-san/Ares/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
@@ -69,14 +69,18 @@ mod tests {
     #[test]
     fn perform_decoding_succeeds() {
         let result = perform_decoding("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==");
-        assert!(!result.is_empty());
-        assert!(result.get(0).is_some());
+        assert!(
+            result
+                ._break_value()
+                .expect("expected successful value, none found")
+                .success
+        );
         //TODO assert that the plaintext is correct by looping over the vector
     }
     #[test]
     fn perform_decoding_succeeds_empty_string() {
         // Some decoders like base64 return even when the string is empty.
         let result = perform_decoding("");
-        assert!(!result.is_empty());
+        assert!(!result._break_value().is_some());
     }
 }
