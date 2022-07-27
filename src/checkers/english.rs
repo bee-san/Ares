@@ -6,6 +6,7 @@ use lemmeknow::Identify;
 
 use crate::checkers::checker_type::{Check, Checker};
 
+/// Checks English plaintext.
 pub struct EnglishChecker;
 
 /// given an input, check every item in the array and return true if any of them match

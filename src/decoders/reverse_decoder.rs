@@ -10,7 +10,14 @@ use super::interface::Crack;
 use super::interface::Decoder;
 
 use log::trace;
-
+/// The Reverse decoder is a decoder that reverses the input string.
+/// ```rust
+/// use ares::decoders::reverse_decoder::ReverseDecoder;
+/// use ares::decoders::interface::{Crack, Decoder};
+/// let reversedecoder = Decoder::<ReverseDecoder>::new();
+/// let result = reversedecoder.crack("stac").unwrap();
+/// assert_eq!(result, "cats");
+/// ```
 pub struct ReverseDecoder;
 
 impl Crack for Decoder<ReverseDecoder> {
@@ -20,8 +27,10 @@ impl Crack for Decoder<ReverseDecoder> {
             description: "Reverses a string. stac -> cats",
             link: "http://string-functions.com/reverse.aspx",
             tags: vec!["reverse", "decoder"],
+            /// We expect it to take 0.01 seconds to run
             expected_runtime: 0.01,
             expected_success: 1.0,
+            /// If it was to fail, we'd expect it to take 0.01 seconds
             failure_runtime: 0.01,
             normalised_entropy: vec![1.0, 10.0],
             // I have never seen a reversed string in a CTF

@@ -25,6 +25,11 @@ pub struct Checker<Type> {
     pub popularity: f32,
     /// lemmeknow config object
     pub lemmeknow_config: Identify,
+    /// https://doc.rust-lang.org/std/marker/struct.PhantomData.html
+    /// Let's us save memory by telling the compiler that our type
+    /// acts like a type <T> even though it doesn't.
+    /// Stops the compiler complaining, else we'd need to implement
+    /// some magic to make it work.
     pub _phatom: std::marker::PhantomData<Type>,
 }
 
@@ -32,8 +37,10 @@ pub struct Checker<Type> {
 /// Which checks the given text to see if its plaintext
 /// and returns CheckResult, which is our results object.
 pub trait Check {
+    /// Returns a new struct of type CheckerType
     fn new() -> Self
     where
         Self: Sized;
+    /// Checks the given text to see if its plaintext
     fn check(&self, text: &str) -> CheckResult;
 }

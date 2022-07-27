@@ -8,6 +8,8 @@ use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::decoders::crack_results::CrackResult;
 use crate::filtration_system::filter_and_get_decoders;
+/// This module provides access to the breadth first search
+/// which searches for the plaintext.
 mod bfs;
 
 /*pub struct Tree <'a> {

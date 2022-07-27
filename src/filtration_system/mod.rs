@@ -17,6 +17,7 @@ use rayon::prelude::*;
 /// the Decoders for the Crack trait in action.
 /// Relevant docs: https://doc.rust-lang.org/book/ch17-02-trait-objects.html
 pub struct Decoders {
+    /// Components is a vector of decoders.
     pub components: Vec<Box<dyn Crack + Sync>>,
 }
 

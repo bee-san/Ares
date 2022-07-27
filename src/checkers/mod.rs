@@ -6,12 +6,19 @@ use self::{
     lemmeknow_checker::LemmeKnow,
 };
 
+/// The default checker we use which simply calls all other checkers in order.
 pub mod athena;
+/// The checkerResult struct is used to store the results of a checker.
 pub mod checker_result;
+/// This is the base checker that all other checkers inherit from.
 pub mod checker_type;
+/// The default checker we use which simply calls all other checkers in order.
 pub mod default_checker;
+/// The English Checker is a checker that checks if the input is English
 pub mod english;
+/// The Human Checker asks humans if the expected plaintext is real plaintext
 pub mod human_checker;
+/// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 pub mod lemmeknow_checker;
 
 pub enum CheckerTypes {
