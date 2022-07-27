@@ -45,6 +45,7 @@ impl CrackResult {
         }
     }
 
+    /// Updates the checker information
     pub fn update_checker(&mut self, checker_result: &CheckResult) {
         self.checker_name = checker_result.checker_name;
         self.checker_description = checker_result.checker_description;

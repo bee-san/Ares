@@ -21,13 +21,18 @@ pub mod human_checker;
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 pub mod lemmeknow_checker;
 
+/// CheckerTypes is a wrapper enum for Checker
 pub enum CheckerTypes {
+    /// Wrapper for LemmeKnow Checker
     CheckLemmeKnow(Checker<LemmeKnow>),
+    /// Wrapper for English Checker
     CheckEnglish(Checker<EnglishChecker>),
+    /// Wrapper for Athena Checker
     CheckAthena(Checker<Athena>),
 }
 
 impl CheckerTypes {
+    /// This functions calls appropriate check function of Checker
     pub fn check(&self, text: &str) -> CheckResult {
         match self {
             CheckerTypes::CheckLemmeKnow(lemmeknow_checker) => lemmeknow_checker.check(text),

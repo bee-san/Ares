@@ -33,9 +33,9 @@ pub fn search_for_plaintext(input: &str) -> Option<String> {
     bfs::bfs(input)
 }
 
-// Performs the decodings by getting all of the decoders
-// and calling `.run` which in turn loops through them and calls
-// `.crack()`.
+/// Performs the decodings by getting all of the decoders
+/// and calling `.run` which in turn loops through them and calls
+/// `.crack()`.
 fn perform_decoding(text: &str) -> Vec<CrackResult> {
     let decoders = filter_and_get_decoders();
     let athena_checker = Checker::<Athena>::new();

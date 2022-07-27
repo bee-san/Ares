@@ -7,7 +7,8 @@ use super::{
     human_checker,
     lemmeknow_checker::LemmeKnow,
 };
-// use CheckerTypes;
+
+/// Athena checker runs all other checkers
 pub struct Athena;
 
 impl Check for Checker<Athena> {
