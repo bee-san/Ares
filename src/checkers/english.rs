@@ -27,9 +27,9 @@ impl Check for Checker<EnglishChecker> {
 
     fn check(&self, input: &str) -> CheckResult {
         trace!("Checking English for sentence {}", input);
-        // If 50% of the words are in the english list, then we consider it english.
-        // This is the threshold at which we consider it english.
-        // TODO: Do we want to put this into a config somewhere?
+        /// If 50% of the words are in the english list, then we consider it english.
+        /// This is the threshold at which we consider it english.
+        /// TODO: Do we want to put this into a config somewhere?
         const PLAINTEXT_DETECTION_PERCENTAGE: f64 = 0.0;
         let mut words_found: f64 = 0.0;
 
