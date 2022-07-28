@@ -29,11 +29,12 @@ pub fn bfs(input: &str) -> Option<String> {
                     None // short-circuits the iterator
                 }
                 MyResults::Continue(results_vec) => {
-                    new_strings = results_vec
-                        .into_iter()
-                        .flat_map(|r| r.unencrypted_text)
-                        .filter(|s| seen_strings.insert(s.clone()))
-                        .collect();
+                    new_strings.extend(
+                        results_vec
+                            .into_iter()
+                            .flat_map(|r| r.unencrypted_text)
+                            .filter(|s| seen_strings.insert(s.clone())),
+                    );
                     Some(()) // indicate we want to continue processing
                 }
             });
