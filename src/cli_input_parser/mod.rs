@@ -10,7 +10,8 @@ and so on.
 
 use crate::api_library_input_struct::LibraryInput;
 
-// added _ before name to let clippy know that they aren't used
+/// This creates a new LibraryInput struct and sets it to a default.
+/// added _ before name to let clippy know that they aren't used
 fn _main() {
     let _options = LibraryInput::default();
 }

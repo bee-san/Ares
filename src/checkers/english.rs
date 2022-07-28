@@ -6,6 +6,7 @@ use log::{debug, trace};
 
 use crate::checkers::checker_type::{Check, Checker};
 
+/// Checks English plaintext.
 pub struct EnglishChecker;
 
 /// given an input, check every item in the array and return true if any of them match
@@ -20,7 +21,7 @@ impl Check for Checker<EnglishChecker> {
             /// English is the most popular language
             popularity: 1.0,
             lemmeknow_config: Identify::default(),
-            _phatom: std::marker::PhantomData,
+            _phantom: std::marker::PhantomData,
         }
     }
 
@@ -103,17 +104,16 @@ mod tests {
     #[test]
     fn test_check_multiple_words() {
         let checker = Checker::<EnglishChecker>::new();
-        assert_eq!(checker.check("and woody").is_identified, true);
+        assert!(!checker.check("and woody").is_identified);
     }
 
     #[test]
     fn test_check_non_dictionary_word() {
         let checker = Checker::<EnglishChecker>::new();
-        assert_eq!(
-            checker
+        assert!(
+            !checker
                 .check("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBabyShark")
-                .is_identified,
-            false
+                .is_identified
         );
     }
 

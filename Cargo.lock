@@ -717,6 +717,9 @@ name = "guppy"
 version = "0.14.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c7225e3bb8e09a1ef73283a85d589174997acd9f8c36fe72d16c1fe8b9483288"
+name = "lemmeknow"
+version = "0.5.0"
+source = "git+https://github.com/swanandx/lemmeknow?rev=9ca641d284b57dc1512eb3b6a99f8ee6a2ff0a6e#9ca641d284b57dc1512eb3b6a99f8ee6a2ff0a6e"
 dependencies = [
  "camino",
  "cargo_metadata",
