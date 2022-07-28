@@ -73,4 +73,14 @@ mod tests {
         assert!(result.is_some());
         assert!(result.unwrap() == "hello");
     }
+
+    #[test]
+    fn new_strings_works() {
+        // text was too long, so we put \ to escape the \n
+        // and put the rest of string on next line.
+        let result = bfs("UFRCRVRWVkNiRlZMTVVkYVVFWjZVbFZPU0\
+        dGMU1WVlpZV2d4VkRVNWJWWnJjRzFVUlhCc1pYSlNWbHBPY0VaV1ZXeHJWRWd4TUZWdlZsWlg=");
+        assert!(result.is_some());
+        assert_eq!(result.unwrap(), "https://www.google.com");
+    }
 }
