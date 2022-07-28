@@ -1,4 +1,3 @@
-// import storage
 use crate::checkers::checker_result::CheckResult;
 use crate::storage;
 use lemmeknow::Identify;
@@ -37,8 +36,10 @@ impl Check for Checker<EnglishChecker> {
         // TODO: Change this when the below bugs are fixed.
         let filename = "English.txt";
 
+        let split_input = input.split(" ");
+
         // loop through all the words in the input
-        for word in input.split_whitespace() {
+        for word in  split_input {
             // if the word is in the english list, then we consider it english
             // TODO: I think the below function iterates through each dictionary in turn.
             // Which means it'll try English.txt, then rockyou.txt etc
@@ -60,15 +61,13 @@ impl Check for Checker<EnglishChecker> {
                 words_found,
                 input.len()
             );
-            // TODO: There is a bug here. We are comparing how many words found to how many characters there are in bytes.
-            // This means the numbers don't exactly match up. There may be some cases where this will break.
-            // We are also typecasting to f64 instead of usize, which costs CPU cycles.
-            if words_found / input.len() as f64 > PLAINTEXT_DETECTION_PERCENTAGE {
+            // TODO: We are also typecasting to f64 instead of usize, which costs CPU cycles.
+            if words_found / (input.split(" ").collect::<Vec<&str>>().len()) as f64 > PLAINTEXT_DETECTION_PERCENTAGE {
                 debug!("Found {} words in {}", words_found, input);
                 debug!("Returning from English chekcer successfully with {}", input);
                 plaintext_found = true;
                 break;
-            }
+          }
         }
 
         CheckResult {

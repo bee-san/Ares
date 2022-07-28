@@ -1,6 +1,7 @@
 use ares::perform_cracking;
 
-// TODO I think the dictionary bug in the TODO there is causing this to fail.
+// TODO Below fails because Library API is broken. 
+// https://github.com/bee-san/Ares/issues/48
 #[ignore]
 fn test_it_works() {
     // It will panic if it doesn't work!
