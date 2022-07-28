@@ -29,6 +29,7 @@ lemmeknow = { git = "https://github.com/swanandx/lemmeknow", default-features = 
 include_dir = "0.7.2"
 once_cell = "1.13.0"
 text_io = "0.1.10"
+crossbeam = "0.8.2"
 
 [dev-dependencies]
 criterion = "0.3.6"
