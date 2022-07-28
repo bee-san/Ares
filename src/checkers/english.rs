@@ -104,7 +104,7 @@ mod tests {
     #[test]
     fn test_check_multiple_words() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(!checker.check("and woody").is_identified);
+        assert!(checker.check("and woody").is_identified);
     }
 
     #[test]
