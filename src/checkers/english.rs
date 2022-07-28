@@ -45,12 +45,20 @@ impl Check for Checker<EnglishChecker> {
             // We should probably just use a single dictionary and assign the filenames to the values in the dictionary.
             // Like {"hello": "English.txt"} etc.
             // If we're using muiltiple dictionaries we may also have duplicated words which is inefficient.
-            if storage::DICTIONARIES.iter().any(|(_, words)| words.contains(word)) {
+            if storage::DICTIONARIES
+                .iter()
+                .any(|(_, words)| words.contains(word))
+            {
                 trace!("Found word {} in English", word);
                 words_found += 1.0;
             }
 
-            trace!("Checking word {} with words_found {} and input length: {}", word, words_found, input.len());
+            trace!(
+                "Checking word {} with words_found {} and input length: {}",
+                word,
+                words_found,
+                input.len()
+            );
             // TODO: There is a bug here. We are comparing how many words found to how many characters there are in bytes.
             // This means the numbers don't exactly match up. There may be some cases where this will break.
             // We are also typecasting to f64 instead of usize, which costs CPU cycles.
