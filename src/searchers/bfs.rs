@@ -74,8 +74,15 @@ mod tests {
         assert!(result.unwrap() == "hello");
     }
 
+    // Vector storing the strings to perform decoding in next iteraion
+    // had strings only from result of last decoding it performed.
+    // This was due to reassignment in try_for_each block
+    // which lead to unintended behaviour.
+    // We want strings from all results, so to fix it,
+    // we call .extend() to extend the vector.
+    // Link to forum https://discord.com/channels/754001738184392704/1002135076034859068
     #[test]
-    fn new_strings_works() {
+    fn non_deterministic_like_behaviour_regression_test() {
         // text was too long, so we put \ to escape the \n
         // and put the rest of string on next line.
         let result = bfs("UFRCRVRWVkNiRlZMTVVkYVVFWjZVbFZPU0\
