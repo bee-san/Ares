@@ -29,11 +29,12 @@ pub fn bfs(input: &str) -> Option<String> {
                     None // short-circuits the iterator
                 }
                 MyResults::Continue(results_vec) => {
-                    new_strings = results_vec
-                        .into_iter()
-                        .flat_map(|r| r.unencrypted_text)
-                        .filter(|s| seen_strings.insert(s.clone()))
-                        .collect();
+                    new_strings.extend(
+                        results_vec
+                            .into_iter()
+                            .flat_map(|r| r.unencrypted_text)
+                            .filter(|s| seen_strings.insert(s.clone())),
+                    );
                     Some(()) // indicate we want to continue processing
                 }
             });
@@ -71,5 +72,22 @@ mod tests {
         let result = bfs("b2xsZWg=");
         assert!(result.is_some());
         assert!(result.unwrap() == "hello");
+    }
+
+    // Vector storing the strings to perform decoding in next iteraion
+    // had strings only from result of last decoding it performed.
+    // This was due to reassignment in try_for_each block
+    // which lead to unintended behaviour.
+    // We want strings from all results, so to fix it,
+    // we call .extend() to extend the vector.
+    // Link to forum https://discord.com/channels/754001738184392704/1002135076034859068
+    #[test]
+    fn non_deterministic_like_behaviour_regression_test() {
+        // text was too long, so we put \ to escape the \n
+        // and put the rest of string on next line.
+        let result = bfs("UFRCRVRWVkNiRlZMTVVkYVVFWjZVbFZPU0\
+        dGMU1WVlpZV2d4VkRVNWJWWnJjRzFVUlhCc1pYSlNWbHBPY0VaV1ZXeHJWRWd4TUZWdlZsWlg=");
+        assert!(result.is_some());
+        assert_eq!(result.unwrap(), "https://www.google.com");
     }
 }
