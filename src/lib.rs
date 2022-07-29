@@ -71,8 +71,8 @@ mod tests {
 
     #[test]
     fn test_perform_cracking_returns_successful_base64_reverse() {
-        let result = perform_cracking("b2xsZWg=");
+        let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==");
         assert!(result.is_some());
-        assert!(result.unwrap() == "hello")
+        assert!(result.unwrap() == "hello there general")
     }
 }
