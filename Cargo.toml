@@ -36,7 +36,6 @@ criterion = "0.3.6"
 
 [profile.release]
 lto = "fat"
-panic = "abort"
 strip = "symbols"
 
 [[bench]]
