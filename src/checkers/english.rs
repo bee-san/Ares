@@ -61,7 +61,7 @@ impl Check for Checker<EnglishChecker> {
                 words_found,
                 input.len()
             );
-            // We are also typecasting to f64 instead of usize, which costs CPU cycles.
+            // TODO: We are also typecasting to f64 instead of usize, which costs CPU cycles.
             if words_found / (input.split(' ').count()) as f64 > PLAINTEXT_DETECTION_PERCENTAGE {
                 debug!("Found {} words in {}", words_found, input);
                 debug!("Returning from English chekcer successfully with {}", input);
