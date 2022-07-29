@@ -1,6 +1,6 @@
 use ares::perform_cracking;
 
-// TODO Below fails because Library API is broken. 
+// TODO Below fails because Library API is broken.
 // https://github.com/bee-san/Ares/issues/48
 #[ignore]
 fn test_it_works() {

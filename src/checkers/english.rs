@@ -39,7 +39,7 @@ impl Check for Checker<EnglishChecker> {
         let split_input = input.split(' ');
 
         // loop through all the words in the input
-        for word in  split_input {
+        for word in split_input {
             // if the word is in the english list, then we consider it english
             // TODO: I think the below function iterates through each dictionary in turn.
             // Which means it'll try English.txt, then rockyou.txt etc
@@ -67,7 +67,7 @@ impl Check for Checker<EnglishChecker> {
                 debug!("Returning from English chekcer successfully with {}", input);
                 plaintext_found = true;
                 break;
-          }
+            }
         }
 
         CheckResult {
