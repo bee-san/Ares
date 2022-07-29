@@ -36,7 +36,7 @@ impl Check for Checker<EnglishChecker> {
         // TODO: Change this when the below bugs are fixed.
         let filename = "English.txt";
 
-        let split_input = input.split(" ");
+        let split_input = input.split(' ');
 
         // loop through all the words in the input
         for word in  split_input {
@@ -61,8 +61,8 @@ impl Check for Checker<EnglishChecker> {
                 words_found,
                 input.len()
             );
-            // TODO: We are also typecasting to f64 instead of usize, which costs CPU cycles.
-            if words_found / (input.split(" ").collect::<Vec<&str>>().len()) as f64 > PLAINTEXT_DETECTION_PERCENTAGE {
+            // We are also typecasting to f64 instead of usize, which costs CPU cycles.
+            if words_found / (input.split(' ').count()) as f64 > PLAINTEXT_DETECTION_PERCENTAGE {
                 debug!("Found {} words in {}", words_found, input);
                 debug!("Returning from English chekcer successfully with {}", input);
                 plaintext_found = true;
