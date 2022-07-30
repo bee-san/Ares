@@ -1,5 +1,5 @@
 use crate::checkers::checker_result::CheckResult;
-use lemmeknow::Identify;
+use lemmeknow::Identifier;
 
 use super::{
     checker_type::{Check, Checker},
@@ -21,7 +21,7 @@ impl Check for Checker<Athena> {
             tags: vec!["athena", "all"],
             expected_runtime: 0.01,
             popularity: 1.0,
-            lemmeknow_config: Identify::default(),
+            lemmeknow_config: Identifier::default(),
             _phantom: std::marker::PhantomData,
         }
     }

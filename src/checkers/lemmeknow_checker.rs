@@ -1,12 +1,12 @@
 use crate::checkers::checker_result::CheckResult;
-use lemmeknow::{Data, Identify};
+use lemmeknow::{Data, Identifier};
 
 use super::checker_type::{Check, Checker};
 
 /// The Lemmeknow checker configuration struct
-const IDENTIFIER: Identify = Identify {
-    min_rarity: Some(0.1),
-    max_rarity: None,
+const IDENTIFIER: Identifier = Identifier {
+    min_rarity: 0.1,
+    max_rarity: 1.0,
     tags: vec![],
     exclude_tags: vec![],
     file_support: false,
@@ -27,7 +27,7 @@ impl Check for Checker<LemmeKnow> {
             tags: vec!["lemmeknow", "regex"],
             expected_runtime: 0.01,
             popularity: 1.0,
-            lemmeknow_config: Identify::default(),
+            lemmeknow_config: Identifier::default(),
             _phantom: std::marker::PhantomData,
         }
     }
