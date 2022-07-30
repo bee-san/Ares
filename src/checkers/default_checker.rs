@@ -1,4 +1,4 @@
-use lemmeknow::Identify;
+use lemmeknow::Identifier;
 
 use super::{
     checker_result::CheckResult,
@@ -19,7 +19,7 @@ impl Check for Checker<DefaultChecker> {
             tags: vec![],
             expected_runtime: 0.0,
             popularity: 0.0,
-            lemmeknow_config: Identify::default(),
+            lemmeknow_config: Identifier::default(),
             _phantom: std::marker::PhantomData,
         }
     }

@@ -1,7 +1,7 @@
 /// Checker_type is a type used to define checkers
 /// This means that we can standardise the way we check for plaintext
 use crate::checkers::checker_result::CheckResult;
-use lemmeknow::Identify;
+use lemmeknow::Identifier;
 
 /// Every checker is of type CheckerType
 /// This will let us pick & choose which checkers to use
@@ -24,7 +24,7 @@ pub struct Checker<Type> {
     /// The popularity of the checker
     pub popularity: f32,
     /// lemmeknow config object
-    pub lemmeknow_config: Identify,
+    pub lemmeknow_config: Identifier,
     /// https://doc.rust-lang.org/std/marker/struct.PhantomData.html
     /// Let's us save memory by telling the compiler that our type
     /// acts like a type <T> even though it doesn't.

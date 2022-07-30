@@ -1,6 +1,6 @@
 use crate::checkers::checker_result::CheckResult;
 use crate::storage;
-use lemmeknow::Identify;
+use lemmeknow::Identifier;
 use log::{debug, trace};
 
 use crate::checkers::checker_type::{Check, Checker};
@@ -19,7 +19,7 @@ impl Check for Checker<EnglishChecker> {
             expected_runtime: 0.1,
             /// English is the most popular language
             popularity: 1.0,
-            lemmeknow_config: Identify::default(),
+            lemmeknow_config: Identifier::default(),
             _phantom: std::marker::PhantomData,
         }
     }
