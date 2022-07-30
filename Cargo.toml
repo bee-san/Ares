@@ -1,6 +1,6 @@
 [package]
 name = "project_ares"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Automated decoding tool, Ciphey but in Rust"
 license = "MIT"
@@ -24,8 +24,7 @@ env_logger = "0.9.0"
 base64 = "0.13.0"
 rayon = "1.5.1"
 petgraph = "0.6.0"
- # Use 0.6 when released
-lemmeknow = { git = "https://github.com/swanandx/lemmeknow", default-features = false, rev="9ca641d284b57dc1512eb3b6a99f8ee6a2ff0a6e" }
+lemmeknow = "0.6.0"
 include_dir = "0.7.2"
 once_cell = "1.13.0"
 text_io = "0.1.10"

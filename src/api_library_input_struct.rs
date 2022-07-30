@@ -3,7 +3,7 @@ use crate::checkers::{
     checker_type::{Check, Checker},
     default_checker::DefaultChecker,
 };
-use lemmeknow::Identify;
+use lemmeknow::Identifier;
 
 /// Library input is the default API input
 /// The CLI turns its arguments into a LibraryInput struct
@@ -17,13 +17,13 @@ pub struct LibraryInput<Type> {
     /// The checker to use
     pub checker: Checker<Type>,
     /// The lemmeknow config to use
-    pub lemmeknow_config: Identify,
+    pub lemmeknow_config: Identifier,
 }
 
 /// Creates a default lemmeknow config
-const LEMMEKNOW_DEFAULT_CONFIG: Identify = Identify {
-    min_rarity: None,
-    max_rarity: None,
+const LEMMEKNOW_DEFAULT_CONFIG: Identifier = Identifier {
+    min_rarity: 0.0,
+    max_rarity: 0.0,
     tags: vec![],
     exclude_tags: vec![],
     file_support: false,
