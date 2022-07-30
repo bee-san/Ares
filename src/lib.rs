@@ -16,6 +16,9 @@ mod api_library_input_struct;
 pub mod checkers;
 /// CLI Input Parser parses the input from the CLI and returns a struct.
 mod cli_input_parser;
+/// The Config module enables a configuration module
+/// Like a global API to access config details
+pub mod config;
 /// Decoders are the functions that actually perform the decodings.
 pub mod decoders;
 /// The filtration system builds what decoders to use at runtime
