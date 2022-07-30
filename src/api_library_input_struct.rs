@@ -22,7 +22,7 @@ pub struct LibraryInput<Type> {
 
 /// Creates a default lemmeknow config
 const LEMMEKNOW_DEFAULT_CONFIG: Identifier = Identifier {
-    min_rarity:  0.0,
+    min_rarity: 0.0,
     max_rarity: 0.0,
     tags: vec![],
     exclude_tags: vec![],
