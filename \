@@ -7,7 +7,7 @@ use lemmeknow::Identifier;
 
 /// Library input is the default API input
 /// The CLI turns its arguments into a LibraryInput struct
-pub struct LibraryInput<Type> {
+pub struct Config<Type> {
     /// The input to be decoded.
     /// Given to us by the user.
     pub encoded_text: String,
@@ -30,13 +30,13 @@ const LEMMEKNOW_DEFAULT_CONFIG: Identifier = Identifier {
     boundaryless: false,
 };
 
-impl Default for LibraryInput<DefaultChecker> {
+impl Default for Config<DefaultChecker> {
     fn default() -> Self {
-        LibraryInput {
+        Config {
             encoded_text: String::new(),
             // this will be of type Checker<DefaultChecker>
-            verbose: 0,
             checker: Checker::new(),
+            verbose: 0,
             lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG,
         }
     }

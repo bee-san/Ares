@@ -2,6 +2,7 @@
 /// This means that we can standardise the way we check for plaintext
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::Identifier;
+use crate::config::Config;
 
 /// Every checker is of type CheckerType
 /// This will let us pick & choose which checkers to use
@@ -42,5 +43,5 @@ pub trait Check {
     where
         Self: Sized;
     /// Checks the given text to see if its plaintext
-    fn check(&self, text: &str) -> CheckResult;
+    fn check(&self, text: &str, config: &Config) -> CheckResult;
 }

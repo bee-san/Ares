@@ -1,6 +1,4 @@
-//! Ares is an automatic decoding and cracking tool.
-//! https://github.com/bee-san/ares
-
+//! Ares is an automatic decoding and cracking tool. https://github.com/bee-san/ares
 // Warns in case we forget to include documentation
 #![warn(
     missing_docs,
@@ -30,29 +28,34 @@ mod searchers;
 /// The storage module contains all the dictionaries and provides
 /// storage of data to our decoderrs and checkers.
 mod storage;
+/// CLI Arg Parsing library 
+pub mod cli;
 
+use crate::config::Config;
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ares::perform_cracking;
 /// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu");
 /// assert!(true)
 /// ```
-pub fn perform_cracking(text: &str) -> Option<String> {
+pub fn perform_cracking(text: &str, config: &Config) -> Option<String> {
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
     // Perform the search algorithm
     // It will either return a failure or success.
-    searchers::search_for_plaintext(text)
+    searchers::search_for_plaintext(text, config)
 }
 
 #[cfg(test)]
 mod tests {
     use super::perform_cracking;
+    use crate::config::Config;
 
     #[test]
     fn test_perform_cracking_returns() {
-        perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh");
+        let config = Config::default(); 
+        perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh", &config);
     }
 
     #[test]
@@ -61,20 +64,22 @@ mod tests {
         // let result = perform_cracking("Q0FOQVJZOiBoZWxsbw==");
         // assert!(result.is_some());
         // assert!(result.unwrap() == "CANARY: hello")
-
-        let result = perform_cracking("b2xsZWg=");
+        let config = Config::default();
+        let result = perform_cracking("b2xsZWg=", &config);
         assert!(result.is_some());
         assert!(result.unwrap() == "hello");
     }
     #[test]
     fn test_perform_cracking_returns_failure() {
-        let result = perform_cracking("");
+        let config = Config::default();
+        let result = perform_cracking("", &config);
         assert!(result.is_none());
     }
 
     #[test]
     fn test_perform_cracking_returns_successful_base64_reverse() {
-        let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==");
+        let config = Config::default();
+        let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", &config);
         assert!(result.is_some());
         assert!(result.unwrap() == "hello there general")
     }

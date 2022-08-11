@@ -99,11 +99,13 @@ mod tests {
         },
         decoders::interface::{Crack, Decoder},
     };
+    use crate::config::Config;
 
     // helper for tests
-    fn get_athena_checker() -> CheckerTypes {
+    fn get_athena_checker() -> CheckerTypes<'static> {
         let athena_checker = Checker::<Athena>::new();
-        CheckerTypes::CheckAthena(athena_checker)
+        let config = Config::default(); 
+        CheckerTypes::CheckAthena(athena_checker, &config)
     }
 
     #[test]

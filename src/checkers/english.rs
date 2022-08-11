@@ -2,6 +2,7 @@ use crate::checkers::checker_result::CheckResult;
 use crate::storage;
 use lemmeknow::Identifier;
 use log::{debug, trace};
+use crate::config::Config;
 
 use crate::checkers::checker_type::{Check, Checker};
 
@@ -24,7 +25,7 @@ impl Check for Checker<EnglishChecker> {
         }
     }
 
-    fn check(&self, input: &str) -> CheckResult {
+    fn check(&self, input: &str, config: &Config) -> CheckResult {
         trace!("Checking English for sentence {}", input);
         /// If 50% of the words are in the english list, then we consider it english.
         /// This is the threshold at which we consider it english.
