@@ -53,8 +53,9 @@ mod tests {
     fn exit_condition(input: &str) -> bool {
         // use Athena Checker from checkers module
         // call check(input)
+        let config = Config::default();
         let athena_checker = Checker::<Athena>::new();
-        let checker = CheckerTypes::CheckAthena(athena_checker);
+        let checker = CheckerTypes::CheckAthena(athena_checker, &config);
         checker.check(input).is_identified
     }
 

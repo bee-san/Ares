@@ -101,6 +101,7 @@ mod tests {
         checker_type::{Check, Checker},
         CheckerTypes,
     };
+    use crate::config::Config;
 
     // TODO: when we add a proper filtration system
     // We need to test that.
@@ -116,7 +117,8 @@ mod tests {
     fn decoders_can_call_dot_run() {
         let decoders = filter_and_get_decoders();
         let athena_checker = Checker::<Athena>::new();
-        let checker = CheckerTypes::CheckAthena(athena_checker);
+        let config = Config::default();
+        let checker = CheckerTypes::CheckAthena(athena_checker, &config);
         decoders.run("TXIgUm9ib3QgaXMgZ3JlYXQ=", checker);
         assert_eq!(true, true);
     }

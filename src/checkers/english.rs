@@ -88,23 +88,28 @@ mod tests {
         checker_type::{Check, Checker},
         english::EnglishChecker,
     };
+    use crate::config::Config;
+
+    fn return_config() -> Config {
+        return Config::default();
+    }
 
     #[test]
     fn test_check_basic() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("preinterview").is_identified);
+        assert!(checker.check("preinterview", &return_config()).is_identified);
     }
 
     #[test]
     fn test_check_basic2() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("and").is_identified);
+        assert!(checker.check("and", &return_config()).is_identified);
     }
 
     #[test]
     fn test_check_multiple_words() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("and woody").is_identified);
+        assert!(checker.check("and woody", &return_config()).is_identified);
     }
 
     #[test]
@@ -112,7 +117,7 @@ mod tests {
         let checker = Checker::<EnglishChecker>::new();
         assert!(
             !checker
-                .check("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBabyShark")
+                .check("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBabyShark", &return_config())
                 .is_identified
         );
     }
@@ -120,6 +125,6 @@ mod tests {
     #[test]
     fn test_check_multiple_words2() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("preinterview hello dog").is_identified);
+        assert!(checker.check("preinterview hello dog", &return_config()).is_identified);
     }
 }
