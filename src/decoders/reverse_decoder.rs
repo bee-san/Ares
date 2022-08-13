@@ -80,8 +80,7 @@ mod tests {
     // helper for tests
     fn get_athena_checker() -> CheckerTypes<'static> {
         let athena_checker = Checker::<Athena>::new();
-        let config = Config::default();
-        CheckerTypes::CheckAthena(athena_checker, &config)
+        CheckerTypes::CheckAthena(athena_checker, &Config::default())
     }
 
     #[test]

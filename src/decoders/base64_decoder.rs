@@ -102,10 +102,10 @@ mod tests {
     use crate::config::Config;
 
     // helper for tests
-    fn get_athena_checker() -> CheckerTypes<'static> {
+    fn get_athena_checker<'a>() -> CheckerTypes<'a> {
         let athena_checker = Checker::<Athena>::new();
         let config = Config::default(); 
-        CheckerTypes::CheckAthena(athena_checker, &config)
+        CheckerTypes::CheckAthena(athena_checker, config)
     }
 
     #[test]
