@@ -100,12 +100,13 @@ mod tests {
         decoders::interface::{Crack, Decoder},
     };
     use crate::config::Config;
+    use std::rc::Rc;
 
     // helper for tests
     fn get_athena_checker<'a>() -> CheckerTypes<'a> {
         let athena_checker = Checker::<Athena>::new();
-        let config = Config::default(); 
-        CheckerTypes::CheckAthena(athena_checker, config)
+        let config = Rc::new(Config::default()); 
+        CheckerTypes::CheckAthena(athena_checker, &config)
     }
 
     #[test]
