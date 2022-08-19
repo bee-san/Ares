@@ -45,11 +45,14 @@ impl CheckerTypes {
 // test
 #[cfg(test)]
 mod tests {
-    use crate::{checkers::{
-        athena::Athena,
-        checker_type::{Check, Checker},
-        CheckerTypes,
-    }, config::{Config, set_global_config}};
+    use crate::{
+        checkers::{
+            athena::Athena,
+            checker_type::{Check, Checker},
+            CheckerTypes,
+        },
+        config::{set_global_config, Config},
+    };
 
     #[test]
     fn test_check_ip_address() {
