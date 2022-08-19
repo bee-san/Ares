@@ -1,7 +1,6 @@
+use super::checker_type::{Check, Checker};
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::{Data, Identifier};
-use crate::config::Config;
-use super::checker_type::{Check, Checker};
 
 /// The Lemmeknow checker configuration struct
 const IDENTIFIER: Identifier = Identifier {
@@ -32,7 +31,7 @@ impl Check for Checker<LemmeKnow> {
         }
     }
 
-    fn check(&self, text: &str, config: &Config) -> CheckResult {
+    fn check(&self, text: &str) -> CheckResult {
         let lemmeknow_result = IDENTIFIER.identify(text);
         let mut is_identified = false;
         let mut description = "".to_string();

@@ -2,7 +2,6 @@ use crate::checkers::checker_result::CheckResult;
 use crate::storage;
 use lemmeknow::Identifier;
 use log::{debug, trace};
-use crate::config::Config;
 
 use crate::checkers::checker_type::{Check, Checker};
 
@@ -25,7 +24,7 @@ impl Check for Checker<EnglishChecker> {
         }
     }
 
-    fn check(&self, input: &str, config: &Config) -> CheckResult {
+    fn check(&self, input: &str) -> CheckResult {
         trace!("Checking English for sentence {}", input);
         /// If 50% of the words are in the english list, then we consider it english.
         /// This is the threshold at which we consider it english.
@@ -88,28 +87,23 @@ mod tests {
         checker_type::{Check, Checker},
         english::EnglishChecker,
     };
-    use crate::config::Config;
-
-    fn return_config() -> Config {
-        return Config::default();
-    }
 
     #[test]
     fn test_check_basic() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("preinterview", &return_config()).is_identified);
+        assert!(checker.check("preinterview").is_identified);
     }
 
     #[test]
     fn test_check_basic2() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("and", &return_config()).is_identified);
+        assert!(checker.check("and").is_identified);
     }
 
     #[test]
     fn test_check_multiple_words() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("and woody", &return_config()).is_identified);
+        assert!(checker.check("and woody").is_identified);
     }
 
     #[test]
@@ -117,7 +111,7 @@ mod tests {
         let checker = Checker::<EnglishChecker>::new();
         assert!(
             !checker
-                .check("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBabyShark", &return_config())
+                .check("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaBabyShark")
                 .is_identified
         );
     }
@@ -125,6 +119,6 @@ mod tests {
     #[test]
     fn test_check_multiple_words2() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("preinterview hello dog", &return_config()).is_identified);
+        assert!(checker.check("preinterview hello dog").is_identified);
     }
 }

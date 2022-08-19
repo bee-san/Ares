@@ -6,8 +6,6 @@ use self::{
     lemmeknow_checker::LemmeKnow,
 };
 
-use crate::config::Config;
-
 /// The default checker we use which simply calls all other checkers in order.
 pub mod athena;
 /// The checkerResult struct is used to store the results of a checker.
@@ -24,22 +22,22 @@ pub mod human_checker;
 pub mod lemmeknow_checker;
 
 /// CheckerTypes is a wrapper enum for Checker
-pub enum CheckerTypes<'a> {
+pub enum CheckerTypes {
     /// Wrapper for LemmeKnow Checker
-    CheckLemmeKnow(Checker<LemmeKnow>, Config),
+    CheckLemmeKnow(Checker<LemmeKnow>),
     /// Wrapper for English Checker
-    CheckEnglish(Checker<EnglishChecker>, Config),
+    CheckEnglish(Checker<EnglishChecker>),
     /// Wrapper for Athena Checker
-    CheckAthena(Checker<Athena>, &'a Config),
+    CheckAthena(Checker<Athena>),
 }
 
-impl CheckerTypes<'_> {
+impl CheckerTypes {
     /// This functions calls appropriate check function of Checker
     pub fn check(&self, text: &str) -> CheckResult {
         match self {
-            CheckerTypes::CheckLemmeKnow(lemmeknow_checker, config) => lemmeknow_checker.check(text, config),
-            CheckerTypes::CheckEnglish(english_checker, config) => english_checker.check(text, config),
-            CheckerTypes::CheckAthena(athena_checker, config) => athena_checker.check(text, config),
+            CheckerTypes::CheckLemmeKnow(lemmeknow_checker) => lemmeknow_checker.check(text),
+            CheckerTypes::CheckEnglish(english_checker) => english_checker.check(text),
+            CheckerTypes::CheckAthena(athena_checker) => athena_checker.check(text),
         }
     }
 }
@@ -52,20 +50,17 @@ mod tests {
         checker_type::{Check, Checker},
         CheckerTypes,
     };
-    use crate::config::Config;
 
     #[test]
     fn test_check_ip_address() {
-        // new config 
-        let config = Config::default();
-        let athena = CheckerTypes::CheckAthena(Checker::<Athena>::new(), &config);
+        // new config
+        let athena = CheckerTypes::CheckAthena(Checker::<Athena>::new());
         assert!(athena.check("192.168.0.1").is_identified);
     }
 
     #[test]
     fn test_check_goes_to_dictionary() {
-        let config = Config::default();
-        let athena = CheckerTypes::CheckAthena(Checker::<Athena>::new(), &config);
+        let athena = CheckerTypes::CheckAthena(Checker::<Athena>::new());
         assert!(athena.check("and").is_identified);
     }
 }

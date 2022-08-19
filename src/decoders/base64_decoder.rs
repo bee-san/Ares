@@ -20,11 +20,14 @@ use log::{debug, info, trace};
 /// ```
 /// use ares::decoders::base64_decoder::{Base64Decoder};
 /// use ares::decoders::interface::{Crack, Decoder};
+/// use ares::config::{set_global_config, Config};
 /// use ares::checkers::{athena::Athena, CheckerTypes, checker_type::{Check, Checker}};
 ///
 /// let decode_base64 = Decoder::<Base64Decoder>::new();
 /// let athena_checker = Checker::<Athena>::new();
 /// let checker = CheckerTypes::CheckAthena(athena_checker);
+/// // set global config
+/// set_global_config(Config::default());
 ///
 /// let result = decode_base64.crack("aGVsbG8gd29ybGQ=", &checker).unencrypted_text;
 /// assert!(result.is_some());
@@ -99,14 +102,11 @@ mod tests {
         },
         decoders::interface::{Crack, Decoder},
     };
-    use crate::config::Config;
-    use std::rc::Rc;
 
     // helper for tests
-    fn get_athena_checker<'a>() -> CheckerTypes<'a> {
+    fn get_athena_checker() -> CheckerTypes {
         let athena_checker = Checker::<Athena>::new();
-        let config = Rc::new(Config::default()); 
-        CheckerTypes::CheckAthena(athena_checker, &config)
+        CheckerTypes::CheckAthena(athena_checker)
     }
 
     #[test]

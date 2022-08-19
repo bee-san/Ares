@@ -7,7 +7,6 @@ use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::filtration_system::{filter_and_get_decoders, MyResults};
-use crate::config::Config;
 /// This module provides access to the breadth first search
 /// which searches for the plaintext.
 mod bfs;
@@ -28,34 +27,32 @@ mod bfs;
 /// We can return an Option? An Enum? And then match on that
 /// So if we return CrackSuccess we return
 /// Else if we return an array, we add it to the children and go again.
-pub fn search_for_plaintext(input: &str, config: &Config) -> Option<String> {
+pub fn search_for_plaintext(input: &str) -> Option<String> {
     // Change this to select which search algorithm we want to use.
-    bfs::bfs(input, config)
+    bfs::bfs(input)
 }
 
 /// Performs the decodings by getting all of the decoders
 /// and calling `.run` which in turn loops through them and calls
 /// `.crack()`.
-fn perform_decoding(text: &str, config: &Config) -> MyResults {
+fn perform_decoding(text: &str) -> MyResults {
     let decoders = filter_and_get_decoders();
     let athena_checker = Checker::<Athena>::new();
-    let checker = CheckerTypes::CheckAthena(athena_checker, config);
+    let checker = CheckerTypes::CheckAthena(athena_checker);
     decoders.run(text, checker)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::Config;
 
     // https://github.com/bee-san/Ares/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
     // Only used for tests!
     fn exit_condition(input: &str) -> bool {
         // use Athena Checker from checkers module
         // call check(input)
-        let config = Config::default();
         let athena_checker = Checker::<Athena>::new();
-        let checker = CheckerTypes::CheckAthena(athena_checker, &config);
+        let checker = CheckerTypes::CheckAthena(athena_checker);
         checker.check(input).is_identified
     }
 
@@ -72,8 +69,7 @@ mod tests {
 
     #[test]
     fn perform_decoding_succeeds() {
-        let config = Config::default();
-        let result = perform_decoding("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==", &config);
+        let result = perform_decoding("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==");
         assert!(
             result
                 ._break_value()
@@ -85,8 +81,7 @@ mod tests {
     #[test]
     fn perform_decoding_succeeds_empty_string() {
         // Some decoders like base64 return even when the string is empty.
-        let config = Config::default();
-        let result = perform_decoding("", &config);
+        let result = perform_decoding("");
         assert!(result._break_value().is_none());
     }
 }

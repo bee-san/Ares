@@ -1,10 +1,9 @@
+use crate::config::Config;
 /// This doc string acts as a help message when the uses runs '--help'
 /// as do all doc strings on fields
-
 use clap::Parser;
+use lemmeknow::Identifier;
 use log::{debug, trace};
-use crate::config::Config;
-use std::rc::Rc;
 
 /// The struct for Clap CLI arguments
 #[derive(Parser)]
@@ -17,12 +16,16 @@ pub struct Opts {
     /// A level of verbosity, and can be used multiple times
     #[clap(short, long, parse(from_occurrences))]
     verbose: i32,
+
+    /// Turn off human checker
+    #[clap(short, long)]
+    disable_human_checker: bool,
 }
 
-/// Parse CLI Arguments turns a Clap Opts struct, seen above 
-/// Into a library Struct for use within the program 
+/// Parse CLI Arguments turns a Clap Opts struct, seen above
+/// Into a library Struct for use within the program
 /// The library struct can be found in the [config](../config) folder.
-pub fn parse_cli_args() -> Rc<Config> {
+pub fn parse_cli_args() -> (String, Config) {
     let opts: Opts = Opts::parse();
     let min_log_level = match opts.verbose {
         0 => "Warn",
@@ -42,6 +45,15 @@ pub fn parse_cli_args() -> Rc<Config> {
 }
 
 /// Turns our CLI arguments into a config stuct
-fn cli_args_into_config_struct(opts: Opts) -> Rc<Config>{
-    todo!()   
+fn cli_args_into_config_struct(opts: Opts) -> (String, Config) {
+    (
+        opts.text,
+        Config {
+            verbose: opts.verbose,
+            lemmeknow_config: Identifier::default(),
+            // default is false, we want default to be true
+            human_checker_on: !opts.disable_human_checker,
+            offline_mode: true,
+        },
+    )
 }

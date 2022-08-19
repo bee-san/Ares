@@ -1,5 +1,4 @@
 use lemmeknow::Identifier;
-use crate::config::Config;
 
 use super::{
     checker_result::CheckResult,
@@ -25,7 +24,7 @@ impl Check for Checker<DefaultChecker> {
         }
     }
 
-    fn check(&self, _text: &str, config: &Config) -> CheckResult {
+    fn check(&self, _text: &str) -> CheckResult {
         CheckResult::new(self)
     }
 }

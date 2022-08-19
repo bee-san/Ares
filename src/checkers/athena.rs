@@ -1,6 +1,5 @@
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::Identifier;
-use crate::config::Config;
 
 use super::{
     checker_type::{Check, Checker},
@@ -27,25 +26,22 @@ impl Check for Checker<Athena> {
         }
     }
 
-    fn check(&self, text: &str, config: &Config) -> CheckResult {
+    fn check(&self, text: &str) -> CheckResult {
         // TODO: wrap all checkers in oncecell so we only create them once!
+        // let config = CONFIG.wait(); // wait instead of get so it waits for config being set
         let lemmeknow = Checker::<LemmeKnow>::new();
-        let lemmeknow_result = lemmeknow.check(text, config);
+        let lemmeknow_result = lemmeknow.check(text);
         if lemmeknow_result.is_identified {
             let mut check_res = CheckResult::new(&lemmeknow);
-            if config.human_checker_on{
-                check_res.is_identified = human_checker::human_checker(&lemmeknow_result);
-            }
+            check_res.is_identified = human_checker::human_checker(&lemmeknow_result);
             return check_res;
         }
 
         let english = Checker::<EnglishChecker>::new();
-        let english_result = english.check(text, config);
+        let english_result = english.check(text);
         if english_result.is_identified {
             let mut check_res = CheckResult::new(&english);
-            if config.human_checker_on{
-                check_res.is_identified = human_checker::human_checker(&english_result);
-            }
+            check_res.is_identified = human_checker::human_checker(&english_result);
             return check_res;
         }
 

@@ -12,6 +12,8 @@
 mod api_library_input_struct;
 /// Checkers is a module that contains the functions that check if the input is plaintext
 pub mod checkers;
+/// CLI Arg Parsing library
+pub mod cli;
 /// CLI Input Parser parses the input from the CLI and returns a struct.
 mod cli_input_parser;
 /// The Config module enables a configuration module
@@ -28,23 +30,24 @@ mod searchers;
 /// The storage module contains all the dictionaries and provides
 /// storage of data to our decoderrs and checkers.
 mod storage;
-/// CLI Arg Parsing library 
-pub mod cli;
 
 use crate::config::Config;
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ares::perform_cracking;
-/// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu");
+/// use ares::config::Config;
+///
+/// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", Config::default());
 /// assert!(true)
 /// ```
-pub fn perform_cracking(text: &str, config: &Config) -> Option<String> {
+pub fn perform_cracking(text: &str, config: Config) -> Option<String> {
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
     // Perform the search algorithm
     // It will either return a failure or success.
-    searchers::search_for_plaintext(text, config)
+    config::set_global_config(config);
+    searchers::search_for_plaintext(text)
 }
 
 #[cfg(test)]
@@ -54,8 +57,8 @@ mod tests {
 
     #[test]
     fn test_perform_cracking_returns() {
-        let config = Config::default(); 
-        perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh", &config);
+        let config = Config::default();
+        perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh", config);
     }
 
     #[test]
@@ -65,21 +68,21 @@ mod tests {
         // assert!(result.is_some());
         // assert!(result.unwrap() == "CANARY: hello")
         let config = Config::default();
-        let result = perform_cracking("b2xsZWg=", &config);
+        let result = perform_cracking("b2xsZWg=", config);
         assert!(result.is_some());
         assert!(result.unwrap() == "hello");
     }
     #[test]
     fn test_perform_cracking_returns_failure() {
         let config = Config::default();
-        let result = perform_cracking("", &config);
+        let result = perform_cracking("", config);
         assert!(result.is_none());
     }
 
     #[test]
     fn test_perform_cracking_returns_successful_base64_reverse() {
         let config = Config::default();
-        let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", &config);
+        let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", config);
         assert!(result.is_some());
         assert!(result.unwrap() == "hello there general")
     }

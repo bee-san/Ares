@@ -1,12 +1,11 @@
 use log::trace;
 use std::collections::HashSet;
-use crate::config::Config;
 
 use crate::{decoders::crack_results::CrackResult, filtration_system::MyResults};
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
-pub fn bfs(input: &str, config: &Config) -> Option<String> {
+pub fn bfs(input: &str) -> Option<String> {
     let mut seen_strings = HashSet::new();
     // all strings to search through
     let mut current_strings = vec![input.to_string()];
@@ -21,7 +20,7 @@ pub fn bfs(input: &str, config: &Config) -> Option<String> {
 
         current_strings
             .into_iter()
-            .map(|current_string| super::perform_decoding(&current_string, config))
+            .map(|current_string| super::perform_decoding(&current_string))
             .try_for_each(|elem| match elem {
                 // if it's Break variant, we have cracked the text successfully
                 // so just stop processing further.
@@ -62,7 +61,6 @@ pub fn bfs(input: &str, config: &Config) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::config::Config;
 
     #[test]
     fn bfs_succeeds() {
@@ -70,8 +68,7 @@ mod tests {
         // let result = bfs("Q0FOQVJZOiBoZWxsbw==");
         // assert!(result.is_some());
         // assert!(result.unwrap() == "CANARY: hello");
-        let config = Config::default();
-        let result = bfs("b2xsZWg=", &config);
+        let result = bfs("b2xsZWg=");
         assert!(result.is_some());
         assert!(result.unwrap() == "hello");
     }
@@ -87,9 +84,8 @@ mod tests {
     fn non_deterministic_like_behaviour_regression_test() {
         // text was too long, so we put \ to escape the \n
         // and put the rest of string on next line.
-        let config = Config::default();
         let result = bfs("UFRCRVRWVkNiRlZMTVVkYVVFWjZVbFZPU0\
-        dGMU1WVlpZV2d4VkRVNWJWWnJjRzFVUlhCc1pYSlNWbHBPY0VaV1ZXeHJWRWd4TUZWdlZsWlg=", &config);
+        dGMU1WVlpZV2d4VkRVNWJWWnJjRzFVUlhCc1pYSlNWbHBPY0VaV1ZXeHJWRWd4TUZWdlZsWlg=");
         assert!(result.is_some());
         assert_eq!(result.unwrap(), "https://www.google.com");
     }
