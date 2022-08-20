@@ -8,7 +8,8 @@ use text_io::read;
 /// TODO: Add a way to specify a list of checkers to use in the library. This checker is not library friendly!
 // compile this if we are not running tests
 pub fn human_checker(input: &CheckResult) -> bool {
-    let config = CONFIG.wait(); // wait instead of get so it waits for config being set
+    // wait instead of get so it waits for config being set
+    let config = CONFIG.wait(); 
     if !config.human_checker_on {
         return true;
     }
