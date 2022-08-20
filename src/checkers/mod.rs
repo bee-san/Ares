@@ -56,7 +56,6 @@ mod tests {
 
     #[test]
     fn test_check_ip_address() {
-        // set global config
         set_global_config(Config::default());
         let athena = CheckerTypes::CheckAthena(Checker::<Athena>::new());
         assert!(athena.check("192.168.0.1").is_identified);
