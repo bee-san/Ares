@@ -68,7 +68,6 @@ mod tests {
         // let result = bfs("Q0FOQVJZOiBoZWxsbw==");
         // assert!(result.is_some());
         // assert!(result.unwrap() == "CANARY: hello");
-
         let result = bfs("b2xsZWg=");
         assert!(result.is_some());
         assert!(result.unwrap() == "hello");

@@ -1,7 +1,6 @@
+use super::checker_type::{Check, Checker};
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::{Data, Identifier};
-
-use super::checker_type::{Check, Checker};
 
 /// The Lemmeknow checker configuration struct
 const IDENTIFIER: Identifier = Identifier {

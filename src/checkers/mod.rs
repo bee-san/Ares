@@ -45,20 +45,25 @@ impl CheckerTypes {
 // test
 #[cfg(test)]
 mod tests {
-    use crate::checkers::{
-        athena::Athena,
-        checker_type::{Check, Checker},
-        CheckerTypes,
+    use crate::{
+        checkers::{
+            athena::Athena,
+            checker_type::{Check, Checker},
+            CheckerTypes,
+        },
+        config::{set_global_config, Config},
     };
 
     #[test]
     fn test_check_ip_address() {
+        set_global_config(Config::default());
         let athena = CheckerTypes::CheckAthena(Checker::<Athena>::new());
         assert!(athena.check("192.168.0.1").is_identified);
     }
 
     #[test]
     fn test_check_goes_to_dictionary() {
+        set_global_config(Config::default());
         let athena = CheckerTypes::CheckAthena(Checker::<Athena>::new());
         assert!(athena.check("and").is_identified);
     }
