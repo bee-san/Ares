@@ -3,9 +3,11 @@ use ares::checkers::checker_type::{Check, Checker};
 use ares::checkers::CheckerTypes;
 use ares::decoders::base64_decoder::Base64Decoder;
 use ares::decoders::interface::{Crack, Decoder};
+use ares::config::{Config, set_global_config};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
 
 pub fn criterion_benchmark(c: &mut Criterion) {
+    set_global_config(Config::default()); 
     let decode_base64 = Decoder::<Base64Decoder>::new();
     let athena_checker = Checker::<Athena>::new();
     let checker = CheckerTypes::CheckAthena(athena_checker);
