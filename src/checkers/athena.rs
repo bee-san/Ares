@@ -28,7 +28,6 @@ impl Check for Checker<Athena> {
 
     fn check(&self, text: &str) -> CheckResult {
         // TODO: wrap all checkers in oncecell so we only create them once!
-        // let config = CONFIG.wait(); // wait instead of get so it waits for config being set
         let lemmeknow = Checker::<LemmeKnow>::new();
         let lemmeknow_result = lemmeknow.check(text);
         if lemmeknow_result.is_identified {
