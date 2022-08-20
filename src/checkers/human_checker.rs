@@ -10,6 +10,7 @@ use text_io::read;
 pub fn human_checker(input: &CheckResult) -> bool {
     // wait instead of get so it waits for config being set
     let config = CONFIG.wait(); 
+    // We still call human checker, just if config is false we return True
     if !config.human_checker_on {
         return true;
     }
