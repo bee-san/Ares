@@ -1,5 +1,5 @@
 use crate::config::Config;
-/// This doc string acts as a help message when the uses runs '--help'
+/// This doc string acts as a help message when the usees run '--help' in CLI mode
 /// as do all doc strings on fields
 use clap::Parser;
 use lemmeknow::Identifier;
