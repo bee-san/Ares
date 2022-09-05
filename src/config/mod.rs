@@ -35,8 +35,8 @@ pub fn set_global_config(config: Config) {
     CONFIG.set(config).ok(); // ok() used to make compiler happy about using Result
 }
 
-/// Get hthe global config.
-/// This will return default config if the config isn't initialized
+/// Get the global config.
+/// This will return default config if the config wasn't already initialized
 pub fn get_config() -> &'static Config {
     CONFIG.get_or_init(Config::default)
 }
