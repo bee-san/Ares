@@ -1,5 +1,5 @@
 use crate::checkers::checker_result::CheckResult;
-use crate::config::CONFIG;
+use crate::config::get_config;
 use text_io::read;
 
 /// The Human Checker asks humans if the expected plaintext is real plaintext
@@ -9,7 +9,7 @@ use text_io::read;
 // compile this if we are not running tests
 pub fn human_checker(input: &CheckResult) -> bool {
     // wait instead of get so it waits for config being set
-    let config = CONFIG.wait();
+    let config = get_config();
     // We still call human checker, just if config is false we return True
     if !config.human_checker_on {
         return true;

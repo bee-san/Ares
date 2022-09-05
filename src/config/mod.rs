@@ -8,10 +8,11 @@ use once_cell::sync::OnceCell;
 /// For the entire program
 /// It's access using a variable like configuration
 /// ```rust
-/// use ares::config::{CONFIG, Config, set_global_config};
-/// set_global_config(Config::default());
+/// use ares::config::get_config;
 /// // Assert that the CONFIG has an offline mode
-/// assert!(!CONFIG.wait().offline_mode);
+/// let config = get_config();
+/// assert!(!config.offline_mode);
+/// ```
 
 pub struct Config {
     /// A level of verbosity to determine.
@@ -26,13 +27,18 @@ pub struct Config {
     pub offline_mode: bool,
 }
 
-/// Global config
-pub static CONFIG: OnceCell<Config> = OnceCell::new();
+/// Cell for storing global Config
+static CONFIG: OnceCell<Config> = OnceCell::new();
 
-#[allow(unused_must_use)]
-/// To initialize global config
+/// To initialize global config with custom values
 pub fn set_global_config(config: Config) {
-    CONFIG.set(config);
+    CONFIG.set(config).ok(); // ok() used to make compiler happy about using Result
+}
+
+/// Get hthe global config.
+/// This will return default config if the config isn't initialized
+pub fn get_config() -> &'static Config {
+    CONFIG.get_or_init(Config::default)
 }
 
 /// Creates a default lemmeknow config
