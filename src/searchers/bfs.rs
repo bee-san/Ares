@@ -1,9 +1,8 @@
+use crate::config::CONFIG;
 use log::trace;
 use std::collections::HashSet;
-use crate::config::CONFIG;
 
 use crate::{decoders::crack_results::CrackResult, filtration_system::MyResults};
-
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search

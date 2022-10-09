@@ -19,3 +19,17 @@ fn test_no_panic_if_empty_string() {
     perform_cracking("", config);
     assert_eq!(true, true);
 }
+
+// To test if max depth limit is working, we set max_depth in the global config
+// Due to config being global, we don't want it to interfere with other tests, or vice-versa
+// This is why we put it in intergration_tests, as they are run independently.
+// https://doc.rust-lang.org/book/ch11-03-test-organization.html?highlight=integration#integration-tests
+#[test]
+fn max_depth_test() {
+    // text is encoded with base64 5 times
+    let mut config = Config::default();
+    config.max_depth = 4;
+    let result = perform_cracking("VjFaV2ExWXlUWGxUYTJoUVVrUkJPUT09", config);
+    // It goes only upto depth 4, so it can't find the plaintext
+    assert!(result.is_none());
+}

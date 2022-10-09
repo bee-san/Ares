@@ -22,7 +22,7 @@ pub struct Opts {
     disable_human_checker: bool,
 
     /// Maximum number of decodings to perform on a string
-    #[clap(short, long, default_value="10000")]
+    #[clap(short, long, default_value = "10000")]
     max_depth: u32,
 }
 
