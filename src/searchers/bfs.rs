@@ -3,6 +3,8 @@ use std::collections::HashSet;
 
 use crate::{decoders::crack_results::CrackResult, filtration_system::MyResults};
 
+const MAX_DEPTH: u32 = 4;
+
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
 pub fn bfs(input: &str) -> Option<String> {
@@ -12,8 +14,10 @@ pub fn bfs(input: &str) -> Option<String> {
 
     let mut exit_result: Option<CrackResult> = None;
 
+    let mut curr_depth: u32 = 1; // as we have input string, so we start from 1
+
     // loop through all of the strings in the vec
-    while !current_strings.is_empty() {
+    while !current_strings.is_empty() && curr_depth <= MAX_DEPTH {
         trace!("Number of potential decodings: {}", current_strings.len());
 
         let mut new_strings: Vec<String> = vec![];
@@ -51,6 +55,7 @@ pub fn bfs(input: &str) -> Option<String> {
         }
 
         current_strings = new_strings;
+        curr_depth += 1;
 
         trace!("Refreshed the vector, {:?}", current_strings);
     }
