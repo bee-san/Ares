@@ -1,9 +1,9 @@
 use log::trace;
 use std::collections::HashSet;
+use crate::config::CONFIG;
 
 use crate::{decoders::crack_results::CrackResult, filtration_system::MyResults};
 
-const MAX_DEPTH: u32 = 4;
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
@@ -14,11 +14,14 @@ pub fn bfs(input: &str) -> Option<String> {
 
     let mut exit_result: Option<CrackResult> = None;
 
+    let max_depth = CONFIG.wait().max_depth;
+
     let mut curr_depth: u32 = 1; // as we have input string, so we start from 1
 
     // loop through all of the strings in the vec
-    while !current_strings.is_empty() && curr_depth <= MAX_DEPTH {
+    while !current_strings.is_empty() && curr_depth <= max_depth {
         trace!("Number of potential decodings: {}", current_strings.len());
+        trace!("Current depth is {:?}; [ {:?} max ]", curr_depth, max_depth);
 
         let mut new_strings: Vec<String> = vec![];
 

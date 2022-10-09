@@ -20,6 +20,10 @@ pub struct Opts {
     /// Turn off human checker
     #[clap(short, long)]
     disable_human_checker: bool,
+
+    /// Maximum number of decodings to perform on a string
+    #[clap(short, long, default_value="10000")]
+    max_depth: u32,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -54,6 +58,7 @@ fn cli_args_into_config_struct(opts: Opts) -> (String, Config) {
             // default is false, we want default to be true
             human_checker_on: !opts.disable_human_checker,
             offline_mode: true,
+            max_depth: opts.max_depth,
         },
     )
 }

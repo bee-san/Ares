@@ -24,6 +24,8 @@ pub struct Config {
     pub human_checker_on: bool,
     /// Is the program being run in offline mode?
     pub offline_mode: bool,
+    /// Number of times decoding shall be perfomed
+    pub max_depth: u32,
 }
 
 /// Global config
@@ -52,6 +54,7 @@ impl Default for Config {
             lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG,
             human_checker_on: false,
             offline_mode: false,
+            max_depth: 10_000, // TODO: Set this to some better value
         }
     }
 }
