@@ -1,8 +1,9 @@
-use crate::config::CONFIG;
 use log::trace;
 use std::collections::HashSet;
 
-use crate::{decoders::crack_results::CrackResult, filtration_system::MyResults};
+use crate::{
+    config::get_config, decoders::crack_results::CrackResult, filtration_system::MyResults,
+};
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
@@ -13,7 +14,7 @@ pub fn bfs(input: &str) -> Option<String> {
 
     let mut exit_result: Option<CrackResult> = None;
 
-    let max_depth = CONFIG.wait().max_depth;
+    let max_depth = get_config().max_depth;
 
     let mut curr_depth: u32 = 1; // as we have input string, so we start from 1
 
