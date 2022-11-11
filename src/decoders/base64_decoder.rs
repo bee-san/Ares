@@ -20,14 +20,11 @@ use log::{debug, info, trace};
 /// ```
 /// use ares::decoders::base64_decoder::{Base64Decoder};
 /// use ares::decoders::interface::{Crack, Decoder};
-/// use ares::config::{set_global_config, Config};
 /// use ares::checkers::{athena::Athena, CheckerTypes, checker_type::{Check, Checker}};
 ///
 /// let decode_base64 = Decoder::<Base64Decoder>::new();
 /// let athena_checker = Checker::<Athena>::new();
 /// let checker = CheckerTypes::CheckAthena(athena_checker);
-/// // set global config
-/// set_global_config(Config::default());
 ///
 /// let result = decode_base64.crack("aGVsbG8gd29ybGQ=", &checker).unencrypted_text;
 /// assert!(result.is_some());
