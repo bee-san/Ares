@@ -20,8 +20,6 @@ use log::trace;
 /// let reversedecoder = Decoder::<ReverseDecoder>::new();
 /// let athena_checker = Checker::<Athena>::new();
 /// let checker = CheckerTypes::CheckAthena(athena_checker);
-/// // set global config
-/// set_global_config(Config::default());
 ///
 /// let result = reversedecoder.crack("stac", &checker).unencrypted_text;
 /// assert!(result.is_some());
