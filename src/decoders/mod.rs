@@ -20,3 +20,6 @@ pub mod interface;
 /// Stac -> Cats
 /// It is public as we use it in some tests.
 pub mod reverse_decoder;
+
+/// The dictionary decoder module decodes text using a dictionary
+mod dictionary_decoder;
