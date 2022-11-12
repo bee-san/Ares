@@ -5,16 +5,19 @@ use crate::{decoders::crack_results::CrackResult, filtration_system::MyResults};
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
-pub fn bfs(input: &str) -> Option<String> {
+pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<String> {
     let mut seen_strings = HashSet::new();
     // all strings to search through
     let mut current_strings = vec![input.to_string()];
 
     let mut exit_result: Option<CrackResult> = None;
 
+    let mut curr_depth: u32 = 1; // as we have input string, so we start from 1
+
     // loop through all of the strings in the vec
-    while !current_strings.is_empty() {
+    while !current_strings.is_empty() && max_depth.map_or(true, |x| curr_depth <= x) {
         trace!("Number of potential decodings: {}", current_strings.len());
+        trace!("Current depth is {:?}; [ {:?} max ]", curr_depth, max_depth);
 
         let mut new_strings: Vec<String> = vec![];
 
@@ -51,6 +54,7 @@ pub fn bfs(input: &str) -> Option<String> {
         }
 
         current_strings = new_strings;
+        curr_depth += 1;
 
         trace!("Refreshed the vector, {:?}", current_strings);
     }
@@ -68,7 +72,7 @@ mod tests {
         // let result = bfs("Q0FOQVJZOiBoZWxsbw==");
         // assert!(result.is_some());
         // assert!(result.unwrap() == "CANARY: hello");
-        let result = bfs("b2xsZWg=");
+        let result = bfs("b2xsZWg=", None);
         assert!(result.is_some());
         assert!(result.unwrap() == "hello");
     }
@@ -84,9 +88,20 @@ mod tests {
     fn non_deterministic_like_behaviour_regression_test() {
         // text was too long, so we put \ to escape the \n
         // and put the rest of string on next line.
-        let result = bfs("UFRCRVRWVkNiRlZMTVVkYVVFWjZVbFZPU0\
-        dGMU1WVlpZV2d4VkRVNWJWWnJjRzFVUlhCc1pYSlNWbHBPY0VaV1ZXeHJWRWd4TUZWdlZsWlg=");
+        let result = bfs(
+            "UFRCRVRWVkNiRlZMTVVkYVVFWjZVbFZPU0\
+        dGMU1WVlpZV2d4VkRVNWJWWnJjRzFVUlhCc1pYSlNWbHBPY0VaV1ZXeHJWRWd4TUZWdlZsWlg=",
+            None,
+        );
         assert!(result.is_some());
         assert_eq!(result.unwrap(), "https://www.google.com");
+    }
+
+    #[test]
+    fn max_depth_test() {
+        // text is encoded with base64 5 times
+        let result = bfs("VjFaV2ExWXlUWGxUYTJoUVVrUkJPUT09", Some(4));
+        // It goes only upto depth 4, so it can't find the plaintext
+        assert!(result.is_none());
     }
 }
