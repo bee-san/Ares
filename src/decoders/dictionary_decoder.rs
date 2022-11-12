@@ -4,17 +4,18 @@ use std::{collections::HashMap, error::Error};
 ///! a mapping of X -> Y, decode that text.
 
 
-pub fn dictionary_decode(input: &str, dictionary: &HashMap<char, char>) -> Option<String> {
-    let mut outputStr = String::new();
+pub fn dictionary_decode(input: &str, dictionary: &HashMap<&str, &str>) -> Option<String> {
+    let mut outputStr = Vec::new();
     for x in input.chars() {
+        let x = x.to_string().to_uppercase().to_owned();
         // TODO support uppercase
-        if !dictionary.contains_key(&x) {
+        if !dictionary.contains_key::<str>(&x) {
             return None;
         }
         outputStr.push(dictionary[&x]);
 
     }
-    return Some(outputStr);
+    return Some(outputStr.join(" "));
 }
 
 #[cfg(test)]
