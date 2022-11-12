@@ -46,8 +46,9 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<String> {
     // let search_tree = searchers::Tree::new(text.to_string());
     // Perform the search algorithm
     // It will either return a failure or success.
+    let max_depth = config.max_depth;
     config::set_global_config(config);
-    searchers::search_for_plaintext(text)
+    searchers::search_for_plaintext(text, max_depth)
 }
 
 #[cfg(test)]
