@@ -58,7 +58,7 @@ fn cli_args_into_config_struct(opts: Opts) -> (String, Config) {
             // default is false, we want default to be true
             human_checker_on: !opts.disable_human_checker,
             offline_mode: true,
-            max_depth: opts.max_depth,
+            max_depth: Some(opts.max_depth),
         },
     )
 }
