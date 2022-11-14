@@ -27,7 +27,7 @@ use log::{debug, info, trace};
 /// let athena_checker = Checker::<Athena>::new();
 /// let checker = CheckerTypes::CheckAthena(athena_checker);
 ///
-/// let result = decode_base32.crack("aGVsbG8gd29ybGQ=", &checker).unencrypted_text;
+/// let result = decode_base32.crack("NBSWY3DPEB3W64TMMQ======", &checker).unencrypted_text;
 /// assert!(result.is_some());
 /// assert_eq!(result.unwrap(), "hello world");
 /// ```
