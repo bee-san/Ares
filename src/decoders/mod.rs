@@ -5,6 +5,7 @@
 //! mod.rs file
 //! you will also need to make it a public module in this file.
 
+pub mod base32_decoder;
 /// The base64_decoder module decodes base64
 /// It is public as we use it in some tests.
 pub mod base64_decoder;
