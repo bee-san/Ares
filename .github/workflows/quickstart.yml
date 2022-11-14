@@ -79,3 +79,9 @@ jobs:
         with:
           command: clippy
           args: -- -D warnings
+  cargo-deny:
+    name: Cargo-deny
+    runs-on: [ubuntu-latest, windows-latest, macos-latest]
+    steps:
+    - uses: actions/checkout@v2
+    - uses: EmbarkStudios/cargo-deny-action@v1
