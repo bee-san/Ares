@@ -23,3 +23,7 @@ pub mod reverse_decoder;
 
 /// The dictionary decoder module decodes text using a dictionary
 mod dictionary_decoder;
+
+/// The morse_code module decodes morse code
+/// It is public as we use it in some tests.
+pub mod morse_code;

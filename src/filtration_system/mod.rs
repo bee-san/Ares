@@ -7,6 +7,7 @@ use crate::checkers::CheckerTypes;
 use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::crack_results::CrackResult;
 use crate::decoders::interface::{Crack, Decoder};
+use crate::decoders::morse_code::MorseCodeDecoder;
 use crate::decoders::reverse_decoder::ReverseDecoder;
 
 use log::trace;
@@ -89,8 +90,9 @@ pub fn filter_and_get_decoders() -> Decoders {
     trace!("Filtering and getting all decoders");
     let base64 = Decoder::<Base64Decoder>::new();
     let reversedecoder = Decoder::<ReverseDecoder>::new();
+    let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
     Decoders {
-        components: vec![Box::new(base64), Box::new(reversedecoder)],
+        components: vec![Box::new(base64), Box::new(reversedecoder), Box::new(morsecodedecoder)],
     }
 }
 
