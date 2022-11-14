@@ -9,6 +9,7 @@ use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
 use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::crack_results::CrackResult;
 use crate::decoders::interface::{Crack, Decoder};
+use crate::decoders::morse_code::MorseCodeDecoder;
 use crate::decoders::reverse_decoder::ReverseDecoder;
 
 use log::trace;
@@ -93,12 +94,14 @@ pub fn filter_and_get_decoders() -> Decoders {
     let base64 = Decoder::<Base64Decoder>::new();
     let base32 = Decoder::<Base32Decoder>::new();
     let reversedecoder = Decoder::<ReverseDecoder>::new();
+    let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
     Decoders {
         components: vec![
             Box::new(base58_bitcoin),
             Box::new(base64),
             Box::new(base32),
             Box::new(reversedecoder),
+            Box::new(morsecodedecoder),
         ],
     }
 }
