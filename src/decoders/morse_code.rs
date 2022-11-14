@@ -1,13 +1,4 @@
-use std::collections::HashMap;
-
-///! Decode a base64 string
-///! Performs error handling and returns a string
-///! Call base64_decoder.crack to use. It returns option<String> and check with
-///! `result.is_some()` to see if it returned okay.
-///
-
 use crate::checkers::CheckerTypes;
-use crate::decoders::dictionary_decoder::dictionary_decode;
 use crate::decoders::interface::check_string_success;
 
 use super::crack_results::CrackResult;
@@ -43,7 +34,8 @@ impl Crack for Decoder<MorseCodeDecoder> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying Morse Code with text {:?}", text);
         // TODO support new line and slash morse code
-        let decoded_text = dictionary_decode(&text.split(" ").collect(), &_morse_to_alphanumeric_dictionary());
+        let decoded_text: Option<String> = text.split(' ').map(morse_to_alphanumeric).collect();
+
         trace!("Decoded text for morse code: {:?}", decoded_text);
         let mut results = CrackResult::new(self, text.to_string());
 
@@ -71,15 +63,9 @@ impl Crack for Decoder<MorseCodeDecoder> {
 
 }
 
-// Declaritive macro for creating readable map declarations, for more info see https://doc.rust-lang.org/book/ch19-06-macros.html
-macro_rules! map {
-    ($($key:expr => $value:expr),* $(,)?) => {
-        std::iter::Iterator::collect(IntoIterator::into_iter([$(($key, $value),)*]))
-    };
-}
-
-fn _morse_to_alphanumeric_dictionary() -> HashMap<&'static str, &'static str> {
-    map! {
+/// Maps morse code to its alphanumeric character, returns None for invalid morse-code
+fn morse_to_alphanumeric(text: &str) -> Option<&str> {
+    let result = match text {
         ".-"   =>  "A",      "-..." => "B",    "-.-." => "C",
         "-.."  =>  "D",      "."    => "E",       "..-." => "F",
         "--."  =>  "G",      "...." => "H",    ".." => "I",
@@ -100,8 +86,11 @@ fn _morse_to_alphanumeric_dictionary() -> HashMap<&'static str, &'static str> {
         ".-..-." => "\"",  "..--.." => "?",  "-..-." => "/",
         "-...-" => "=",   ".-.-." => "+",   "-....-" => "-",
         "-.--." => "(",   "-.--.-" => ")",  "/" => " ",
-        "-.-.--" => "!",  " " => " ",       "" => ""
-    }
+        "-.-.--" => "!",  " " => " ",       "" => "",
+        _ => return None,
+    };
+
+    Some(result)
 }
 
 #[cfg(test)]
