@@ -5,6 +5,10 @@
 //! mod.rs file
 //! you will also need to make it a public module in this file.
 
+/// The base32_decoder module decodes base32
+pub mod base32_decoder;
+/// The base58_bitcoin_decoder module decodes base58 bitcoin
+pub mod base58_bitcoin_decoder;
 /// The base64_decoder module decodes base64
 /// It is public as we use it in some tests.
 pub mod base64_decoder;
