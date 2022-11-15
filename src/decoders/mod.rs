@@ -9,6 +9,8 @@
 pub mod base32_decoder;
 /// The base58_bitcoin_decoder module decodes base58 bitcoin
 pub mod base58_bitcoin_decoder;
+/// The base58_monero_decoder module decodes base58 monero
+pub mod base58_monero_decoder;
 /// The base64_decoder module decodes base64
 /// It is public as we use it in some tests.
 pub mod base64_decoder;
