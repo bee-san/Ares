@@ -12,6 +12,8 @@ pub mod base58_bitcoin_decoder;
 /// The base64_decoder module decodes base64
 /// It is public as we use it in some tests.
 pub mod base64_decoder;
+/// The base91_decoder module decodes base91
+pub mod base91_decoder;
 /// The crack_results module defines the CrackResult
 /// Each and every decoder return same CrackResult
 pub mod crack_results;
