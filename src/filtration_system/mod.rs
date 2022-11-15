@@ -4,8 +4,8 @@ use crate::checkers::CheckerTypes;
 use crate::decoders::base32_decoder::Base32Decoder;
 use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
 
-use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
 use crate::decoders::base58_flickr_decoder::Base58FlickrDecoder;
+use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
 
 ///! Proposal: https://broadleaf-angora-7db.notion.site/Filtration-System-7143b36a42f1466faea3077bfc7e859e
 ///! Given a filter object, return an array of decoders/crackers which have been filtered
