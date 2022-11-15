@@ -3,6 +3,7 @@ use std::sync::mpsc::channel;
 use crate::checkers::CheckerTypes;
 use crate::decoders::base32_decoder::Base32Decoder;
 use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
+use crate::decoders::base58_monero_decoder::Base58MoneroDecoder;
 
 use crate::decoders::base58_flickr_decoder::Base58FlickrDecoder;
 use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
@@ -95,6 +96,7 @@ impl MyResults {
 pub fn filter_and_get_decoders() -> Decoders {
     trace!("Filtering and getting all decoders");
     let base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
+    let base58_monero = Decoder::<Base58MoneroDecoder>::new();
     let base58_ripple = Decoder::<Base58RippleDecoder>::new();
     let base58_flickr = Decoder::<Base58FlickrDecoder>::new();
     let base64 = Decoder::<Base64Decoder>::new();
@@ -104,6 +106,7 @@ pub fn filter_and_get_decoders() -> Decoders {
     Decoders {
         components: vec![
             Box::new(base58_bitcoin),
+            Box::new(base58_monero),
             Box::new(base58_ripple),
             Box::new(base58_flickr),
             Box::new(base64),
