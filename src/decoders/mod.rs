@@ -12,7 +12,6 @@ pub mod base58_bitcoin_decoder;
 /// The base58_monero_decoder module decodes base58 monero
 pub mod base58_monero_decoder;
 
-
 /// The base58_ripple_decoder module decodes base58 ripple
 pub mod base58_ripple_decoder;
 
