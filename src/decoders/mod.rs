@@ -11,6 +11,14 @@ pub mod base32_decoder;
 pub mod base58_bitcoin_decoder;
 /// The base58_monero_decoder module decodes base58 monero
 pub mod base58_monero_decoder;
+
+
+/// The base58_ripple_decoder module decodes base58 ripple
+pub mod base58_ripple_decoder;
+
+/// The base58_flickr decoder module decodes base58 flickr
+pub mod base58_flickr_decoder;
+
 /// The base64_decoder module decodes base64
 /// It is public as we use it in some tests.
 pub mod base64_decoder;
