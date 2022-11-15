@@ -3,7 +3,10 @@ use std::sync::mpsc::channel;
 use crate::checkers::CheckerTypes;
 use crate::decoders::base32_decoder::Base32Decoder;
 use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
+
 use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
+use crate::decoders::base58_flickr_decoder::Base58FlickrDecoder;
+
 ///! Proposal: https://broadleaf-angora-7db.notion.site/Filtration-System-7143b36a42f1466faea3077bfc7e859e
 ///! Given a filter object, return an array of decoders/crackers which have been filtered
 ///
@@ -93,6 +96,7 @@ pub fn filter_and_get_decoders() -> Decoders {
     trace!("Filtering and getting all decoders");
     let base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
     let base58_ripple = Decoder::<Base58RippleDecoder>::new();
+    let base58_flickr = Decoder::<Base58FlickrDecoder>::new();
     let base64 = Decoder::<Base64Decoder>::new();
     let base32 = Decoder::<Base32Decoder>::new();
     let reversedecoder = Decoder::<ReverseDecoder>::new();
@@ -101,6 +105,7 @@ pub fn filter_and_get_decoders() -> Decoders {
         components: vec![
             Box::new(base58_bitcoin),
             Box::new(base58_ripple),
+            Box::new(base58_flickr),
             Box::new(base64),
             Box::new(base32),
             Box::new(reversedecoder),
