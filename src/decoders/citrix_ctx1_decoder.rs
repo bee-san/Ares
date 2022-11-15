@@ -65,6 +65,10 @@ fn decode_citrix_ctx1(text: &str) -> Option<String> {
         return None;
     }
 
+    if text.to_uppercase() != text || !text.chars().all(|c| c.is_ascii()) {
+        return None;
+    }
+
     let mut rev = text.as_bytes().to_vec();
     rev.reverse();
     let mut result = Vec::new();
