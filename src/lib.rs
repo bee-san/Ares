@@ -40,7 +40,7 @@ use crate::config::Config;
 /// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", Config::default());
 /// assert!(true)
 /// ```
-pub fn perform_cracking(text: &str, config: Config) -> Option<String> {
+pub fn perform_cracking(text: &str, config: Config) -> Option<Text> {
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
@@ -49,6 +49,15 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<String> {
     let max_depth = config.max_depth;
     config::set_global_config(config);
     searchers::search_for_plaintext(text, max_depth)
+}
+
+/// Our custom text which also has path to get there
+#[derive(Debug)]
+pub struct Text {
+    /// text we got
+    pub text: String,
+    /// decoder used so far to get this text
+    pub path: Vec<&'static str>,
 }
 
 #[cfg(test)]
@@ -71,7 +80,7 @@ mod tests {
         let config = Config::default();
         let result = perform_cracking("b2xsZWg=", config);
         assert!(result.is_some());
-        assert!(result.unwrap() == "hello");
+        assert!(result.unwrap().text == "hello");
     }
     #[test]
     fn test_perform_cracking_returns_failure() {
@@ -85,6 +94,6 @@ mod tests {
         let config = Config::default();
         let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", config);
         assert!(result.is_some());
-        assert!(result.unwrap() == "hello there general")
+        assert!(result.unwrap().text == "hello there general")
     }
 }

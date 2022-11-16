@@ -1,16 +1,20 @@
 use log::trace;
 use std::collections::HashSet;
 
-use crate::{decoders::crack_results::CrackResult, filtration_system::MyResults};
+use crate::{filtration_system::MyResults, Text};
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
-pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<String> {
+pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<Text> {
+    let initial = Text {
+        text: input.to_string(),
+        path: vec![],
+    };
     let mut seen_strings = HashSet::new();
     // all strings to search through
-    let mut current_strings = vec![input.to_string()];
+    let mut current_strings = vec![initial];
 
-    let mut exit_result: Option<CrackResult> = None;
+    let mut exit_result: Option<Text> = None;
 
     let mut curr_depth: u32 = 1; // as we have input string, so we start from 1
 
@@ -19,38 +23,51 @@ pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<String> {
         trace!("Number of potential decodings: {}", current_strings.len());
         trace!("Current depth is {:?}; [ {:?} max ]", curr_depth, max_depth);
 
-        let mut new_strings: Vec<String> = vec![];
+        let mut new_strings: Vec<Text> = vec![];
 
-        current_strings
-            .into_iter()
-            .map(|current_string| super::perform_decoding(&current_string))
-            .try_for_each(|elem| match elem {
+        current_strings.into_iter().try_for_each(|current_string| {
+            let res = super::perform_decoding(&current_string.text);
+
+            match res {
                 // if it's Break variant, we have cracked the text successfully
                 // so just stop processing further.
                 MyResults::Break(res) => {
-                    exit_result = Some(res);
+                    let mut decoders_used = current_string.path;
+                    decoders_used.push(res.decoder);
+                    decoders_used.reverse();
+                    let result_text = Text {
+                        text: res.unencrypted_text.unwrap_or_default(),
+                        path: decoders_used,
+                    };
+
+                    exit_result = Some(result_text);
                     None // short-circuits the iterator
                 }
                 MyResults::Continue(results_vec) => {
                     new_strings.extend(
                         results_vec
                             .into_iter()
-                            .flat_map(|r| r.unencrypted_text)
-                            .filter(|s| seen_strings.insert(s.clone())),
+                            .map(|r| {
+                                let mut decoders_used = current_string.path.clone();
+                                decoders_used.push(r.decoder);
+                                Text {
+                                    text: r.unencrypted_text.unwrap_or_default(),
+                                    path: decoders_used,
+                                }
+                            })
+                            .filter(|s| seen_strings.insert(s.text.clone())),
                     );
                     Some(()) // indicate we want to continue processing
                 }
-            });
+            }
+        });
 
         // if we find an element that matches our exit condition, return it!
         // technically this won't check if the initial string matches our exit condition
         // but this is a demo and i'll be lazy :P
-        if let Some(exit_res) = exit_result {
-            let exit_str = exit_res
-                .unencrypted_text
-                .expect("No unencrypted text even after checker succeed!");
-            trace!("Found exit string: {}", exit_str);
-            return Some(exit_str);
+        if exit_result.is_some() {
+            trace!("Found exit result: {:?}", exit_result);
+            return exit_result;
         }
 
         current_strings = new_strings;
@@ -74,7 +91,7 @@ mod tests {
         // assert!(result.unwrap() == "CANARY: hello");
         let result = bfs("b2xsZWg=", None);
         assert!(result.is_some());
-        assert!(result.unwrap() == "hello");
+        assert!(result.unwrap().text == "hello");
     }
 
     // Vector storing the strings to perform decoding in next iteraion
@@ -94,7 +111,7 @@ mod tests {
             None,
         );
         assert!(result.is_some());
-        assert_eq!(result.unwrap(), "https://www.google.com");
+        assert_eq!(result.unwrap().text, "https://www.google.com");
     }
 
     #[test]

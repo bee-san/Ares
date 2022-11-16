@@ -6,7 +6,11 @@ fn main() {
     let (text, config) = parse_cli_args();
     let result = perform_cracking(&text, config);
     match result {
-        Some(result) => println!("SUCCESSFUL {:?}", result),
+        Some(result) => {
+            println!("SUCCESSFUL 😁");
+            println!("PLAINTEXT: {:?}", result.text);
+            println!("DECODERS USED: {}", result.path.join(" -> "))
+        }
         None => println!("FAILED 😭"),
     }
 }
