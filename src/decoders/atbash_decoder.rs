@@ -106,7 +106,7 @@ mod tests {
     fn test_atbash_non_alphabetic_characters() {
         let decoder = Decoder::<AtbashDecoder>::new();
         let result = decoder.crack(
-            "Zgyzhs hslfow ovzev xszizxgvih orpv gsvhv: ',.39=_#%^ rmgzxg zugvi wvxlwrmt",
+            "Zgyzhs hslfow ovzev xszizxgvih orpv gsvhv: ',.39=_#%^ rmgzxg zugvi wvxlwrmt!",
             &get_athena_checker(),
         );
         assert_eq!(
