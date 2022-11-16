@@ -18,7 +18,7 @@ path = "src/main.rs"
 bench = false
 
 [dependencies]
-clap = {version = "4.0.24", features = ["derive"]}
+clap = {version = "4.0.26", features = ["derive"]}
 log = "0.4"
 env_logger = "0.9.3"
 base64 = "0.13.1"
