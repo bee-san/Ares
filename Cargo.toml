@@ -1,6 +1,6 @@
 [package]
 name = "project_ares"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 description = "Automated decoding tool, Ciphey but in Rust"
 license = "MIT"
@@ -18,10 +18,10 @@ path = "src/main.rs"
 bench = false
 
 [dependencies]
-clap = {version = "3.0.0-beta.2", features = ["derive"]}
+clap = {version = "4.0.24", features = ["derive"]}
 log = "0.4"
 env_logger = "0.9.3"
-base64 = "0.13.0"
+base64 = "0.13.1"
 rayon = "1.5.1"
 petgraph = "0.6.0"
 lemmeknow = "0.7.0"

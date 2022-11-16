@@ -17,7 +17,7 @@ use once_cell::sync::OnceCell;
 pub struct Config {
     /// A level of verbosity to determine.
     /// How much we print in logs.
-    pub verbose: i32,
+    pub verbose: u8,
     /// The lemmeknow config to use
     pub lemmeknow_config: Identifier,
     /// Should the human checker be on?
