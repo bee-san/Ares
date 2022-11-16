@@ -34,6 +34,7 @@ pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<Text> {
                 MyResults::Break(res) => {
                     let mut decoders_used = current_string.path;
                     decoders_used.push(res.decoder);
+                    decoders_used.reverse();
                     let result_text = Text {
                         text: res.unencrypted_text.unwrap_or_default(),
                         path: decoders_used,
@@ -117,7 +118,7 @@ mod tests {
     fn max_depth_test() {
         // text is encoded with base64 5 times
         let result = bfs("VjFaV2ExWXlUWGxUYTJoUVVrUkJPUT09", Some(4));
-        // It goes only upto depth 4, so it can't find the plaicantext
+        // It goes only upto depth 4, so it can't find the plaintext
         assert!(result.is_none());
     }
 }
