@@ -32,14 +32,14 @@ pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<Text> {
                 // if it's Break variant, we have cracked the text successfully
                 // so just stop processing further.
                 MyResults::Break(res) => {
-                    let mut new_text = Text {
+                    let mut decoders_used = current_string.path;
+                    decoders_used.push(res.decoder);
+                    let result_text = Text {
                         text: res.unencrypted_text.unwrap_or_default(),
-                        path: current_string.path.clone(),
+                        path: decoders_used,
                     };
 
-                    new_text.path.push(res.decoder);
-
-                    exit_result = Some(new_text);
+                    exit_result = Some(result_text);
                     None // short-circuits the iterator
                 }
                 MyResults::Continue(results_vec) => {
@@ -47,23 +47,15 @@ pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<Text> {
                         results_vec
                             .into_iter()
                             .map(|r| {
-                                let mut new_text = Text {
+                                let mut decoders_used = current_string.path.clone();
+                                decoders_used.push(r.decoder);
+                                Text {
                                     text: r.unencrypted_text.unwrap_or_default(),
-                                    path: current_string.path.clone(),
-                                };
-
-                                new_text.path.push(r.decoder);
-
-                                new_text
+                                    path: decoders_used,
+                                }
                             })
                             .filter(|s| seen_strings.insert(s.text.clone())),
                     );
-                    // new_strings.extend(
-                    //     results_vec
-                    //         .into_iter()
-                    //         .flat_map(|r| r.unencrypted_text)
-                    //         .filter(|s| seen_strings.insert(s.clone())),
-                    // );
                     Some(()) // indicate we want to continue processing
                 }
             }
