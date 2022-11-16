@@ -10,7 +10,7 @@ fn main() {
             println!("SUCCESSFUL 😁");
             println!("PLAINTEXT: {:?}", result.text);
             println!("DECODERS USED: {}", result.path.join(" -> "))
-        },
+        }
         None => println!("FAILED 😭"),
     }
 }
