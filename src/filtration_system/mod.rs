@@ -1,6 +1,7 @@
 use std::sync::mpsc::channel;
 
 use crate::checkers::CheckerTypes;
+use crate::decoders::atbash_decoder::AtbashDecoder;
 use crate::decoders::base32_decoder::Base32Decoder;
 use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
 use crate::decoders::base58_monero_decoder::Base58MoneroDecoder;
@@ -105,6 +106,7 @@ pub fn filter_and_get_decoders() -> Decoders {
     let base32 = Decoder::<Base32Decoder>::new();
     let reversedecoder = Decoder::<ReverseDecoder>::new();
     let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
+    let atbashdecoder = Decoder::<AtbashDecoder>::new();
     Decoders {
         components: vec![
             Box::new(base58_bitcoin),
@@ -116,6 +118,7 @@ pub fn filter_and_get_decoders() -> Decoders {
             Box::new(base32),
             Box::new(reversedecoder),
             Box::new(morsecodedecoder),
+            Box::new(atbashdecoder),
         ],
     }
 }
