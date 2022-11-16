@@ -130,10 +130,7 @@ mod tests {
     fn atbash_decode_handles_panics() {
         let atbash_decoder = Decoder::<AtbashDecoder>::new();
         let result = atbash_decoder
-            .crack(
-                "hello my name is panicky mc panic face!",
-                &get_athena_checker(),
-            )
+            .crack("583920482058430191", &get_athena_checker())
             .unencrypted_text;
         if result.is_some() {
             panic!("Decode_atbash did not return an option with Some<t>.")
