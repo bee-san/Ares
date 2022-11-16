@@ -7,22 +7,22 @@ use log::{debug, trace};
 
 /// The struct for Clap CLI arguments
 #[derive(Parser)]
-#[clap(version = "1.0", author = "Bee <bee@skerritt.blog>")]
+#[command(author = "Bee <bee@skerritt.blog>", version = "1.0", about, long_about = None)]
 pub struct Opts {
     /// Some input. Because this isn't an Option<T> it's required to be used
-    #[clap(short, long)]
+    #[arg(short, long)]
     text: String,
 
     /// A level of verbosity, and can be used multiple times
-    #[clap(short, long, parse(from_occurrences))]
-    verbose: i32,
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
 
     /// Turn off human checker
-    #[clap(short, long)]
+    #[arg(short, long)]
     disable_human_checker: bool,
 
     /// Maximum number of decodings to perform on a string
-    #[clap(short, long, default_value = "10000")]
+    #[arg(short, long, default_value = "10000")]
     max_depth: u32,
 }
 
