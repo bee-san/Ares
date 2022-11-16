@@ -66,11 +66,15 @@ fn atbash_to_alphabet(text: &str) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::checkers::athena::Athena;
-    use crate::checkers::checker_type::{Check, Checker};
-    use crate::checkers::CheckerTypes;
-    use crate::decoders::interface::Crack;
+    use super::AtbashDecoder;
+    use crate::{
+        checkers::{
+            athena::Athena,
+            checker_type::{Check, Checker},
+            CheckerTypes,
+        },
+        decoders::interface::{Crack, Decoder},
+    };
 
     // helper for tests
     fn get_athena_checker() -> CheckerTypes {
@@ -83,5 +87,94 @@ mod tests {
         let decoder = Decoder::<AtbashDecoder>::new();
         let result = decoder.crack("svool dliow", &get_athena_checker());
         assert_eq!(result.unencrypted_text.unwrap(), "hello world");
+    }
+
+    #[test]
+    fn test_atbash_capitalization() {
+        let decoder = Decoder::<AtbashDecoder>::new();
+        let result = decoder.crack(
+            "Zgyzhs Hslfow Pvvk Xzkrgzorazgrlm orpv GSRH",
+            &get_athena_checker(),
+        );
+        assert_eq!(
+            result.unencrypted_text.unwrap(),
+            "Atbash Should Keep Capitalization like THIS"
+        );
+    }
+
+    #[test]
+    fn test_atbash_non_alphabetic_characters() {
+        let decoder = Decoder::<AtbashDecoder>::new();
+        let result = decoder.crack(
+            "Zgyzhs hslfow ovzev xszizxgvih orpv gsvhv: ',.39=_#%^ rmgzxg zugvi wvxlwrmt",
+            &get_athena_checker(),
+        );
+        assert_eq!(
+            result.unencrypted_text.unwrap(),
+            "Atbash should leave characters like these: ',.39=_#%^ intact after decoding!"
+        );
+    }
+
+    #[test]
+    fn atbash_decode_empty_string() {
+        // Atbash returns an empty string, this is a valid atbash string
+        // but returns False on check_string_success
+        let atbash_decoder = Decoder::<AtbashDecoder>::new();
+        let result = atbash_decoder
+            .crack("", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn atbash_decode_handles_panics() {
+        let atbash_decoder = Decoder::<AtbashDecoder>::new();
+        let result = atbash_decoder
+            .crack(
+                "hello my name is panicky mc panic face!",
+                &get_athena_checker(),
+            )
+            .unencrypted_text;
+        if result.is_some() {
+            panic!("Decode_atbash did not return an option with Some<t>.")
+        } else {
+            // If we get here, the test passed
+            // Because the atbash_decoder.crack function returned None
+            // as it should do for the input
+            assert_eq!(true, true);
+        }
+    }
+
+    #[test]
+    fn atbash_handle_panic_if_empty_string() {
+        let atbash_decoder = Decoder::<AtbashDecoder>::new();
+        let result = atbash_decoder
+            .crack("", &get_athena_checker())
+            .unencrypted_text;
+        if result.is_some() {
+            assert_eq!(true, true);
+        }
+    }
+
+    #[test]
+    fn atbash_work_if_string_not_atbash() {
+        let atbash_decoder = Decoder::<AtbashDecoder>::new();
+        let result = atbash_decoder
+            .crack("hello good day!", &get_athena_checker())
+            .unencrypted_text;
+        if result.is_some() {
+            assert_eq!(true, true);
+        }
+    }
+
+    #[test]
+    fn atbash_handle_panic_if_emoji() {
+        let atbash_decoder = Decoder::<AtbashDecoder>::new();
+        let result = atbash_decoder
+            .crack("😂", &get_athena_checker())
+            .unencrypted_text;
+        if result.is_some() {
+            assert_eq!(true, true);
+        }
     }
 }
