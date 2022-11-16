@@ -34,7 +34,6 @@ pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<Text> {
                 MyResults::Break(res) => {
                     let mut decoders_used = current_string.path;
                     decoders_used.push(res.decoder);
-                    decoders_used.reverse();
                     let result_text = Text {
                         text: res.unencrypted_text.unwrap_or_default(),
                         path: decoders_used,
