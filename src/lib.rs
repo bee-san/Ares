@@ -80,7 +80,7 @@ mod tests {
         let config = Config::default();
         let result = perform_cracking("b2xsZWg=", config);
         assert!(result.is_some());
-        assert!(result.unwrap() == "hello");
+        assert!(result.unwrap().text == "hello");
     }
     #[test]
     fn test_perform_cracking_returns_failure() {
@@ -94,6 +94,6 @@ mod tests {
         let config = Config::default();
         let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", config);
         assert!(result.is_some());
-        assert!(result.unwrap() == "hello there general")
+        assert!(result.unwrap().text == "hello there general")
     }
 }
