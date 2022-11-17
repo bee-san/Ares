@@ -16,14 +16,14 @@ pub fn human_checker(input: &CheckResult) -> bool {
     }
 
     let output_string = format!(
-        "Is the plaintext '{}', which is {}. [Y/n]? ",
-        input.text, input.description
+        "I think the plaintext is a {}.\nPossible plaintext: '{}' (y/N): ",
+        input.description, input.text
     );
     // print output_string and ask user to input yes or no
     println!("{}", output_string);
     let reply: String = read!("{}\n");
-    if reply.starts_with('n') {
-        return false;
+    if reply.to_ascii_lowercase().starts_with('y') {
+        return true;
     }
-    true
+    false
 }
