@@ -13,6 +13,7 @@ use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
 ///! Given a filter object, return an array of decoders/crackers which have been filtered
 ///
 use crate::decoders::base64_decoder::Base64Decoder;
+use crate::decoders::caesar_decoder::CaesarDecoder;
 use crate::decoders::citrix_ctx1_decoder::CitrixCTX1Decoder;
 use crate::decoders::crack_results::CrackResult;
 use crate::decoders::interface::{Crack, Decoder};
@@ -107,6 +108,7 @@ pub fn filter_and_get_decoders() -> Decoders {
     let reversedecoder = Decoder::<ReverseDecoder>::new();
     let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
     let atbashdecoder = Decoder::<AtbashDecoder>::new();
+    let caesardecoder = Decoder::<CaesarDecoder>::new();
     Decoders {
         components: vec![
             Box::new(base58_bitcoin),
@@ -119,6 +121,7 @@ pub fn filter_and_get_decoders() -> Decoders {
             Box::new(reversedecoder),
             Box::new(morsecodedecoder),
             Box::new(atbashdecoder),
+            Box::new(caesardecoder),
         ],
     }
 }
