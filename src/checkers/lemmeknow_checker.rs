@@ -65,5 +65,5 @@ fn format_data_result(input: &Data) -> String {
     println!("{}", input.url);
     println!("{:?}", input.tags);
     In the future we'd want to include more advanced things like URL. */
-    format!("The plaintext is {}", input.name) // removed .to_string() from here
+    input.name.to_string() // removed .to_string() from here
 }
