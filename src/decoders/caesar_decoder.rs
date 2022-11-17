@@ -69,7 +69,7 @@ impl Crack for Decoder<CaesarDecoder> {
                 trace!("Found a match with caesar shift {}", shift);
                 results.unencrypted_text = Some(decoded_text);
                 results.update_checker(&checker_result);
-                return results
+                return results;
             }
         }
         results
@@ -94,15 +94,15 @@ fn caesar(cipher: &str, shift: u8) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::CaesarDecoder;
+    use super::*;
     use crate::{
         checkers::{
             athena::Athena,
             checker_type::{Check, Checker},
             CheckerTypes,
         },
-        decoders::{interface::{Crack, Decoder}},
+        decoders::interface::{Crack, Decoder},
     };
 
     // helper for tests
@@ -125,7 +125,7 @@ mod tests {
     fn caesar_unicode() {
         assert_eq!(caesar("attack at dawn 攻", 5), "fyyfhp fy ifbs 攻");
     }
-    
+
     #[test]
     fn successful_decoding() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
@@ -174,10 +174,7 @@ mod tests {
     fn caesar_decode_fails() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
         let result = caesar_decoder
-            .crack(
-                "#",
-                &get_athena_checker(),
-            )
+            .crack("#", &get_athena_checker())
             .unencrypted_text;
         if result.is_some() {
             panic!("Decode_caesar did not return an option with Some<t>.")
