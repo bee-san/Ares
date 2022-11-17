@@ -18,6 +18,7 @@ use crate::decoders::crack_results::CrackResult;
 use crate::decoders::interface::{Crack, Decoder};
 use crate::decoders::morse_code::MorseCodeDecoder;
 use crate::decoders::reverse_decoder::ReverseDecoder;
+use crate::decoders::caesar_decoder::CaesarDecoder;
 
 use log::trace;
 use rayon::prelude::*;
@@ -107,6 +108,7 @@ pub fn filter_and_get_decoders() -> Decoders {
     let reversedecoder = Decoder::<ReverseDecoder>::new();
     let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
     let atbashdecoder = Decoder::<AtbashDecoder>::new();
+    let caesardecoder = Decoder::<CaesarDecoder>::new();
     Decoders {
         components: vec![
             Box::new(base58_bitcoin),
@@ -119,6 +121,7 @@ pub fn filter_and_get_decoders() -> Decoders {
             Box::new(reversedecoder),
             Box::new(morsecodedecoder),
             Box::new(atbashdecoder),
+            Box::new(caesardecoder),
         ],
     }
 }

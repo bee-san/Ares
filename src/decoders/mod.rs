@@ -41,3 +41,6 @@ pub mod reverse_decoder;
 /// The morse_code module decodes morse code
 /// It is public as we use it in some tests.
 pub mod morse_code;
+
+/// For the caesar cipher decoder
+pub mod caesar_decoder;
