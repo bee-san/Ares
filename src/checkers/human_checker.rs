@@ -16,7 +16,7 @@ pub fn human_checker(input: &CheckResult) -> bool {
     }
 
     let output_string = format!(
-        "Is the plaintext '{}' which is {}. [Y/n]? ",
+        "Is the plaintext '{}', which is {}. [Y/n]? ",
         input.text, input.description
     );
     // print output_string and ask user to input yes or no
