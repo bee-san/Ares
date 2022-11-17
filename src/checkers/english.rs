@@ -25,6 +25,8 @@ impl Check for Checker<EnglishChecker> {
     }
 
     fn check(&self, input: &str) -> CheckResult {
+        // Normalise the string
+        let input = normalise_string(input); 
         trace!("Checking English for sentence {}", input);
         /// If 50% of the words are in the english list, then we consider it english.
         /// This is the threshold at which we consider it english.
@@ -81,8 +83,20 @@ impl Check for Checker<EnglishChecker> {
     }
 }
 
+
+// Strings look funny, they might have commas, be uppercase etc
+// This normalises the string so English checker can work on it 
+fn normalise_string(input: &str) -> String { 
+    // The replace function supports patterns https://doc.rust-lang.org/std/str/pattern/trait.Pattern.html#impl-Pattern%3C%27a%3E-3
+    // TODO add more puncuation
+    input.to_lowercase().replace(&['(', ')', '!', '/', ',', '?', '\"', '.', ';', ':', '\''][..], "")
+}
+
+
+
 #[cfg(test)]
 mod tests {
+    use crate::checkers::english::normalise_string;
     use crate::checkers::{
         checker_type::{Check, Checker},
         english::EnglishChecker,
@@ -121,4 +135,26 @@ mod tests {
         let checker = Checker::<EnglishChecker>::new();
         assert!(checker.check("preinterview hello dog").is_identified);
     }
+    #[test]
+    fn test_check_normalise_string_works_with_lowercasing() {
+        let x = normalise_string(&"Hello Dear");
+        assert_eq!(x, "hello dear")
+    }
+    #[test]
+    fn test_check_normalise_string_works_with_puncuation() {
+        let x = normalise_string(&"Hello, Dear");
+        assert_eq!(x, "hello dear")
+    }
+    #[test]
+    fn test_check_normalise_string_works_with_messy_puncuation() {
+        let x = normalise_string(&".He/ll?O, Dea!r");
+        assert_eq!(x, "hello dear")
+    }
+
+    #[test]
+    fn test_checker_works_with_puncuation_and_lowercase() {
+        let checker = Checker::<EnglishChecker>::new();
+        assert!(checker.check("Prei?nterview He!llo Dog?").is_identified);
+    }
+
 }
