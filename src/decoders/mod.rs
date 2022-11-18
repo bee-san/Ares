@@ -5,9 +5,26 @@
 //! mod.rs file
 //! you will also need to make it a public module in this file.
 
+/// The atbash_decoder module decodes atbash
+pub mod atbash_decoder;
+/// The base32_decoder module decodes base32
+pub mod base32_decoder;
+/// The base58_bitcoin_decoder module decodes base58 bitcoin
+pub mod base58_bitcoin_decoder;
+/// The base58_monero_decoder module decodes base58 monero
+pub mod base58_monero_decoder;
+
+/// The base58_ripple_decoder module decodes base58 ripple
+pub mod base58_ripple_decoder;
+
+/// The base58_flickr decoder module decodes base58 flickr
+pub mod base58_flickr_decoder;
+
 /// The base64_decoder module decodes base64
 /// It is public as we use it in some tests.
 pub mod base64_decoder;
+/// The citrix_ctx1_decoder module decodes citrix ctx1
+pub mod citrix_ctx1_decoder;
 /// The crack_results module defines the CrackResult
 /// Each and every decoder return same CrackResult
 pub mod crack_results;
@@ -20,3 +37,10 @@ pub mod interface;
 /// Stac -> Cats
 /// It is public as we use it in some tests.
 pub mod reverse_decoder;
+
+/// The morse_code module decodes morse code
+/// It is public as we use it in some tests.
+pub mod morse_code;
+
+/// For the caesar cipher decoder
+pub mod caesar_decoder;

@@ -1,7 +1,6 @@
+use super::checker_type::{Check, Checker};
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::{Data, Identifier};
-
-use super::checker_type::{Check, Checker};
 
 /// The Lemmeknow checker configuration struct
 const IDENTIFIER: Identifier = Identifier {
@@ -66,5 +65,5 @@ fn format_data_result(input: &Data) -> String {
     println!("{}", input.url);
     println!("{:?}", input.tags);
     In the future we'd want to include more advanced things like URL. */
-    format!("The plaintext is {}", input.name) // removed .to_string() from here
+    input.name.to_string() // removed .to_string() from here
 }

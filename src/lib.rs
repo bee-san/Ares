@@ -1,6 +1,4 @@
-//! Ares is an automatic decoding and cracking tool.
-//! https://github.com/bee-san/ares
-
+//! Ares is an automatic decoding and cracking tool. https://github.com/bee-san/ares
 // Warns in case we forget to include documentation
 #![warn(
     missing_docs,
@@ -14,8 +12,13 @@
 mod api_library_input_struct;
 /// Checkers is a module that contains the functions that check if the input is plaintext
 pub mod checkers;
+/// CLI Arg Parsing library
+pub mod cli;
 /// CLI Input Parser parses the input from the CLI and returns a struct.
 mod cli_input_parser;
+/// The Config module enables a configuration module
+/// Like a global API to access config details
+pub mod config;
 /// Decoders are the functions that actually perform the decodings.
 pub mod decoders;
 /// The filtration system builds what decoders to use at runtime
@@ -28,28 +31,44 @@ mod searchers;
 /// storage of data to our decoderrs and checkers.
 mod storage;
 
+use crate::config::Config;
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ares::perform_cracking;
-/// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu");
+/// use ares::config::Config;
+///
+/// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", Config::default());
 /// assert!(true)
 /// ```
-pub fn perform_cracking(text: &str) -> Option<String> {
+pub fn perform_cracking(text: &str, config: Config) -> Option<Text> {
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
     // Perform the search algorithm
     // It will either return a failure or success.
-    searchers::search_for_plaintext(text)
+    let max_depth = config.max_depth;
+    config::set_global_config(config);
+    searchers::search_for_plaintext(text, max_depth)
+}
+
+/// Our custom text which also has path to get there
+#[derive(Debug)]
+pub struct Text {
+    /// text we got
+    pub text: String,
+    /// decoder used so far to get this text
+    pub path: Vec<&'static str>,
 }
 
 #[cfg(test)]
 mod tests {
     use super::perform_cracking;
+    use crate::config::Config;
 
     #[test]
     fn test_perform_cracking_returns() {
-        perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh");
+        let config = Config::default();
+        perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh", config);
     }
 
     #[test]
@@ -58,21 +77,23 @@ mod tests {
         // let result = perform_cracking("Q0FOQVJZOiBoZWxsbw==");
         // assert!(result.is_some());
         // assert!(result.unwrap() == "CANARY: hello")
-
-        let result = perform_cracking("b2xsZWg=");
+        let config = Config::default();
+        let result = perform_cracking("b2xsZWg=", config);
         assert!(result.is_some());
-        assert!(result.unwrap() == "hello");
+        assert!(result.unwrap().text == "hello");
     }
     #[test]
     fn test_perform_cracking_returns_failure() {
-        let result = perform_cracking("");
+        let config = Config::default();
+        let result = perform_cracking("", config);
         assert!(result.is_none());
     }
 
     #[test]
     fn test_perform_cracking_returns_successful_base64_reverse() {
-        let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==");
+        let config = Config::default();
+        let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", config);
         assert!(result.is_some());
-        assert!(result.unwrap() == "hello there general")
+        assert!(result.unwrap().text == "hello there general")
     }
 }

@@ -35,8 +35,8 @@ impl Default for LibraryInput<DefaultChecker> {
         LibraryInput {
             encoded_text: String::new(),
             // this will be of type Checker<DefaultChecker>
-            checker: Checker::new(),
             verbose: 0,
+            checker: Checker::new(),
             lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG,
         }
     }
