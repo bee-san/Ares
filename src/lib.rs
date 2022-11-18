@@ -30,6 +30,7 @@ mod searchers;
 /// The storage module contains all the dictionaries and provides
 /// storage of data to our decoderrs and checkers.
 mod storage;
+mod timer;
 
 use crate::config::Config;
 /// The main function to call which performs the cracking.
