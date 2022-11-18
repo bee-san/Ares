@@ -1,7 +1,8 @@
-use log::trace;
+use crossbeam::{channel::bounded, select};
+use log::{error, trace};
 use std::collections::HashSet;
 
-use crate::{filtration_system::MyResults, Text};
+use crate::{filtration_system::MyResults, timer, Text};
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
@@ -14,9 +15,10 @@ pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<Text> {
     // all strings to search through
     let mut current_strings = vec![initial];
 
-    let mut exit_result: Option<Text> = None;
-
     let mut curr_depth: u32 = 1; // as we have input string, so we start from 1
+
+    let (result_send, result_recv) = bounded(1);
+    let timer = timer::start(5); // even 1 sec is enough ;D
 
     // loop through all of the strings in the vec
     while !current_strings.is_empty() && max_depth.map_or(true, |x| curr_depth <= x) {
@@ -39,7 +41,9 @@ pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<Text> {
                         path: decoders_used,
                     };
 
-                    exit_result = Some(result_text);
+                    result_send
+                        .send(result_text)
+                        .expect("Succesfully send the result");
                     None // short-circuits the iterator
                 }
                 MyResults::Continue(results_vec) => {
@@ -60,17 +64,26 @@ pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<Text> {
                 }
             }
         });
-
-        // if we find an element that matches our exit condition, return it!
-        // technically this won't check if the initial string matches our exit condition
-        // but this is a demo and i'll be lazy :P
-        if exit_result.is_some() {
-            trace!("Found exit result: {:?}", exit_result);
-            return exit_result;
-        }
-
         current_strings = new_strings;
         curr_depth += 1;
+
+        select! {
+            recv(result_recv) -> exit_result => {
+                // if we find an element that matches our exit condition, return it!
+                // technically this won't check if the initial string matches our exit condition
+                // but this is a demo and i'll be lazy :P
+                let exit_result = exit_result.ok(); // convert Result to Some
+                if exit_result.is_some() {
+                    trace!("Found exit result: {:?}", exit_result);
+                    return exit_result;
+                }
+            },
+            recv(timer) -> _ => {
+                error!("TIMEOUT!!!");
+                return None;
+            },
+            default => continue,
+        };
 
         trace!("Refreshed the vector, {:?}", current_strings);
     }

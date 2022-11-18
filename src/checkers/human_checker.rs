@@ -1,5 +1,6 @@
 use crate::checkers::checker_result::CheckResult;
 use crate::config::get_config;
+use crate::timer;
 use text_io::read;
 
 /// The Human Checker asks humans if the expected plaintext is real plaintext
@@ -15,6 +16,7 @@ pub fn human_checker(input: &CheckResult) -> bool {
         return true;
     }
 
+    timer::pause();
     let output_string = format!(
         "I think the plaintext is a {}.\nPossible plaintext: '{}' (y/N): ",
         input.description, input.text
@@ -22,8 +24,7 @@ pub fn human_checker(input: &CheckResult) -> bool {
     // print output_string and ask user to input yes or no
     println!("{}", output_string);
     let reply: String = read!("{}\n");
-    if reply.to_ascii_lowercase().starts_with('y') {
-        return true;
-    }
-    false
+    timer::resume();
+
+    reply.to_ascii_lowercase().starts_with('y')
 }
