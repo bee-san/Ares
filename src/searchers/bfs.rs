@@ -15,13 +15,10 @@ pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<Text> {
     // all strings to search through
     let mut current_strings = vec![initial];
 
-    // let mut exit_result: Option<Text> = None;
-
     let mut curr_depth: u32 = 1; // as we have input string, so we start from 1
 
-    let timer = timer::start(1);
-
     let (result_send, result_recv) = bounded(1);
+    let timer = timer::start(5); // even 1 sec is enough ;D
 
     // loop through all of the strings in the vec
     while !current_strings.is_empty() && max_depth.map_or(true, |x| curr_depth <= x) {
@@ -47,7 +44,6 @@ pub fn bfs(input: &str, max_depth: Option<u32>) -> Option<Text> {
                     result_send
                         .send(result_text)
                         .expect("Succesfully send the result");
-                    // exit_result = Some(result_text);
                     None // short-circuits the iterator
                 }
                 MyResults::Continue(results_vec) => {

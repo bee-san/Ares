@@ -30,6 +30,7 @@ mod searchers;
 /// The storage module contains all the dictionaries and provides
 /// storage of data to our decoderrs and checkers.
 mod storage;
+/// Timer for internal use
 mod timer;
 
 use crate::config::Config;
