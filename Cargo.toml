@@ -35,9 +35,10 @@ crossbeam = "0.8"
 criterion = "0.4.0"
 
 [profile.release]
-lto = "thin"
+lto = "fat"
 panic = "abort"
 strip = "symbols"
+codegen-units = 1
 
 [[bench]]
 name = "benchmark_crackers"
