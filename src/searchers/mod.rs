@@ -28,9 +28,9 @@ mod bfs;
 /// We can return an Option? An Enum? And then match on that
 /// So if we return CrackSuccess we return
 /// Else if we return an array, we add it to the children and go again.
-pub fn search_for_plaintext(input: &str, max_depth: Option<u32>) -> Option<Text> {
+pub fn search_for_plaintext(input: &str) -> Option<Text> {
     // Change this to select which search algorithm we want to use.
-    bfs::bfs(input, max_depth)
+    bfs::bfs(input)
 }
 
 /// Performs the decodings by getting all of the decoders
