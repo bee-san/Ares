@@ -25,9 +25,9 @@ pub struct Config {
     pub human_checker_on: bool,
     /// Is the program being run in offline mode?
     pub offline_mode: bool,
-    /// Number of times decoding shall be perfomed
-    /// Setting it to [`None`] means we will go infinitely in depth
-    pub max_depth: Option<u32>,
+    /// The timeout threshold before Ares quites
+    /// This is in seconds
+    pub timeout: u32,
 }
 
 /// Cell for storing global Config
@@ -61,7 +61,7 @@ impl Default for Config {
             lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG,
             human_checker_on: false,
             offline_mode: false,
-            max_depth: Some(10_000), // TODO: Set this to some better value
+            timeout: 5,
         }
     }
 }
