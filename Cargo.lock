@@ -41,6 +41,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9e1b586273c5702936fe7b7d6896644d8be71e6314cfe09d3167c95f712589e8"
 
 [[package]]
+name = "base65536"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f77451458eb583269092b64b828dab4ff6ab995477c3ceaec8586dfdd2b9eee"
+dependencies = [
+ "fnv",
+ "lazy_static",
+]
+
+[[package]]
 name = "bit-set"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -348,6 +358,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "fnv"
+version = "1.0.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3f9eec918d3f24069decb9af1554cad7c880e2da24a9afd88aca000531ab82c1"
+
+[[package]]
 name = "half"
 version = "1.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -634,6 +650,7 @@ name = "project_ares"
 version = "0.4.0"
 dependencies = [
  "base64",
+ "base65536",
  "bs58",
  "clap 4.0.26",
  "criterion",

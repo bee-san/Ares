@@ -14,6 +14,7 @@ use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
 ///
 use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::base64_url_decoder::Base64URLDecoder;
+use crate::decoders::base65536_decoder::Base65536Decoder;
 use crate::decoders::caesar_decoder::CaesarDecoder;
 use crate::decoders::citrix_ctx1_decoder::CitrixCTX1Decoder;
 use crate::decoders::crack_results::CrackResult;
@@ -105,6 +106,7 @@ pub fn filter_and_get_decoders() -> Decoders {
     let base58_flickr = Decoder::<Base58FlickrDecoder>::new();
     let base64 = Decoder::<Base64Decoder>::new();
     let base64_url = Decoder::<Base64URLDecoder>::new();
+    let base65536 = Decoder::<Base65536Decoder>::new();
     let citrix_ctx1 = Decoder::<CitrixCTX1Decoder>::new();
     let base32 = Decoder::<Base32Decoder>::new();
     let reversedecoder = Decoder::<ReverseDecoder>::new();
@@ -119,6 +121,7 @@ pub fn filter_and_get_decoders() -> Decoders {
             Box::new(base58_flickr),
             Box::new(base64),
             Box::new(base64_url),
+            Box::new(base65536),
             Box::new(citrix_ctx1),
             Box::new(base32),
             Box::new(reversedecoder),
