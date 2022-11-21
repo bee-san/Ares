@@ -23,6 +23,10 @@ pub mod base58_flickr_decoder;
 /// The base64_decoder module decodes base64
 /// It is public as we use it in some tests.
 pub mod base64_decoder;
+/// The base64_url_decoder module decodes base64 url
+pub mod base64_url_decoder;
+/// The base65536 module decodes base65536
+pub mod base65536_decoder;
 /// The citrix_ctx1_decoder module decodes citrix ctx1
 pub mod citrix_ctx1_decoder;
 /// The crack_results module defines the CrackResult
@@ -41,3 +45,6 @@ pub mod reverse_decoder;
 /// The morse_code module decodes morse code
 /// It is public as we use it in some tests.
 pub mod morse_code;
+
+/// For the caesar cipher decoder
+pub mod caesar_decoder;

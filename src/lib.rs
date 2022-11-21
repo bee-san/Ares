@@ -30,6 +30,8 @@ mod searchers;
 /// The storage module contains all the dictionaries and provides
 /// storage of data to our decoderrs and checkers.
 mod storage;
+/// Timer for internal use
+mod timer;
 
 use crate::config::Config;
 /// The main function to call which performs the cracking.
@@ -46,9 +48,8 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<Text> {
     // let search_tree = searchers::Tree::new(text.to_string());
     // Perform the search algorithm
     // It will either return a failure or success.
-    let max_depth = config.max_depth;
     config::set_global_config(config);
-    searchers::search_for_plaintext(text, max_depth)
+    searchers::search_for_plaintext(text)
 }
 
 /// Our custom text which also has path to get there
