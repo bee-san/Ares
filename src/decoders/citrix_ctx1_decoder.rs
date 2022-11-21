@@ -10,6 +10,19 @@ use log::{debug, info, trace};
 ///! Citrix CTX1 Decoder
 pub struct CitrixCTX1Decoder;
 
+///! Error enum
+#[derive(Debug)]
+enum Error {
+    ///! Error when the input is not divisible by 4
+    InvalidLength,
+    ///! Error with left-hand side subtraction
+    LhsOverflow,
+    ///! Error with right-hand side subtraction
+    RhsOverflow,
+    ///! Error if the result isn't UTF-8
+    InvalidUtf8,
+}
+
 impl Crack for Decoder<CitrixCTX1Decoder> {
     fn new() -> Decoder<CitrixCTX1Decoder> {
         Decoder {
@@ -31,15 +44,16 @@ impl Crack for Decoder<CitrixCTX1Decoder> {
     /// Else the Option returns nothing and the error is logged in Trace
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying citrix_ctx1 with text {:?}", text);
-        let decoded_text: Option<String> = decode_citrix_ctx1(text);
+        let decoded_text: Result<String, Error> = decode_citrix_ctx1(text);
 
-        trace!("Decoded text for citrix_ctx1: {:?}", decoded_text);
         let mut results = CrackResult::new(self, text.to_string());
 
-        if decoded_text.is_none() {
-            debug!("Failed to decode citrix_ctx1 because the length is not a multiple of 4");
+        if decoded_text.is_err() {
+            debug!("Failed to decode citrix_ctx1: {:?}", decoded_text);
             return results;
         }
+
+        trace!("Decoded text for citrix_ctx1: {:?}", decoded_text);
 
         let decoded_text = decoded_text.unwrap();
         if !check_string_success(&decoded_text, text) {
@@ -60,13 +74,9 @@ impl Crack for Decoder<CitrixCTX1Decoder> {
 }
 
 /// Decodes Citrix CTX1
-fn decode_citrix_ctx1(text: &str) -> Option<String> {
+fn decode_citrix_ctx1(text: &str) -> Result<String, Error> {
     if text.len() % 4 != 0 {
-        return None;
-    }
-
-    if text.to_uppercase() != text || !text.chars().all(|c| c.is_ascii()) {
-        return None;
+        return Err(Error::InvalidLength);
     }
 
     let mut rev = text.as_bytes().to_vec();
@@ -78,16 +88,19 @@ fn decode_citrix_ctx1(text: &str) -> Option<String> {
         if i + 2 >= rev.len() {
             temp = 0;
         } else {
-            temp = ((rev[i + 2] - 0x41) & 0xF) ^ (((rev[i + 3] - 0x41) << 4) & 0xF0);
+            temp = ((rev[i + 2].checked_sub(0x41)).ok_or(Error::LhsOverflow)? & 0xF)
+                ^ (((rev[i + 3].checked_sub(0x41)).ok_or(Error::RhsOverflow)? << 4) & 0xF0);
         }
-        temp ^= (((rev[i] - 0x41) & 0xF) ^ (((rev[i + 1] - 0x41) << 4) & 0xF0)) ^ 0xA5;
+        temp ^= (((rev[i].checked_sub(0x41)).ok_or(Error::LhsOverflow)? & 0xF)
+            ^ (((rev[i + 1].checked_sub(0x41)).ok_or(Error::RhsOverflow)? << 4) & 0xF0))
+            ^ 0xA5;
         result.push(temp);
     }
 
     result.retain(|&x| x != 0);
     result.reverse();
 
-    String::from_utf8(result).ok()
+    String::from_utf8(result).map_err(|_| Error::InvalidUtf8)
 }
 
 #[cfg(test)]
@@ -109,7 +122,8 @@ mod tests {
     }
 
     #[test]
-    fn test_citrix_ctx1() {
+    fn citrix_ctx1_decodes_successfully() {
+        // This tests if Citrix CTX1 can decode Citrix CTX1 successfully
         let decoder = Decoder::<CitrixCTX1Decoder>::new();
         let result = decoder.crack(
             "MNGIKIANMEGBKIANMHGCOHECJADFPPFKINCIOBEEIFCA",
@@ -117,10 +131,61 @@ mod tests {
         );
         assert_eq!(result.unencrypted_text.unwrap(), "hello world");
     }
+
     #[test]
-    fn citrix_ctx1_decode_empty_string() {
-        // Citrix_ctx1 returns an empty string, this is a valid citrix_ctx1 string
-        // but returns False on check_string_success
+    fn citrix_ctx1_decodes_lowercase_successfully() {
+        // This tests if Citrix CTX1 can decode lowercase strings
+        let decoder = Decoder::<CitrixCTX1Decoder>::new();
+        let result = decoder.crack(
+            "pbfejjdmpaffidcgkdagmkgpljbmjjdmpffajkdponeiiicnpkfpjjdmpifnilcoooelmoglincioeebjadfocehilcopdfgndhgjadfmegbjmdjknai",
+            &get_athena_checker(),
+        );
+        assert_eq!(
+            result.unencrypted_text.unwrap(),
+            "This is lowercase Citrix CTX1"
+        );
+    }
+
+    #[test]
+    fn citrix_ctx1_handles_substraction_overflow() {
+        // This tests if Citrix CTX1 can handle substraction overflows
+        // It should return None and not panic
+        let citrix_ctx1_decoder = Decoder::<CitrixCTX1Decoder>::new();
+        let result = citrix_ctx1_decoder
+            .crack("NUWEN43XR44TLAYHSU4DVI2ISF======", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn citrix_ctx1_handles_length_not_divisible_by_4() {
+        // This tests if Citrix CTX1 can handle strings with length that are not divisible by 4
+        // It should return None
+        let citrix_ctx1_decoder = Decoder::<CitrixCTX1Decoder>::new();
+        let result = citrix_ctx1_decoder
+            .crack("AAA", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn citrix_ctx1_decode_handles_panics() {
+        // This tests if Citrix CTX1 can handle panics
+        // It should return None
+        let citrix_ctx1_decoder = Decoder::<CitrixCTX1Decoder>::new();
+        let result = citrix_ctx1_decoder
+            .crack(
+                "hello my name is panicky mc panic face!",
+                &get_athena_checker(),
+            )
+            .unencrypted_text;
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn citrix_ctx1_handle_panic_if_empty_string() {
+        // This tests if Citrix CTX1 can handle an empty string
+        // It should return None
         let citrix_ctx1_decoder = Decoder::<CitrixCTX1Decoder>::new();
         let result = citrix_ctx1_decoder
             .crack("", &get_athena_checker())
@@ -129,59 +194,10 @@ mod tests {
     }
 
     #[test]
-    fn citrix_ctx1_decode_handles_panics() {
+    fn citrix_ctx1_decodes_emoji_successfully() {
+        // This tests if Citrix CTX1 can decode an emoji
         let citrix_ctx1_decoder = Decoder::<CitrixCTX1Decoder>::new();
-        let result = citrix_ctx1_decoder
-            .crack(
-                "hello my name is panicky mc panic face!",
-                &get_athena_checker(),
-            )
-            .unencrypted_text;
-        if result.is_some() {
-            panic!("Decode_citrix_ctx1 did not return an option with Some<t>.")
-        } else {
-            // If we get here, the test passed
-            // Because the citrix_ctx1_decoder.crack function returned None
-            // as it should do for the input
-            assert_eq!(true, true);
-        }
-    }
-
-    #[test]
-    fn citrix_ctx1_handle_panic_if_empty_string() {
-        let citrix_ctx1_decoder = Decoder::<CitrixCTX1Decoder>::new();
-        let result = citrix_ctx1_decoder
-            .crack("", &get_athena_checker())
-            .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
-    }
-
-    #[test]
-    fn citrix_ctx1_work_if_string_not_citrix_ctx1() {
-        // You can citrix_ctx1 decode a string that is not citrix_ctx1
-        // This string decodes to:
-        // ```.ée¢
-        // (uÖ²```
-        // https://gchq.github.io/CyberChef/#recipe=From_Base58('A-Za-z0-9%2B/%3D',true)&input=aGVsbG8gZ29vZCBkYXkh
-        let citrix_ctx1_decoder = Decoder::<CitrixCTX1Decoder>::new();
-        let result = citrix_ctx1_decoder
-            .crack("hello good day!", &get_athena_checker())
-            .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
-    }
-
-    #[test]
-    fn citrix_ctx1_handle_panic_if_emoji() {
-        let citrix_ctx1_decoder = Decoder::<CitrixCTX1Decoder>::new();
-        let result = citrix_ctx1_decoder
-            .crack("😂", &get_athena_checker())
-            .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        let result = citrix_ctx1_decoder.crack("😂", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap(), "[*");
     }
 }
