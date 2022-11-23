@@ -17,6 +17,8 @@ ignore = [
     # ansi_term is unmaintained, but it does exactly what it needs to and no more
     # so no reason to change just for the sake of it
     "RUSTSEC-2021-0139",
+    # atty is used in 3 of our dependencies, ignoring it until they update
+    "RUSTSEC-2021-0145"
 ]
 
 [licenses]
