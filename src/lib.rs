@@ -34,6 +34,8 @@ mod storage;
 mod timer;
 
 use crate::config::Config;
+
+use self::decoders::crack_results::CrackResult;
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ares::perform_cracking;
@@ -58,7 +60,7 @@ pub struct Text {
     /// text we got
     pub text: String,
     /// decoder used so far to get this text
-    pub path: Vec<&'static str>,
+    pub path: Vec<CrackResult>,
 }
 
 #[cfg(test)]

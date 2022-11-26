@@ -37,9 +37,10 @@ pub fn bfs(input: &str) -> Option<Text> {
                 // so just stop processing further.
                 MyResults::Break(res) => {
                     let mut decoders_used = current_string.path;
-                    decoders_used.push(res.decoder);
+                    let text = res.unencrypted_text.clone().unwrap_or_default();
+                    decoders_used.push(res);
                     let result_text = Text {
-                        text: res.unencrypted_text.unwrap_or_default(),
+                        text ,
                         path: decoders_used,
                     };
 
@@ -54,9 +55,10 @@ pub fn bfs(input: &str) -> Option<Text> {
                             .into_iter()
                             .map(|r| {
                                 let mut decoders_used = current_string.path.clone();
-                                decoders_used.push(r.decoder);
+                                let text = r.unencrypted_text.clone().unwrap_or_default();
+                                decoders_used.push(r);
                                 Text {
-                                    text: r.unencrypted_text.unwrap_or_default(),
+                                    text,
                                     path: decoders_used,
                                 }
                             })
