@@ -40,7 +40,7 @@ pub fn bfs(input: &str) -> Option<Text> {
                     let text = res.unencrypted_text.clone().unwrap_or_default();
                     decoders_used.push(res);
                     let result_text = Text {
-                        text ,
+                        text,
                         path: decoders_used,
                     };
 
