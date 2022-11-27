@@ -58,7 +58,7 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<Text> {
 #[derive(Debug)]
 pub struct Text {
     /// text we got
-    pub text: String,
+    pub text: Vec<String>,
     /// decoder used so far to get this text
     pub path: Vec<CrackResult>,
 }

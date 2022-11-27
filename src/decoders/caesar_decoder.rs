@@ -54,8 +54,10 @@ impl Crack for Decoder<CaesarDecoder> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying Caesar Cipher with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
+        let mut decoded_strings = Vec::new();
         for shift in 1..25 {
             let decoded_text = caesar(text, shift);
+            decoded_strings.push(decoded_text);
             if !check_string_success(&decoded_text, text) {
                 info!(
                     "Failed to decode caesar because check_string_success returned false on string {}. This means the string is 'funny' as it wasn't modified.",
@@ -67,11 +69,12 @@ impl Crack for Decoder<CaesarDecoder> {
             // If checkers return true, exit early with the correct result
             if checker_result.is_identified {
                 trace!("Found a match with caesar shift {}", shift);
-                results.unencrypted_text = Some(decoded_text);
+                results.unencrypted_text = Some(vec![decoded_text]);
                 results.update_checker(&checker_result);
                 return results;
             }
         }
+        results.unencrypted_text = Some(decoded_strings);
         results
     }
 }

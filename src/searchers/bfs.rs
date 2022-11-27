@@ -10,7 +10,7 @@ use crate::{filtration_system::MyResults, timer, Text};
 pub fn bfs(input: &str) -> Option<Text> {
     let config = get_config();
     let initial = Text {
-        text: input.to_string(),
+        text: vec![input.to_string()],
         path: vec![],
     };
     let mut seen_strings = HashSet::new();
@@ -30,7 +30,7 @@ pub fn bfs(input: &str) -> Option<Text> {
         let mut new_strings: Vec<Text> = vec![];
 
         current_strings.into_iter().try_for_each(|current_string| {
-            let res = super::perform_decoding(&current_string.text);
+            let res = super::perform_decoding(&current_string.text[0]);
 
             match res {
                 // if it's Break variant, we have cracked the text successfully
@@ -55,9 +55,15 @@ pub fn bfs(input: &str) -> Option<Text> {
                             .into_iter()
                             .map(|r| {
                                 let mut decoders_used = current_string.path.clone();
+                                // text is a vector of strings
                                 let text = r.unencrypted_text.clone().unwrap_or_default();
                                 decoders_used.push(r);
                                 Text {
+                                    // and this is a vector of strings
+                                    // TODO we should probably loop through all `text` and create Text structs for each one
+                                    // and append those structs
+                                    // I think we should keep text as a single string
+                                    // and just create more of them....
                                     text,
                                     path: decoders_used,
                                 }
@@ -68,6 +74,7 @@ pub fn bfs(input: &str) -> Option<Text> {
                 }
             }
         });
+        // we should probabkly 
         current_strings = new_strings;
         curr_depth += 1;
 
