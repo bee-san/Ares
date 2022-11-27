@@ -124,8 +124,6 @@ mod tests {
         let result = bfs("b2xsZWg=");
         assert!(result.is_some());
         let txt = result.unwrap().text;
-        error!("HELLO **********************");
-        error!("{:?}", txt);
         assert!(txt[0] == "hello");
     }
 
