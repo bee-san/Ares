@@ -65,7 +65,7 @@ impl Crack for Decoder<CitrixCTX1Decoder> {
         }
 
         let checker_result = checker.check(&decoded_text);
-        results.unencrypted_text = Some(decoded_text);
+        results.unencrypted_text = Some(vec![decoded_text]);
 
         results.update_checker(&checker_result);
 
@@ -129,7 +129,7 @@ mod tests {
             "MNGIKIANMEGBKIANMHGCOHECJADFPPFKINCIOBEEIFCA",
             &get_athena_checker(),
         );
-        assert_eq!(result.unencrypted_text.unwrap(), "hello world");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world");
     }
 
     #[test]
@@ -141,7 +141,7 @@ mod tests {
             &get_athena_checker(),
         );
         assert_eq!(
-            result.unencrypted_text.unwrap(),
+            result.unencrypted_text.unwrap()[0],
             "This is lowercase Citrix CTX1"
         );
     }
@@ -198,6 +198,6 @@ mod tests {
         // This tests if Citrix CTX1 can decode an emoji
         let citrix_ctx1_decoder = Decoder::<CitrixCTX1Decoder>::new();
         let result = citrix_ctx1_decoder.crack("😂", &get_athena_checker());
-        assert_eq!(result.unencrypted_text.unwrap(), "[*");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "[*");
     }
 }

@@ -57,7 +57,7 @@ impl Crack for Decoder<CaesarDecoder> {
         let mut decoded_strings = Vec::new();
         for shift in 1..25 {
             let decoded_text = caesar(text, shift);
-            decoded_strings.push(decoded_text);
+            decoded_strings.push(decoded_text.clone());
             if !check_string_success(&decoded_text, text) {
                 info!(
                     "Failed to decode caesar because check_string_success returned false on string {}. This means the string is 'funny' as it wasn't modified.",
@@ -137,7 +137,7 @@ mod tests {
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str, "attack");
+        assert_eq!(decoded_str[0], "attack");
     }
 
     #[test]
@@ -148,7 +148,7 @@ mod tests {
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str, "hello this is long text");
+        assert_eq!(decoded_str[0], "hello this is long text");
     }
 
     #[test]
@@ -159,7 +159,7 @@ mod tests {
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str, "Hello! this is long text?");
+        assert_eq!(decoded_str[0], "Hello! this is long text?");
     }
 
     #[test]

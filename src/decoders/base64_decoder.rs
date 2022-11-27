@@ -71,7 +71,7 @@ impl Crack for Decoder<Base64Decoder> {
         }
 
         let checker_result = checker.check(&decoded_text);
-        results.unencrypted_text = Some(decoded_text);
+        results.unencrypted_text = Some(vec![decoded_text]);
 
         results.update_checker(&checker_result);
 
@@ -114,7 +114,7 @@ mod tests {
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for base64");
-        assert_eq!(decoded_str, "hello world");
+        assert_eq!(decoded_str[0], "hello world");
     }
 
     #[test]

@@ -114,7 +114,7 @@ mod tests {
         // assert!(result.unwrap() == "CANARY: hello");
         let result = bfs("b2xsZWg=");
         assert!(result.is_some());
-        assert!(result.unwrap().text == "hello");
+        assert!(result.unwrap().text[0] == "hello");
     }
 
     // Vector storing the strings to perform decoding in next iteraion
@@ -131,6 +131,6 @@ mod tests {
         let result = bfs("UFRCRVRWVkNiRlZMTVVkYVVFWjZVbFZPU0\
         dGMU1WVlpZV2d4VkRVNWJWWnJjRzFVUlhCc1pYSlNWbHBPY0VaV1ZXeHJWRWd4TUZWdlZsWlg=");
         assert!(result.is_some());
-        assert_eq!(result.unwrap().text, "https://www.google.com");
+        assert_eq!(result.unwrap().text[0], "https://www.google.com");
     }
 }

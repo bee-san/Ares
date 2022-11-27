@@ -71,7 +71,7 @@ impl Crack for Decoder<Base64URLDecoder> {
         }
 
         let checker_result = checker.check(&decoded_text);
-        results.unencrypted_text = Some(decoded_text);
+        results.unencrypted_text = Some(vec![decoded_text]);
 
         results.update_checker(&checker_result);
 
@@ -116,7 +116,7 @@ mod tests {
             &get_athena_checker(),
         );
         assert_eq!(
-            result.unencrypted_text.unwrap(),
+            result.unencrypted_text.unwrap()[0],
             "https://www.google.com/?example=test"
         );
     }
@@ -131,7 +131,7 @@ mod tests {
             &get_athena_checker(),
         );
         assert_eq!(
-            result.unencrypted_text.unwrap(),
+            result.unencrypted_text.unwrap()[0],
             "This is decodable by both Base64 and Base64 URL"
         );
     }

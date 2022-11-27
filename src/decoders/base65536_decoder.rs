@@ -73,7 +73,7 @@ impl Crack for Decoder<Base65536Decoder> {
         }
 
         let checker_result = checker.check(&decoded_text);
-        results.unencrypted_text = Some(decoded_text);
+        results.unencrypted_text = Some(vec![decoded_text]);
 
         results.update_checker(&checker_result);
 
@@ -115,7 +115,7 @@ mod tests {
         let base65536_decoder = Decoder::<Base65536Decoder>::new();
         let result = base65536_decoder.crack("𒅓鹨𖡮𒀠啦ꍢ顡啫𓍱𓁡𠁴唬𓍪鱤啥𖥭𔐠𔕯ᔮ", &get_athena_checker());
         assert_eq!(
-            result.unencrypted_text.unwrap(),
+            result.unencrypted_text.unwrap()[0],
             "Sphinx of black quartz, judge my vow."
         );
     }

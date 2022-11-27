@@ -59,7 +59,7 @@ impl Crack for Decoder<ReverseDecoder> {
         let rev_str: String = text.chars().rev().collect();
         let checker_res = checker.check(&rev_str);
 
-        result.unencrypted_text = Some(rev_str);
+        result.unencrypted_text = Some(vec![rev_str]);
         result.update_checker(&checker_res);
         result
     }
@@ -89,7 +89,7 @@ mod tests {
             .crack("stac", &get_athena_checker())
             .unencrypted_text
             .expect("No unencrypted string for reverse decoder");
-        assert_eq!(result, "cats");
+        assert_eq!(result[0], "cats");
     }
 
     #[test]
