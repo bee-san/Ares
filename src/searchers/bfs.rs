@@ -30,7 +30,10 @@ pub fn bfs(input: &str) -> Option<Text> {
         let mut new_strings: Vec<Text> = vec![];
 
         current_strings.into_iter().try_for_each(|current_string| {
-            let res = super::perform_decoding(&current_string.text[0]);
+            if&current_string.text.len() <= &0 {
+                return None
+            }
+            let res = super::perform_decoding(&current_string.text);
 
             match res {
                 // if it's Break variant, we have cracked the text successfully
@@ -109,12 +112,12 @@ mod tests {
     #[test]
     fn bfs_succeeds() {
         // this will work after english checker can identify "CANARY: hello"
-        // let result = bfs("Q0FOQVJZOiBoZWxsbw==");
-        // assert!(result.is_some());
-        // assert!(result.unwrap() == "CANARY: hello");
         let result = bfs("b2xsZWg=");
         assert!(result.is_some());
-        assert!(result.unwrap().text[0] == "hello");
+        let txt = result.unwrap().text;
+        error!("HELLO **********************");
+        error!("{:?}", txt);
+        assert!(txt[0] == "hello");
     }
 
     // Vector storing the strings to perform decoding in next iteraion
