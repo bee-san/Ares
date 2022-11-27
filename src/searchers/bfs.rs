@@ -1,4 +1,4 @@
-use crate::config::get_config;
+use crate::{config::get_config, decoders::crack_results::CrackResult};
 use crossbeam::{channel::bounded, select};
 use log::{error, trace};
 use std::collections::HashSet;
@@ -30,10 +30,7 @@ pub fn bfs(input: &str) -> Option<Text> {
         let mut new_strings: Vec<Text> = vec![];
 
         current_strings.into_iter().try_for_each(|current_string| {
-            if&current_string.text.len() <= &0 {
-                return None
-            }
-            let res = super::perform_decoding(&current_string.text);
+            let res = super::perform_decoding(&current_string.text[0]);
 
             match res {
                 // if it's Break variant, we have cracked the text successfully
@@ -77,8 +74,20 @@ pub fn bfs(input: &str) -> Option<Text> {
                 }
             }
         });
-        // we should probabkly 
-        current_strings = new_strings;
+        let mut new_strings_to_be_added = Vec::new();
+        for textStruct in new_strings{
+            for decoded_text in textStruct.text{
+                new_strings_to_be_added.push(
+                    Text {
+                        text: vec![decoded_text],
+                        // quick hack
+                        path: textStruct.path.clone(),
+                    }
+                )
+            }
+            
+        }
+        current_strings = new_strings_to_be_added;
         curr_depth += 1;
 
         select! {
