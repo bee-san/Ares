@@ -1,4 +1,4 @@
-use crate::{config::get_config};
+use crate::config::get_config;
 use crossbeam::{channel::bounded, select};
 use log::{error, trace};
 use std::collections::HashSet;
@@ -75,17 +75,14 @@ pub fn bfs(input: &str) -> Option<Text> {
             }
         });
         let mut new_strings_to_be_added = Vec::new();
-        for text_struct in new_strings{
-            for decoded_text in text_struct.text{
-                new_strings_to_be_added.push(
-                    Text {
-                        text: vec![decoded_text],
-                        // quick hack
-                        path: text_struct.path.clone(),
-                    }
-                )
+        for text_struct in new_strings {
+            for decoded_text in text_struct.text {
+                new_strings_to_be_added.push(Text {
+                    text: vec![decoded_text],
+                    // quick hack
+                    path: text_struct.path.clone(),
+                })
             }
-            
         }
         current_strings = new_strings_to_be_added;
         curr_depth += 1;
