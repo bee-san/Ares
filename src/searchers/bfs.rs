@@ -138,6 +138,7 @@ mod tests {
     // So in Ciphey only Rot1(X) was passed to base64, not Rot13(X)
     #[test]
     fn non_deterministic_like_behaviour_regression_test() {
+        // Caesar Cipher (Rot13) -> Base64
         let result = bfs("MTkyLjE2OC4wLjE=");
         assert!(result.is_some());
         assert_eq!(result.unwrap().text[0], "192.168.0.1");
