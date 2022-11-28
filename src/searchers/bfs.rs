@@ -1,4 +1,4 @@
-use crate::{config::get_config, decoders::crack_results::CrackResult};
+use crate::{config::get_config};
 use crossbeam::{channel::bounded, select};
 use log::{error, trace};
 use std::collections::HashSet;
@@ -75,13 +75,13 @@ pub fn bfs(input: &str) -> Option<Text> {
             }
         });
         let mut new_strings_to_be_added = Vec::new();
-        for textStruct in new_strings{
-            for decoded_text in textStruct.text{
+        for text_struct in new_strings{
+            for decoded_text in text_struct.text{
                 new_strings_to_be_added.push(
                     Text {
                         text: vec![decoded_text],
                         // quick hack
-                        path: textStruct.path.clone(),
+                        path: text_struct.path.clone(),
                     }
                 )
             }
@@ -134,13 +134,12 @@ mod tests {
     // We want strings from all results, so to fix it,
     // we call .extend() to extend the vector.
     // Link to forum https://discord.com/channels/754001738184392704/1002135076034859068
+    // This also tests the bug whereby each iteration of caesar was not passed to the next decoder
+    // So in Ciphey only Rot1(X) was passed to base64, not Rot13(X)
     #[test]
     fn non_deterministic_like_behaviour_regression_test() {
-        // text was too long, so we put \ to escape the \n
-        // and put the rest of string on next line.
-        let result = bfs("UFRCRVRWVkNiRlZMTVVkYVVFWjZVbFZPU0\
-        dGMU1WVlpZV2d4VkRVNWJWWnJjRzFVUlhCc1pYSlNWbHBPY0VaV1ZXeHJWRWd4TUZWdlZsWlg=");
+        let result = bfs("MTkyLjE2OC4wLjE=");
         assert!(result.is_some());
-        assert_eq!(result.unwrap().text[0], "https://www.google.com");
+        assert_eq!(result.unwrap().text[0], "192.168.0.1");
     }
 }
