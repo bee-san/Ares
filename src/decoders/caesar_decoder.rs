@@ -28,7 +28,9 @@ use log::{info, trace};
 ///
 /// let result = decode_caesar.crack("uryyb guvf vf ybat grkg", &checker).unencrypted_text;
 /// assert!(result.is_some());
-/// assert_eq!(result.unwrap(), "hello this is long text");
+/// // If it succeeds, the 0th element is the plaintext else it'll contain 25 elements
+/// // of unsuccessfully decoded text
+/// assert_eq!(result.unwrap()[0], "hello this is long text");
 /// ```
 pub struct CaesarDecoder;
 

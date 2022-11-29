@@ -28,7 +28,7 @@ use log::{debug, info, trace};
 ///
 /// let result = decode_base65536.crack("𒅓鹨𖡮𒀠啦ꍢ顡啫𓍱𓁡𠁴唬𓍪鱤啥𖥭𔐠𔕯ᔮ", &checker).unencrypted_text;
 /// assert!(result.is_some());
-/// assert_eq!(result.unwrap(), "Sphinx of black quartz, judge my vow.");
+/// assert_eq!(result.unwrap()[0], "Sphinx of black quartz, judge my vow.");
 /// ```
 pub struct Base65536Decoder;
 

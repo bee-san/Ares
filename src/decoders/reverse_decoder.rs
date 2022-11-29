@@ -23,7 +23,7 @@ use log::trace;
 ///
 /// let result = reversedecoder.crack("stac", &checker).unencrypted_text;
 /// assert!(result.is_some());
-/// assert_eq!(result.unwrap(), "cats");
+/// assert_eq!(result.unwrap()[0], "cats");
 /// ```
 pub struct ReverseDecoder;
 

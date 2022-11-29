@@ -28,7 +28,7 @@ use log::{debug, info, trace};
 ///
 /// let result = decode_base64_url.crack("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8_ZXhhbXBsZT10ZXN0", &checker).unencrypted_text;
 /// assert!(result.is_some());
-/// assert_eq!(result.unwrap(), "https://www.google.com/?example=test");
+/// assert_eq!(result.unwrap()[0], "https://www.google.com/?example=test");
 /// ```
 pub struct Base64URLDecoder;
 
