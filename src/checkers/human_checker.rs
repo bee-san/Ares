@@ -29,5 +29,5 @@ pub fn human_checker(input: &CheckResult) -> bool {
         timer::resume();
         return false;
     }
-    return true;
+    true
 }
