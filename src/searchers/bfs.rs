@@ -94,11 +94,13 @@ pub fn bfs(input: &str) -> Option<Text> {
                 // but this is a demo and i'll be lazy :P
                 let exit_result = exit_result.ok(); // convert Result to Some
                 if exit_result.is_some() {
+                    println!("Ares has decoded {times} times", times=curr_depth * (12+25));
                     trace!("Found exit result: {:?}", exit_result);
                     return exit_result;
                 }
             },
             recv(timer) -> _ => {
+                println!("Ares has decoded {times} times", times=curr_depth * (12+25));
                 error!("Ares failed to decrypt the text you have provided within {} seconds, it is unlikely to be decoded.", config.timeout);
                 return None;
             },
