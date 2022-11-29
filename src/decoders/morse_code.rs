@@ -54,7 +54,7 @@ impl Crack for Decoder<MorseCodeDecoder> {
         }
 
         let checker_result = checker.check(&decoded_text);
-        results.unencrypted_text = Some(decoded_text);
+        results.unencrypted_text = Some(vec![decoded_text]);
 
         results.update_checker(&checker_result);
 
@@ -148,6 +148,6 @@ mod tests {
             ".---- ----. ..--- .-.-.- .---- -.... ---.. .-.-.- ----- .-.-.- .----",
             &get_athena_checker(),
         );
-        assert_eq!(result.unencrypted_text.unwrap(), "192.168.0.1");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "192.168.0.1");
     }
 }

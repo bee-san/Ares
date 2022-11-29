@@ -15,7 +15,7 @@ pub struct CrackResult {
     pub encrypted_text: String,
     /// Unencrypted text is what it looks like after.
     /// if decoder failed, this will be None
-    pub unencrypted_text: Option<String>,
+    pub unencrypted_text: Option<Vec<String>>,
     /// Decoder is the function we used to decode the text
     pub decoder: &'static str,
     /// Checker which identified the text

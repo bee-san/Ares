@@ -28,7 +28,7 @@ use log::{debug, info, trace};
 ///
 /// let result = decode_base64_url.crack("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8_ZXhhbXBsZT10ZXN0", &checker).unencrypted_text;
 /// assert!(result.is_some());
-/// assert_eq!(result.unwrap(), "https://www.google.com/?example=test");
+/// assert_eq!(result.unwrap()[0], "https://www.google.com/?example=test");
 /// ```
 pub struct Base64URLDecoder;
 
@@ -71,7 +71,7 @@ impl Crack for Decoder<Base64URLDecoder> {
         }
 
         let checker_result = checker.check(&decoded_text);
-        results.unencrypted_text = Some(decoded_text);
+        results.unencrypted_text = Some(vec![decoded_text]);
 
         results.update_checker(&checker_result);
 
@@ -116,7 +116,7 @@ mod tests {
             &get_athena_checker(),
         );
         assert_eq!(
-            result.unencrypted_text.unwrap(),
+            result.unencrypted_text.unwrap()[0],
             "https://www.google.com/?example=test"
         );
     }
@@ -131,7 +131,7 @@ mod tests {
             &get_athena_checker(),
         );
         assert_eq!(
-            result.unencrypted_text.unwrap(),
+            result.unencrypted_text.unwrap()[0],
             "This is decodable by both Base64 and Base64 URL"
         );
     }

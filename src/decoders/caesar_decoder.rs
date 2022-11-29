@@ -28,7 +28,9 @@ use log::{info, trace};
 ///
 /// let result = decode_caesar.crack("uryyb guvf vf ybat grkg", &checker).unencrypted_text;
 /// assert!(result.is_some());
-/// assert_eq!(result.unwrap(), "hello this is long text");
+/// // If it succeeds, the 0th element is the plaintext else it'll contain 25 elements
+/// // of unsuccessfully decoded text
+/// assert_eq!(result.unwrap()[0], "hello this is long text");
 /// ```
 pub struct CaesarDecoder;
 
@@ -54,8 +56,10 @@ impl Crack for Decoder<CaesarDecoder> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying Caesar Cipher with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
+        let mut decoded_strings = Vec::new();
         for shift in 1..25 {
             let decoded_text = caesar(text, shift);
+            decoded_strings.push(decoded_text.clone());
             if !check_string_success(&decoded_text, text) {
                 info!(
                     "Failed to decode caesar because check_string_success returned false on string {}. This means the string is 'funny' as it wasn't modified.",
@@ -67,11 +71,12 @@ impl Crack for Decoder<CaesarDecoder> {
             // If checkers return true, exit early with the correct result
             if checker_result.is_identified {
                 trace!("Found a match with caesar shift {}", shift);
-                results.unencrypted_text = Some(decoded_text);
+                results.unencrypted_text = Some(vec![decoded_text]);
                 results.update_checker(&checker_result);
                 return results;
             }
         }
+        results.unencrypted_text = Some(decoded_strings);
         results
     }
 }
@@ -134,7 +139,7 @@ mod tests {
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str, "attack");
+        assert_eq!(decoded_str[0], "attack");
     }
 
     #[test]
@@ -145,7 +150,7 @@ mod tests {
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str, "hello this is long text");
+        assert_eq!(decoded_str[0], "hello this is long text");
     }
 
     #[test]
@@ -156,7 +161,7 @@ mod tests {
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str, "Hello! this is long text?");
+        assert_eq!(decoded_str[0], "Hello! this is long text?");
     }
 
     #[test]

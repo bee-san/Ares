@@ -10,7 +10,7 @@ use crate::{filtration_system::MyResults, timer, Text};
 pub fn bfs(input: &str) -> Option<Text> {
     let config = get_config();
     let initial = Text {
-        text: input.to_string(),
+        text: vec![input.to_string()],
         path: vec![],
     };
     let mut seen_strings = HashSet::new();
@@ -30,7 +30,7 @@ pub fn bfs(input: &str) -> Option<Text> {
         let mut new_strings: Vec<Text> = vec![];
 
         current_strings.into_iter().try_for_each(|current_string| {
-            let res = super::perform_decoding(&current_string.text);
+            let res = super::perform_decoding(&current_string.text[0]);
 
             match res {
                 // if it's Break variant, we have cracked the text successfully
@@ -55,9 +55,15 @@ pub fn bfs(input: &str) -> Option<Text> {
                             .into_iter()
                             .map(|r| {
                                 let mut decoders_used = current_string.path.clone();
+                                // text is a vector of strings
                                 let text = r.unencrypted_text.clone().unwrap_or_default();
                                 decoders_used.push(r);
                                 Text {
+                                    // and this is a vector of strings
+                                    // TODO we should probably loop through all `text` and create Text structs for each one
+                                    // and append those structs
+                                    // I think we should keep text as a single string
+                                    // and just create more of them....
                                     text,
                                     path: decoders_used,
                                 }
@@ -68,7 +74,17 @@ pub fn bfs(input: &str) -> Option<Text> {
                 }
             }
         });
-        current_strings = new_strings;
+        let mut new_strings_to_be_added = Vec::new();
+        for text_struct in new_strings {
+            for decoded_text in text_struct.text {
+                new_strings_to_be_added.push(Text {
+                    text: vec![decoded_text],
+                    // quick hack
+                    path: text_struct.path.clone(),
+                })
+            }
+        }
+        current_strings = new_strings_to_be_added;
         curr_depth += 1;
 
         select! {
@@ -102,12 +118,10 @@ mod tests {
     #[test]
     fn bfs_succeeds() {
         // this will work after english checker can identify "CANARY: hello"
-        // let result = bfs("Q0FOQVJZOiBoZWxsbw==");
-        // assert!(result.is_some());
-        // assert!(result.unwrap() == "CANARY: hello");
         let result = bfs("b2xsZWg=");
         assert!(result.is_some());
-        assert!(result.unwrap().text == "hello");
+        let txt = result.unwrap().text;
+        assert!(txt[0] == "hello");
     }
 
     // Vector storing the strings to perform decoding in next iteraion
@@ -117,13 +131,13 @@ mod tests {
     // We want strings from all results, so to fix it,
     // we call .extend() to extend the vector.
     // Link to forum https://discord.com/channels/754001738184392704/1002135076034859068
+    // This also tests the bug whereby each iteration of caesar was not passed to the next decoder
+    // So in Ciphey only Rot1(X) was passed to base64, not Rot13(X)
     #[test]
     fn non_deterministic_like_behaviour_regression_test() {
-        // text was too long, so we put \ to escape the \n
-        // and put the rest of string on next line.
-        let result = bfs("UFRCRVRWVkNiRlZMTVVkYVVFWjZVbFZPU0\
-        dGMU1WVlpZV2d4VkRVNWJWWnJjRzFVUlhCc1pYSlNWbHBPY0VaV1ZXeHJWRWd4TUZWdlZsWlg=");
+        // Caesar Cipher (Rot13) -> Base64
+        let result = bfs("MTkyLjE2OC4wLjE=");
         assert!(result.is_some());
-        assert_eq!(result.unwrap().text, "https://www.google.com");
+        assert_eq!(result.unwrap().text[0], "192.168.0.1");
     }
 }

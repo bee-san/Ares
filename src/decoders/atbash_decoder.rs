@@ -45,7 +45,7 @@ impl Crack for Decoder<AtbashDecoder> {
         }
 
         let checker_result = checker.check(&decoded_text);
-        results.unencrypted_text = Some(decoded_text);
+        results.unencrypted_text = Some(vec![decoded_text]);
 
         results.update_checker(&checker_result);
 
@@ -86,7 +86,7 @@ mod tests {
     fn test_atbash() {
         let decoder = Decoder::<AtbashDecoder>::new();
         let result = decoder.crack("svool dliow", &get_athena_checker());
-        assert_eq!(result.unencrypted_text.unwrap(), "hello world");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world");
     }
 
     #[test]
@@ -97,7 +97,7 @@ mod tests {
             &get_athena_checker(),
         );
         assert_eq!(
-            result.unencrypted_text.unwrap(),
+            result.unencrypted_text.unwrap()[0],
             "Atbash Should Keep Capitalization like THIS"
         );
     }
@@ -110,7 +110,7 @@ mod tests {
             &get_athena_checker(),
         );
         assert_eq!(
-            result.unencrypted_text.unwrap(),
+            result.unencrypted_text.unwrap()[0],
             "Atbash should leave characters like these: ',.39=_#%^ intact after decoding!"
         );
     }
