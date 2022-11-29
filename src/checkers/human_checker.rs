@@ -25,7 +25,7 @@ pub fn human_checker(input: &CheckResult) -> bool {
     println!("{}", output_string);
     let reply: String = read!("{}\n");
     let result = reply.to_ascii_lowercase().starts_with('y');
-    if !result{
+    if !result {
         timer::resume();
         return false;
     }
