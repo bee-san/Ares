@@ -44,7 +44,7 @@ use self::decoders::crack_results::CrackResult;
 /// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", Config::default());
 /// assert!(true)
 /// ```
-pub fn perform_cracking(text: &str, config: Config) -> Option<Text> {
+pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
@@ -54,12 +54,15 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<Text> {
     searchers::search_for_plaintext(text)
 }
 
-/// Our custom text which also has path to get there
+/// DecoderResult is the result of decoders
 #[derive(Debug)]
-pub struct Text {
-    /// text we got
+pub struct DecoderResult {
+    /// The text we have from the decoder, as a vector
+    /// because the decoder might return more than 1 text (caesar)
     pub text: Vec<String>,
-    /// decoder used so far to get this text
+    /// The list of decoders we have so far
+    /// The CrackResult contains more than just each decoder, such as the keys used
+    /// or the checkers used.
     pub path: Vec<CrackResult>,
 }
 

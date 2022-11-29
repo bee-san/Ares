@@ -7,7 +7,7 @@ use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::filtration_system::{filter_and_get_decoders, MyResults};
-use crate::Text;
+use crate::DecoderResult;
 /// This module provides access to the breadth first search
 /// which searches for the plaintext.
 mod bfs;
@@ -28,7 +28,7 @@ mod bfs;
 /// We can return an Option? An Enum? And then match on that
 /// So if we return CrackSuccess we return
 /// Else if we return an array, we add it to the children and go again.
-pub fn search_for_plaintext(input: &str) -> Option<Text> {
+pub fn search_for_plaintext(input: &str) -> Option<DecoderResult> {
     // Change this to select which search algorithm we want to use.
     bfs::bfs(input)
 }
