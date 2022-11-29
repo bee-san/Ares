@@ -24,7 +24,10 @@ pub fn human_checker(input: &CheckResult) -> bool {
     // print output_string and ask user to input yes or no
     println!("{}", output_string);
     let reply: String = read!("{}\n");
-    timer::resume();
-
-    reply.to_ascii_lowercase().starts_with('y')
+    let result = reply.to_ascii_lowercase().starts_with('y');
+    if !result {
+        timer::resume();
+        return false;
+    }
+    true
 }
