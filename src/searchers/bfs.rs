@@ -99,6 +99,7 @@ pub fn bfs(input: &str) -> Option<Text> {
                 }
             },
             recv(timer) -> _ => {
+                println!("Ares has decoded {times} times", times=curr_depth * (12+24));
                 error!("Ares failed to decrypt the text you have provided within {} seconds, it is unlikely to be decoded.", config.timeout);
                 return None;
             },
