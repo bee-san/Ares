@@ -59,19 +59,20 @@ impl Crack for Decoder<CaesarDecoder> {
         let mut decoded_strings = Vec::new();
         for shift in 1..25 {
             let decoded_text = caesar(text, shift);
-            decoded_strings.push(decoded_text.clone());
-            if !check_string_success(&decoded_text, text) {
+            decoded_strings.push(decoded_text);
+            let borrowed_decoded_text = &decoded_strings[decoded_strings.len() - 1];
+            if !check_string_success(borrowed_decoded_text, text) {
                 info!(
                     "Failed to decode caesar because check_string_success returned false on string {}. This means the string is 'funny' as it wasn't modified.",
-                    decoded_text
+                    borrowed_decoded_text
                 );
                 return results;
             }
-            let checker_result = checker.check(&decoded_text);
+            let checker_result = checker.check(borrowed_decoded_text);
             // If checkers return true, exit early with the correct result
             if checker_result.is_identified {
                 trace!("Found a match with caesar shift {}", shift);
-                results.unencrypted_text = Some(vec![decoded_text]);
+                results.unencrypted_text = Some(vec![borrowed_decoded_text.to_string()]);
                 results.update_checker(&checker_result);
                 return results;
             }
