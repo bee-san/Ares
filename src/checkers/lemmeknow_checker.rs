@@ -2,8 +2,6 @@ use super::checker_type::{Check, Checker};
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::{Data, Identifier};
 
-const TAG: std::string::String = "CTF Flag";
-
 /// The Lemmeknow checker configuration struct
 const IDENTIFIER: Identifier = Identifier {
     min_rarity: 0.1,
