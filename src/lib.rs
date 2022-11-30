@@ -33,6 +33,9 @@ mod storage;
 /// Timer for internal use
 mod timer;
 
+use checkers::{checker_type::{Checker, Check}, athena::Athena, CheckerTypes};
+use log::debug;
+
 use crate::config::Config;
 
 use self::decoders::crack_results::CrackResult;
@@ -45,6 +48,11 @@ use self::decoders::crack_results::CrackResult;
 /// assert!(true)
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<Text> {
+    if check_if_input_text_is_plaintext(text){
+        debug!("The input text provided to the program {} is the plaintext. Returning early.", text);
+        return_early_becauseinput_text_is_plaintext();
+        return None
+    }
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
@@ -52,6 +60,15 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<Text> {
     // It will either return a failure or success.
     config::set_global_config(config);
     searchers::search_for_plaintext(text)
+}
+
+fn check_if_input_text_is_plaintext(text: &str) -> bool {
+    let athena_checker = Checker::<Athena>::new();
+    athena_checker.check(text).is_identified
+}
+
+fn return_early_becauseinput_text_is_plaintext(){
+    println!("Your input text is the plaintext 🥳")
 }
 
 /// Our custom text which also has path to get there
@@ -98,5 +115,13 @@ mod tests {
         let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", config);
         assert!(result.is_some());
         assert!(result.unwrap().text[0] == "hello there general")
+    }
+
+    #[test]
+    fn test_early_exit_if_input_is_plaintext() {
+        let config = Config::default();
+        let result = perform_cracking("192.168.0.1", config);
+        // We return None since the input is the plaintext
+        assert!(result.is_none());
     }
 }
