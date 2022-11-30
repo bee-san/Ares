@@ -3,13 +3,13 @@ use crossbeam::{channel::bounded, select};
 use log::{error, trace};
 use std::collections::HashSet;
 
-use crate::{filtration_system::MyResults, timer, Text};
+use crate::{filtration_system::MyResults, timer, DecoderResult};
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
-pub fn bfs(input: &str) -> Option<Text> {
+pub fn bfs(input: &str) -> Option<DecoderResult> {
     let config = get_config();
-    let initial = Text {
+    let initial = DecoderResult {
         text: vec![input.to_string()],
         path: vec![],
     };
@@ -27,7 +27,7 @@ pub fn bfs(input: &str) -> Option<Text> {
         trace!("Number of potential decodings: {}", current_strings.len());
         trace!("Current depth is {:?}", curr_depth);
 
-        let mut new_strings: Vec<Text> = vec![];
+        let mut new_strings: Vec<DecoderResult> = vec![];
 
         current_strings.into_iter().try_for_each(|current_string| {
             let res = super::perform_decoding(&current_string.text[0]);
@@ -39,7 +39,7 @@ pub fn bfs(input: &str) -> Option<Text> {
                     let mut decoders_used = current_string.path;
                     let text = res.unencrypted_text.clone().unwrap_or_default();
                     decoders_used.push(res);
-                    let result_text = Text {
+                    let result_text = DecoderResult {
                         text,
                         path: decoders_used,
                     };
@@ -58,7 +58,7 @@ pub fn bfs(input: &str) -> Option<Text> {
                                 // text is a vector of strings
                                 let text = r.unencrypted_text.clone().unwrap_or_default();
                                 decoders_used.push(r);
-                                Text {
+                                DecoderResult {
                                     // and this is a vector of strings
                                     // TODO we should probably loop through all `text` and create Text structs for each one
                                     // and append those structs
@@ -77,7 +77,7 @@ pub fn bfs(input: &str) -> Option<Text> {
         let mut new_strings_to_be_added = Vec::new();
         for text_struct in new_strings {
             for decoded_text in text_struct.text {
-                new_strings_to_be_added.push(Text {
+                new_strings_to_be_added.push(DecoderResult {
                     text: vec![decoded_text],
                     // quick hack
                     path: text_struct.path.clone(),
