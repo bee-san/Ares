@@ -69,11 +69,14 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     searchers::search_for_plaintext(text)
 }
 
+/// Checks if the given input is plaintext or not
+/// Used at the start of the program to not waste CPU cycles
 fn check_if_input_text_is_plaintext(text: &str) -> bool {
     let athena_checker = Checker::<Athena>::new();
     athena_checker.check(text).is_identified
 }
 
+/// A nice function to print when the input text is the plaintext
 fn return_early_because_input_text_is_plaintext() {
     println!("Your input text is the plaintext 🥳")
 }
