@@ -2,6 +2,8 @@ use super::checker_type::{Check, Checker};
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::{Data, Identifier};
 
+const TAG: std::string::String = "CTF Flag";
+
 /// The Lemmeknow checker configuration struct
 const IDENTIFIER: Identifier = Identifier {
     min_rarity: 0.1,
@@ -26,7 +28,7 @@ impl Check for Checker<LemmeKnow> {
             tags: vec!["lemmeknow", "regex"],
             expected_runtime: 0.01,
             popularity: 1.0,
-            lemmeknow_config: Identifier::default(),
+            lemmeknow_config: Identifier::default().exclude_tags(&vec!["Identifiers".to_string()]),
             _phantom: std::marker::PhantomData,
         }
     }
@@ -57,7 +59,7 @@ impl Check for Checker<LemmeKnow> {
 fn format_data_result(input: &Data) -> String {
     /*
     Input contains these:
-        println!("{}", input.name);
+    println!("{}", input.name);
     println!("{}", input.regex);
     println!("{}", input.plural_name);
     println!("{}", input.description);
