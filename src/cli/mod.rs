@@ -54,7 +54,7 @@ fn cli_args_into_config_struct(opts: Opts) -> (String, Config) {
         opts.text,
         Config {
             verbose: opts.verbose,
-            lemmeknow_config: Identifier::default(),
+            lemmeknow_config: Identifier::default().exclude_tags(&vec!["Identifiers".to_string()]),
             // default is false, we want default to be true
             human_checker_on: !opts.disable_human_checker,
             offline_mode: true,

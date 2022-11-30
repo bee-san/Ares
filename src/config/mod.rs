@@ -58,7 +58,7 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             verbose: 0,
-            lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG,
+            lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG.exclude_tags(&vec!["Identifiers".to_string()]),
             human_checker_on: false,
             offline_mode: false,
             timeout: 5,

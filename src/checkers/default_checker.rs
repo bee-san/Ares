@@ -19,7 +19,7 @@ impl Check for Checker<DefaultChecker> {
             tags: vec![],
             expected_runtime: 0.0,
             popularity: 0.0,
-            lemmeknow_config: Identifier::default(),
+            lemmeknow_config: Identifier::default().exclude_tags(&vec!["Identifiers".to_string()]),
             _phantom: std::marker::PhantomData,
         }
     }

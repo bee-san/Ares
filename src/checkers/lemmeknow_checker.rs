@@ -26,7 +26,7 @@ impl Check for Checker<LemmeKnow> {
             tags: vec!["lemmeknow", "regex"],
             expected_runtime: 0.01,
             popularity: 1.0,
-            lemmeknow_config: Identifier::default().exclude_tags(&vec!["Identifiers".to_string()]),
+            lemmeknow_config: Identifier::default().min_rarity(1.0),
             _phantom: std::marker::PhantomData,
         }
     }

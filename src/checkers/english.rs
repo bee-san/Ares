@@ -19,7 +19,7 @@ impl Check for Checker<EnglishChecker> {
             expected_runtime: 0.1,
             /// English is the most popular language
             popularity: 1.0,
-            lemmeknow_config: Identifier::default(),
+            lemmeknow_config: Identifier::default().exclude_tags(&vec!["Identifiers".to_string()]),
             _phantom: std::marker::PhantomData,
         }
     }

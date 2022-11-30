@@ -37,7 +37,7 @@ impl Default for LibraryInput<DefaultChecker> {
             // this will be of type Checker<DefaultChecker>
             verbose: 0,
             checker: Checker::new(),
-            lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG,
+            lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG.exclude_tags(&vec!["Identifiers".to_string()]),
         }
     }
 }
