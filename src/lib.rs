@@ -33,7 +33,10 @@ mod storage;
 /// Timer for internal use
 mod timer;
 
-use checkers::{checker_type::{Checker, Check}, athena::Athena};
+use checkers::{
+    athena::Athena,
+    checker_type::{Check, Checker},
+};
 use log::debug;
 
 use crate::config::Config;
@@ -48,10 +51,13 @@ use self::decoders::crack_results::CrackResult;
 /// assert!(true)
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
-    if check_if_input_text_is_plaintext(text){
-        debug!("The input text provided to the program {} is the plaintext. Returning early.", text);
+    if check_if_input_text_is_plaintext(text) {
+        debug!(
+            "The input text provided to the program {} is the plaintext. Returning early.",
+            text
+        );
         return_early_becauseinput_text_is_plaintext();
-        return None
+        return None;
     }
 
     // Build a new search tree
@@ -68,7 +74,7 @@ fn check_if_input_text_is_plaintext(text: &str) -> bool {
     athena_checker.check(text).is_identified
 }
 
-fn return_early_becauseinput_text_is_plaintext(){
+fn return_early_becauseinput_text_is_plaintext() {
     println!("Your input text is the plaintext 🥳")
 }
 
