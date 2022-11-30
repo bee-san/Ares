@@ -16,6 +16,8 @@ impl Check for Checker<LemmeKnow> {
             tags: vec!["lemmeknow", "regex"],
             expected_runtime: 0.01,
             popularity: 1.0,
+            // We use 0.7 min rarity for lemmeknow to speed up the program
+            // TODO we need to let the user configure this :)
             lemmeknow_config: Identifier::default(),
             _phantom: std::marker::PhantomData,
         }
