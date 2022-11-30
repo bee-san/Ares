@@ -33,7 +33,7 @@ mod storage;
 /// Timer for internal use
 mod timer;
 
-use checkers::{checker_type::{Checker, Check}, athena::Athena, CheckerTypes};
+use checkers::{checker_type::{Checker, Check}, athena::Athena};
 use log::debug;
 
 use crate::config::Config;
@@ -47,13 +47,13 @@ use self::decoders::crack_results::CrackResult;
 /// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", Config::default());
 /// assert!(true)
 /// ```
-pub fn perform_cracking(text: &str, config: Config) -> Option<Text> {
+pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     if check_if_input_text_is_plaintext(text){
         debug!("The input text provided to the program {} is the plaintext. Returning early.", text);
         return_early_becauseinput_text_is_plaintext();
         return None
     }
-pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
+
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
