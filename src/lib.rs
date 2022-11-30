@@ -53,6 +53,7 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<Text> {
         return_early_becauseinput_text_is_plaintext();
         return None
     }
+pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
@@ -71,12 +72,15 @@ fn return_early_becauseinput_text_is_plaintext(){
     println!("Your input text is the plaintext 🥳")
 }
 
-/// Our custom text which also has path to get there
+/// DecoderResult is the result of decoders
 #[derive(Debug)]
-pub struct Text {
-    /// text we got
+pub struct DecoderResult {
+    /// The text we have from the decoder, as a vector
+    /// because the decoder might return more than 1 text (caesar)
     pub text: Vec<String>,
-    /// decoder used so far to get this text
+    /// The list of decoders we have so far
+    /// The CrackResult contains more than just each decoder, such as the keys used
+    /// or the checkers used.
     pub path: Vec<CrackResult>,
 }
 
