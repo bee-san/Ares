@@ -56,7 +56,7 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
             "The input text provided to the program {} is the plaintext. Returning early.",
             text
         );
-        return_early_becauseinput_text_is_plaintext();
+        return_early_because_input_text_is_plaintext();
         return None;
     }
 
@@ -74,7 +74,7 @@ fn check_if_input_text_is_plaintext(text: &str) -> bool {
     athena_checker.check(text).is_identified
 }
 
-fn return_early_becauseinput_text_is_plaintext() {
+fn return_early_because_input_text_is_plaintext() {
     println!("Your input text is the plaintext 🥳")
 }
 
