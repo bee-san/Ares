@@ -19,9 +19,16 @@ pub fn start(duration: u32) -> Receiver<()> {
             if !PAUSED.load(Relaxed) {
                 sleep(Duration::from_secs(1));
                 time_spent += 1;
+                // Some pretty printing support
+                if time_spent % 5 == 0 && time_spent != 0 {
+                    println!(
+                        "{} seconds have passed. {} remaining",
+                        time_spent,
+                        duration - time_spent
+                    );
+                }
             }
         }
-
         sender.send(()).expect("Timer should send succesfully");
     });
 

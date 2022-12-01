@@ -2,16 +2,6 @@ use super::checker_type::{Check, Checker};
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::{Data, Identifier};
 
-/// The Lemmeknow checker configuration struct
-const IDENTIFIER: Identifier = Identifier {
-    min_rarity: 0.1,
-    max_rarity: 1.0,
-    tags: vec![],
-    exclude_tags: vec![],
-    file_support: false,
-    boundaryless: false,
-};
-
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 /// This is the struct for it.
 pub struct LemmeKnow;
@@ -32,7 +22,7 @@ impl Check for Checker<LemmeKnow> {
     }
 
     fn check(&self, text: &str) -> CheckResult {
-        let lemmeknow_result = IDENTIFIER.identify(text);
+        let lemmeknow_result = self.lemmeknow_config.identify(text);
         let mut is_identified = false;
         let mut description = "".to_string();
         if !lemmeknow_result.is_empty() {
