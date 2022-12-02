@@ -5,6 +5,7 @@ use crate::decoders::atbash_decoder::AtbashDecoder;
 use crate::decoders::base32_decoder::Base32Decoder;
 use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
 use crate::decoders::base58_monero_decoder::Base58MoneroDecoder;
+use crate::decoders::binary_decoder::BinaryDecoder;
 
 use crate::decoders::base58_flickr_decoder::Base58FlickrDecoder;
 use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
@@ -100,6 +101,7 @@ impl MyResults {
 /// Currently takes no args as this is just a spike to get all the basic functionality working
 pub fn filter_and_get_decoders() -> Decoders {
     trace!("Filtering and getting all decoders");
+    let binary = Decoder::<BinaryDecoder>::new();
     let base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
     let base58_monero = Decoder::<Base58MoneroDecoder>::new();
     let base58_ripple = Decoder::<Base58RippleDecoder>::new();
@@ -115,6 +117,7 @@ pub fn filter_and_get_decoders() -> Decoders {
     let caesardecoder = Decoder::<CaesarDecoder>::new();
     Decoders {
         components: vec![
+            Box::new(binary),
             Box::new(base58_bitcoin),
             Box::new(base58_monero),
             Box::new(base58_ripple),
