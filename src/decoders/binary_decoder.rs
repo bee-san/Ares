@@ -5,7 +5,7 @@ use super::crack_results::CrackResult;
 use super::interface::Crack;
 use super::interface::Decoder;
 
-use log::{info, trace};
+use log::{debug, info, trace};
 
 ///! Binary Decoder
 pub struct BinaryDecoder;
@@ -41,7 +41,7 @@ impl Crack for Decoder<BinaryDecoder> {
             decoded_strings.push(decoded_text);
             let borrowed_decoded_text = &decoded_strings[decoded_strings.len() - 1];
             if !check_string_success(borrowed_decoded_text, text) {
-                info!(
+                debug!(
                     "Failed to decode binary because binary returned false on string {}. This means the string is 'funny' as it wasn't modified.",
                     borrowed_decoded_text
                 );
@@ -50,7 +50,7 @@ impl Crack for Decoder<BinaryDecoder> {
             let checker_result = checker.check(borrowed_decoded_text);
             // If checkers return true, exit early with the correct result
             if checker_result.is_identified {
-                trace!("Found a match with binary bit {}", shift);
+                info!("Found a match with binary bit {}", shift);
                 results.unencrypted_text = Some(vec![borrowed_decoded_text.to_string()]);
                 results.update_checker(&checker_result);
                 return results;
