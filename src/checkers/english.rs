@@ -37,7 +37,7 @@ impl Check for Checker<EnglishChecker> {
 
         let mut plaintext_found = false;
         // TODO: Change this when the below bugs are fixed.
-        let filename = "English.txt";
+        let filename = "English text";
 
         let split_input = input.split(' ');
 
@@ -96,7 +96,9 @@ fn normalise_string(input: &str) -> String {
     // The replace function supports patterns https://doc.rust-lang.org/std/str/pattern/trait.Pattern.html#impl-Pattern%3C%27a%3E-3
     // TODO add more puncuation
     input.to_lowercase().replace(
-        &['(', ')', '!', '/', ',', '?', '\"', '.', ';', ':', '\''][..],
+        &[
+            '(', ')', '!', '/', ',', '?', '\"', '.', ';', ':', '\'', '`', ';', ':', '~', '^',
+        ][..],
         "",
     )
 }
