@@ -38,4 +38,9 @@ mod tests {
     fn test_dictionary_loads_words_txt_contains_hello() {
         assert!(DICTIONARIES.get("words.txt").unwrap().contains("hello"))
     }
+
+    #[test]
+    fn test_dictionary_does_not_contain_single_letter_words() {
+        assert!(!DICTIONARIES.get("words.txt").unwrap().contains("a"))
+    }
 }
