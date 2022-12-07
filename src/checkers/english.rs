@@ -37,7 +37,7 @@ impl Check for Checker<EnglishChecker> {
 
         let mut plaintext_found = false;
         // TODO: Change this when the below bugs are fixed.
-        let filename = "English.txt";
+        let filename = "English text";
 
         let split_input = input.split(' ');
 

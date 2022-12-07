@@ -137,4 +137,13 @@ mod tests {
         // We return None since the input is the plaintext
         assert!(result.is_none());
     }
+    #[test]
+    // Previously this would decode to `Fchohs as 13 dzoqsg!` because the English checker wasn't that good
+    // This test makes sure we can decode it okay
+    fn test_successfully_decode_caesar() {
+        let config = Config::default();
+        let result = perform_cracking("Ebgngr zr 13 cynprf!", config);
+        // We return None since the input is the plaintext
+        assert!(result.unwrap().text[0] == "Rotate me 13 places!");
+    }
 }

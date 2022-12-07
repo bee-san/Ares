@@ -24,3 +24,18 @@ pub static DICTIONARIES: Lazy<HashMap<&str, HashSet<&str>>> = Lazy::new(|| {
     }
     entries
 });
+
+// Rust tests
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_dictionary_loads_words_txt() {
+        assert!(DICTIONARIES.contains_key("words.txt"))
+    }
+    #[test]
+    fn test_dictionary_loads_words_txt_contains_hello() {
+        assert!(DICTIONARIES.get("words.txt").unwrap().contains("hello"))
+    }
+}
