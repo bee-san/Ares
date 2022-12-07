@@ -96,7 +96,7 @@ fn normalise_string(input: &str) -> String {
     // The replace function supports patterns https://doc.rust-lang.org/std/str/pattern/trait.Pattern.html#impl-Pattern%3C%27a%3E-3
     // TODO add more puncuation
     input.to_lowercase().replace(
-        &['(', ')', '!', '/', ',', '?', '\"', '.', ';', ':', '\''][..],
+        &['(', ')', '!', '/', ',', '?', '\"', '.', ';', ':', '\'', '`', ';', ':', '~', '^'][..],
         "",
     )
 }
