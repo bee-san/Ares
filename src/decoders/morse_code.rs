@@ -34,6 +34,8 @@ impl Crack for Decoder<MorseCodeDecoder> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying Morse Code with text {:?}", text);
         // TODO support new line and slash morse code
+        // let text = normalise_string(text);
+        let text = normalise_morse_string(text);
         let decoded_text: Option<String> = text.split(' ').map(morse_to_alphanumeric).collect();
 
         trace!("Decoded text for morse code: {:?}", decoded_text);
@@ -45,7 +47,7 @@ impl Crack for Decoder<MorseCodeDecoder> {
         }
 
         let decoded_text = decoded_text.unwrap();
-        if !check_string_success(&decoded_text, text) {
+        if !check_string_success(&decoded_text, &text) {
             info!(
                 "Failed to decode morse code because check_string_success returned false on string {}",
                 decoded_text
@@ -60,6 +62,17 @@ impl Crack for Decoder<MorseCodeDecoder> {
 
         results
     }
+}
+
+fn normalise_morse_string(text: &str) -> String {
+    // The replace function supports patterns https://doc.rust-lang.org/std/str/pattern/trait.Pattern.html#impl-Pattern%3C%27a%3E-3
+    // We want to remove new lines / line breaks so all the morse is on 1 line and we can parse it better
+    text.to_lowercase()
+        .replace("\n", "")
+        .replace("\r", "")
+        .replace("\\n", "")
+        .replace("\\r", "")
+        .replace("\\", "")
 }
 
 /// Maps morse code to its alphanumeric character, returns None for invalid morse-code
@@ -149,5 +162,93 @@ mod tests {
             &get_athena_checker(),
         );
         assert_eq!(result.unencrypted_text.unwrap()[0], "192.168.0.1");
+    }
+    #[test]
+    fn test_morse_code_new_line() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            ".---- ----. ..--- .-.-.- .---- -.... ---.. .-.-.- ----- .-.-.- .----\n",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "192.168.0.1");
+    }
+    #[test]
+    fn test_morse_code_new_line_with_space() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            ".---- ----. ..--- .-.-.- .---- -.... ---.. .-.-.- ----- .-.-.- .---- \n",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "192.168.0.1");
+    }
+    #[test]
+    fn test_morse_code_carrage_arrage_return_with_space() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            ".---- ----. ..--- .-.-.- .---- -.... ---.. .-.-.- ----- .-.-.- .---- \r",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "192.168.0.1");
+    }
+
+    #[test]
+    fn test_morse_code_both_new_line_and_carrage_return() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            ".---- ----. \n..--- .-.-.- \r.---- -.... ---.. .-.-.- ----- .-.-.- .---- \r",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "192.168.0.1");
+    }
+
+    #[test]
+    // We cannot decode this because backslashes are not supported
+    #[ignore]
+    fn test_morse_code_backslash() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            r".... . .-.. .-.. ---\.-- --- .-. .-.. -.. -.-.--",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world!");
+    }
+    #[test]
+    // We cannot decode this because linefeeds are not supported
+    // This is the default on CyberChef
+    // Maybe file input would be better here, does it detect the new line in the text?
+    #[ignore]
+    fn test_morse_code_line_feed() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            r".... . .-.. .-.. ---
+            .-- --- .-. .-.. -.. -.-.--",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world!");
+    }
+    #[test]
+    // This is broken because we split on spaces in our code
+    // And because the comma is not a space it is not split
+    #[ignore]
+    fn test_morse_code_comma() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            r".... . .-.. .-.. ---,.-- --- .-. .-.. -.. -.-.--",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world!");
+    }
+
+    #[test]
+    // This is broken because we split on spaces in our code
+    // And because the colon is not a space it is not split
+    #[ignore]
+    fn test_morse_code_colon() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            r".... . .-.. .-.. ---:.-- --- .-. .-.. -.. -.-.--",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world!");
     }
 }
