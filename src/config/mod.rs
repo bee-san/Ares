@@ -23,11 +23,13 @@ pub struct Config {
     /// Should the human checker be on?
     /// This asks yes/no for plaintext. Turn off for API
     pub human_checker_on: bool,
-    /// Is the program being run in offline mode?
-    pub offline_mode: bool,
     /// The timeout threshold before Ares quites
     /// This is in seconds
     pub timeout: u32,
+    /// Is the program being run in API mode?
+    /// This is used to determine if we should print to stdout
+    /// Or return the values
+    pub api_mode: bool,
 }
 
 /// Cell for storing global Config
@@ -60,8 +62,8 @@ impl Default for Config {
             verbose: 0,
             lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG,
             human_checker_on: false,
-            offline_mode: false,
             timeout: 5,
+            api_mode: true,
         }
     }
 }

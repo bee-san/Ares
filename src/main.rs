@@ -9,7 +9,6 @@ fn main() {
         // TODO: As result have array of CrackResult used,
         // we can print in better way with more info
         Some(result) => {
-            println!("SUCCESSFUL 😁");
             println!("PLAINTEXT: {:?}", result.text);
             println!(
                 "DECODERS USED: {}",

@@ -32,6 +32,7 @@ bs58 = "0.4.0"
 num = "0.4"
 crossbeam = "0.8"
 base65536 = "1.0.1"
+ansi_term = "0.12.1"
 
 [dev-dependencies]
 criterion = "0.4.0"

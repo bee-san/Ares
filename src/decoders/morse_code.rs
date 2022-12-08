@@ -34,7 +34,7 @@ impl Crack for Decoder<MorseCodeDecoder> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying Morse Code with text {:?}", text);
         // TODO support new line and slash morse code
-        let decoded_text: Option<String> = text.split(' ').map(morse_to_alphanumeric).collect();
+        let decoded_text: Option<String> = text.split(" ").map(morse_to_alphanumeric).collect();
 
         trace!("Decoded text for morse code: {:?}", decoded_text);
         let mut results = CrackResult::new(self, text.to_string());
@@ -64,6 +64,7 @@ impl Crack for Decoder<MorseCodeDecoder> {
 
 /// Maps morse code to its alphanumeric character, returns None for invalid morse-code
 fn morse_to_alphanumeric(text: &str) -> Option<&str> {
+    trace!("Starting to map morse code to alphanumeric");
     let result = match text {
         ".-" => "A",
         "-..." => "B",
@@ -121,6 +122,10 @@ fn morse_to_alphanumeric(text: &str) -> Option<&str> {
         "-.-.--" => "!",
         " " => " ",
         "" => "",
+        // Turns line breaks and new lines into space. This may break what the plaintext is supposed to be
+        // But enables us to support them
+        "\n" => " ",
+        "\r" => " ",
         _ => return None,
     };
 
@@ -149,5 +154,12 @@ mod tests {
             &get_athena_checker(),
         );
         assert_eq!(result.unencrypted_text.unwrap()[0], "192.168.0.1");
+    }
+
+    #[test]
+    fn test_morse_code_with_new_line() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(".... . .-.. .-.. ---\n", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO");
     }
 }

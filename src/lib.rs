@@ -16,6 +16,8 @@ pub mod checkers;
 pub mod cli;
 /// CLI Input Parser parses the input from the CLI and returns a struct.
 mod cli_input_parser;
+/// The CLI Pretty Printing module contains the functions that print the results
+pub mod cli_pretty_printing;
 /// The Config module enables a configuration module
 /// Like a global API to access config details
 pub mod config;

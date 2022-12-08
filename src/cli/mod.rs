@@ -7,7 +7,7 @@ use log::{debug, trace};
 
 /// The struct for Clap CLI arguments
 #[derive(Parser)]
-#[command(author = "Bee <bee@skerritt.blog>", version = "1.0", about, long_about = None)]
+#[command(author = "Bee <bee@skerritt.blog>", about, long_about = None)]
 pub struct Opts {
     /// Some input. Because this isn't an Option<T> it's required to be used
     #[arg(short, long)]
@@ -21,9 +21,16 @@ pub struct Opts {
     #[arg(short, long)]
     disable_human_checker: bool,
 
-    /// Maximum number of decodings to perform on a string
-    #[arg(short, long, default_value = "10000")]
-    max_depth: u32,
+    /// Set timeout, if it is not decrypted after this time, it will return an error.
+    /// Default is 5 seconds.
+    // If we want to call it `timeout`, the short argument contends with the one for Text `ares -t`.
+    // I propose we just call it `cracking_timeout`.
+    #[arg(short, long)]
+    cracking_timeout: Option<u32>,
+    /// Run in API mode, this will return the results instead of printing them
+    /// Default is False
+    #[arg(short, long)]
+    api_mode: Option<bool>,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -40,6 +47,7 @@ pub fn parse_cli_args() -> (String, Config) {
     env_logger::init_from_env(
         env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, min_log_level),
     );
+
     trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
     debug!("{:?}", opts.text);
@@ -57,9 +65,13 @@ fn cli_args_into_config_struct(opts: Opts) -> (String, Config) {
             lemmeknow_config: Identifier::default(),
             // default is false, we want default to be true
             human_checker_on: !opts.disable_human_checker,
-            offline_mode: true,
-            // TODO make this into a CLI arg
-            timeout: 5,
+            // These if statements act as defaults
+            timeout: if opts.cracking_timeout.is_none() {
+                5
+            } else {
+                opts.cracking_timeout.unwrap()
+            },
+            api_mode: if opts.api_mode.is_none() { false } else { true },
         },
     )
 }
