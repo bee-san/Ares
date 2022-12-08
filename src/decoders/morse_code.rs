@@ -34,7 +34,6 @@ impl Crack for Decoder<MorseCodeDecoder> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying Morse Code with text {:?}", text);
         // TODO support new line and slash morse code
-        // let text = normalise_string(text);
         let text = normalise_morse_string(text);
         let decoded_text: Option<String> = text.split(' ').map(morse_to_alphanumeric).collect();
 
