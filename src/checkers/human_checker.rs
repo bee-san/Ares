@@ -9,6 +9,7 @@ use text_io::read;
 /// TODO: Add a way to specify a list of checkers to use in the library. This checker is not library friendly!
 // compile this if we are not running tests
 pub fn human_checker(input: &CheckResult) -> bool {
+    timer::pause();
     // wait instead of get so it waits for config being set
     let config = get_config();
     // We still call human checker, just if config is false we return True
@@ -16,7 +17,6 @@ pub fn human_checker(input: &CheckResult) -> bool {
         return true;
     }
 
-    timer::pause();
     let output_string = format!(
         "I think the plaintext is a {}.\nPossible plaintext: '{}' (y/N): ",
         input.description, input.text
