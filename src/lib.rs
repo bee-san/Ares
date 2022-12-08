@@ -46,9 +46,35 @@ use self::decoders::crack_results::CrackResult;
 /// ```rust
 /// use ares::perform_cracking;
 /// use ares::config::Config;
-///
-/// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", Config::default());
-/// assert!(true)
+/// let mut config = Config::default();
+/// // You can set the config to your liking using the Config struct
+/// // Just edit the data like below if you want:
+/// config.timeout = 5;
+/// config.human_checker_on = false;
+/// config.verbose = 0;
+/// let result = perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", config);
+/// assert!(true);
+/// // The result is an Option<DecoderResult> so we need to unwrap it
+/// // The DecoderResult contains the text and the path
+/// // The path is a vector of CrackResults which contains the decoder used and the keys used
+/// // The text is a vector of strings because some decoders return more than 1 text (Caesar)
+/// // Becuase the program has returned True, the first result is the plaintext (and it will only have 1 result).
+/// // This is some tech debt we need to clean up https://github.com/bee-san/Ares/issues/130
+/// assert!(result.unwrap().text[0] == "The main function to call which performs the cracking.");
+/// ```
+/// The human checker defaults to off in the config, but it returns the first thing it finds currently.
+/// We have an issue for that here https://github.com/bee-san/Ares/issues/129
+/// ```rust
+/// use ares::perform_cracking;
+/// use ares::config::Config;
+/// let mut config = Config::default();
+/// // You can set the config to your liking using the Config struct
+/// // Just edit the data like below if you want:
+/// config.timeout = 1;
+/// let result = perform_cracking("thisisatestthatitwillneverget111", config);
+/// assert!(true);
+/// // If the program times out, or it cannot decode the text it will return None.
+/// assert!(result.is_none());
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     if check_if_input_text_is_plaintext(text) {
