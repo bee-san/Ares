@@ -66,7 +66,8 @@ impl Crack for Decoder<MorseCodeDecoder> {
 /// We want to remove new lines / line breaks so all the morse is on 1 line and we can parse it better
 fn normalise_morse_string(text: &str) -> String {
     // The replace function supports patterns https://doc.rust-lang.org/std/str/pattern/trait.Pattern.html#impl-Pattern%3C%27a%3E-3
-    text.to_lowercase().replace(['\n', '\r'], "")
+    text.to_lowercase()
+        .replace(['\n', '\r'], "")
         .replace("\\n", "")
         .replace("\\r", "")
         .replace('\\', "")
