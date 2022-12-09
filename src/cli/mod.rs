@@ -3,7 +3,7 @@ use crate::config::Config;
 /// as do all doc strings on fields
 use clap::Parser;
 use lemmeknow::Identifier;
-use log::{debug, trace};
+use log::trace;
 
 /// The struct for Clap CLI arguments
 #[derive(Parser)]
@@ -17,7 +17,7 @@ pub struct Opts {
     #[arg(short, long, action = clap::ArgAction::Count)]
     verbose: u8,
 
-    /// Turn off human checker
+    /// Turn off human checker, perfect for APIs where you don't want input from humans
     #[arg(short, long)]
     disable_human_checker: bool,
 
@@ -50,8 +50,6 @@ pub fn parse_cli_args() -> (String, Config) {
 
     trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
-    debug!("{:?}", opts.text);
-    debug!("{:?}", opts.verbose);
 
     cli_args_into_config_struct(opts)
 }
