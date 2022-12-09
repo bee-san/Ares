@@ -71,7 +71,7 @@ fn cli_args_into_config_struct(opts: Opts) -> (String, Config) {
             } else {
                 opts.cracking_timeout.unwrap()
             },
-            api_mode: if opts.api_mode.is_none() { false } else { true },
+            api_mode: opts.api_mode.is_some(),
         },
     )
 }
