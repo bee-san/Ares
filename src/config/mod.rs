@@ -9,9 +9,8 @@ use once_cell::sync::OnceCell;
 /// It's access using a variable like configuration
 /// ```rust
 /// use ares::config::get_config;
-/// // Assert that the CONFIG has an offline mode
 /// let config = get_config();
-/// assert!(!config.offline_mode);
+/// assert_eq!(config.verbose, 0);
 /// ```
 
 pub struct Config {
