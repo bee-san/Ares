@@ -84,7 +84,7 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
             "The input text provided to the program {} is the plaintext. Returning early.",
             text
         );
-        return_early_because_input_text_is_plaintext();
+        cli_pretty_printing::return_early_because_input_text_is_plaintext();
         return None;
     }
 
@@ -102,11 +102,6 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
 fn check_if_input_text_is_plaintext(text: &str) -> bool {
     let athena_checker = Checker::<Athena>::new();
     athena_checker.check(text).is_identified
-}
-
-/// A nice function to print when the input text is the plaintext
-fn return_early_because_input_text_is_plaintext() {
-    println!("Your input text is the plaintext 🥳")
 }
 
 /// DecoderResult is the result of decoders

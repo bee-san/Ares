@@ -6,6 +6,8 @@ use std::{
     time::Duration,
 };
 
+use crate::cli_pretty_printing::countdown_until_program_ends;
+
 /// Indicate whether timer is paused
 static PAUSED: AtomicBool = AtomicBool::new(false);
 
@@ -20,13 +22,8 @@ pub fn start(duration: u32) -> Receiver<()> {
                 sleep(Duration::from_secs(1));
                 time_spent += 1;
                 // Some pretty printing support
-                if time_spent % 5 == 0 && time_spent != 0 {
-                    println!(
-                        "{} seconds have passed. {} remaining",
-                        time_spent,
-                        duration - time_spent
-                    );
-                }
+                countdown_until_program_ends(time_spent, duration);
+
             }
         }
         sender.send(()).expect("Timer should send succesfully");

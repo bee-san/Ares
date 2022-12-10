@@ -4,100 +4,92 @@
 // We should invert this to align the happy path to the left
 // https://medium.com/@matryer/line-of-sight-in-code-186dd7cdea88
 
-/// The output macro is used to print the output of the program.
+use crate::DecoderResult;
+
+/// The output function is used to print the output of the program.
 /// If the API mode is on, it will not print.
-#[macro_export]
-macro_rules! program_exiting_successful_decoding {
-    ($result:expr) => {
-        let config = ares::config::get_config();
-        if !config.api_mode {
-            let plaintext = $result.text;
-            // calculate path
-            let decoded_path =  $result
-                .path
-                .iter()
-                .map(|c| c.decoder)
-                .collect::<Vec<_>>()
-                .join(" → ");
+pub fn program_exiting_successful_decoding(result: DecoderResult) -> (){
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return ();
+    }
+    let plaintext = result.text;
+    // calculate path
+    let decoded_path =  result
+        .path
+        .iter()
+        .map(|c| c.decoder)
+        .collect::<Vec<_>>()
+        .join(" → ");
 
-            // TODO if text is longer than 1 line on terminal this will suck
-            // Perhaps if its over say 30 chars we do not do it up to length
-            // However it's helpful when the plaintext has whitespace in it, like this:
-            // 👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇👇
-            // ```hello there```
-            // 👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆👆
-            // You can clearly see it has white space haha. Maybe we should detect this and warn about it?
-            let point_down = "👇".repeat(plaintext[0].len());
-            let point_up = "👆".repeat(plaintext[0].len());
-
-            let decoded_path_string = if !decoded_path.contains("→") {
-                // handles case where only 1 decoder is used
-                format!("the decoder used is {}", decoded_path)
-            } else {
-                format!("the decoders used and their order is {}", decoded_path)
-            };
-            println!(
-                "The plaintext is: \n{}\n{}\n{}\nand {}", point_down,
-                ansi_term::Colour::Yellow.bold().paint(&plaintext[0]), point_up, decoded_path_string
-            );
-        }
+    let decoded_path_string = if !decoded_path.contains("→") {
+        // handles case where only 1 decoder is used
+        format!("the decoder used is {}", decoded_path)
+    } else {
+        format!("the decoders used are {}", decoded_path)
     };
+    println!(
+        "The plaintext is: \n{}\nand {}",
+        ansi_term::Colour::Yellow.bold().paint(&plaintext[0]), decoded_path_string
+    );
+    return ();
 }
 
-/// The output macro is used to print the output of the program.
-#[macro_export]
-macro_rules! decoded_how_many_times {
-    ($depth:expr) => {
-        let config = $crate::config::get_config();
-        if !config.api_mode {
 
-            // Gets how many decoders we have
-            // Then we add 25 for Caesar, and roughly 25 for Binary
-            let decoders = filter_and_get_decoders();
-            let decoded_times_int = $depth * (decoders.components.len() as u32 + 25 + 25);
-            let decoded_times_str = ansi_term::Colour::Yellow
-                .bold()
-                .paint(format!("{} times", decoded_times_int));
+/// The output function is used to print the output of the program.
+pub fn decoded_how_many_times(depth: u32) -> () {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return ();
+    }
 
-            let time_took = $crate::cli_pretty_printing::calculate_time_took(decoded_times_int);
+    // Gets how many decoders we have
+    // Then we add 25 for Caesar, and roughly 25 for Binary
+    let decoders = crate::filtration_system::filter_and_get_decoders();
+    let decoded_times_int = depth * (decoders.components.len() as u32 + 25 + 25);
+    let decoded_times_str = ansi_term::Colour::Yellow
+        .bold()
+        .paint(format!("{} times", decoded_times_int));
 
-            // TODO add colour to the times
-            println!("\n{} Ares has decoded {} times.\nIf you would have used Ciphey, it would have taken you {}\n", "🥳", decoded_times_str, time_took);
-        }
-    };
+    let time_took = calculate_time_took(decoded_times_int);
+
+    // TODO add colour to the times
+    println!("\n{} Ares has decoded {} times.\nIf you would have used Ciphey, it would have taken you {}\n", "🥳", decoded_times_str, time_took);
+    return ();
 }
 
-/// The output macro is used to print the output of the program.
-#[macro_export]
-macro_rules! human_checker_check {
-    ($description:expr, $text:expr) => {
-        println!(
-            "{} I think the plaintext is {}.\nPossible plaintext: '{}' (y/N): ",
-            "🕵️ ",
-            ansi_term::Colour::Yellow
-                .bold()
-                .paint($description)
-                .to_string(),
-            ansi_term::Colour::Yellow.bold().paint($text).to_string()
-        )
-    };
+/// Whenever the human checker checks for text, this function is run.
+/// The human checker checks to see if API mdoe is runnign inside of it
+/// rather than doing it here at the printing level
+pub fn human_checker_check(description: &str, text: &str) {
+    println!(
+        "{} I think the plaintext is {}.\nPossible plaintext: '{}' (y/N): ",
+        "🕵️ ",
+        ansi_term::Colour::Yellow
+            .bold()
+            .paint(description)
+            .to_string(),
+        ansi_term::Colour::Yellow.bold().paint(text).to_string()
+    )
 }
 
 /// When Ares has failed to decode something, print this message
-pub fn failed_to_decode() {
+pub fn failed_to_decode() -> () {
     let config = crate::config::get_config();
-    if !config.api_mode {
-        // The program can roughly do 45 decodings a second
-        // Currently it is not possible to get this info at this stage of the program from the decoding level
-        // TODO fix this
-        let ares_decodings = config.timeout * 45;
-        let time_took = calculate_time_took(ares_decodings);
-        println!("Ares has failed to decode the text after trying {} decodings. If you would have used Ciphey, it would have taken you {}", ares_decodings, time_took);
-        println!("If you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog")
+    if config.api_mode {
+        return ();
     }
+    // The program can roughly do 45 decodings a second
+    // Currently it is not possible to get this info at this stage of the program from the decoding level
+    // TODO fix this
+    let ares_decodings = config.timeout * 45;
+    let time_took = calculate_time_took(ares_decodings);
+    println!("⛔️ Ares has failed to decode the text. If you would have used Ciphey, it would have taken you {}\n", time_took);
+    println!("If you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog");
+    return ();
 }
 /// Calculate how long it would take to decode this in Ciphey
-pub fn calculate_time_took(decoded_times_int: u32) -> String {
+fn calculate_time_took(decoded_times_int: u32) -> String {
     // TODO if we grab how long the programs been running for (see timer) we can make some nice stats like:
     // * How many decodings / second we did
     // * How much longer it'd take in Ciphey
@@ -119,4 +111,37 @@ pub fn calculate_time_took(decoded_times_int: u32) -> String {
     } else {
         format!("{} seconds", ciphey_how_long_to_decode_in_seconds)
     }
+}
+
+/// Every second the timer ticks once
+/// If the timer hits our countdown, we exit the program.
+/// This function prints the countdown to let the user know the program is still running.
+pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) -> () {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return ();
+    }
+    if seconds_spent_running % 5 == 0 && seconds_spent_running != 0 {
+        let time_left = duration - seconds_spent_running;
+        if time_left <= 0{
+            return ();
+        }
+        println!(
+            "{} seconds have passed. {} remaining",
+            seconds_spent_running, time_left
+            
+        );
+    }
+    return ();
+}
+
+/// The input given to Ares is already plaintext
+/// So we do not need to do anything
+pub fn return_early_because_input_text_is_plaintext() -> () {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return ();
+    }
+    println!("Your input text is the plaintext 🥳");
+    return ();
 }

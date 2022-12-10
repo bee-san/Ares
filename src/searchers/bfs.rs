@@ -1,8 +1,8 @@
 use crate::{
-    config::get_config, decoded_how_many_times, filtration_system::filter_and_get_decoders,
+    config::get_config, cli_pretty_printing::decoded_how_many_times,
 };
 use crossbeam::{channel::bounded, select};
-use log::{error, trace};
+use log::{trace, debug};
 use std::collections::HashSet;
 
 use crate::{filtration_system::MyResults, timer, DecoderResult};
@@ -96,14 +96,14 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
                 // but this is a demo and i'll be lazy :P
                 let exit_result = exit_result.ok(); // convert Result to Some
                 if exit_result.is_some() {
-                    decoded_how_many_times!(curr_depth);
-                    trace!("Found exit result: {:?}", exit_result);
+                    decoded_how_many_times(curr_depth);
+                    debug!("Found exit result: {:?}", exit_result);
                     return exit_result;
                 }
             },
             recv(timer) -> _ => {
-                decoded_how_many_times!(curr_depth);
-                error!("Ares failed to decrypt the text you have provided within {} seconds, it is unlikely to be decoded.", config.timeout);
+                decoded_how_many_times(curr_depth);
+                debug!("Ares has failed to decode");
                 return None;
             },
             default => continue,
