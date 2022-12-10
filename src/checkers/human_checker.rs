@@ -1,7 +1,7 @@
 use crate::checkers::checker_result::CheckResult;
 use crate::cli_pretty_printing::human_checker_check;
 use crate::config::get_config;
-use crate::{timer};
+use crate::timer;
 use text_io::read;
 
 /// The Human Checker asks humans if the expected plaintext is real plaintext

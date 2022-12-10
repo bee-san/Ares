@@ -1,8 +1,6 @@
-use crate::{
-    config::get_config, cli_pretty_printing::decoded_how_many_times,
-};
+use crate::{cli_pretty_printing::decoded_how_many_times, config::get_config};
 use crossbeam::{channel::bounded, select};
-use log::{trace, debug};
+use log::{debug, trace};
 use std::collections::HashSet;
 
 use crate::{filtration_system::MyResults, timer, DecoderResult};

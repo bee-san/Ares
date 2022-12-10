@@ -1,21 +1,19 @@
-// TODO align the happy path to the left
-// Currently we are aligning the happy path to the right
-// So config.api, if it's not on we do something
-// We should invert this to align the happy path to the left
-// https://medium.com/@matryer/line-of-sight-in-code-186dd7cdea88
-
+/// By having all of our print statements in one file it allows us to align what they look like
+/// and make sure each one is up to our standards. Previously a rogue print statement that went off at an edge case
+/// would look a bit ugly and not the same UI as others.
+/// We can also do things like check for logic or share information / functions which would be a bit messy in the main code.
 use crate::DecoderResult;
 
 /// The output function is used to print the output of the program.
 /// If the API mode is on, it will not print.
-pub fn program_exiting_successful_decoding(result: DecoderResult) -> (){
+pub fn program_exiting_successful_decoding(result: DecoderResult) -> () {
     let config = crate::config::get_config();
     if config.api_mode {
         return ();
     }
     let plaintext = result.text;
     // calculate path
-    let decoded_path =  result
+    let decoded_path = result
         .path
         .iter()
         .map(|c| c.decoder)
@@ -30,11 +28,11 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) -> (){
     };
     println!(
         "The plaintext is: \n{}\nand {}",
-        ansi_term::Colour::Yellow.bold().paint(&plaintext[0]), decoded_path_string
+        ansi_term::Colour::Yellow.bold().paint(&plaintext[0]),
+        decoded_path_string
     );
     return ();
 }
-
 
 /// The output function is used to print the output of the program.
 pub fn decoded_how_many_times(depth: u32) -> () {
@@ -123,13 +121,12 @@ pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) -
     }
     if seconds_spent_running % 5 == 0 && seconds_spent_running != 0 {
         let time_left = duration - seconds_spent_running;
-        if time_left <= 0{
+        if time_left <= 0 {
             return ();
         }
         println!(
             "{} seconds have passed. {} remaining",
             seconds_spent_running, time_left
-            
         );
     }
     return ();

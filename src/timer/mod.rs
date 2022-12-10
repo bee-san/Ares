@@ -23,7 +23,6 @@ pub fn start(duration: u32) -> Receiver<()> {
                 time_spent += 1;
                 // Some pretty printing support
                 countdown_until_program_ends(time_spent, duration);
-
             }
         }
         sender.send(()).expect("Timer should send succesfully");

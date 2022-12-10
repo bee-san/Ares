@@ -1,6 +1,6 @@
 use ares::cli::parse_cli_args;
 use ares::cli_pretty_printing::program_exiting_successful_decoding;
-use ares::{perform_cracking};
+use ares::perform_cracking;
 
 fn main() {
     // Turn CLI arguments into a library object
