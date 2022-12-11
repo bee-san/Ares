@@ -71,7 +71,7 @@ impl Crack for Decoder<Base91Decoder> {
         }
 
         let checker_result = checker.check(&decoded_text);
-        results.unencrypted_text = Some(vec!(decoded_text));
+        results.unencrypted_text = Some(vec![decoded_text]);
 
         results.update_checker(&checker_result);
 
@@ -131,10 +131,7 @@ mod tests {
     fn base91_decode_handles_panics() {
         let base91_decoder = Decoder::<Base91Decoder>::new();
         let result = base91_decoder
-            .crack(
-                "😈",
-                &get_athena_checker(),
-            )
+            .crack("😈", &get_athena_checker())
             .unencrypted_text;
         if result.is_some() {
             panic!("Decode_base91 did not return an option with Some<t>.")

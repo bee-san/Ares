@@ -14,9 +14,9 @@ use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
 ///! Given a filter object, return an array of decoders/crackers which have been filtered
 ///
 use crate::decoders::base64_decoder::Base64Decoder;
-use crate::decoders::base91_decoder::Base91Decoder;
 use crate::decoders::base64_url_decoder::Base64URLDecoder;
 use crate::decoders::base65536_decoder::Base65536Decoder;
+use crate::decoders::base91_decoder::Base91Decoder;
 use crate::decoders::caesar_decoder::CaesarDecoder;
 use crate::decoders::citrix_ctx1_decoder::CitrixCTX1Decoder;
 use crate::decoders::crack_results::CrackResult;
