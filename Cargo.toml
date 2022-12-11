@@ -31,6 +31,7 @@ data-encoding = "2.3.2"
 bs58 = "0.4.0"
 crossbeam = "0.8"
 base65536 = "1.0.1"
+base62 = "2.0.2"
 
 [dev-dependencies]
 criterion = "0.4.0"

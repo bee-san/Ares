@@ -12,6 +12,7 @@ use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
 ///! Proposal: https://broadleaf-angora-7db.notion.site/Filtration-System-7143b36a42f1466faea3077bfc7e859e
 ///! Given a filter object, return an array of decoders/crackers which have been filtered
 ///
+use crate::decoders::base62_decoder::Base62Decoder;
 use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::base64_url_decoder::Base64URLDecoder;
 use crate::decoders::base65536_decoder::Base65536Decoder;
@@ -104,6 +105,7 @@ pub fn filter_and_get_decoders() -> Decoders {
     let base58_monero = Decoder::<Base58MoneroDecoder>::new();
     let base58_ripple = Decoder::<Base58RippleDecoder>::new();
     let base58_flickr = Decoder::<Base58FlickrDecoder>::new();
+    let base62 = Decoder::<Base62Decoder>::new();
     let base64 = Decoder::<Base64Decoder>::new();
     let base64_url = Decoder::<Base64URLDecoder>::new();
     let base65536 = Decoder::<Base65536Decoder>::new();
@@ -119,6 +121,7 @@ pub fn filter_and_get_decoders() -> Decoders {
             Box::new(base58_monero),
             Box::new(base58_ripple),
             Box::new(base58_flickr),
+            Box::new(base62),
             Box::new(base64),
             Box::new(base64_url),
             Box::new(base65536),

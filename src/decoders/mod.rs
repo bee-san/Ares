@@ -5,27 +5,25 @@
 //! mod.rs file
 //! you will also need to make it a public module in this file.
 
-/// The atbash_decoder module decodes atbash
+/// The atbash_decoder_module decodes atbash
 pub mod atbash_decoder;
-/// The base32_decoder module decodes base32
+/// The base32_decoder_module decodes base32
 pub mod base32_decoder;
 /// The base58_bitcoin_decoder module decodes base58 bitcoin
 pub mod base58_bitcoin_decoder;
+/// The base58_flickr_decoder module decodes base58 flickr
+pub mod base58_flickr_decoder;
 /// The base58_monero_decoder module decodes base58 monero
 pub mod base58_monero_decoder;
-
 /// The base58_ripple_decoder module decodes base58 ripple
 pub mod base58_ripple_decoder;
-
-/// The base58_flickr decoder module decodes base58 flickr
-pub mod base58_flickr_decoder;
-
+/// The base62_decoder module decodes base62
+pub mod base62_decoder;
 /// The base64_decoder module decodes base64
-/// It is public as we use it in some tests.
 pub mod base64_decoder;
 /// The base64_url_decoder module decodes base64 url
 pub mod base64_url_decoder;
-/// The base65536 module decodes base65536
+/// The base65536_decoder module decodes base65536
 pub mod base65536_decoder;
 /// The citrix_ctx1_decoder module decodes citrix ctx1
 pub mod citrix_ctx1_decoder;
