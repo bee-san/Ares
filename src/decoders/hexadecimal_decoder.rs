@@ -5,7 +5,8 @@ use super::crack_results::CrackResult;
 use super::interface::Crack;
 use super::interface::Decoder;
 
-use log::{info, trace};
+use log::debug;
+use log::trace;
 
 ///! Hexadecimal Decoder
 pub struct HexadecimalDecoder;
@@ -31,13 +32,17 @@ impl Crack for Decoder<HexadecimalDecoder> {
     /// Else the Option returns nothing and the error is logged in Trace
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying hexadecimal with text {:?}", text);
-        let decoded_text = hexadecimal_to_string(text);
         let mut results = CrackResult::new(self, text.to_string());
+
+        let decoded_text = match hexadecimal_to_string(text) {
+            x if x.is_some() => x.unwrap(),
+            _ => return results,
+        };
 
         trace!("Decoded text for hexadecimal: {:?}", decoded_text);
 
         if !check_string_success(&decoded_text, text) {
-            info!(
+            debug!(
                 "Failed to decode hexadecimal because check_string_success returned false on string {}",
                 decoded_text
             );
@@ -54,7 +59,7 @@ impl Crack for Decoder<HexadecimalDecoder> {
 }
 
 /// Decodes hexadecimal to string
-fn hexadecimal_to_string(hex: &str) -> String {
+fn hexadecimal_to_string(hex: &str) -> Option<String> {
     // Remove all non-hexadecimal characters from the string
     let hex = hex.replace(|c: char| !c.is_ascii_hexdigit(), "");
 
@@ -63,7 +68,7 @@ fn hexadecimal_to_string(hex: &str) -> String {
 
     // Ensure that the vector of bytes has an even length, so it can be processed in pairs
     if bytes.len() % 2 == 1 {
-        return String::new();
+        return None;
     }
 
     // Iterate over the vector of bytes in pairs
@@ -74,7 +79,7 @@ fn hexadecimal_to_string(hex: &str) -> String {
         result.push(u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap() as char);
     }
 
-    result
+    Some(result)
 }
 
 #[cfg(test)]
