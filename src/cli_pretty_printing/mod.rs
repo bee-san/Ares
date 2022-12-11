@@ -20,11 +20,12 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
         .collect::<Vec<_>>()
         .join(" → ");
 
+    let decoded_path_coloured = ansi_term::Colour::Yellow.bold().paint(&decoded_path);
     let decoded_path_string = if !decoded_path.contains('→') {
         // handles case where only 1 decoder is used
-        format!("the decoder used is {}", decoded_path)
+        format!("the decoder used is {}", decoded_path_coloured)
     } else {
-        format!("the decoders used are {}", decoded_path)
+        format!("the decoders used are {}", decoded_path_coloured)
     };
     println!(
         "The plaintext is: \n{}\nand {}",
@@ -44,9 +45,7 @@ pub fn decoded_how_many_times(depth: u32) {
     // Then we add 25 for Caesar, and roughly 25 for Binary
     let decoders = crate::filtration_system::filter_and_get_decoders();
     let decoded_times_int = depth * (decoders.components.len() as u32 + 25 + 25);
-    let decoded_times_str = ansi_term::Colour::Yellow
-        .bold()
-        .paint(format!("{} times", decoded_times_int));
+    let decoded_times_str= format!("{} times", decoded_times_int);
 
     let time_took = calculate_time_took(decoded_times_int);
 
