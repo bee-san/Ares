@@ -129,6 +129,20 @@ mod tests {
     }
 
     #[test]
+    fn hexadecimal_tryhackme_ctf_flag() {
+        // This tests if we can hex decode the hex from the tryhackme CTF challenge
+        let decoder = Decoder::<HexadecimalDecoder>::new();
+        let result = decoder.crack(
+            "68 65 78 61 64 65 63 69 6d 61 6c 20 6f 72 20 62 61 73 65 31 36 3f",
+            &get_athena_checker(),
+        );
+        assert_eq!(
+            result.unencrypted_text.unwrap()[0],
+            "hexadecimal or base16?"
+        );
+    }
+
+    #[test]
     fn hexadecimal_with_delimiters_decodes_successfully() {
         // This tests if Hexadecimal can decode Hexadecimal with delimiters successfully
         let decoder = Decoder::<HexadecimalDecoder>::new();
