@@ -1,3 +1,4 @@
+use crate::filtration_system::MyResults;
 use crate::{cli_pretty_printing::decoded_how_many_times, config::get_config};
 use crossbeam::{channel::bounded, select};
 use log::{debug, trace};
