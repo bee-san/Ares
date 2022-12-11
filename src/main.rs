@@ -1,4 +1,5 @@
 use ares::cli::parse_cli_args;
+use ares::cli_pretty_printing::program_exiting_successful_decoding;
 use ares::perform_cracking;
 
 fn main() {
@@ -9,18 +10,8 @@ fn main() {
         // TODO: As result have array of CrackResult used,
         // we can print in better way with more info
         Some(result) => {
-            println!("SUCCESSFUL 😁");
-            println!("PLAINTEXT: {:?}", result.text);
-            println!(
-                "DECODERS USED: {}",
-                result
-                    .path
-                    .iter()
-                    .map(|c| c.decoder)
-                    .collect::<Vec<_>>()
-                    .join(" → ")
-            )
+            program_exiting_successful_decoding(result);
         }
-        None => println!("FAILED 😭"),
+        None => ares::cli_pretty_printing::failed_to_decode(),
     }
 }

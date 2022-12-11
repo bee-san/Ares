@@ -26,7 +26,11 @@ pub struct Opts {
     // If we want to call it `timeout`, the short argument contends with the one for Text `ares -t`.
     // I propose we just call it `cracking_timeout`.
     #[arg(short, long)]
-    cracking_timeout: u32,
+    cracking_timeout: Option<u32>,
+    /// Run in API mode, this will return the results instead of printing them
+    /// Default is False
+    #[arg(short, long)]
+    api_mode: Option<bool>,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -43,6 +47,7 @@ pub fn parse_cli_args() -> (String, Config) {
     env_logger::init_from_env(
         env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, min_log_level),
     );
+
     trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
 
@@ -58,9 +63,13 @@ fn cli_args_into_config_struct(opts: Opts) -> (String, Config) {
             lemmeknow_config: Identifier::default(),
             // default is false, we want default to be true
             human_checker_on: !opts.disable_human_checker,
-            offline_mode: true,
-            // TODO make this into a CLI arg
-            timeout: opts.cracking_timeout,
+            // These if statements act as defaults
+            timeout: if opts.cracking_timeout.is_none() {
+                5
+            } else {
+                opts.cracking_timeout.unwrap()
+            },
+            api_mode: opts.api_mode.is_some(),
         },
     )
 }

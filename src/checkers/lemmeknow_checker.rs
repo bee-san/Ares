@@ -45,15 +45,5 @@ impl Check for Checker<LemmeKnow> {
 /// Formats the data result to a string
 /// This is used to display the result in the UI
 fn format_data_result(input: &Data) -> String {
-    /*
-    Input contains these:
-        println!("{}", input.name);
-    println!("{}", input.regex);
-    println!("{}", input.plural_name);
-    println!("{}", input.description);
-    println!("{}", input.rarity);
-    println!("{}", input.url);
-    println!("{:?}", input.tags);
-    In the future we'd want to include more advanced things like URL. */
-    input.name.to_string() // removed .to_string() from here
+    input.name.to_string()
 }
