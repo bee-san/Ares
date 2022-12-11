@@ -1,9 +1,9 @@
-use crate::config::get_config;
+use crate::{config::get_config, filtration_system::MyResults};
 use crossbeam::{channel::bounded, select};
 use log::{error, trace};
 use std::collections::HashSet;
 
-use crate::{filtration_system::MyResults, timer, DecoderResult};
+use crate::{timer, DecoderResult};
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search

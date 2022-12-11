@@ -6,8 +6,8 @@
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
-use crate::filtration_system::{filter_and_get_decoders, MyResults};
 use crate::DecoderResult;
+use crate::filtration_system::{filter_and_get_decoders, MyResults};
 /// This module provides access to the breadth first search
 /// which searches for the plaintext.
 mod bfs;
