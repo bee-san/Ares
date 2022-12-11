@@ -45,7 +45,7 @@ pub fn decoded_how_many_times(depth: u32) {
     // Then we add 25 for Caesar, and roughly 25 for Binary
     let decoders = crate::filtration_system::filter_and_get_decoders();
     let decoded_times_int = depth * (decoders.components.len() as u32 + 25 + 25);
-    let decoded_times_str= format!("{} times", decoded_times_int);
+    let decoded_times_str = format!("{} times", decoded_times_int);
 
     let time_took = calculate_time_took(decoded_times_int);
 
