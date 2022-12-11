@@ -17,7 +17,7 @@ use once_cell::sync::OnceCell;
 pub struct Config {
     /// A level of verbosity to determine.
     /// How much we print in logs.
-    pub verbose: i32,
+    pub verbose: u8,
     /// The lemmeknow config to use
     pub lemmeknow_config: Identifier,
     /// Should the human checker be on?
@@ -25,9 +25,9 @@ pub struct Config {
     pub human_checker_on: bool,
     /// Is the program being run in offline mode?
     pub offline_mode: bool,
-    /// Number of times decoding shall be perfomed
-    /// Setting it to [`None`] means we will go infinitely in depth
-    pub max_depth: Option<u32>,
+    /// The timeout threshold before Ares quites
+    /// This is in seconds
+    pub timeout: u32,
 }
 
 /// Cell for storing global Config
@@ -61,7 +61,7 @@ impl Default for Config {
             lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG,
             human_checker_on: false,
             offline_mode: false,
-            max_depth: Some(10_000), // TODO: Set this to some better value
+            timeout: 5,
         }
     }
 }

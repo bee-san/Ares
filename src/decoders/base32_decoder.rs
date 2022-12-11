@@ -29,7 +29,7 @@ use log::{debug, info, trace};
 ///
 /// let result = decode_base32.crack("NBSWY3DPEB3W64TMMQ======", &checker).unencrypted_text;
 /// assert!(result.is_some());
-/// assert_eq!(result.unwrap(), "hello world");
+/// assert_eq!(result.unwrap()[0], "hello world");
 /// ```
 pub struct Base32Decoder;
 
@@ -72,7 +72,7 @@ impl Crack for Decoder<Base32Decoder> {
         }
 
         let checker_result = checker.check(&decoded_text);
-        results.unencrypted_text = Some(decoded_text);
+        results.unencrypted_text = Some(vec![decoded_text]);
 
         results.update_checker(&checker_result);
 
@@ -116,7 +116,7 @@ mod tests {
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for base32");
-        assert_eq!(decoded_str, "hello world");
+        assert_eq!(decoded_str[0], "hello world");
     }
 
     #[test]

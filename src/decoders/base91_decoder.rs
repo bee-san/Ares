@@ -132,7 +132,7 @@ mod tests {
         let base91_decoder = Decoder::<Base91Decoder>::new();
         let result = base91_decoder
             .crack(
-                "hello my name is panicky mc panic face!",
+                "😈",
                 &get_athena_checker(),
             )
             .unencrypted_text;

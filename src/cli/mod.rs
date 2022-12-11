@@ -3,27 +3,30 @@ use crate::config::Config;
 /// as do all doc strings on fields
 use clap::Parser;
 use lemmeknow::Identifier;
-use log::{debug, trace};
+use log::trace;
 
 /// The struct for Clap CLI arguments
 #[derive(Parser)]
-#[clap(version = "1.0", author = "Bee <bee@skerritt.blog>")]
+#[command(author = "Bee <bee@skerritt.blog>", about, long_about = None)]
 pub struct Opts {
     /// Some input. Because this isn't an Option<T> it's required to be used
-    #[clap(short, long)]
+    #[arg(short, long)]
     text: String,
 
     /// A level of verbosity, and can be used multiple times
-    #[clap(short, long, parse(from_occurrences))]
-    verbose: i32,
+    #[arg(short, long, action = clap::ArgAction::Count)]
+    verbose: u8,
 
-    /// Turn off human checker
-    #[clap(short, long)]
+    /// Turn off human checker, perfect for APIs where you don't want input from humans
+    #[arg(short, long)]
     disable_human_checker: bool,
 
-    /// Maximum number of decodings to perform on a string
-    #[clap(short, long, default_value = "10000")]
-    max_depth: u32,
+    /// Set timeout, if it is not decrypted after this time, it will return an error.
+    /// Default is 5 seconds.
+    // If we want to call it `timeout`, the short argument contends with the one for Text `ares -t`.
+    // I propose we just call it `cracking_timeout`.
+    #[arg(short, long)]
+    cracking_timeout: u32,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -42,8 +45,6 @@ pub fn parse_cli_args() -> (String, Config) {
     );
     trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
-    debug!("{:?}", opts.text);
-    debug!("{:?}", opts.verbose);
 
     cli_args_into_config_struct(opts)
 }
@@ -58,7 +59,8 @@ fn cli_args_into_config_struct(opts: Opts) -> (String, Config) {
             // default is false, we want default to be true
             human_checker_on: !opts.disable_human_checker,
             offline_mode: true,
-            max_depth: Some(opts.max_depth),
+            // TODO make this into a CLI arg
+            timeout: opts.cracking_timeout,
         },
     )
 }

@@ -2,16 +2,6 @@ use super::checker_type::{Check, Checker};
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::{Data, Identifier};
 
-/// The Lemmeknow checker configuration struct
-const IDENTIFIER: Identifier = Identifier {
-    min_rarity: 0.1,
-    max_rarity: 1.0,
-    tags: vec![],
-    exclude_tags: vec![],
-    file_support: false,
-    boundaryless: false,
-};
-
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 /// This is the struct for it.
 pub struct LemmeKnow;
@@ -26,13 +16,13 @@ impl Check for Checker<LemmeKnow> {
             tags: vec!["lemmeknow", "regex"],
             expected_runtime: 0.01,
             popularity: 1.0,
-            lemmeknow_config: Identifier::default(),
+            lemmeknow_config: Identifier::default().min_rarity(0.1),
             _phantom: std::marker::PhantomData,
         }
     }
 
     fn check(&self, text: &str) -> CheckResult {
-        let lemmeknow_result = IDENTIFIER.identify(text);
+        let lemmeknow_result = self.lemmeknow_config.identify(text);
         let mut is_identified = false;
         let mut description = "".to_string();
         if !lemmeknow_result.is_empty() {
@@ -65,5 +55,5 @@ fn format_data_result(input: &Data) -> String {
     println!("{}", input.url);
     println!("{:?}", input.tags);
     In the future we'd want to include more advanced things like URL. */
-    format!("The plaintext is {}", input.name) // removed .to_string() from here
+    input.name.to_string() // removed .to_string() from here
 }

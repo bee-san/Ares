@@ -30,25 +30,93 @@ mod searchers;
 /// The storage module contains all the dictionaries and provides
 /// storage of data to our decoderrs and checkers.
 mod storage;
+/// Timer for internal use
+mod timer;
+
+use checkers::{
+    athena::Athena,
+    checker_type::{Check, Checker},
+};
+use log::debug;
 
 use crate::config::Config;
+
+use self::decoders::crack_results::CrackResult;
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ares::perform_cracking;
 /// use ares::config::Config;
-///
-/// perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", Config::default());
-/// assert!(true)
+/// let mut config = Config::default();
+/// // You can set the config to your liking using the Config struct
+/// // Just edit the data like below if you want:
+/// config.timeout = 5;
+/// config.human_checker_on = false;
+/// config.verbose = 0;
+/// let result = perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", config);
+/// assert!(true);
+/// // The result is an Option<DecoderResult> so we need to unwrap it
+/// // The DecoderResult contains the text and the path
+/// // The path is a vector of CrackResults which contains the decoder used and the keys used
+/// // The text is a vector of strings because some decoders return more than 1 text (Caesar)
+/// // Becuase the program has returned True, the first result is the plaintext (and it will only have 1 result).
+/// // This is some tech debt we need to clean up https://github.com/bee-san/Ares/issues/130
+/// assert!(result.unwrap().text[0] == "The main function to call which performs the cracking.");
 /// ```
-pub fn perform_cracking(text: &str, config: Config) -> Option<String> {
+/// The human checker defaults to off in the config, but it returns the first thing it finds currently.
+/// We have an issue for that here https://github.com/bee-san/Ares/issues/129
+/// ```rust
+/// use ares::perform_cracking;
+/// use ares::config::Config;
+/// let mut config = Config::default();
+/// // You can set the config to your liking using the Config struct
+/// // Just edit the data like below if you want:
+/// config.timeout = 1;
+/// let result = perform_cracking("thisisatestthatitwillneverget111", config);
+/// assert!(true);
+/// // If the program times out, or it cannot decode the text it will return None.
+/// assert!(result.is_none());
+/// ```
+pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
+    if check_if_input_text_is_plaintext(text) {
+        debug!(
+            "The input text provided to the program {} is the plaintext. Returning early.",
+            text
+        );
+        return_early_because_input_text_is_plaintext();
+        return None;
+    }
+
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
     // Perform the search algorithm
     // It will either return a failure or success.
-    let max_depth = config.max_depth;
     config::set_global_config(config);
-    searchers::search_for_plaintext(text, max_depth)
+    searchers::search_for_plaintext(text)
+}
+
+/// Checks if the given input is plaintext or not
+/// Used at the start of the program to not waste CPU cycles
+fn check_if_input_text_is_plaintext(text: &str) -> bool {
+    let athena_checker = Checker::<Athena>::new();
+    athena_checker.check(text).is_identified
+}
+
+/// A nice function to print when the input text is the plaintext
+fn return_early_because_input_text_is_plaintext() {
+    println!("Your input text is the plaintext 🥳")
+}
+
+/// DecoderResult is the result of decoders
+#[derive(Debug)]
+pub struct DecoderResult {
+    /// The text we have from the decoder, as a vector
+    /// because the decoder might return more than 1 text (caesar)
+    pub text: Vec<String>,
+    /// The list of decoders we have so far
+    /// The CrackResult contains more than just each decoder, such as the keys used
+    /// or the checkers used.
+    pub path: Vec<CrackResult>,
 }
 
 #[cfg(test)]
@@ -71,7 +139,7 @@ mod tests {
         let config = Config::default();
         let result = perform_cracking("b2xsZWg=", config);
         assert!(result.is_some());
-        assert!(result.unwrap() == "hello");
+        assert!(result.unwrap().text[0] == "hello");
     }
     #[test]
     fn test_perform_cracking_returns_failure() {
@@ -85,6 +153,23 @@ mod tests {
         let config = Config::default();
         let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", config);
         assert!(result.is_some());
-        assert!(result.unwrap() == "hello there general")
+        assert!(result.unwrap().text[0] == "hello there general")
+    }
+
+    #[test]
+    fn test_early_exit_if_input_is_plaintext() {
+        let config = Config::default();
+        let result = perform_cracking("192.168.0.1", config);
+        // We return None since the input is the plaintext
+        assert!(result.is_none());
+    }
+    #[test]
+    // Previously this would decode to `Fchohs as 13 dzoqsg!` because the English checker wasn't that good
+    // This test makes sure we can decode it okay
+    fn test_successfully_decode_caesar() {
+        let config = Config::default();
+        let result = perform_cracking("Ebgngr zr 13 cynprf!", config);
+        // We return None since the input is the plaintext
+        assert!(result.unwrap().text[0] == "Rotate me 13 places!");
     }
 }

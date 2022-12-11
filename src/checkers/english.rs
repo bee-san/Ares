@@ -25,6 +25,9 @@ impl Check for Checker<EnglishChecker> {
     }
 
     fn check(&self, input: &str) -> CheckResult {
+        let original_input = input;
+        // Normalise the string
+        let input = normalise_string(input);
         trace!("Checking English for sentence {}", input);
         /// If 50% of the words are in the english list, then we consider it english.
         /// This is the threshold at which we consider it english.
@@ -34,7 +37,7 @@ impl Check for Checker<EnglishChecker> {
 
         let mut plaintext_found = false;
         // TODO: Change this when the below bugs are fixed.
-        let filename = "English.txt";
+        let filename = "English text";
 
         let split_input = input.split(' ');
 
@@ -63,8 +66,11 @@ impl Check for Checker<EnglishChecker> {
             );
             // TODO: We are also typecasting to f64 instead of usize, which costs CPU cycles.
             if words_found / (input.split(' ').count()) as f64 > PLAINTEXT_DETECTION_PERCENTAGE {
-                debug!("Found {} words in {}", words_found, input);
-                debug!("Returning from English chekcer successfully with {}", input);
+                debug!("Found {} words in {}", words_found, original_input);
+                debug!(
+                    "Returning from English chekcer successfully with {}",
+                    original_input
+                );
                 plaintext_found = true;
                 break;
             }
@@ -72,7 +78,7 @@ impl Check for Checker<EnglishChecker> {
 
         CheckResult {
             is_identified: plaintext_found,
-            text: input.to_string(),
+            text: original_input.to_string(),
             checker_name: self.name,
             checker_description: self.description,
             description: filename.to_string(),
@@ -81,8 +87,25 @@ impl Check for Checker<EnglishChecker> {
     }
 }
 
+///! Strings look funny, they might have commas, be uppercase etc
+///! This normalises the string so English checker can work on it
+///! In particular it:
+///! Removes puncuation from the string
+///! Lowercases the string
+fn normalise_string(input: &str) -> String {
+    // The replace function supports patterns https://doc.rust-lang.org/std/str/pattern/trait.Pattern.html#impl-Pattern%3C%27a%3E-3
+    // TODO add more puncuation
+    input.to_lowercase().replace(
+        &[
+            '(', ')', '!', '/', ',', '?', '\"', '.', ';', ':', '\'', '`', ';', ':', '~', '^',
+        ][..],
+        "",
+    )
+}
+
 #[cfg(test)]
 mod tests {
+    use crate::checkers::english::normalise_string;
     use crate::checkers::{
         checker_type::{Check, Checker},
         english::EnglishChecker,
@@ -120,5 +143,26 @@ mod tests {
     fn test_check_multiple_words2() {
         let checker = Checker::<EnglishChecker>::new();
         assert!(checker.check("preinterview hello dog").is_identified);
+    }
+    #[test]
+    fn test_check_normalise_string_works_with_lowercasing() {
+        let x = normalise_string(&"Hello Dear");
+        assert_eq!(x, "hello dear")
+    }
+    #[test]
+    fn test_check_normalise_string_works_with_puncuation() {
+        let x = normalise_string(&"Hello, Dear");
+        assert_eq!(x, "hello dear")
+    }
+    #[test]
+    fn test_check_normalise_string_works_with_messy_puncuation() {
+        let x = normalise_string(&".He/ll?O, Dea!r");
+        assert_eq!(x, "hello dear")
+    }
+
+    #[test]
+    fn test_checker_works_with_puncuation_and_lowercase() {
+        let checker = Checker::<EnglishChecker>::new();
+        assert!(checker.check("Prei?nterview He!llo Dog?").is_identified);
     }
 }

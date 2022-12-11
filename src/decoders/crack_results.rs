@@ -7,6 +7,7 @@ use super::interface::Decoder;
 
 /// Every cracker returns this object which
 /// Either indicates success or failure among other things.
+#[derive(Debug, Clone)]
 pub struct CrackResult {
     /// If our checkers return success, we change this bool to True
     pub success: bool,
@@ -14,8 +15,8 @@ pub struct CrackResult {
     pub encrypted_text: String,
     /// Unencrypted text is what it looks like after.
     /// if decoder failed, this will be None
-    pub unencrypted_text: Option<String>,
-    /// Deocder is the function we used to decode the text
+    pub unencrypted_text: Option<Vec<String>>,
+    /// Decoder is the function we used to decode the text
     pub decoder: &'static str,
     /// Checker which identified the text
     pub checker_name: &'static str,
