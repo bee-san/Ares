@@ -1,4 +1,11 @@
-use crate::config::Config;
+use std::{fs::File, io::Read};
+
+use crate::{
+    cli_pretty_printing::{
+        panic_failure_both_input_and_fail_provided, panic_failure_no_input_provided,
+    },
+    config::Config,
+};
 /// This doc string acts as a help message when the usees run '--help' in CLI mode
 /// as do all doc strings on fields
 use clap::Parser;
@@ -11,7 +18,7 @@ use log::trace;
 pub struct Opts {
     /// Some input. Because this isn't an Option<T> it's required to be used
     #[arg(short, long)]
-    text: String,
+    text: Option<String>,
 
     /// A level of verbosity, and can be used multiple times
     #[arg(short, long, action = clap::ArgAction::Count)]
@@ -31,13 +38,17 @@ pub struct Opts {
     /// Default is False
     #[arg(short, long)]
     api_mode: Option<bool>,
+    /// Opens a file for decoding
+    /// Used instead of `--t`
+    #[arg(short, long)]
+    file: Option<String>,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
 /// Into a library Struct for use within the program
 /// The library struct can be found in the [config](../config) folder.
 pub fn parse_cli_args() -> (String, Config) {
-    let opts: Opts = Opts::parse();
+    let mut opts: Opts = Opts::parse();
     let min_log_level = match opts.verbose {
         0 => "Warn",
         1 => "Info",
@@ -48,16 +59,37 @@ pub fn parse_cli_args() -> (String, Config) {
         env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, min_log_level),
     );
 
+    if opts.text.is_none() && opts.file.is_none() {
+        panic_failure_no_input_provided();
+    }
+    if opts.file.is_some() && opts.text.is_some() {
+        panic_failure_both_input_and_fail_provided();
+    }
+    let input_text: String = if opts.file.is_some() {
+        // TODO pretty match on the errors to provide better output
+        // Else it'll panic
+        let mut file = File::open(opts.file.unwrap()).unwrap();
+        let mut contents = String::new();
+        file.read_to_string(&mut contents).unwrap();
+        // We can just put the file into the `Opts.text` and the program will work as normal
+        contents
+    } else {
+        opts.text.unwrap().clone()
+    };
+    // Else we are using text
+    opts.text = None;
+    opts.file = None;
+
     trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
 
-    cli_args_into_config_struct(opts)
+    cli_args_into_config_struct(opts, input_text)
 }
 
 /// Turns our CLI arguments into a config stuct
-fn cli_args_into_config_struct(opts: Opts) -> (String, Config) {
+fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
     (
-        opts.text,
+        text,
         Config {
             verbose: opts.verbose,
             lemmeknow_config: Identifier::default(),

@@ -132,3 +132,21 @@ pub fn return_early_because_input_text_is_plaintext() {
     }
     println!("Your input text is the plaintext 🥳");
 }
+
+/// The user has provided both textual input and file input
+pub fn panic_failure_both_input_and_fail_provided() {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return;
+    }
+    panic!("Failed -- both file and text were provided. Please only use one.")
+}
+
+/// The user has not provided any input.
+pub fn panic_failure_no_input_provided() {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return;
+    }
+    panic!("Failed -- no input was provided. Please use -t for text or -f for files.")
+}
