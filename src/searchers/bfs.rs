@@ -78,7 +78,7 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
         let mut new_strings_to_be_added = Vec::new();
         for text_struct in new_strings {
             for decoded_text in text_struct.text {
-                if check_if_string_can_be_decoded(&decoded_text) {
+                if check_if_string_cant_be_decoded(&decoded_text) {
                     continue;
                 }
                 new_strings_to_be_added.push(DecoderResult {
@@ -118,8 +118,8 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
 }
 
 /// If this returns False it will not attempt to decode that string
-fn check_if_string_can_be_decoded(text: &str) -> bool {
-    text.len() < 2
+fn check_if_string_cant_be_decoded(text: &str) -> bool {
+    text.len() <= 2
 }
 
 #[cfg(test)]
@@ -150,5 +150,20 @@ mod tests {
         let result = bfs("MTkyLjE2OC4wLjE=");
         assert!(result.is_some());
         assert_eq!(result.unwrap().text[0], "192.168.0.1");
+    }
+
+    #[test]
+    fn string_size_checker_returns_bad_if_string_cant_be_decoded() {
+        // Should return true because it cant decode it
+        let text = "12";
+        assert_eq!(check_if_string_cant_be_decoded(&text), true);
+    }
+
+
+    #[test]
+    fn string_size_checker_returns_ok_if_string_can_be_decoded() {
+        // Should return true because it cant decode it
+        let text = "123";
+        assert_eq!(check_if_string_cant_be_decoded(&text), false);
     }
 }
