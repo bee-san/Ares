@@ -134,6 +134,8 @@ pub fn return_early_because_input_text_is_plaintext() {
 }
 
 /// The user has provided both textual input and file input
+/// # Panics
+/// This function panics and is only used in the CLI.
 pub fn panic_failure_both_input_and_fail_provided() {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -143,6 +145,8 @@ pub fn panic_failure_both_input_and_fail_provided() {
 }
 
 /// The user has not provided any input.
+/// # Panics
+/// This function panics and is only used in the CLI.
 pub fn panic_failure_no_input_provided() {
     let config = crate::config::get_config();
     if config.api_mode {

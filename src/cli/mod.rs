@@ -1,11 +1,6 @@
 use std::{fs::File, io::Read};
 
-use crate::{
-    cli_pretty_printing::{
-        panic_failure_both_input_and_fail_provided, panic_failure_no_input_provided,
-    },
-    config::Config,
-};
+use crate::{cli_pretty_printing::panic_failure_both_input_and_fail_provided, config::Config};
 /// This doc string acts as a help message when the usees run '--help' in CLI mode
 /// as do all doc strings on fields
 use clap::Parser;
@@ -47,6 +42,8 @@ pub struct Opts {
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
 /// Into a library Struct for use within the program
 /// The library struct can be found in the [config](../config) folder.
+/// # Panics
+/// This function can panic when it gets both a file and text input at the same time.
 pub fn parse_cli_args() -> (String, Config) {
     let mut opts: Opts = Opts::parse();
     let min_log_level = match opts.verbose {
@@ -79,7 +76,6 @@ pub fn parse_cli_args() -> (String, Config) {
     } else {
         opts.text
             .expect("Error. No input was provided. Please use ares --help")
-            .clone()
     };
 
     // Fixes bug where opts.text and opts.file are partially borrowed
