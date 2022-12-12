@@ -1,9 +1,10 @@
+use crate::filtration_system::MyResults;
 use crate::{cli_pretty_printing::decoded_how_many_times, config::get_config};
 use crossbeam::{channel::bounded, select};
 use log::{debug, trace};
 use std::collections::HashSet;
 
-use crate::{filtration_system::MyResults, timer, DecoderResult};
+use crate::{timer, DecoderResult};
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search

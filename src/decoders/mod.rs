@@ -31,6 +31,8 @@ pub mod base64_decoder;
 pub mod base64_url_decoder;
 /// The base65536 module decodes base65536
 pub mod base65536_decoder;
+/// The base91_decoder module decodes base91
+pub mod base91_decoder;
 /// The citrix_ctx1_decoder module decodes citrix ctx1
 pub mod citrix_ctx1_decoder;
 /// The crack_results module defines the CrackResult

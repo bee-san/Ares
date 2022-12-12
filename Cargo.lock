@@ -60,6 +60,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "base91"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b4eb5fbae7b5ee422f239444a3dca9bdf5ecb3abf3af1bf87c8097db3f7bc025"
+
+[[package]]
 name = "bit-set"
 version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -792,6 +798,7 @@ dependencies = [
  "ansi_term",
  "base64",
  "base65536",
+ "base91",
  "bs58",
  "clap 4.0.27",
  "criterion",
