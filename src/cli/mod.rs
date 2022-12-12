@@ -34,7 +34,7 @@ pub struct Opts {
     #[arg(short, long)]
     api_mode: Option<bool>,
     /// Opens a file for decoding
-    /// Used instead of `--t`
+    /// Use instead of `--text`
     #[arg(short, long)]
     file: Option<String>,
 }
