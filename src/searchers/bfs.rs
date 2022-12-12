@@ -78,6 +78,9 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
         let mut new_strings_to_be_added = Vec::new();
         for text_struct in new_strings {
             for decoded_text in text_struct.text {
+                if !check_if_string_can_be_decoded(&decoded_text) {
+                    continue;
+                }
                 new_strings_to_be_added.push(DecoderResult {
                     text: vec![decoded_text],
                     // quick hack
@@ -112,6 +115,11 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
     }
 
     None
+}
+
+/// If this returns False it will not attempt to decode that string
+fn check_if_string_can_be_decoded(text: &str) -> bool {
+    text.len() > 2
 }
 
 #[cfg(test)]
