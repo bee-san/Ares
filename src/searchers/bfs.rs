@@ -159,7 +159,6 @@ mod tests {
         assert_eq!(check_if_string_cant_be_decoded(&text), true);
     }
 
-
     #[test]
     fn string_size_checker_returns_ok_if_string_can_be_decoded() {
         // Should return true because it cant decode it
