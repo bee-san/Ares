@@ -38,6 +38,25 @@ pub struct Decoder<Type> {
     pub phantom: std::marker::PhantomData<Type>,
 }
 
+/// The default implementation for a decoder
+pub struct DefaultDecoder;
+impl Default for Decoder<DefaultDecoder> {
+    fn default() -> Decoder<DefaultDecoder> {
+        Decoder {
+            name: "Default decoder",
+            description: "N/A",
+            link: "N/A",
+            tags: vec!["N/A"],
+            expected_runtime: 0.0,
+            popularity: 0.0,
+            expected_success: 0.0,
+            failure_runtime: 0.0,
+            normalised_entropy: vec![0.0],
+            phantom: std::marker::PhantomData,
+        }
+    }
+}
+
 /// All decoders will share the same Crack trait
 /// Which let's us put them into a vector and iterate over them,
 /// Running `.crack()` on each of them.
