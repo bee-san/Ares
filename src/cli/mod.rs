@@ -1,11 +1,6 @@
 use std::{fs::File, io::Read};
 
-use crate::{
-    cli_pretty_printing::{
-        panic_failure_both_input_and_fail_provided, panic_failure_no_input_provided,
-    },
-    config::Config,
-};
+use crate::{config::Config, cli_pretty_printing::{panic_failure_both_input_and_fail_provided, panic_failure_no_input_provided}};
 /// This doc string acts as a help message when the usees run '--help' in CLI mode
 /// as do all doc strings on fields
 use clap::Parser;
@@ -41,7 +36,7 @@ pub struct Opts {
     /// Opens a file for decoding
     /// Used instead of `--t`
     #[arg(short, long)]
-    file: Option<String>,
+    file: Option<String>
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -59,29 +54,30 @@ pub fn parse_cli_args() -> (String, Config) {
         env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, min_log_level),
     );
 
-    if opts.text.is_none() && opts.file.is_none() {
-        panic_failure_no_input_provided();
-    }
-    if opts.file.is_some() && opts.text.is_some() {
-        panic_failure_both_input_and_fail_provided();
-    }
-    let input_text: String = if opts.file.is_some() {
+    let input_text: String = if opts.file.is_some(){
         // TODO pretty match on the errors to provide better output
         // Else it'll panic
         let mut file = File::open(opts.file.unwrap()).unwrap();
         let mut contents = String::new();
         file.read_to_string(&mut contents).unwrap();
         // We can just put the file into the `Opts.text` and the program will work as normal
-        contents
+        // On Unix systems a line is defined as "\n{text}\n"
+        // https://stackoverflow.com/a/729795
+        // Which means if a user creates a file on Unix, it'll have a new line appended.
+        // This is probably not what they wanted to decode (it is not what I wanted) so we are removing them
+        contents.strip_suffix(['\n', '\r']).unwrap().to_owned()
     } else {
-        opts.text.unwrap().clone()
+        opts.text.expect("Error. No input was provided. Please use ares --help").clone()
     };
-    // Else we are using text
+
+    // Fixes bug where opts.text and opts.file are partially borrowed
     opts.text = None;
     opts.file = None;
 
+
     trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
+    trace!("The inputted text is {}", &input_text);
 
     cli_args_into_config_struct(opts, input_text)
 }
