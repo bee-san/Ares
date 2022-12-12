@@ -5,10 +5,19 @@ use super::crack_results::CrackResult;
 use super::interface::Crack;
 use super::interface::Decoder;
 
-use log::{info, trace};
+use log::{debug, info, trace};
 
 ///! Hexadecimal Decoder
 pub struct HexadecimalDecoder;
+
+///! Error enum
+#[derive(Debug)]
+enum Error {
+    ///! Error when the input is not divisible by 2
+    InvalidLength,
+    ///! Error if the result isn't UTF-8
+    InvalidUtf8,
+}
 
 impl Crack for Decoder<HexadecimalDecoder> {
     fn new() -> Decoder<HexadecimalDecoder> {
@@ -31,10 +40,17 @@ impl Crack for Decoder<HexadecimalDecoder> {
     /// Else the Option returns nothing and the error is logged in Trace
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying hexadecimal with text {:?}", text);
-        let decoded_text = hexadecimal_to_string(text);
+        let decoded_text: Result<String, Error> = hexadecimal_to_string(text);
         let mut results = CrackResult::new(self, text.to_string());
 
+        if decoded_text.is_err() {
+            debug!("Failed to decode hexadecimal: {:?}", decoded_text);
+            return results;
+        }
+
         trace!("Decoded text for hexadecimal: {:?}", decoded_text);
+
+        let decoded_text = decoded_text.unwrap();
 
         if !check_string_success(&decoded_text, text) {
             info!(
@@ -54,7 +70,9 @@ impl Crack for Decoder<HexadecimalDecoder> {
 }
 
 /// Decodes hexadecimal to string
-fn hexadecimal_to_string(hex: &str) -> String {
+fn hexadecimal_to_string(hex: &str) -> Result<String, Error> {
+    // Remove "0x" delimiters
+    let hex = hex.replace("0x", "");
     // Remove all non-hexadecimal characters from the string
     let hex = hex.replace(|c: char| !c.is_ascii_hexdigit(), "");
 
@@ -63,7 +81,7 @@ fn hexadecimal_to_string(hex: &str) -> String {
 
     // Ensure that the vector of bytes has an even length, so it can be processed in pairs
     if bytes.len() % 2 == 1 {
-        return String::new();
+        return Err(Error::InvalidLength);
     }
 
     // Iterate over the vector of bytes in pairs
@@ -74,7 +92,7 @@ fn hexadecimal_to_string(hex: &str) -> String {
         result.push(u8::from_str_radix(std::str::from_utf8(pair).unwrap(), 16).unwrap() as char);
     }
 
-    result
+    String::from_utf8(result.into()).map_err(|_| Error::InvalidUtf8)
 }
 
 #[cfg(test)]
@@ -112,14 +130,15 @@ mod tests {
     #[test]
     fn hexadecimal_with_spaces_decodes_successfully() {
         // This tests if Hexadecimal can decode Hexadecimal with spaces successfully
+        // We use the hex string from the "c4ptur3-th3-fl4g" THM room
         let decoder = Decoder::<HexadecimalDecoder>::new();
         let result = decoder.crack(
-            "54 68 69 73 20 69 73 20 61 6e 20 65 78 61 6d 70 6c 65 20 6f 66 20 68 65 78 61 64 65 63 69 6d 61 6c 20 77 69 74 68 20 73 70 61 63 65 73",
+            "68 65 78 61 64 65 63 69 6d 61 6c 20 6f 72 20 62 61 73 65 31 36 3f",
             &get_athena_checker(),
         );
         assert_eq!(
             result.unencrypted_text.unwrap()[0],
-            "This is an example of hexadecimal with spaces"
+            "hexadecimal or base16?"
         );
     }
 
@@ -146,6 +165,34 @@ mod tests {
             &get_athena_checker(),
         );
         assert_eq!(result.unencrypted_text.unwrap()[0], "Uppercase hexadecimal");
+    }
+
+    #[test]
+    fn hexadecimal_with_0x_delimiters_decodes_successfully() {
+        // This tests if Hexadecimal can decode Hexadecimal with 0x delimiters successfully
+        let decoder = Decoder::<HexadecimalDecoder>::new();
+        let result = decoder.crack(
+            "0x540x680x690x730x200x750x730x650x730x200x300x780x200x610x730x200x740x680x650x200x700x720x650x660x690x780x200x620x650x740x770x650x650x6e0x200x650x760x650x720x790x200x630x680x750x6e0x6b",
+            &get_athena_checker(),
+        );
+        assert_eq!(
+            result.unencrypted_text.unwrap()[0],
+            "This uses 0x as the prefix between every chunk"
+        );
+    }
+
+    #[test]
+    fn hexadecimal_with_0x_and_comma_delimiters_decodes_successfully() {
+        // This tests if Hexadecimal can decode Hexadecimal with 0x and comma delimiters successfully
+        let decoder = Decoder::<HexadecimalDecoder>::new();
+        let result = decoder.crack(
+            "0x48,0x65,0x78,0x61,0x64,0x65,0x63,0x69,0x6d,0x61,0x6c,0x20,0x77,0x69,0x74,0x68,0x20,0x30,0x78,0x20,0x2b,0x20,0x63,0x6f,0x6d,0x6d,0x61,0x73",
+            &get_athena_checker(),
+        );
+        assert_eq!(
+            result.unencrypted_text.unwrap()[0],
+            "Hexadecimal with 0x + commas"
+        );
     }
 
     #[test]
