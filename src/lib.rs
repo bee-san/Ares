@@ -182,8 +182,6 @@ mod tests {
     }
 
     #[test]
-    // Previously this would decode to `Fchohs as 13 dzoqsg!` because the English checker wasn't that good
-    // This test makes sure we can decode it okay
     fn test_successfully_inputted_plaintext() {
         let config = Config::default();
         let result = perform_cracking("Hello, World!", config);
