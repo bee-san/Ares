@@ -15,6 +15,8 @@ pub mod base58_bitcoin_decoder;
 pub mod base58_monero_decoder;
 /// The binary_decoder module decodes binary
 pub mod binary_decoder;
+/// The hexadecimal_decoder module decodes hexadecimal
+pub mod hexadecimal_decoder;
 
 /// The base58_ripple_decoder module decodes base58 ripple
 pub mod base58_ripple_decoder;
