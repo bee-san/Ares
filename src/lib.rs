@@ -37,11 +37,12 @@ mod timer;
 
 use checkers::{
     athena::Athena,
+    checker_result::CheckResult,
     checker_type::{Check, Checker},
 };
 use log::debug;
 
-use crate::config::Config;
+use crate::{config::Config, decoders::interface::Decoder};
 
 use self::decoders::crack_results::CrackResult;
 /// The main function to call which performs the cracking.
@@ -72,20 +73,30 @@ use self::decoders::crack_results::CrackResult;
 /// let mut config = Config::default();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
-/// config.timeout = 1;
-/// let result = perform_cracking("thisisatestthatitwillneverget111", config);
+/// config.timeout = 0;
+/// let result = perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", config);
 /// assert!(true);
 /// // If the program times out, or it cannot decode the text it will return None.
 /// assert!(result.is_none());
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
-    if check_if_input_text_is_plaintext(text) {
+    let initial_check_for_plaintext = check_if_input_text_is_plaintext(text);
+    if initial_check_for_plaintext.is_identified {
         debug!(
             "The input text provided to the program {} is the plaintext. Returning early.",
             text
         );
         cli_pretty_printing::return_early_because_input_text_is_plaintext();
-        return None;
+
+        let mut crack_result = CrackResult::new(&Decoder::default(), (&text).to_string());
+        crack_result.checker_name = initial_check_for_plaintext.checker_name;
+
+        let output = DecoderResult {
+            text: vec![(&text).to_string()],
+            path: vec![crack_result],
+        };
+
+        return Some(output);
     }
 
     // Build a new search tree
@@ -99,9 +110,9 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
 
 /// Checks if the given input is plaintext or not
 /// Used at the start of the program to not waste CPU cycles
-fn check_if_input_text_is_plaintext(text: &str) -> bool {
+fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
     let athena_checker = Checker::<Athena>::new();
-    athena_checker.check(text).is_identified
+    athena_checker.check(text)
 }
 
 /// DecoderResult is the result of decoders
@@ -157,8 +168,8 @@ mod tests {
     fn test_early_exit_if_input_is_plaintext() {
         let config = Config::default();
         let result = perform_cracking("192.168.0.1", config);
-        // We return None since the input is the plaintext
-        assert!(result.is_none());
+        // Since we are exiting early the path should be of length 1, which is 1 check (the Athena check)
+        assert!(result.unwrap().path.len() == 1);
     }
     #[test]
     // Previously this would decode to `Fchohs as 13 dzoqsg!` because the English checker wasn't that good
@@ -168,5 +179,17 @@ mod tests {
         let result = perform_cracking("Ebgngr zr 13 cynprf!", config);
         // We return None since the input is the plaintext
         assert!(result.unwrap().text[0] == "Rotate me 13 places!");
+    }
+
+    #[test]
+    fn test_successfully_inputted_plaintext() {
+        let config = Config::default();
+        let result = perform_cracking("Hello, World!", config);
+        // We return None since the input is the plaintext
+        let res_unwrapped = result.unwrap();
+        assert!(&res_unwrapped.text[0] == "Hello, World!");
+        // Since our input is the plaintext we did not decode it
+        // Therefore we return with the default decoder
+        assert!(res_unwrapped.path[0].decoder == "Default decoder");
     }
 }

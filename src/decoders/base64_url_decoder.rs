@@ -83,9 +83,15 @@ impl Crack for Decoder<Base64URLDecoder> {
 fn decode_base64_url_no_error_handling(text: &str) -> Option<String> {
     // Runs the code to decode base64_url
     // Doesn't perform error handling, call from_base64_url
-    base64::decode_config(text.as_bytes(), base64::URL_SAFE)
-        .ok()
-        .map(|inner| String::from_utf8(inner).ok())?
+    base64::decode_engine(
+        text.as_bytes(),
+        &base64::engine::fast_portable::FastPortable::from(
+            &base64::alphabet::URL_SAFE,
+            base64::engine::fast_portable::PAD,
+        ),
+    )
+    .ok()
+    .map(|inner| String::from_utf8(inner).ok())?
 }
 
 #[cfg(test)]
