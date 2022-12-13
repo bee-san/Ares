@@ -74,7 +74,7 @@ use self::decoders::crack_results::CrackResult;
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
 /// config.timeout = 0;
-/// let result = perform_cracking("thisisatestthatitwillneverget111", config);
+/// let result = perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", config);
 /// assert!(true);
 /// // If the program times out, or it cannot decode the text it will return None.
 /// assert!(result.is_none());
