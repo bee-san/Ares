@@ -146,17 +146,17 @@ mod tests {
     }
     #[test]
     fn test_check_normalise_string_works_with_lowercasing() {
-        let x = normalise_string(&"Hello Dear");
+        let x = normalise_string("Hello Dear");
         assert_eq!(x, "hello dear")
     }
     #[test]
     fn test_check_normalise_string_works_with_puncuation() {
-        let x = normalise_string(&"Hello, Dear");
+        let x = normalise_string("Hello, Dear");
         assert_eq!(x, "hello dear")
     }
     #[test]
     fn test_check_normalise_string_works_with_messy_puncuation() {
-        let x = normalise_string(&".He/ll?O, Dea!r");
+        let x = normalise_string(".He/ll?O, Dea!r");
         assert_eq!(x, "hello dear")
     }
 
