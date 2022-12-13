@@ -62,17 +62,7 @@ pub fn parse_cli_args() -> (String, Config) {
     }
 
     let input_text: String = if opts.file.is_some() {
-        // TODO pretty match on the errors to provide better output
-        // Else it'll panic
-        let mut file = File::open(opts.file.unwrap()).unwrap();
-        let mut contents = String::new();
-        file.read_to_string(&mut contents).unwrap();
-        // We can just put the file into the `Opts.text` and the program will work as normal
-        // On Unix systems a line is defined as "\n{text}\n"
-        // https://stackoverflow.com/a/729795
-        // Which means if a user creates a file on Unix, it'll have a new line appended.
-        // This is probably not what they wanted to decode (it is not what I wanted) so we are removing them
-        contents.strip_suffix(['\n', '\r']).unwrap().to_owned()
+        read_and_parse_file(opts.file.unwrap())
     } else {
         opts.text
             .expect("Error. No input was provided. Please use ares --help")
@@ -87,6 +77,26 @@ pub fn parse_cli_args() -> (String, Config) {
     trace!("The inputted text is {}", &input_text);
 
     cli_args_into_config_struct(opts, input_text)
+}
+
+/// When the CLI is called with `-f` to open a file
+/// this function opens it
+pub fn read_and_parse_file(file_path: String) -> String {
+    // TODO pretty match on the errors to provide better output
+    // Else it'll panic
+    let mut file = File::open(file_path).unwrap();
+    let mut contents = String::new();
+    file.read_to_string(&mut contents).unwrap();
+    // We can just put the file into the `Opts.text` and the program will work as normal
+    // On Unix systems a line is defined as "\n{text}\n"
+    // https://stackoverflow.com/a/729795
+    // Which means if a user creates a file on Unix, it'll have a new line appended.
+    // This is probably not what they wanted to decode (it is not what I wanted) so we are removing them
+    if contents.ends_with(['\n', '\r']) {
+        contents.strip_suffix(['\n', '\r']).unwrap().to_owned()
+    } else {
+        contents
+    }
 }
 
 /// Turns our CLI arguments into a config stuct
