@@ -21,7 +21,7 @@ bench = false
 clap = {version = "4.0.27", features = ["derive"]}
 log = "0.4"
 env_logger = "0.10.0"
-base64 = "0.13.1"
+base64 = "0.20.0"
 rayon = "1.6.1"
 lemmeknow = "0.7.0"
 include_dir = "0.7.3"
