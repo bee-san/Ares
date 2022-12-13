@@ -81,6 +81,8 @@ pub fn parse_cli_args() -> (String, Config) {
 
 /// When the CLI is called with `-f` to open a file
 /// this function opens it
+/// # Panics
+/// This can panic when opening a file which does not exist!
 pub fn read_and_parse_file(file_path: String) -> String {
     // TODO pretty match on the errors to provide better output
     // Else it'll panic
