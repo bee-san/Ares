@@ -35,14 +35,11 @@ pub struct Base91Decoder;
 impl Crack for Decoder<Base91Decoder> {
     fn new() -> Decoder<Base91Decoder> {
         Decoder {
-            name: "base91",
+            name: "Base91",
             description: "basE91 is an advanced method for encoding binary data as ASCII characters. It is similar to UUencode or base64, but is more efficient.",
             link: "https://base91.sourceforge.net/",
             tags: vec!["base91", "decoder", "base"],
-            expected_runtime: 0.01,
-            expected_success: 0.7,
-            failure_runtime: 0.01,
-            normalised_entropy: vec![1.0, 10.0],
+            reciprocal: false,
             popularity: 0.3,
             phantom: std::marker::PhantomData,
         }

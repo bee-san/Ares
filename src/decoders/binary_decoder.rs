@@ -13,14 +13,11 @@ pub struct BinaryDecoder;
 impl Crack for Decoder<BinaryDecoder> {
     fn new() -> Decoder<BinaryDecoder> {
         Decoder {
-            name: "binary",
+            name: "Binary",
             description: "A binary code represents text, computer processor instructions, or any other data using a two-symbol system. The two-symbol system used is often \"0\" and \"1\" from the binary number system. The binary code assigns a pattern of binary digits, also known as bits, to each character, instruction, etc.",
             link: "https://en.wikipedia.org/wiki/Binary_code",
             tags: vec!["binary", "base", "decoder"],
-            expected_runtime: 0.01,
-            expected_success: 1.0,
-            failure_runtime: 0.01,
-            normalised_entropy: vec![1.0, 10.0],
+            reciprocal: false,
             popularity: 1.0,
             phantom: std::marker::PhantomData,
         }

@@ -22,14 +22,11 @@ enum Error {
 impl Crack for Decoder<HexadecimalDecoder> {
     fn new() -> Decoder<HexadecimalDecoder> {
         Decoder {
-            name: "hexadecimal",
+            name: "Hexadecimal",
             description: "Data is broken into 4-bit sequences, and each value (between 0 and 15 inclusively) is encoded using one of 16 symbols from the ASCII character set. Although any 16 symbols from the ASCII character set can be used, in practice the ASCII digits '0'–'9' and the letters 'A'–'F' (or the lowercase 'a'–'f') are always chosen in order to align with standard written notation for hexadecimal numbers.",
             link: "https://en.wikipedia.org/wiki/Hexadecimal#Base16_(transfer_encoding)",
             tags: vec!["hexadecimal", "hex", "base", "decoder"],
-            expected_runtime: 0.01,
-            expected_success: 1.0,
-            failure_runtime: 0.01,
-            normalised_entropy: vec![1.0, 10.0],
+            reciprocal: false,
             popularity: 1.0,
             phantom: std::marker::PhantomData,
         }
