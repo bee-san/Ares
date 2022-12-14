@@ -35,14 +35,11 @@ pub struct Base64URLDecoder;
 impl Crack for Decoder<Base64URLDecoder> {
     fn new() -> Decoder<Base64URLDecoder> {
         Decoder {
-            name: "base64_url",
+            name: "Base64 URL",
             description: "Modified Base64 for URL variants exist (such as base64url in RFC 4648), where the '+' and '/' characters of standard Base64 are respectively replaced by '-' and '_', so that using URL encoders/decoders is no longer necessary.",
             link: "https://en.wikipedia.org/wiki/Base64#URL_applications",
             tags: vec!["base64_url", "base64", "url", "decoder", "base"],
-            expected_runtime: 0.01,
-            expected_success: 1.0,
-            failure_runtime: 0.01,
-            normalised_entropy: vec![1.0, 10.0],
+            reciprocal: false,
             popularity: 0.9,
             phantom: std::marker::PhantomData,
         }

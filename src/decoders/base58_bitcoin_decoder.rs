@@ -35,14 +35,11 @@ pub struct Base58BitcoinDecoder;
 impl Crack for Decoder<Base58BitcoinDecoder> {
     fn new() -> Decoder<Base58BitcoinDecoder> {
         Decoder {
-            name: "base58_bitcoin",
+            name: "Base58 Bitcoin",
             description: "Base58 is a group of binary-to-text encoding schemes that represent binary data (more specifically, a sequence of 8-bit bytes) in an ASCII string format by translating the data into a radix-32 representation.",
             link: "https://en.wikipedia.org/wiki/Base58",
             tags: vec!["base58_bitcoin", "base58", "bitcoin", "cryptocurrency", "decoder", "base"],
-            expected_runtime: 0.01,
-            expected_success: 0.7,
-            failure_runtime: 0.01,
-            normalised_entropy: vec![1.0, 10.0],
+            reciprocal: false,
             popularity: 0.8,
             phantom: std::marker::PhantomData,
         }

@@ -35,14 +35,11 @@ pub struct Base65536Decoder;
 impl Crack for Decoder<Base65536Decoder> {
     fn new() -> Decoder<Base65536Decoder> {
         Decoder {
-            name: "base65536",
+            name: "Base65536",
             description: "Base65536 is a binary encoding optimised for UTF-32-encoded text. Base65536 uses only \"safe\" Unicode code points - no unassigned code points, no whitespace, no control characters, etc.",
             link: "https://github.com/qntm/base65536",
             tags: vec!["base65536", "decoder", "base"],
-            expected_runtime: 0.01,
-            expected_success: 1.0,
-            failure_runtime: 0.01,
-            normalised_entropy: vec![1.0, 10.0],
+            reciprocal: false,
             popularity: 0.1,
             phantom: std::marker::PhantomData,
         }

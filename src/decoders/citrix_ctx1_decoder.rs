@@ -26,14 +26,11 @@ enum Error {
 impl Crack for Decoder<CitrixCTX1Decoder> {
     fn new() -> Decoder<CitrixCTX1Decoder> {
         Decoder {
-            name: "citrix_ctx1",
+            name: "Citrix Ctx1",
             description: "Citrix CTX1 is a very old encoding that was used for encoding Citrix passwords.",
             link: "https://www.remkoweijnen.nl/blog/2012/05/13/encoding-and-decoding-citrix-passwords/",
             tags: vec!["citrix_ctx1", "citrix", "passwords", "decoder"],
-            expected_runtime: 0.01,
-            expected_success: 1.0,
-            failure_runtime: 0.01,
-            normalised_entropy: vec![1.0, 10.0],
+            reciprocal: false,
             popularity: 0.1,
             phantom: std::marker::PhantomData,
         }

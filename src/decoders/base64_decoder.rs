@@ -35,14 +35,11 @@ pub struct Base64Decoder;
 impl Crack for Decoder<Base64Decoder> {
     fn new() -> Decoder<Base64Decoder> {
         Decoder {
-            name: "base64",
+            name: "Base64",
             description: "Base64 is a group of binary-to-text encoding schemes that represent binary data (more specifically, a sequence of 8-bit bytes) in an ASCII string format by translating the data into a radix-64 representation.",
             link: "https://en.wikipedia.org/wiki/Base64",
             tags: vec!["base64", "decoder", "base"],
-            expected_runtime: 0.01,
-            expected_success: 1.0,
-            failure_runtime: 0.01,
-            normalised_entropy: vec![1.0, 10.0],
+            reciprocal: false,
             popularity: 1.0,
             phantom: std::marker::PhantomData,
         }
