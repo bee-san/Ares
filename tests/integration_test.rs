@@ -1,3 +1,4 @@
+use ares::cli::read_and_parse_file;
 use ares::config::Config;
 use ares::perform_cracking;
 
@@ -18,4 +19,26 @@ fn test_no_panic_if_empty_string() {
     let config = Config::default();
     perform_cracking("", config);
     assert_eq!(true, true);
+}
+
+#[test]
+fn test_program_parses_files_and_cracks() {
+    // It should be able to open and crack this file
+    let file_path = "tests/test_fixtures/base64_3_times_with_no_new_line";
+    let config = Config::default();
+    let to_crack = read_and_parse_file(file_path.to_string());
+    let result = perform_cracking(&to_crack, config);
+    assert_eq!(true, true);
+    assert!(result.unwrap().text[0] == "Multiple base64 encodings");
+}
+
+#[test]
+fn test_program_parses_files_with_new_line_and_cracks() {
+    // It should be able to open and crack this file
+    let file_path = "tests/test_fixtures/rot13_base64_hex_with_newline";
+    let config = Config::default();
+    let to_crack = read_and_parse_file(file_path.to_string());
+    let result = perform_cracking(&to_crack, config);
+    assert_eq!(true, true);
+    assert!(result.unwrap().text[0] == "This is a test!");
 }
