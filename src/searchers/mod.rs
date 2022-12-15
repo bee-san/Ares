@@ -36,11 +36,11 @@ pub fn search_for_plaintext(input: &str) -> Option<DecoderResult> {
 /// Performs the decodings by getting all of the decoders
 /// and calling `.run` which in turn loops through them and calls
 /// `.crack()`.
-fn perform_decoding(text: &str) -> MyResults {
-    let decoders = filter_and_get_decoders();
+fn perform_decoding(decoder_result: &DecoderResult) -> MyResults {
+    let decoders = filter_and_get_decoders(decoder_result);
     let athena_checker = Checker::<Athena>::new();
     let checker = CheckerTypes::CheckAthena(athena_checker);
-    decoders.run(text, checker)
+    decoders.run(&decoder_result.text[0], checker)
 }
 
 #[cfg(test)]

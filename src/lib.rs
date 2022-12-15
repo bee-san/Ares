@@ -127,6 +127,16 @@ pub struct DecoderResult {
     pub path: Vec<CrackResult>,
 }
 
+
+impl Default for DecoderResult {
+    fn default() -> Self {
+        DecoderResult {
+            text: vec!("Default".to_string()),
+            path: vec!(CrackResult::new(&Decoder::default(), "Default".to_string())),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::perform_cracking;
