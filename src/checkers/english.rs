@@ -29,10 +29,10 @@ impl Check for Checker<EnglishChecker> {
         // Normalise the string
         let input = normalise_string(input);
         trace!("Checking English for sentence {}", input);
-        /// If 50% of the words are in the english list, then we consider it english.
+        /// If 40% of the words are in the english list, then we consider it english.
         /// This is the threshold at which we consider it english.
         /// TODO: Do we want to put this into a config somewhere?
-        const PLAINTEXT_DETECTION_PERCENTAGE: f64 = 0.0;
+        const PLAINTEXT_DETECTION_PERCENTAGE: f64 = 0.4;
         let mut words_found: f64 = 0.0;
 
         let mut plaintext_found = false;
@@ -126,7 +126,7 @@ mod tests {
     #[test]
     fn test_check_multiple_words() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("and woody").is_identified);
+        assert!(checker.check("zzz zu'lkadah zenelophon").is_identified);
     }
 
     #[test]
@@ -164,5 +164,15 @@ mod tests {
     fn test_checker_works_with_puncuation_and_lowercase() {
         let checker = Checker::<EnglishChecker>::new();
         assert!(checker.check("Prei?nterview He!llo Dog?").is_identified);
+    }
+
+    #[test]
+    fn test_checker_fails_doesnt_hit_50_percent() {
+        let checker = Checker::<EnglishChecker>::new();
+        assert!(
+            !checker
+                .check("Hello Dog nnnnnnnnnnn llllllll ppppppppp gggggggg")
+                .is_identified
+        );
     }
 }
