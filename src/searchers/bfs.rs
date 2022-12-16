@@ -31,7 +31,7 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
         let mut new_strings: Vec<DecoderResult> = vec![];
 
         current_strings.into_iter().try_for_each(|current_string| {
-            let res = super::perform_decoding(&current_string);
+            let res = super::perform_decoding(&current_string.text[0]);;
 
             match res {
                 // if it's Break variant, we have cracked the text successfully

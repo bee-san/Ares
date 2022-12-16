@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use std::sync::mpsc::channel;
 
 use crate::DecoderResult;
@@ -38,7 +37,7 @@ use rayon::prelude::*;
 /// Relevant docs: https://doc.rust-lang.org/book/ch17-02-trait-objects.html
 pub struct Decoders {
     /// Components is a vector of decoders.
-    pub components: Vec<Box<dyn Crack + Sync + Deref>>,
+    pub components: Vec<Box<dyn Crack + Sync>>,
 }
 
 impl Decoders {
@@ -103,35 +102,60 @@ impl MyResults {
 }
 
 /// Currently takes no args as this is just a spike to get all the basic functionality working
-pub fn filter_and_get_decoders(decoder_result: &DecoderResult) -> Decoders {
+pub fn filter_and_get_decoders() -> Decoders {
     trace!("Filtering and getting all decoders");
-    let decoders = vec!(Decoder::<BinaryDecoder>::new(), Decoder::<HexadecimalDecoder>::new());
+    let binary = Decoder::<BinaryDecoder>::new();
     let binary = Decoder::<BinaryDecoder>::new();
     let hexadecimal = Decoder::<HexadecimalDecoder>::new();
+    let hexadecimal = Decoder::<HexadecimalDecoder>::new();
+    let base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
     let base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
     let base58_monero = Decoder::<Base58MoneroDecoder>::new();
+    let base58_monero = Decoder::<Base58MoneroDecoder>::new();
+    let base58_ripple = Decoder::<Base58RippleDecoder>::new();
     let base58_ripple = Decoder::<Base58RippleDecoder>::new();
     let base58_flickr = Decoder::<Base58FlickrDecoder>::new();
+    let base58_flickr = Decoder::<Base58FlickrDecoder>::new();
+    let base64 = Decoder::<Base64Decoder>::new();
     let base64 = Decoder::<Base64Decoder>::new();
     let base91 = Decoder::<Base91Decoder>::new();
+    let base91 = Decoder::<Base91Decoder>::new();
+    let base64_url = Decoder::<Base64URLDecoder>::new();
     let base64_url = Decoder::<Base64URLDecoder>::new();
     let base65536 = Decoder::<Base65536Decoder>::new();
+    let base65536 = Decoder::<Base65536Decoder>::new();
+    let citrix_ctx1 = Decoder::<CitrixCTX1Decoder>::new();
     let citrix_ctx1 = Decoder::<CitrixCTX1Decoder>::new();
     let base32 = Decoder::<Base32Decoder>::new();
+    let base32 = Decoder::<Base32Decoder>::new();
+    let reversedecoder = Decoder::<ReverseDecoder>::new();
     let reversedecoder = Decoder::<ReverseDecoder>::new();
     let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
+    let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
+    let atbashdecoder = Decoder::<AtbashDecoder>::new();
     let atbashdecoder = Decoder::<AtbashDecoder>::new();
     let caesardecoder = Decoder::<CaesarDecoder>::new();
-
-`
-
-    for component in decoders.components {
-        // Access the data inside the Box using the `deref` method.
-        let data = (*component).deref();
-        // Use the data here.
+    let caesardecoder = Decoder::<CaesarDecoder>::new();
+    Decoders {
+        components: vec![
+            Box::new(binary),
+            Box::new(hexadecimal),
+            Box::new(base58_bitcoin),
+            Box::new(base58_monero),
+            Box::new(base58_ripple),
+            Box::new(base58_flickr),
+            Box::new(base64),
+            Box::new(base91),
+            Box::new(base64_url),
+            Box::new(base65536),
+            Box::new(citrix_ctx1),
+            Box::new(base32),
+            Box::new(reversedecoder),
+            Box::new(morsecodedecoder),
+            Box::new(atbashdecoder),
+            Box::new(caesardecoder),
+        ],
     }
-    
-    decoders
 }
 
 #[cfg(test)]
@@ -140,7 +164,7 @@ mod tests {
         athena::Athena,
         checker_type::{Check, Checker},
         CheckerTypes,
-    }, DecoderResult};
+    }};
 
     // TODO: when we add a proper filtration system
     // We need to test that.
@@ -148,13 +172,13 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let _decoders = filter_and_get_decoders(&DecoderResult::default());
+        let _decoders = filter_and_get_decoders();
         assert_eq!(2 + 2, 4);
     }
 
     #[test]
     fn decoders_can_call_dot_run() {
-        let decoders = filter_and_get_decoders(&DecoderResult::default());
+        let decoders = filter_and_get_decoders();
         let athena_checker = Checker::<Athena>::new();
         let checker = CheckerTypes::CheckAthena(athena_checker);
         decoders.run("TXIgUm9ib3QgaXMgZ3JlYXQ=", checker);
