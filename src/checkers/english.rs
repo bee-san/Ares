@@ -167,7 +167,7 @@ mod tests {
     }
 
     #[test]
-    fn test_checker_fails_doesnt_hit_50_percent() {
+    fn test_checker_fails_doesnt_hit_40_percent() {
         let checker = Checker::<EnglishChecker>::new();
         assert!(
             !checker
