@@ -1,6 +1,5 @@
 use std::sync::mpsc::channel;
 
-use crate::DecoderResult;
 use crate::checkers::CheckerTypes;
 use crate::decoders::atbash_decoder::AtbashDecoder;
 use crate::decoders::base32_decoder::Base32Decoder;
@@ -104,37 +103,37 @@ impl MyResults {
 /// Currently takes no args as this is just a spike to get all the basic functionality working
 pub fn filter_and_get_decoders() -> Decoders {
     trace!("Filtering and getting all decoders");
+    let _binary = Decoder::<BinaryDecoder>::new();
     let binary = Decoder::<BinaryDecoder>::new();
-    let binary = Decoder::<BinaryDecoder>::new();
+    let _hexadecimal = Decoder::<HexadecimalDecoder>::new();
     let hexadecimal = Decoder::<HexadecimalDecoder>::new();
-    let hexadecimal = Decoder::<HexadecimalDecoder>::new();
+    let _base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
     let base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
-    let base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
+    let _base58_monero = Decoder::<Base58MoneroDecoder>::new();
     let base58_monero = Decoder::<Base58MoneroDecoder>::new();
-    let base58_monero = Decoder::<Base58MoneroDecoder>::new();
+    let _base58_ripple = Decoder::<Base58RippleDecoder>::new();
     let base58_ripple = Decoder::<Base58RippleDecoder>::new();
-    let base58_ripple = Decoder::<Base58RippleDecoder>::new();
+    let _base58_flickr = Decoder::<Base58FlickrDecoder>::new();
     let base58_flickr = Decoder::<Base58FlickrDecoder>::new();
-    let base58_flickr = Decoder::<Base58FlickrDecoder>::new();
+    let _base64 = Decoder::<Base64Decoder>::new();
     let base64 = Decoder::<Base64Decoder>::new();
-    let base64 = Decoder::<Base64Decoder>::new();
+    let _base91 = Decoder::<Base91Decoder>::new();
     let base91 = Decoder::<Base91Decoder>::new();
-    let base91 = Decoder::<Base91Decoder>::new();
+    let _base64_url = Decoder::<Base64URLDecoder>::new();
     let base64_url = Decoder::<Base64URLDecoder>::new();
-    let base64_url = Decoder::<Base64URLDecoder>::new();
+    let _base65536 = Decoder::<Base65536Decoder>::new();
     let base65536 = Decoder::<Base65536Decoder>::new();
-    let base65536 = Decoder::<Base65536Decoder>::new();
+    let _citrix_ctx1 = Decoder::<CitrixCTX1Decoder>::new();
     let citrix_ctx1 = Decoder::<CitrixCTX1Decoder>::new();
-    let citrix_ctx1 = Decoder::<CitrixCTX1Decoder>::new();
+    let _base32 = Decoder::<Base32Decoder>::new();
     let base32 = Decoder::<Base32Decoder>::new();
-    let base32 = Decoder::<Base32Decoder>::new();
+    let _reversedecoder = Decoder::<ReverseDecoder>::new();
     let reversedecoder = Decoder::<ReverseDecoder>::new();
-    let reversedecoder = Decoder::<ReverseDecoder>::new();
+    let _morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
     let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
-    let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
+    let _atbashdecoder = Decoder::<AtbashDecoder>::new();
     let atbashdecoder = Decoder::<AtbashDecoder>::new();
-    let atbashdecoder = Decoder::<AtbashDecoder>::new();
-    let caesardecoder = Decoder::<CaesarDecoder>::new();
+    let _caesardecoder = Decoder::<CaesarDecoder>::new();
     let caesardecoder = Decoder::<CaesarDecoder>::new();
     Decoders {
         components: vec![
@@ -160,11 +159,11 @@ pub fn filter_and_get_decoders() -> Decoders {
 
 #[cfg(test)]
 mod tests {
-    use crate::{checkers::{
+    use crate::checkers::{
         athena::Athena,
         checker_type::{Check, Checker},
         CheckerTypes,
-    }};
+    };
 
     // TODO: when we add a proper filtration system
     // We need to test that.
