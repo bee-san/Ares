@@ -20,6 +20,8 @@ pub mod english;
 pub mod human_checker;
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 pub mod lemmeknow_checker;
+/// The Regex checker checks to see if the intended text matches the plaintext
+pub mod regex_checker;
 
 /// CheckerTypes is a wrapper enum for Checker
 pub enum CheckerTypes {

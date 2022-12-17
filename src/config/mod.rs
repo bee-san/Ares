@@ -29,6 +29,8 @@ pub struct Config {
     /// This is used to determine if we should print to stdout
     /// Or return the values
     pub api_mode: bool,
+    /// Regex enables the user to search for a specific regex or crib
+    pub regex: Option<String>,
 }
 
 /// Cell for storing global Config
@@ -63,6 +65,7 @@ impl Default for Config {
             human_checker_on: false,
             timeout: 5,
             api_mode: true,
+            regex: None,
         }
     }
 }

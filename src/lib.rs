@@ -7,6 +7,9 @@
     clippy::missing_panics_doc
 )]
 
+#[macro_use]
+extern crate lazy_static;
+
 /// The main crate for the Ares project.
 /// This provides the library API interface for Ares.
 mod api_library_input_struct;

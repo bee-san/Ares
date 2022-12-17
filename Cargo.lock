@@ -806,6 +806,7 @@ dependencies = [
  "data-encoding",
  "env_logger",
  "include_dir",
+ "lazy_static",
  "lemmeknow",
  "log",
  "num",
