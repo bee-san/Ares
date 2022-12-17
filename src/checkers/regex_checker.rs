@@ -1,7 +1,7 @@
 use lemmeknow::Identifier;
 
 use super::checker_type::{Check, Checker};
-use crate::{checkers::checker_result::CheckResult, config::{get_config, self}};
+use crate::{checkers::checker_result::CheckResult, config::{get_config}};
 use regex::Regex;
 
 /// The Regex Checker checks if the text matches a known Regex pattern.
@@ -23,17 +23,13 @@ impl Check for Checker<RegexChecker> {
     }
 
     fn check(&self, text: &str) -> CheckResult {
-        lazy_static! {
-            static ref compiled_regex: Regex = {
-                let config = get_config();
-                let regex_to_parse = config.regex.unwrap();
-                Regex::new(regex_to_parse).unwrap()
-            };
-        }
+        // TODO put this into a lazy static so we don't generate it everytime
+        let config = get_config();
+        let regex_to_parse = config.regex.clone();
+        let re = Regex::new(&regex_to_parse.unwrap()).unwrap();
         
-        let regex_check_result = match compiled_regex {
-            _ => {},
-        }
+        let regess_check_result = re.is_match(text);
+        
         
         let mut result = CheckResult { is_identified: false, text: text.to_owned(), description: "".to_string(), checker_name: self.name, checker_description: self.description, link: self.link };
 
@@ -46,19 +42,5 @@ impl Check for Checker<RegexChecker> {
             result.is_identified = true;
         }
         result
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::checkers::{
-        checker_type::{Check, Checker},
-        RegexChecker::regex,
-    };
-
-    #[test]
-    fn test_check_basic() {
-        let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("preinterview").is_identified);
     }
 }

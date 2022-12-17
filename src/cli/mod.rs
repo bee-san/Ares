@@ -37,6 +37,11 @@ pub struct Opts {
     /// Use instead of `--text`
     #[arg(short, long)]
     file: Option<String>,
+    /// If you have a crib (you know a piece of information in the plaintext)
+    /// Or you want to create a custom regex to check against, you can use the Regex checker below.
+    /// This turns off other checkers (English, LemmeKnow)
+    #[arg(short, long)]
+    regex: Option<String>,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -117,6 +122,11 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
                 opts.cracking_timeout.unwrap()
             },
             api_mode: opts.api_mode.is_some(),
+            regex: if opts.regex.is_none(){
+                None
+            } else {
+                opts.regex
+            },
         },
     )
 }
