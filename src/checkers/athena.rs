@@ -1,5 +1,6 @@
 use crate::{checkers::checker_result::CheckResult, config::get_config};
 use lemmeknow::Identifier;
+use log::trace;
 
 use super::{
     checker_type::{Check, Checker},
@@ -30,6 +31,7 @@ impl Check for Checker<Athena> {
         let config = get_config();
         // Only run regex if its in the config
         if config.regex.is_some(){
+            trace!("running regex");
             let regex_checker = Checker::<RegexChecker>::new();
             let regex_result = regex_checker.check(text);
             if regex_result.is_identified {

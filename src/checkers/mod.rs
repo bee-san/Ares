@@ -3,7 +3,7 @@ use self::{
     checker_result::CheckResult,
     checker_type::{Check, Checker},
     english::EnglishChecker,
-    lemmeknow_checker::LemmeKnow,
+    lemmeknow_checker::LemmeKnow, regex_checker::RegexChecker,
 };
 
 /// The default checker we use which simply calls all other checkers in order.
@@ -31,6 +31,8 @@ pub enum CheckerTypes {
     CheckEnglish(Checker<EnglishChecker>),
     /// Wrapper for Athena Checker
     CheckAthena(Checker<Athena>),
+    /// Wrapper for Regex
+    CheckRegex(Checker<RegexChecker>),
 }
 
 impl CheckerTypes {
@@ -40,6 +42,7 @@ impl CheckerTypes {
             CheckerTypes::CheckLemmeKnow(lemmeknow_checker) => lemmeknow_checker.check(text),
             CheckerTypes::CheckEnglish(english_checker) => english_checker.check(text),
             CheckerTypes::CheckAthena(athena_checker) => athena_checker.check(text),
+            CheckerTypes::CheckRegex(regex_checker) => regex_checker.check(text),
         }
     }
 }
