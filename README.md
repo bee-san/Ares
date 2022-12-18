@@ -15,7 +15,11 @@ Ares is the next generation of decoding tools, built by the same people that bro
 
 We fully intend to replace [Ciphey](https://github.com/ciphey/ciphey) with Ares.
 
-This has minimal features, currently it supports only Base64 & reverse encoder with minimal ability to check for plaintext.
+# How to Use
+
+The simplest way to use Ares is to join the [Discord Server](http://discord.skerritt.blog), head to the #bots channel and use ares with `$ares`. Type `$help` for helpful information!
+
+The second best way is to use `cargo install project-ares` and call it with `ares`.
 
 # Features
 
