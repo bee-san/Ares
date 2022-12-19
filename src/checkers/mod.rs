@@ -4,6 +4,7 @@ use self::{
     checker_type::{Check, Checker},
     english::EnglishChecker,
     lemmeknow_checker::LemmeKnow,
+    regex_checker::RegexChecker,
 };
 
 /// The default checker we use which simply calls all other checkers in order.
@@ -20,6 +21,8 @@ pub mod english;
 pub mod human_checker;
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 pub mod lemmeknow_checker;
+/// The Regex checker checks to see if the intended text matches the plaintext
+pub mod regex_checker;
 
 /// CheckerTypes is a wrapper enum for Checker
 pub enum CheckerTypes {
@@ -29,6 +32,8 @@ pub enum CheckerTypes {
     CheckEnglish(Checker<EnglishChecker>),
     /// Wrapper for Athena Checker
     CheckAthena(Checker<Athena>),
+    /// Wrapper for Regex
+    CheckRegex(Checker<RegexChecker>),
 }
 
 impl CheckerTypes {
@@ -38,6 +43,7 @@ impl CheckerTypes {
             CheckerTypes::CheckLemmeKnow(lemmeknow_checker) => lemmeknow_checker.check(text),
             CheckerTypes::CheckEnglish(english_checker) => english_checker.check(text),
             CheckerTypes::CheckAthena(athena_checker) => athena_checker.check(text),
+            CheckerTypes::CheckRegex(regex_checker) => regex_checker.check(text),
         }
     }
 }
