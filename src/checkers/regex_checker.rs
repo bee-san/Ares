@@ -1,7 +1,8 @@
 use lemmeknow::Identifier;
 
 use super::checker_type::{Check, Checker};
-use crate::{checkers::checker_result::CheckResult, config::{get_config}};
+use crate::{checkers::checker_result::CheckResult, config::get_config};
+use log::trace;
 use regex::Regex;
 
 /// The Regex Checker checks if the text matches a known Regex pattern.
@@ -23,24 +24,26 @@ impl Check for Checker<RegexChecker> {
     }
 
     fn check(&self, text: &str) -> CheckResult {
+        trace!("Checking {} with regex", text);
         // TODO put this into a lazy static so we don't generate it everytime
         let config = get_config();
         let regex_to_parse = config.regex.clone();
         let re = Regex::new(&regex_to_parse.unwrap()).unwrap();
-        
-        let regess_check_result = re.is_match(text);
-        
-        
-        let mut result = CheckResult { is_identified: false, text: text.to_owned(), description: "".to_string(), checker_name: self.name, checker_description: self.description, link: self.link };
 
-        result.checker_name = self.name;
-        result.checker_description = self.description;
-        result.link = self.link;
-        result.text = text.to_owned();
-
-        if regess_check_result {
-            result.is_identified = true;
+        let regex_check_result = re.is_match(text);
+        let mut plaintext_found = false;
+        let printed_name = format!("Regex matched: {}", re);
+        if regex_check_result {
+            plaintext_found = true;
         }
-        result
+
+        CheckResult {
+            is_identified: plaintext_found,
+            text: text.to_string(),
+            checker_name: self.name,
+            checker_description: self.description,
+            description: printed_name,
+            link: self.link,
+        }
     }
 }

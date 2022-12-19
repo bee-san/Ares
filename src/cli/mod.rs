@@ -122,11 +122,7 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
                 opts.cracking_timeout.unwrap()
             },
             api_mode: opts.api_mode.is_some(),
-            regex: if opts.regex.is_none(){
-                None
-            } else {
-                opts.regex
-            },
+            regex: opts.regex,
         },
     )
 }

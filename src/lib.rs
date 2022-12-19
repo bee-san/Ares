@@ -7,7 +7,6 @@
     clippy::missing_panics_doc
 )]
 
-
 /// The main crate for the Ares project.
 /// This provides the library API interface for Ares.
 mod api_library_input_struct;
@@ -81,6 +80,7 @@ use self::decoders::crack_results::CrackResult;
 /// assert!(result.is_none());
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
+    config::set_global_config(config);
     let initial_check_for_plaintext = check_if_input_text_is_plaintext(text);
     if initial_check_for_plaintext.is_identified {
         debug!(
@@ -105,7 +105,6 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     // let search_tree = searchers::Tree::new(text.to_string());
     // Perform the search algorithm
     // It will either return a failure or success.
-    config::set_global_config(config);
     searchers::search_for_plaintext(text)
 }
 
