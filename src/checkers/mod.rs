@@ -3,7 +3,8 @@ use self::{
     checker_result::CheckResult,
     checker_type::{Check, Checker},
     english::EnglishChecker,
-    lemmeknow_checker::LemmeKnow, regex_checker::RegexChecker,
+    lemmeknow_checker::LemmeKnow,
+    regex_checker::RegexChecker,
 };
 
 /// The default checker we use which simply calls all other checkers in order.
