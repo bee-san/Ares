@@ -19,7 +19,7 @@ We fully intend to replace [Ciphey](https://github.com/ciphey/ciphey) with Ares.
 
 The simplest way to use Ares is to join the [Discord Server](http://discord.skerritt.blog), head to the #bots channel and use ares with `$ares`. Type `$help` for helpful information!
 
-The second best way is to use `cargo install project-ares` and call it with `ares`.
+The second best way is to use `cargo install project_ares` and call it with `ares`.
 
 # Features
 
