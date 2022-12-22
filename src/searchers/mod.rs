@@ -71,7 +71,7 @@ mod tests {
     #[test]
     fn perform_decoding_succeeds() {
         let mut dc = DecoderResult::default();
-        dc.text = vec!("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==".to_string());
+        dc.text = vec!["aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==".to_string()];
         let result = perform_decoding(&dc);
         assert!(
             result
@@ -85,7 +85,7 @@ mod tests {
     fn perform_decoding_succeeds_empty_string() {
         // Some decoders like base64 return even when the string is empty.
         let mut dc = DecoderResult::default();
-        dc.text = vec!("".to_string());
+        dc.text = vec!["".to_string()];
         let result = perform_decoding(&dc);
         assert!(result._break_value().is_none());
     }

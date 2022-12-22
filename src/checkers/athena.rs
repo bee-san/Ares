@@ -1,6 +1,6 @@
 use crate::{checkers::checker_result::CheckResult, config::get_config};
 use lemmeknow::Identifier;
-use log::{trace, debug};
+use log::{debug, trace};
 
 use super::{
     checker_type::{Check, Checker},

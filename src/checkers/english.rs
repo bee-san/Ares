@@ -91,7 +91,6 @@ impl Check for Checker<EnglishChecker> {
         }
 
         return result;
-
     }
 }
 
@@ -105,7 +104,8 @@ fn normalise_string(input: &str) -> String {
     // TODO add more puncuation
     input.to_lowercase().replace(
         &[
-            '(', ')', '!', '/', ',', '?', '\"', '.', ';', ':', '\'', '`', ';', ':', '~', '^', '#', '='
+            '(', ')', '!', '/', ',', '?', '\"', '.', ';', ':', '\'', '`', ';', ':', '~', '^', '#',
+            '=',
         ][..],
         "",
     )
@@ -187,10 +187,6 @@ mod tests {
     #[test]
     fn test_check_fail_single_puncuation_char() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(
-            !checker
-                .check("#")
-                .is_identified
-        );
+        assert!(!checker.check("#").is_identified);
     }
 }

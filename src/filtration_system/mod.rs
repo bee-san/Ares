@@ -1,6 +1,5 @@
 use std::sync::mpsc::channel;
 
-use crate::DecoderResult;
 use crate::checkers::CheckerTypes;
 use crate::decoders::atbash_decoder::AtbashDecoder;
 use crate::decoders::base32_decoder::Base32Decoder;
@@ -8,6 +7,7 @@ use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
 use crate::decoders::base58_monero_decoder::Base58MoneroDecoder;
 use crate::decoders::binary_decoder::BinaryDecoder;
 use crate::decoders::hexadecimal_decoder::HexadecimalDecoder;
+use crate::DecoderResult;
 
 use crate::decoders::base58_flickr_decoder::Base58FlickrDecoder;
 use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
@@ -144,11 +144,14 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
 
 #[cfg(test)]
 mod tests {
-    use crate::{checkers::{
-        athena::Athena,
-        checker_type::{Check, Checker},
-        CheckerTypes,
-    }, DecoderResult};
+    use crate::{
+        checkers::{
+            athena::Athena,
+            checker_type::{Check, Checker},
+            CheckerTypes,
+        },
+        DecoderResult,
+    };
 
     // TODO: when we add a proper filtration system
     // We need to test that.
