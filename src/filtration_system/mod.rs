@@ -141,9 +141,10 @@ pub fn filter_and_get_decoders() -> Decoders {
     };
 
     for i in decoders.components{
-        // TODO I believe I need to implement getter methods on all the crackers
-        // To get things like popularity etc
-        if i.crack(text, checker)
+        // TODO implement getter methods on all functions
+        // TODO we need to receive the previous decoding to the filter function, we can do that by changing `.text()`
+        // TODO we need to check if the previous function is reciprocal and remove it from this round
+        if i.get_reciprocal() 
     }
 
     return decoders

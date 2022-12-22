@@ -48,6 +48,10 @@ impl Crack for Decoder<AtbashDecoder> {
 
         results
     }
+
+    fn get_name(&self) -> &str {
+        return self.name;
+    }
 }
 
 /// Maps atbash to the alphabet

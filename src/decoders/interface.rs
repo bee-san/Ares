@@ -54,6 +54,7 @@ pub trait Crack {
         Self: Sized;
     /// Crack is the function that actually does the decoding
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult;
+    fn get_reciprocal(&self) -> &bool;
 }
 
 /// Returns a boolean of True if the string is successfully changed
