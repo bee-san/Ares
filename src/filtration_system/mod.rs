@@ -102,7 +102,7 @@ impl MyResults {
 }
 
 /// Currently takes no args as this is just a spike to get all the basic functionality working
-pub fn filter_and_get_decoders(textStruct: &DecoderResult) -> Decoders {
+pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     trace!("Filtering and getting all decoders");
     let binary = Decoder::<BinaryDecoder>::new();
     let hexadecimal = Decoder::<HexadecimalDecoder>::new();

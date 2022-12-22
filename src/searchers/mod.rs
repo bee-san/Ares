@@ -36,7 +36,7 @@ pub fn search_for_plaintext(input: &str) -> Option<DecoderResult> {
 /// Performs the decodings by getting all of the decoders
 /// and calling `.run` which in turn loops through them and calls
 /// `.crack()`.
-fn perform_decoding(text: DecoderResult) -> MyResults {
+fn perform_decoding(text: &DecoderResult) -> MyResults {
     let decoders = filter_and_get_decoders(&text);
     let athena_checker = Checker::<Athena>::new();
     let checker = CheckerTypes::CheckAthena(athena_checker);
@@ -72,7 +72,7 @@ mod tests {
     fn perform_decoding_succeeds() {
         let mut dc = DecoderResult::default();
         dc.text = vec!("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ".to_string());
-        let result = perform_decoding(dc);
+        let result = perform_decoding(&dc);
         assert!(
             result
                 ._break_value()
@@ -86,7 +86,7 @@ mod tests {
         // Some decoders like base64 return even when the string is empty.
         let mut dc = DecoderResult::default();
         dc.text = vec!("".to_string());
-        let result = perform_decoding(dc);
+        let result = perform_decoding(&dc);
         assert!(result._break_value().is_none());
     }
 }

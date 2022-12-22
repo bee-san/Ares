@@ -31,13 +31,13 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
         let mut new_strings: Vec<DecoderResult> = vec![];
 
         current_strings.into_iter().try_for_each(|current_string| {
-            let res = super::perform_decoding(current_string);
+            let res = super::perform_decoding(&current_string);
 
             match res {
                 // if it's Break variant, we have cracked the text successfully
                 // so just stop processing further.
                 MyResults::Break(res) => {
-                    let mut decoders_used = current_string.path;
+                    let mut decoders_used = current_string.path.clone();
                     let text = res.unencrypted_text.clone().unwrap_or_default();
                     decoders_used.push(res);
                     let result_text = DecoderResult {
@@ -55,7 +55,7 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
                         results_vec
                             .into_iter()
                             .map(|r| {
-                                let mut decoders_used = current_string.path;
+                                let mut decoders_used = current_string.path.clone();
                                 // text is a vector of strings
                                 let text = r.unencrypted_text.clone().unwrap_or_default();
                                 decoders_used.push(r);
