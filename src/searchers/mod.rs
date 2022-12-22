@@ -71,7 +71,7 @@ mod tests {
     #[test]
     fn perform_decoding_succeeds() {
         let mut dc = DecoderResult::default();
-        dc.text = vec!("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ".to_string());
+        dc.text = vec!("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==".to_string());
         let result = perform_decoding(&dc);
         assert!(
             result
