@@ -135,8 +135,6 @@ pub fn filter_and_get_decoders() -> Decoders {
             Box::new(base32),
             Box::new(reversedecoder),
             Box::new(morsecodedecoder),
-            Box::new(atbashdecoder),
-            Box::new(caesardecoder),
         ],
     }
 }
