@@ -1,5 +1,6 @@
 use std::sync::mpsc::channel;
 
+use crate::DecoderResult;
 use crate::checkers::CheckerTypes;
 use crate::decoders::atbash_decoder::AtbashDecoder;
 use crate::decoders::base32_decoder::Base32Decoder;
@@ -101,7 +102,7 @@ impl MyResults {
 }
 
 /// Currently takes no args as this is just a spike to get all the basic functionality working
-pub fn filter_and_get_decoders() -> Decoders {
+pub fn filter_and_get_decoders(textStruct: &DecoderResult) -> Decoders {
     trace!("Filtering and getting all decoders");
     let binary = Decoder::<BinaryDecoder>::new();
     let hexadecimal = Decoder::<HexadecimalDecoder>::new();
@@ -143,11 +144,11 @@ pub fn filter_and_get_decoders() -> Decoders {
 
 #[cfg(test)]
 mod tests {
-    use crate::checkers::{
+    use crate::{checkers::{
         athena::Athena,
         checker_type::{Check, Checker},
         CheckerTypes,
-    };
+    }, DecoderResult};
 
     // TODO: when we add a proper filtration system
     // We need to test that.
@@ -155,13 +156,13 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let _decoders = filter_and_get_decoders();
+        let _decoders = filter_and_get_decoders(&DecoderResult::default());
         assert_eq!(2 + 2, 4);
     }
 
     #[test]
     fn decoders_can_call_dot_run() {
-        let decoders = filter_and_get_decoders();
+        let decoders = filter_and_get_decoders(&DecoderResult::default());
         let athena_checker = Checker::<Athena>::new();
         let checker = CheckerTypes::CheckAthena(athena_checker);
         decoders.run("TXIgUm9ib3QgaXMgZ3JlYXQ=", checker);
