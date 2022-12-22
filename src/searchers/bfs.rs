@@ -37,7 +37,7 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
                 // if it's Break variant, we have cracked the text successfully
                 // so just stop processing further.
                 MyResults::Break(res) => {
-                    let mut decoders_used = current_string.path.clone();
+                    let mut decoders_used = current_string.path;
                     let text = res.unencrypted_text.clone().unwrap_or_default();
                     decoders_used.push(res);
                     let result_text = DecoderResult {

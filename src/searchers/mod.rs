@@ -37,7 +37,7 @@ pub fn search_for_plaintext(input: &str) -> Option<DecoderResult> {
 /// and calling `.run` which in turn loops through them and calls
 /// `.crack()`.
 fn perform_decoding(text: &DecoderResult) -> MyResults {
-    let decoders = filter_and_get_decoders(&text);
+    let decoders = filter_and_get_decoders(text);
     let athena_checker = Checker::<Athena>::new();
     let checker = CheckerTypes::CheckAthena(athena_checker);
     decoders.run(&text.text[0], checker)

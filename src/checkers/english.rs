@@ -49,7 +49,7 @@ impl Check for Checker<EnglishChecker> {
 
         // After we've normalised our string, if we find it's a length 0 we don't do anything
         // This can happen if our string is a single puncuation mark, for example.
-        if input.len() == 0 {
+        if input.is_empty() {
             return result;
         }
 
@@ -90,7 +90,7 @@ impl Check for Checker<EnglishChecker> {
             }
         }
 
-        return result;
+        result
     }
 }
 
