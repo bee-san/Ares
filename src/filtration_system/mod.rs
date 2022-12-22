@@ -122,8 +122,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let caesardecoder = Decoder::<CaesarDecoder>::new();
     Decoders {
         components: vec![
-            Box::new(binary),
-            Box::new(hexadecimal),
+            Box::new(reversedecoder),
             Box::new(base58_bitcoin),
             Box::new(base58_monero),
             Box::new(base58_ripple),
@@ -132,12 +131,13 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(base91),
             Box::new(base64_url),
             Box::new(base65536),
-            Box::new(citrix_ctx1),
+            Box::new(binary),
+            Box::new(hexadecimal),
             Box::new(base32),
-            Box::new(reversedecoder),
             Box::new(morsecodedecoder),
             Box::new(atbashdecoder),
             Box::new(caesardecoder),
+            Box::new(citrix_ctx1),
         ],
     }
 }
