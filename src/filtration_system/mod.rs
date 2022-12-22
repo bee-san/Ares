@@ -119,7 +119,7 @@ pub fn filter_and_get_decoders() -> Decoders {
     let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
     let atbashdecoder = Decoder::<AtbashDecoder>::new();
     let caesardecoder = Decoder::<CaesarDecoder>::new();
-    Decoders {
+    let mut decoders = Decoders {
         components: vec![
             Box::new(binary),
             Box::new(hexadecimal),
@@ -138,7 +138,15 @@ pub fn filter_and_get_decoders() -> Decoders {
             Box::new(atbashdecoder),
             Box::new(caesardecoder),
         ],
+    };
+
+    for i in decoders.components{
+        // TODO I believe I need to implement getter methods on all the crackers
+        // To get things like popularity etc
+        if i.crack(text, checker)
     }
+
+    return decoders
 }
 
 #[cfg(test)]
