@@ -127,10 +127,27 @@ pub struct DecoderResult {
     pub path: Vec<CrackResult>,
 }
 
+/// Lets us create a Decoder result with the given text
+pub trait NewDecoderResultWithText {
+    /// Returns a new struct of type CheckerType
+    fn new(text: &str) -> Self;
+}
+
+/// Creates a default DecoderResult with Default as the text / path
 impl Default for DecoderResult {
     fn default() -> Self {
         DecoderResult {
             text: vec!["Default".to_string()],
+            path: vec![CrackResult::new(&Decoder::default(), "Default".to_string())],
+        }
+    }
+}
+
+/// Lets us make a new decoder defaulted with text, this allows us to test things
+impl NewDecoderResultWithText for DecoderResult {
+    fn new(text: &str) -> Self {
+        DecoderResult {
+            text: vec![text.to_string()],
             path: vec![CrackResult::new(&Decoder::default(), "Default".to_string())],
         }
     }

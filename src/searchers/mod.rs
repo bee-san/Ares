@@ -45,6 +45,8 @@ fn perform_decoding(text: &DecoderResult) -> MyResults {
 
 #[cfg(test)]
 mod tests {
+    use crate::NewDecoderResultWithText;
+
     use super::*;
 
     // https://github.com/bee-san/Ares/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
@@ -70,8 +72,7 @@ mod tests {
 
     #[test]
     fn perform_decoding_succeeds() {
-        let mut dc = DecoderResult::default();
-        dc.text = vec!["aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==".to_string()];
+        let dc = DecoderResult::new("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbQ==");
         let result = perform_decoding(&dc);
         assert!(
             result
@@ -84,8 +85,7 @@ mod tests {
     #[test]
     fn perform_decoding_succeeds_empty_string() {
         // Some decoders like base64 return even when the string is empty.
-        let mut dc = DecoderResult::default();
-        dc.text = vec!["".to_string()];
+        let dc = DecoderResult::new("");
         let result = perform_decoding(&dc);
         assert!(result._break_value().is_none());
     }

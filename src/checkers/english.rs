@@ -102,13 +102,11 @@ impl Check for Checker<EnglishChecker> {
 fn normalise_string(input: &str) -> String {
     // The replace function supports patterns https://doc.rust-lang.org/std/str/pattern/trait.Pattern.html#impl-Pattern%3C%27a%3E-3
     // TODO add more puncuation
-    input.to_lowercase().replace(
-        &[
-            '(', ')', '!', '/', ',', '?', '\"', '.', ';', ':', '\'', '`', ';', ':', '~', '^', '#',
-            '=',
-        ][..],
-        "",
-    )
+    input
+        .to_ascii_lowercase()
+        .chars()
+        .filter(|x| !x.is_ascii_punctuation())
+        .collect()
 }
 
 #[cfg(test)]
