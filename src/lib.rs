@@ -143,9 +143,10 @@ impl Default for DecoderResult {
     }
 }
 
-/// Lets us make a new decoder defaulted with text, this allows us to test things
-impl NewDecoderResultWithText for DecoderResult {
-    fn new(text: &str) -> Self {
+/// Lets us create a new decoderResult with given text
+impl DecoderResult {
+    /// It's only used in tests so it thinks its dead code
+    fn _new(text: &str) -> Self {
         DecoderResult {
             text: vec![text.to_string()],
             path: vec![CrackResult::new(&Decoder::default(), "Default".to_string())],
