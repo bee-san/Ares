@@ -127,12 +127,6 @@ pub struct DecoderResult {
     pub path: Vec<CrackResult>,
 }
 
-/// Lets us create a Decoder result with the given text
-pub trait NewDecoderResultWithText {
-    /// Returns a new struct of type CheckerType
-    fn new(text: &str) -> Self;
-}
-
 /// Creates a default DecoderResult with Default as the text / path
 impl Default for DecoderResult {
     fn default() -> Self {
