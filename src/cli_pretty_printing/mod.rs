@@ -70,12 +70,8 @@ pub fn failed_to_decode() {
     if config.api_mode {
         return;
     }
-    // The program can roughly do 45 decodings a second
-    // Currently it is not possible to get this info at this stage of the program from the decoding level
-    // TODO fix this
-    let ares_decodings = config.timeout * 45;
-    let time_took = calculate_time_took(ares_decodings);
-    println!("⛔️ Ares has failed to decode the text. If you would have used Ciphey, it would have taken you {}\n", time_took);
+
+    println!("⛔️ Ares has failed to decode the text.");
     println!("If you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog");
 }
 /// Calculate how long it would take to decode this in Ciphey
