@@ -127,10 +127,22 @@ pub struct DecoderResult {
     pub path: Vec<CrackResult>,
 }
 
+/// Creates a default DecoderResult with Default as the text / path
 impl Default for DecoderResult {
     fn default() -> Self {
         DecoderResult {
             text: vec!["Default".to_string()],
+            path: vec![CrackResult::new(&Decoder::default(), "Default".to_string())],
+        }
+    }
+}
+
+/// Lets us create a new decoderResult with given text
+impl DecoderResult {
+    /// It's only used in tests so it thinks its dead code
+    fn _new(text: &str) -> Self {
+        DecoderResult {
+            text: vec![text.to_string()],
             path: vec![CrackResult::new(&Decoder::default(), "Default".to_string())],
         }
     }

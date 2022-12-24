@@ -7,6 +7,7 @@ use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
 use crate::decoders::base58_monero_decoder::Base58MoneroDecoder;
 use crate::decoders::binary_decoder::BinaryDecoder;
 use crate::decoders::hexadecimal_decoder::HexadecimalDecoder;
+use crate::DecoderResult;
 
 use crate::decoders::base58_flickr_decoder::Base58FlickrDecoder;
 use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
@@ -101,7 +102,7 @@ impl MyResults {
 }
 
 /// Currently takes no args as this is just a spike to get all the basic functionality working
-pub fn filter_and_get_decoders() -> Decoders {
+pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     trace!("Filtering and getting all decoders");
     let binary = Decoder::<BinaryDecoder>::new();
     let hexadecimal = Decoder::<HexadecimalDecoder>::new();
@@ -143,10 +144,13 @@ pub fn filter_and_get_decoders() -> Decoders {
 
 #[cfg(test)]
 mod tests {
-    use crate::checkers::{
-        athena::Athena,
-        checker_type::{Check, Checker},
-        CheckerTypes,
+    use crate::{
+        checkers::{
+            athena::Athena,
+            checker_type::{Check, Checker},
+            CheckerTypes,
+        },
+        DecoderResult,
     };
 
     // TODO: when we add a proper filtration system
@@ -155,13 +159,13 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let _decoders = filter_and_get_decoders();
+        let _decoders = filter_and_get_decoders(&DecoderResult::default());
         assert_eq!(2 + 2, 4);
     }
 
     #[test]
     fn decoders_can_call_dot_run() {
-        let decoders = filter_and_get_decoders();
+        let decoders = filter_and_get_decoders(&DecoderResult::default());
         let athena_checker = Checker::<Athena>::new();
         let checker = CheckerTypes::CheckAthena(athena_checker);
         decoders.run("TXIgUm9ib3QgaXMgZ3JlYXQ=", checker);

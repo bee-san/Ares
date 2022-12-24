@@ -31,7 +31,7 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
         let mut new_strings: Vec<DecoderResult> = vec![];
 
         current_strings.into_iter().try_for_each(|current_string| {
-            let res = super::perform_decoding(&current_string.text[0]);
+            let res = super::perform_decoding(&current_string);
 
             match res {
                 // if it's Break variant, we have cracked the text successfully
@@ -66,7 +66,7 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
                                     // I think we should keep text as a single string
                                     // and just create more of them....
                                     text,
-                                    path: decoders_used,
+                                    path: decoders_used.to_vec(),
                                 }
                             })
                             .filter(|s| seen_strings.insert(s.text.clone())),

@@ -35,9 +35,23 @@ impl Check for Checker<EnglishChecker> {
         const PLAINTEXT_DETECTION_PERCENTAGE: f64 = 0.4;
         let mut words_found: f64 = 0.0;
 
-        let mut plaintext_found = false;
         // TODO: Change this when the below bugs are fixed.
         let filename = "English text";
+
+        let mut result = CheckResult {
+            is_identified: false,
+            text: original_input.to_string(),
+            checker_name: self.name,
+            checker_description: self.description,
+            description: filename.to_string(),
+            link: self.link,
+        };
+
+        // After we've normalised our string, if we find it's a length 0 we don't do anything
+        // This can happen if our string is a single puncuation mark, for example.
+        if input.is_empty() {
+            return result;
+        }
 
         let split_input = input.split(' ');
 
@@ -71,19 +85,12 @@ impl Check for Checker<EnglishChecker> {
                     "Returning from English chekcer successfully with {}",
                     original_input
                 );
-                plaintext_found = true;
+                result.is_identified = true;
                 break;
             }
         }
 
-        CheckResult {
-            is_identified: plaintext_found,
-            text: original_input.to_string(),
-            checker_name: self.name,
-            checker_description: self.description,
-            description: filename.to_string(),
-            link: self.link,
-        }
+        result
     }
 }
 
@@ -95,12 +102,11 @@ impl Check for Checker<EnglishChecker> {
 fn normalise_string(input: &str) -> String {
     // The replace function supports patterns https://doc.rust-lang.org/std/str/pattern/trait.Pattern.html#impl-Pattern%3C%27a%3E-3
     // TODO add more puncuation
-    input.to_lowercase().replace(
-        &[
-            '(', ')', '!', '/', ',', '?', '\"', '.', ';', ':', '\'', '`', ';', ':', '~', '^',
-        ][..],
-        "",
-    )
+    input
+        .to_ascii_lowercase()
+        .chars()
+        .filter(|x| !x.is_ascii_punctuation())
+        .collect()
 }
 
 #[cfg(test)]
@@ -174,5 +180,11 @@ mod tests {
                 .check("Hello Dog nnnnnnnnnnn llllllll ppppppppp gggggggg")
                 .is_identified
         );
+    }
+
+    #[test]
+    fn test_check_fail_single_puncuation_char() {
+        let checker = Checker::<EnglishChecker>::new();
+        assert!(!checker.check("#").is_identified);
     }
 }
