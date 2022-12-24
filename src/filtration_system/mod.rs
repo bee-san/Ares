@@ -36,13 +36,13 @@ use rayon::prelude::*;
 /// Relevant docs: https://doc.rust-lang.org/book/ch17-02-trait-objects.html
 pub struct Decoders {
     /// Components is a vector of decoders.
-    pub components: Vec<Box<dyn Crack + Sync>>,
+    pub components: Vec<Box<dyn std::any::Any + Crack + Sync>>,
 }
 
 impl Decoders {
     /// Iterate over all of the decoders and run .crack(text) on them
     /// Then if the checker succeed, we short-circuit the iterator
-    /// and stop all processing as soon as possible.
+    /// and stop all processing as soon as possible.d
     /// We are using Trait Objects
     /// https://doc.rust-lang.org/book/ch17-02-trait-objects.html
     /// Which allows us to have multiple different structs in the same vector
