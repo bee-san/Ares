@@ -26,7 +26,6 @@ impl Crack for Decoder<HexadecimalDecoder> {
             description: "Data is broken into 4-bit sequences, and each value (between 0 and 15 inclusively) is encoded using one of 16 symbols from the ASCII character set. Although any 16 symbols from the ASCII character set can be used, in practice the ASCII digits '0'–'9' and the letters 'A'–'F' (or the lowercase 'a'–'f') are always chosen in order to align with standard written notation for hexadecimal numbers.",
             link: "https://en.wikipedia.org/wiki/Hexadecimal#Base16_(transfer_encoding)",
             tags: vec!["hexadecimal", "hex", "base", "decoder"],
-            reciprocal: false,
             popularity: 1.0,
             phantom: std::marker::PhantomData,
         }
@@ -63,6 +62,14 @@ impl Crack for Decoder<HexadecimalDecoder> {
         results.update_checker(&checker_result);
 
         results
+    }
+    /// Gets all tags for this decoder
+    fn get_tags(&self) -> &Vec<&str> {
+        &self.tags
+    }
+    /// Gets the name for the current decoder
+    fn get_name(&self) -> &str {
+        self.name
     }
 }
 

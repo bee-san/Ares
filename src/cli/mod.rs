@@ -117,7 +117,7 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
             human_checker_on: !opts.disable_human_checker,
             // These if statements act as defaults
             timeout: if opts.cracking_timeout.is_none() {
-                5
+                30
             } else {
                 opts.cracking_timeout.unwrap()
             },

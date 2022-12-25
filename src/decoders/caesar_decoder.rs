@@ -40,8 +40,7 @@ impl Crack for Decoder<CaesarDecoder> {
             name: "Caesar Cipher",
             description: "Caesar cipher, also known as Caesar's cipher, the shift cipher, Caesar's code or Caesar shift, is one of the simplest and most widely known encryption techniques. It is a type of substitution cipher in which each letter in the plaintext is replaced by a letter some fixed number of positions down the alphabet.",
             link: "https://en.wikipedia.org/wiki/Caesar_cipher",
-            tags: vec!["caesar", "decryption", "classic"],
-            reciprocal: true,
+            tags: vec!["caesar", "decryption", "classic", "reciprocal"],
             popularity: 1.0,
             phantom: std::marker::PhantomData,
         }
@@ -76,6 +75,14 @@ impl Crack for Decoder<CaesarDecoder> {
         }
         results.unencrypted_text = Some(decoded_strings);
         results
+    }
+    /// Gets all tags for this decoder
+    fn get_tags(&self) -> &Vec<&str> {
+        &self.tags
+    }
+    /// Gets the name for the current decoder
+    fn get_name(&self) -> &str {
+        self.name
     }
 }
 

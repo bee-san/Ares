@@ -33,9 +33,7 @@ impl Crack for Decoder<ReverseDecoder> {
             name: "Reverse",
             description: "Reverses a string. stac -> cats",
             link: "http://string-functions.com/reverse.aspx",
-            tags: vec!["reverse", "decoder"],
-            /// We expect it to take 0.01 seconds to run
-            reciprocal: true,
+            tags: vec!["reverse", "decoder", "reciprocal"],
             // I have never seen a reversed string in a CTF
             // or otherwise
             popularity: 0.2,
@@ -58,6 +56,14 @@ impl Crack for Decoder<ReverseDecoder> {
         result.unencrypted_text = Some(vec![rev_str]);
         result.update_checker(&checker_res);
         result
+    }
+    /// Gets all tags for this decoder
+    fn get_tags(&self) -> &Vec<&str> {
+        &self.tags
+    }
+    /// Gets the name for the current decoder
+    fn get_name(&self) -> &str {
+        self.name
     }
 }
 
