@@ -30,7 +30,6 @@ impl Crack for Decoder<CitrixCTX1Decoder> {
             description: "Citrix CTX1 is a very old encoding that was used for encoding Citrix passwords.",
             link: "https://www.remkoweijnen.nl/blog/2012/05/13/encoding-and-decoding-citrix-passwords/",
             tags: vec!["citrix_ctx1", "citrix", "passwords", "decoder"],
-            reciprocal: false,
             popularity: 0.1,
             phantom: std::marker::PhantomData,
         }
@@ -67,6 +66,14 @@ impl Crack for Decoder<CitrixCTX1Decoder> {
         results.update_checker(&checker_result);
 
         results
+    }
+    /// Gets all tags for this decoder
+    fn get_tags(&self) -> &Vec<&str> {
+        &self.tags
+    }
+    /// Gets the name for the current decoder
+    fn get_name(&self) -> &str {
+        self.name
     }
 }
 

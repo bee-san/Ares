@@ -39,7 +39,6 @@ impl Crack for Decoder<Base64URLDecoder> {
             description: "Modified Base64 for URL variants exist (such as base64url in RFC 4648), where the '+' and '/' characters of standard Base64 are respectively replaced by '-' and '_', so that using URL encoders/decoders is no longer necessary.",
             link: "https://en.wikipedia.org/wiki/Base64#URL_applications",
             tags: vec!["base64_url", "base64", "url", "decoder", "base"],
-            reciprocal: false,
             popularity: 0.9,
             phantom: std::marker::PhantomData,
         }
@@ -73,6 +72,14 @@ impl Crack for Decoder<Base64URLDecoder> {
         results.update_checker(&checker_result);
 
         results
+    }
+    /// Gets all tags for this decoder
+    fn get_tags(&self) -> &Vec<&str> {
+        &self.tags
+    }
+    /// Gets the name for the current decoder
+    fn get_name(&self) -> &str {
+        self.name
     }
 }
 

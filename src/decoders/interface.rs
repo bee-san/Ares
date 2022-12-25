@@ -20,9 +20,6 @@ pub struct Decoder<Type> {
     pub tags: Vec<&'static str>,
     /// We get popularity by eye-balling it or using the API's data
     pub popularity: f32,
-    /// If you decode X by this, and then decode it again will nothing have changed?
-    /// An example is Cat -> Reverse (taC) -> Reverse -> Cat
-    pub reciprocal: bool,
     /// we don't use the Type, so we use PhantomData to mark it!
     pub phantom: std::marker::PhantomData<Type>,
 }
@@ -37,7 +34,6 @@ impl Default for Decoder<DefaultDecoder> {
             link: "N/A",
             tags: vec!["N/A"],
             popularity: 0.0,
-            reciprocal: false,
             phantom: std::marker::PhantomData,
         }
     }
@@ -54,6 +50,10 @@ pub trait Crack {
         Self: Sized;
     /// Crack is the function that actually does the decoding
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult;
+    /// Get all tags for the current decoder
+    fn get_tags(&self) -> &Vec<&str>;
+    /// Get the nam of the current decoder
+    fn get_name(&self) -> &str;
 }
 
 /// Returns a boolean of True if the string is successfully changed

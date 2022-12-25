@@ -39,7 +39,6 @@ impl Crack for Decoder<Base65536Decoder> {
             description: "Base65536 is a binary encoding optimised for UTF-32-encoded text. Base65536 uses only \"safe\" Unicode code points - no unassigned code points, no whitespace, no control characters, etc.",
             link: "https://github.com/qntm/base65536",
             tags: vec!["base65536", "decoder", "base"],
-            reciprocal: false,
             popularity: 0.1,
             phantom: std::marker::PhantomData,
         }
@@ -75,6 +74,14 @@ impl Crack for Decoder<Base65536Decoder> {
         results.update_checker(&checker_result);
 
         results
+    }
+    /// Gets all tags for this decoder
+    fn get_tags(&self) -> &Vec<&str> {
+        &self.tags
+    }
+    /// Gets the name for the current decoder
+    fn get_name(&self) -> &str {
+        self.name
     }
 }
 

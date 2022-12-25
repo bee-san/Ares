@@ -39,7 +39,6 @@ impl Crack for Decoder<Base64Decoder> {
             description: "Base64 is a group of binary-to-text encoding schemes that represent binary data (more specifically, a sequence of 8-bit bytes) in an ASCII string format by translating the data into a radix-64 representation.",
             link: "https://en.wikipedia.org/wiki/Base64",
             tags: vec!["base64", "decoder", "base"],
-            reciprocal: false,
             popularity: 1.0,
             phantom: std::marker::PhantomData,
         }
@@ -73,6 +72,14 @@ impl Crack for Decoder<Base64Decoder> {
         results.update_checker(&checker_result);
 
         results
+    }
+    /// Gets all tags for this decoder
+    fn get_tags(&self) -> &Vec<&str> {
+        &self.tags
+    }
+    /// Gets the name for the current decoder
+    fn get_name(&self) -> &str {
+        self.name
     }
 }
 

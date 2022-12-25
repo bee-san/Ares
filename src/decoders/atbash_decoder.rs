@@ -16,8 +16,7 @@ impl Crack for Decoder<AtbashDecoder> {
             name: "Atbash",
             description: "Atbash is a monoalphabetic substitution cipher originally used to encrypt the Hebrew alphabet. It can be modified for use with any known writing system with a standard collating order.",
             link: "https://en.wikipedia.org/wiki/Atbash",
-            tags: vec!["atbash", "substitution", "decoder"],
-            reciprocal: true,
+            tags: vec!["atbash", "substitution", "decoder", "reciprocal"],
             popularity: 1.0,
             phantom: std::marker::PhantomData,
         }
@@ -47,6 +46,14 @@ impl Crack for Decoder<AtbashDecoder> {
         results.update_checker(&checker_result);
 
         results
+    }
+    /// Gets all tags for this decoder
+    fn get_tags(&self) -> &Vec<&str> {
+        &self.tags
+    }
+    /// Gets the name for the current decoder
+    fn get_name(&self) -> &str {
+        self.name
     }
 }
 

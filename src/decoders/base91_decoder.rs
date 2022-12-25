@@ -39,7 +39,6 @@ impl Crack for Decoder<Base91Decoder> {
             description: "basE91 is an advanced method for encoding binary data as ASCII characters. It is similar to UUencode or base64, but is more efficient.",
             link: "https://base91.sourceforge.net/",
             tags: vec!["base91", "decoder", "base"],
-            reciprocal: false,
             popularity: 0.3,
             phantom: std::marker::PhantomData,
         }
@@ -73,6 +72,14 @@ impl Crack for Decoder<Base91Decoder> {
         results.update_checker(&checker_result);
 
         results
+    }
+    /// Gets all tags for this decoder
+    fn get_tags(&self) -> &Vec<&str> {
+        &self.tags
+    }
+    /// Gets the name for the current decoder
+    fn get_name(&self) -> &str {
+        self.name
     }
 }
 
