@@ -1,0 +1,11 @@
+{"version": 2, "width": 123, "height": 45, "timestamp": 1672149835, "env": {"SHELL": "/bin/zsh", "TERM": "xterm-256color"}}
+[0.111327, "o", "\r\u001b[0m\u001b[27m\u001b[24m\u001b[J\u001b[01;32m➜  \u001b[36m~\u001b[00m \u001b[K"]
+[0.111394, "o", "\u001b[?1h\u001b=\u001b[?2004h"]
+[0.940616, "o", "\u001b[7mares -t 'LJIVE222KFJGUWSRJZ2FUUKSNNNFCTTLLJIVE5C2KFJGWWSRKJVVUUKOORNFCUTLLJIVE222KFHHIWSRKJVVUUKSNNNEOUTULJIU4222KFJGW\u001b[7mW\u001b[7mSRJZ2FUUKONNNFCTTKLJIU45C2KFJGWWSHJZVVUR2SORNFCUTLLJIVE222I5JHIWSRKJVVUR2ONJNEOTTULJIVE222KFJGWWSRJZ2FUUKSNNNFCTTLLJIU45C2\u001b[7mK\u001b[7mFHGWWSRJZVFUUKSHU======' -d\u001b[27m\u001b[K"]
+[1.697765, "o", "\r\r\n"]
+[2.213287, "o", "\r\n🥳 Ares has decoded 205 times times.\r\nIf you would have used Ciphey, it would have taken you 41 seconds\r\n\r\n"]
+[2.225368, "o", "The plaintext is: \r\n\u001b[1;33mhello, world!\u001b[0m\r\nand the decoders used are \u001b[1;33mBase32 → Caesar Cipher → Base64 → Binary\u001b[0m\r\n"]
+[2.237779, "o", "\r\u001b[0m\u001b[27m\u001b[24m\u001b[J\u001b[01;32m➜  \u001b[36m~\u001b[00m \u001b[K"]
+[2.237852, "o", "\u001b[?1h\u001b="]
+[2.237875, "o", "\u001b[?2004h"]
+[5.440228, "o", "\u001b[?2004l\r\r\n"]
