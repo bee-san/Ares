@@ -106,6 +106,9 @@ fn normalise_string(input: &str) -> String {
         .to_ascii_lowercase()
         .chars()
         .filter(|x| !x.is_ascii_punctuation())
+        // if digit is base10 filter it out
+        // Our dictionary does not contain numbers, so we want to filter them out
+        .filter(|x| !x.is_digit(10))
         .collect()
 }
 
@@ -186,5 +189,11 @@ mod tests {
     fn test_check_fail_single_puncuation_char() {
         let checker = Checker::<EnglishChecker>::new();
         assert!(!checker.check("#").is_identified);
+    }
+
+    #[test]
+    fn test_check_fail_single_number() {
+        let checker = Checker::<EnglishChecker>::new();
+        assert!(!checker.check("2").is_identified);
     }
 }

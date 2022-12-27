@@ -12,9 +12,12 @@ file_name = input("Enter the name of the file you want to modify: ")
 f = open(file_name)
 f2 = open("modified.txt", "w")
 for line in f:
+    line = line.strip()
     if len(line) <= MIN_LENGTH:
         continue
     if len(set(line).intersection(PUNC)) != 0:
+        continue
+    if not line.isalpha():
         continue
     if LOWERCASE:
         line = line.lower()
