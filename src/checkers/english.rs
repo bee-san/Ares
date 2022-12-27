@@ -108,7 +108,7 @@ fn normalise_string(input: &str) -> String {
         .filter(|x| !x.is_ascii_punctuation())
         // if digit is base10 filter it out
         // Our dictionary does not contain numbers, so we want to filter them out
-        .filter(|x| !x.is_digit(10))
+        .filter(|x| !x.is_ascii_digit())
         .collect()
 }
 
