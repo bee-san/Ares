@@ -50,3 +50,4 @@ codegen-units = 1
 [[bench]]
 name = "benchmark_crackers"
 harness = false
+path = "benches"
