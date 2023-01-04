@@ -524,9 +524,9 @@ dependencies = [
 
 [[package]]
 name = "lazy-regex"
-version = "2.3.2"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "274ae5b8ca435c817dd3b9a92bfa93179189e9f6963879982c33c85895251981"
+checksum = "fb06a211c24037a055686e0b2d79cb7f4c14d124a63a9097fdfcc05880f8ce28"
 dependencies = [
  "lazy-regex-proc_macros",
  "once_cell",
@@ -535,9 +535,9 @@ dependencies = [
 
 [[package]]
 name = "lazy-regex-proc_macros"
-version = "2.3.2"
+version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b2adfafeb53fa30d6998407a5465bcba4c36ed992131f790ea25d398e10f621"
+checksum = "e256930eb532edd31ff0103cebde847040897b31d3cb344dd2c46d96c6f346f7"
 dependencies = [
  "proc-macro2",
  "quote",
