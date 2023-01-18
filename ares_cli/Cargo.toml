@@ -1,0 +1,17 @@
+[package]
+name = "project_ares"
+version = "0.10.0"
+edition = "2021"
+description = "Automated decoding tool, Ciphey but in Rust"
+license = "MIT"
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[[bin]]
+name = "ares"
+path = "src/main.rs"
+bench = false
+
+[dependencies]
+clap = {version = "4.1.1", features = ["derive"]}
+log = "0.4"
+env_logger = "0.10.0"
