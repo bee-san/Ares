@@ -5,6 +5,7 @@ RUN apk add --no-cache build-base
 WORKDIR /app/ares
 COPY Cargo.toml Cargo.lock ./
 COPY src/ src/
+COPY benches/ benches/
 RUN cargo build --release
 
 FROM alpine:3.12
