@@ -21,6 +21,8 @@ The simplest way to use Ares is to join the [Discord Server](http://discord.sker
 
 The second best way is to use `cargo install project_ares` and call it with `ares`.
 
+You can also `git clone` this repo and run `docker build .` it to get an image.
+
 # Features
 
 Some features that may interest you, and that we're proud of.

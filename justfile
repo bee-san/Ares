@@ -6,6 +6,7 @@ test-all:
   cargo build
   cargo check
   cargo clippy
+  cargo fmt
   cargo test
 
 publish:
