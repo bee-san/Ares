@@ -41,10 +41,3 @@ exceptions = [
         "Unicode-DFS-2016",
     ], name = "unicode-ident" },
 ]
-
-[[licenses.clarify]]
-name = "ring"
-expression = "MIT AND ISC AND OpenSSL"
-license-files = [
-    { path = "LICENSE", hash = 0xbd0eed23 }
-]
