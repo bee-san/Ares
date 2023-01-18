@@ -9,6 +9,8 @@ test-all:
   cargo fmt
   cargo test
 
+test:
+  cargo nextest run
+
 publish:
-  cargo publish
   docker buildx build --platform linux/arm/v7,linux/amd64,linux/arm64/v8 -t autumnskerritt/ares:latest --push .
