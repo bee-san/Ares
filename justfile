@@ -7,6 +7,7 @@ test-all:
   cargo check
   cargo clippy
   cargo fmt
+  cargo deny check
   cargo test
 
 test:
