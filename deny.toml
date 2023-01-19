@@ -21,13 +21,19 @@ ignore = [
     "RUSTSEC-2021-0145"
 ]
 
+[bans]
+multiple-versions = "deny" #catch mutliple versions of a crate
+deny = []
+#skip quick-error for "reasons" that i cba to explain just about as much as i cba to fix
+skip = [{name = "webpki"}]
+
 [licenses]
 unlicensed = "deny"
 allow-osi-fsf-free = "neither"
 copyleft = "deny"
 # We want really high confidence when inferring licenses from text
 confidence-threshold = 0.93
-allow = ["Apache-2.0", "Apache-2.0 WITH LLVM-exception", "MIT", "MPL-2.0", "ISC", "CC0-1.0"]
+allow = ["Apache-2.0", "Apache-2.0 WITH LLVM-exception", "MIT", "MPL-2.0", "ISC", "CC0-1.0", "LicenseRef-webpki"]
 
 exceptions = [
     { allow = [
@@ -40,4 +46,11 @@ exceptions = [
     { allow = [
         "Unicode-DFS-2016",
     ], name = "unicode-ident" },
+]
+
+[[licenses.clarify]]
+name = "webpki"
+expression = "LicenseRef-webpki"
+license-files = [
+    { path = "LICENSE", hash = 0x001c7e6c },
 ]
