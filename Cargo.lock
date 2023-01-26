@@ -157,9 +157,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.1.1"
+version = "4.1.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4ec7a4128863c188deefe750ac1d1dfe66c236909f845af04beed823638dc1b2"
+checksum = "f13b9c79b5d1dd500d20ef541215a6423c75829ef43117e1b4d17fd8af0b5d76"
 dependencies = [
  "bitflags",
  "clap_derive",
@@ -557,7 +557,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5c3519c5f4257dc07fce33ea7f4781a7bca508606acee63a3cac282b16aa941"
 dependencies = [
- "clap 4.1.1",
+ "clap 4.1.4",
  "comfy-table",
  "fancy-regex",
  "once_cell",
@@ -823,7 +823,7 @@ dependencies = [
  "base65536",
  "base91",
  "bs58",
- "clap 4.1.1",
+ "clap 4.1.4",
  "criterion",
  "crossbeam",
  "data-encoding",
