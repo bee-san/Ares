@@ -20,6 +20,8 @@ Ares is the next generation of decoding tools, built by the same people that bro
 
 We fully intend to replace [Ciphey](https://github.com/ciphey/ciphey) with Ares.
 
+✨ You can read more about Ares here https://skerritt.blog/introducing-ares/ ✨
+
 # How to Use
 
 The simplest way to use Ares is to join the [Discord Server](http://discord.skerritt.blog), head to the #bots channel and use ares with `$ares`. Type `$help` for helpful information!
