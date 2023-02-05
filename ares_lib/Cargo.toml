@@ -1,8 +1,45 @@
 [package]
 name = "ares_lib"
-version = "0.1.0"
+version = "0.10.0"
 edition = "2021"
+description = "Automated decoding tool, Ciphey but in Rust"
+license = "MIT"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[lib]
+name = "ares"
+path = "src/lib.rs"
+bench = false
 
 [dependencies]
+clap = {version = "4.1.1", features = ["derive"]}
+log = "0.4"
+env_logger = "0.10.0"
+base64 = "0.20.0"
+rayon = "1.6.1"
+lemmeknow = "0.7.0"
+include_dir = "0.7.3"
+once_cell = "1.17.0"
+text_io = "0.1.12"
+data-encoding = "2.3.3"
+bs58 = "0.4.0"
+base91 = "0.1.0"
+num = "0.4"
+crossbeam = "0.8"
+base65536 = "1.0.1"
+ansi_term = "0.12.1"
+lazy_static = "1.4.0"
+lazy-regex = "2.4.1"
+regex = "1.7.1"
+
+[dev-dependencies]
+criterion = "0.4.0"
+
+[profile.release]
+lto = "fat"
+panic = "abort"
+strip = "symbols"
+codegen-units = 1
+
+[[bench]]
+name = "benchmark_crackers"
+harness = false
