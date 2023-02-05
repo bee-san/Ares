@@ -192,7 +192,6 @@ mod tests {
             // If we get here, the test passed
             // Because the caesar_decoder.crack function returned None
             // as it should do for the input
-            assert!(true);
         }
     }
 }
