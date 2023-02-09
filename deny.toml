@@ -18,14 +18,21 @@ ignore = [
     # so no reason to change just for the sake of it
     "RUSTSEC-2021-0139",
     # atty is used in criterion, ignoring it until they update
-    "RUSTSEC-2021-0145"
+    "RUSTSEC-2021-0145",
+    # time is used in cargo-nextest, ignoring it until they update
+    "RUSTSEC-2020-0071",
+    # libgit2-sys is used in cargo-deny, ignoring it until they update
+    "RUSTSEC-2023-0003",
+    # openssl-src is used in cargo-deny, ignoring it until they update
+    "RUSTSEC-2023-0006",
+    # openssl-src is used in cargo-deny, ignoring it until they update
+    "RUSTSEC-2023-0007",
+    # openssl-src is used in cargo-deny, ignoring it until they update
+    "RUSTSEC-2023-0009",
+    # openssl-src is used in cargo-deny, ignoring it until they update
+    "RUSTSEC-2023-0010"
 ]
 
-[bans]
-multiple-versions = "deny" #catch mutliple versions of a crate
-deny = []
-#skip quick-error for "reasons" that i cba to explain just about as much as i cba to fix
-skip = [{name = "webpki"}]
 
 [licenses]
 unlicensed = "deny"
@@ -33,7 +40,7 @@ allow-osi-fsf-free = "neither"
 copyleft = "deny"
 # We want really high confidence when inferring licenses from text
 confidence-threshold = 0.93
-allow = ["Apache-2.0", "Apache-2.0 WITH LLVM-exception", "MIT", "MPL-2.0", "ISC", "CC0-1.0", "LicenseRef-webpki"]
+allow = ["Apache-2.0", "Apache-2.0 WITH LLVM-exception", "MIT", "BSD-3-Clause", "OpenSSL", "MPL-2.0", "ISC", "CC0-1.0"]
 
 exceptions = [
     { allow = [
@@ -50,7 +57,13 @@ exceptions = [
 
 [[licenses.clarify]]
 name = "webpki"
-expression = "LicenseRef-webpki"
+expression = "ISC"
 license-files = [
     { path = "LICENSE", hash = 0x001c7e6c },
+]
+[[licenses.clarify]]
+name = "ring"
+expression = "MIT AND ISC AND OpenSSL"
+license-files = [
+    { path = "LICENSE", hash = 0xbd0eed23 }
 ]
