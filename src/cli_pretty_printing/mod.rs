@@ -23,9 +23,9 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     let decoded_path_coloured = ansi_term::Colour::Yellow.bold().paint(&decoded_path);
     let decoded_path_string = if !decoded_path.contains('→') {
         // handles case where only 1 decoder is used
-        format!("the decoder used is {}", decoded_path_coloured)
+        format!("the decoder used is {decoded_path_coloured}")
     } else {
-        format!("the decoders used are {}", decoded_path_coloured)
+        format!("the decoders used are {decoded_path_coloured}")
     };
     println!(
         "The plaintext is: \n{}\nand {}",
@@ -45,12 +45,12 @@ pub fn decoded_how_many_times(depth: u32) {
     // Then we add 25 for Caesar
     let decoders = crate::filtration_system::filter_and_get_decoders(&DecoderResult::default());
     let decoded_times_int = depth * (decoders.components.len() as u32 + 25);
-    let decoded_times_str = format!("{} times", decoded_times_int);
+    let decoded_times_str = format!("{decoded_times_int} times");
 
     let time_took = calculate_time_took(decoded_times_int);
 
     // TODO add colour to the times
-    println!("\n🥳 Ares has decoded {} times.\nIf you would have used Ciphey, it would have taken you {}\n", decoded_times_str, time_took);
+    println!("\n🥳 Ares has decoded {decoded_times_str} times.\nIf you would have used Ciphey, it would have taken you {time_took}\n");
 }
 
 /// Whenever the human checker checks for text, this function is run.
@@ -95,7 +95,7 @@ fn calculate_time_took(decoded_times_int: u32) -> String {
             format!("{} minutes", ciphey_how_long_to_decode_in_seconds / 60)
         }
     } else {
-        format!("{} seconds", ciphey_how_long_to_decode_in_seconds)
+        format!("{ciphey_how_long_to_decode_in_seconds} seconds")
     }
 }
 
@@ -112,10 +112,7 @@ pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
         if time_left == 0 {
             return;
         }
-        println!(
-            "{} seconds have passed. {} remaining",
-            seconds_spent_running, time_left
-        );
+        println!("{seconds_spent_running} seconds have passed. {time_left} remaining");
     }
 }
 
