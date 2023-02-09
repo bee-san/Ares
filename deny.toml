@@ -21,8 +21,6 @@ ignore = [
     "RUSTSEC-2021-0145",
     # time is used in cargo-nextest, ignoring it until they update
     "RUSTSEC-2020-0071",
-    # libgit2-sys is used in cargo-deny, ignoring it until they update
-    "RUSTSEC-2023-0003",
 ]
 
 
