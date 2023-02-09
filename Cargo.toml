@@ -37,6 +37,7 @@ ansi_term = "0.12.1"
 lazy_static = "1.4.0"
 lazy-regex = "2.4.1"
 regex = "1.7.1"
+urlencoding = "2.1.2"
 
 [dev-dependencies]
 cargo-deny = "0.13.7"
