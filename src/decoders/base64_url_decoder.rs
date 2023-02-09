@@ -86,6 +86,8 @@ impl Crack for Decoder<Base64URLDecoder> {
 
 /// helper function
 fn decode_base64_url_no_error_handling(text: &str) -> Option<String> {
+    // Strip all padding
+    let text = text.replace('=', "");
     // Runs the code to decode base64_url
     // Doesn't perform error handling, call from_base64_url
     general_purpose::URL_SAFE_NO_PAD

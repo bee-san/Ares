@@ -86,6 +86,8 @@ impl Crack for Decoder<Base64Decoder> {
 
 /// helper function
 fn decode_base64_no_error_handling(text: &str) -> Option<String> {
+    // Strip all padding
+    let text = text.replace('=', "");
     // Runs the code to decode base64
     // Doesn't perform error handling, call from_base64
     general_purpose::STANDARD_NO_PAD
