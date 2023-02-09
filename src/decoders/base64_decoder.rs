@@ -5,6 +5,7 @@
 ///
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
+use base64::{engine::general_purpose, Engine as _};
 
 use super::crack_results::CrackResult;
 use super::interface::Crack;
@@ -87,7 +88,8 @@ impl Crack for Decoder<Base64Decoder> {
 fn decode_base64_no_error_handling(text: &str) -> Option<String> {
     // Runs the code to decode base64
     // Doesn't perform error handling, call from_base64
-    base64::decode(text.as_bytes())
+    general_purpose::STANDARD_NO_PAD
+        .decode(text.as_bytes())
         .ok()
         .map(|inner| String::from_utf8(inner).ok())?
 }
