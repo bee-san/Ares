@@ -5,6 +5,7 @@
 ///
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
+use base64::{engine::general_purpose, Engine as _};
 
 use super::crack_results::CrackResult;
 use super::interface::Crack;
@@ -85,17 +86,14 @@ impl Crack for Decoder<Base64URLDecoder> {
 
 /// helper function
 fn decode_base64_url_no_error_handling(text: &str) -> Option<String> {
+    // Strip all padding
+    let text = text.replace('=', "");
     // Runs the code to decode base64_url
     // Doesn't perform error handling, call from_base64_url
-    base64::decode_engine(
-        text.as_bytes(),
-        &base64::engine::fast_portable::FastPortable::from(
-            &base64::alphabet::URL_SAFE,
-            base64::engine::fast_portable::PAD,
-        ),
-    )
-    .ok()
-    .map(|inner| String::from_utf8(inner).ok())?
+    general_purpose::URL_SAFE_NO_PAD
+        .decode(text.as_bytes())
+        .ok()
+        .map(|inner| String::from_utf8(inner).ok())?
 }
 
 #[cfg(test)]

@@ -11,9 +11,16 @@
 <h1>Project Ares</h1>
 </p>
 
+<p align="center">
+  <img src="https://raw.githubusercontent.com/bee-san/Ares/main/images/main_demo.svg" alt="Ares demo">
+</p>
+
+
 Ares is the next generation of decoding tools, built by the same people that brought you [Ciphey](https://github.com/ciphey/ciphey).
 
 We fully intend to replace [Ciphey](https://github.com/ciphey/ciphey) with Ares.
+
+✨ You can read more about Ares here https://skerritt.blog/introducing-ares/ ✨
 
 # How to Use
 
@@ -28,6 +35,8 @@ You can also `git clone` this repo and run `docker build .` it to get an image.
 Some features that may interest you, and that we're proud of.
 
 ## Fast
+
+![](https://raw.githubusercontent.com/bee-san/Ares/main/images/better_demo.svg)
 
 Ares is fast. Very fast. Other decoders such as Ciphey require advance artifical intelligence to determine which path it should take to decode (whether to try Caesar next or Base64 etc).
 
@@ -55,6 +64,8 @@ Ares has a timer (built into the library and the CLI) which means it will eventu
 Ares already has ~120 tests, documentation tests (to ensure our docs are kept up to date) and we enforce documentation on all of our major components. This is beautiful.
 
 ## LemmeKnow
+
+![](https://raw.githubusercontent.com/bee-san/Ares/main/images/lemmeknow.svg)
 
 <img width="861" alt="Screenshot 2022-12-18 at 17 08 36" src="https://user-images.githubusercontent.com/10378052/208310491-86e704ca-963d-4850-a2b2-f14b6e0f4797.png">
 
