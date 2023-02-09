@@ -23,14 +23,6 @@ ignore = [
     "RUSTSEC-2020-0071",
     # libgit2-sys is used in cargo-deny, ignoring it until they update
     "RUSTSEC-2023-0003",
-    # openssl-src is used in cargo-deny, ignoring it until they update
-    "RUSTSEC-2023-0006",
-    # openssl-src is used in cargo-deny, ignoring it until they update
-    "RUSTSEC-2023-0007",
-    # openssl-src is used in cargo-deny, ignoring it until they update
-    "RUSTSEC-2023-0009",
-    # openssl-src is used in cargo-deny, ignoring it until they update
-    "RUSTSEC-2023-0010"
 ]
 
 
