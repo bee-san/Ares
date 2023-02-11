@@ -38,6 +38,8 @@ pub mod citrix_ctx1_decoder;
 /// The crack_results module defines the CrackResult
 /// Each and every decoder return same CrackResult
 pub mod crack_results;
+/// The url_decoder module decodes url
+pub mod url_decoder;
 
 /// The interface module defines the interface for decoders
 /// Each and every decoder has the same struct & traits
