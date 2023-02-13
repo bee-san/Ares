@@ -10,7 +10,7 @@ use super::crack_results::CrackResult;
 use super::interface::Crack;
 use super::interface::Decoder;
 
-use data_encoding::BASE32;
+use data_encoding::BASE32_NOPAD;
 use log::{debug, info, trace};
 
 /// The Base32 decoder, call:
@@ -86,9 +86,11 @@ impl Crack for Decoder<Base32Decoder> {
 
 /// helper function
 fn decode_base32_no_error_handling(text: &str) -> Option<String> {
+    // Strip all padding
+    let text = text.replace('=', "");
     // Runs the code to decode base32
     // Doesn't perform error handling, call from_base32
-    if let Ok(decoded_text) = &BASE32.decode(text.as_bytes()) {
+    if let Ok(decoded_text) = &BASE32_NOPAD.decode(text.as_bytes()) {
         return Some(String::from_utf8_lossy(decoded_text).to_string());
     }
     None
@@ -113,20 +115,49 @@ mod tests {
     }
 
     #[test]
-    fn successful_decoding() {
+    fn base32_decodes_successfully() {
+        // This tests if Base32 can decode Base32 successfully
         let base32_decoder = Decoder::<Base32Decoder>::new();
-
         let result = base32_decoder.crack("NBSWY3DPEB3W64TMMQ======", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for base32");
-        assert_eq!(decoded_str[0], "hello world");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world");
     }
 
     #[test]
-    fn base32_decode_empty_string() {
-        // Bsae32 returns an empty string, this is a valid base32 string
-        // but returns False on check_string_success
+    fn base32_decodes_no_padding_base32_successfully() {
+        // This tests if Base32 can decode Base32 with no padding successfully
+        let base32_decoder = Decoder::<Base32Decoder>::new();
+        let result =
+            base32_decoder.crack("KRUGS4ZANBQXGID2MVZG6IDQMFSGI2LOM4", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "This has zero padding");
+    }
+
+    #[test]
+    fn base32_decodes_broken_padding_base32_successfully() {
+        // This tests if Base32 can decode Base32 with broken padding successfully
+        // Normally this string should have 4 equal signs instead of 2
+        let base32_decoder = Decoder::<Base32Decoder>::new();
+        let result = base32_decoder.crack("JFXGG33SOJSWG5BAOBQWIZDJNZTQ==", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "Incorrect padding");
+    }
+
+    #[test]
+    fn base32_handles_panics() {
+        // This tests if Base32 can handle panics
+        // It should return None
+        let base32_decoder = Decoder::<Base32Decoder>::new();
+        let result = base32_decoder
+            .crack(
+                "hello my name is panicky mc panic face!",
+                &get_athena_checker(),
+            )
+            .unencrypted_text;
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn base32_handles_panic_if_empty_string() {
+        // This tests if Base32 can handle an empty string
+        // It should return None
         let base32_decoder = Decoder::<Base32Decoder>::new();
         let result = base32_decoder
             .crack("", &get_athena_checker())
@@ -135,59 +166,13 @@ mod tests {
     }
 
     #[test]
-    fn base32_decode_handles_panics() {
-        let base32_decoder = Decoder::<Base32Decoder>::new();
-        let result = base32_decoder
-            .crack(
-                "hello my name is panicky mc panic face!",
-                &get_athena_checker(),
-            )
-            .unencrypted_text;
-        if result.is_some() {
-            panic!("Decode_base32 did not return an option with Some<t>.")
-        } else {
-            // If we get here, the test passed
-            // Because the base32_decoder.crack function returned None
-            // as it should do for the input
-            assert_eq!(true, true);
-        }
-    }
-
-    #[test]
-    fn base32_handle_panic_if_empty_string() {
-        let base32_decoder = Decoder::<Base32Decoder>::new();
-        let result = base32_decoder
-            .crack("", &get_athena_checker())
-            .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
-    }
-
-    #[test]
-    fn base32_work_if_string_not_base32() {
-        // You can base32 decode a string that is not base32
-        // This string decodes to:
-        // ```.ée¢
-        // (uÖ²```
-        // https://gchq.github.io/CyberChef/#recipe=From_Base32('A-Za-z0-9%2B/%3D',true)&input=aGVsbG8gZ29vZCBkYXkh
-        let base32_decoder = Decoder::<Base32Decoder>::new();
-        let result = base32_decoder
-            .crack("hello good day!", &get_athena_checker())
-            .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
-    }
-
-    #[test]
-    fn base32_handle_panic_if_emoji() {
+    fn base32_handles_panic_if_emoji() {
+        // This tests if Base32 can handle an emoji
+        // It should return None
         let base32_decoder = Decoder::<Base32Decoder>::new();
         let result = base32_decoder
             .crack("😂", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 }
