@@ -140,6 +140,17 @@ mod tests {
         assert_eq!(result.unencrypted_text.unwrap()[0], "Incorrect padding");
     }
 
+    #[ignore]
+    #[test]
+    fn base32_decodes_tryhackme_base32_successfully() {
+        // This tests if Base32 can decode Base32 with no padding successfully
+        // The string is from the "breakit" THM room
+        // TODO: Ignoring this until we have quadgrams
+        let base32_decoder = Decoder::<Base32Decoder>::new();
+        let result = base32_decoder.crack("GM4HOU3VHBAW6OKNJJFW6SS2IZ3VAMTYORFDMUC2G44EQULIJI3WIVRUMNCWI6KGK5XEKZDTN5YU2RT2MR3E45KKI5TXSOJTKZJTC4KRKFDWKZTZOF3TORJTGZTXGNKCOE", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "base16_is_hex");
+    }
+
     #[test]
     fn base32_handles_panics() {
         // This tests if Base32 can handle panics
