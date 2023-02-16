@@ -320,7 +320,7 @@ dependencies = [
  "bytesize",
  "cargo-platform",
  "cargo-util",
- "clap 4.1.4",
+ "clap 4.1.6",
  "crates-io",
  "curl",
  "curl-sys",
@@ -383,7 +383,7 @@ dependencies = [
  "atty",
  "bitvec",
  "cargo",
- "clap 4.1.4",
+ "clap 4.1.6",
  "codespan",
  "codespan-reporting",
  "crates-index",
@@ -428,7 +428,7 @@ checksum = "ad44acb16932130bde6f180d484e7f42580abbf263b06c0327ddd0d7bf84cf45"
 dependencies = [
  "camino",
  "cfg-if",
- "clap 4.1.4",
+ "clap 4.1.6",
  "color-eyre",
  "dialoguer",
  "duct",
@@ -595,9 +595,9 @@ dependencies = [
 
 [[package]]
 name = "clap"
-version = "4.1.4"
+version = "4.1.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f13b9c79b5d1dd500d20ef541215a6423c75829ef43117e1b4d17fd8af0b5d76"
+checksum = "ec0b0588d44d4d63a87dbd75c136c166bbfd9a86a31cb89e09906521c7d3f5e3"
 dependencies = [
  "bitflags",
  "clap_derive",
@@ -1947,7 +1947,7 @@ version = "0.7.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b5c3519c5f4257dc07fce33ea7f4781a7bca508606acee63a3cac282b16aa941"
 dependencies = [
- "clap 4.1.4",
+ "clap 4.1.6",
  "comfy-table",
  "fancy-regex",
  "once_cell",
@@ -2782,7 +2782,7 @@ dependencies = [
  "bs58",
  "cargo-deny",
  "cargo-nextest",
- "clap 4.1.4",
+ "clap 4.1.6",
  "criterion",
  "crossbeam",
  "data-encoding",
