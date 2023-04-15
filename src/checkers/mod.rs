@@ -5,6 +5,7 @@ use self::{
     english::EnglishChecker,
     lemmeknow_checker::LemmeKnow,
     regex_checker::RegexChecker,
+    quadgrams::QuadgramsChecker
 };
 
 /// The default checker we use which simply calls all other checkers in order.
@@ -23,6 +24,8 @@ pub mod human_checker;
 pub mod lemmeknow_checker;
 /// The Regex checker checks to see if the intended text matches the plaintext
 pub mod regex_checker;
+
+pub mod quadgrams;
 
 /// CheckerTypes is a wrapper enum for Checker
 pub enum CheckerTypes {

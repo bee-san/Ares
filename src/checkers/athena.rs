@@ -8,6 +8,7 @@ use super::{
     human_checker,
     lemmeknow_checker::LemmeKnow,
     regex_checker::RegexChecker,
+    quadgrams::QuadgramsChecker,
 };
 
 /// Athena checker runs all other checkers
