@@ -4,7 +4,7 @@ use lemmeknow::Identifier;
 use log::{debug, trace};
 
 use lingua::{Language, LanguageDetector, LanguageDetectorBuilder};
-use lingua::Language::{English};
+use lingua::Language::{English, German};
 
 use crate::checkers::checker_type::{Check, Checker};
 
@@ -37,7 +37,7 @@ impl Check for Checker<QuadgramsChecker> {
             link: self.link,
         };
 
-        let languages = vec![English];
+        let languages = vec![English, German];
         let detector: LanguageDetector = LanguageDetectorBuilder::from_languages(&languages).build();
 
         if let Some(_detected_language) = detector.detect_language_of(input) {
