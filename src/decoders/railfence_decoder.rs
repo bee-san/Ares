@@ -31,9 +31,9 @@ impl Crack for Decoder<RailfenceDecoder> {
         let mut decoded_strings = Vec::new();
 
         for rails in 2..10 {
-            for offset in 0..rails {
+            // Should be less than (rail * 2 - 3). This is the max offset
+            for offset in 0..=(rails * 2 - 3) {
                 let decoded_text = railfence_decoder(text, rails, offset);
-                println!("{} rails and {} offset: {}", rails, offset, decoded_text);
                 decoded_strings.push(decoded_text);
                 let borrowed_decoded_text = &decoded_strings[decoded_strings.len() - 1];
                 if !check_string_success(borrowed_decoded_text, text) {
