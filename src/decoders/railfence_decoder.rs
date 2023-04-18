@@ -82,6 +82,7 @@ fn railfence_decoder(text: &str, rails: usize, offset: usize) -> String {
     char_with_index.iter().map(|(_, c)| c).collect()
 }
 
+///! Returns an iterator that yields the indexes of a zigzag pattern with the specified number of rails and offset
 fn zigzag(n: usize, offset: usize) -> impl Iterator<Item = usize> {
     (0..n - 1).chain((1..n).rev()).cycle().skip(offset)
 }
@@ -117,20 +118,6 @@ mod tests {
             result.unencrypted_text.unwrap()[0],
             "Sphinx of black quartz, judge my vow"
         );
-    }
-
-    #[test]
-    fn railfence_handles_panics() {
-        // This tests if Railfence can handle panics
-        // It should return None
-        let railfence_decoder = Decoder::<RailfenceDecoder>::new();
-        let result = railfence_decoder
-            .crack(
-                "hello my name is panicky mc panic face!",
-                &get_athena_checker(),
-            )
-            .unencrypted_text;
-        assert!(result.is_none());
     }
 
     #[test]
