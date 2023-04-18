@@ -45,12 +45,11 @@ pub fn decoded_how_many_times(depth: u32) {
     // Then we add 25 for Caesar
     let decoders = crate::filtration_system::filter_and_get_decoders(&DecoderResult::default());
     let decoded_times_int = depth * (decoders.components.len() as u32 + 25);
-    let decoded_times_str = format!("{decoded_times_int} times");
 
     let time_took = calculate_time_took(decoded_times_int);
 
     // TODO add colour to the times
-    println!("\n🥳 Ares has decoded {decoded_times_str} times.\nIf you would have used Ciphey, it would have taken you {time_took}\n");
+    println!("\n🥳 Ares has decoded {decoded_times_int} times.\nIf you would have used Ciphey, it would have taken you {time_took}\n");
 }
 
 /// Whenever the human checker checks for text, this function is run.

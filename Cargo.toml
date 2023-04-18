@@ -17,31 +17,34 @@ name = "ares"
 path = "src/main.rs"
 bench = false
 
+# Please keep this list in alphabetical order
 [dependencies]
-clap = {version = "4.1.4", features = ["derive"]}
-log = "0.4"
-env_logger = "0.10.0"
-base64 = "0.21.0"
-rayon = "1.6.1"
-lemmeknow = "0.7.0"
-include_dir = "0.7.3"
-once_cell = "1.17.0"
-text_io = "0.1.12"
-data-encoding = "2.3.3"
-bs58 = "0.4.0"
-base91 = "0.1.0"
-num = "0.4"
-crossbeam = "0.8"
-base65536 = "1.0.1"
 ansi_term = "0.12.1"
+clap = {version = "4.1.8", features = ["derive"]}
+crossbeam = "0.8"
+env_logger = "0.10.0"
+include_dir = "0.7.3"
+lazy-regex = "2.5.0"
 lazy_static = "1.4.0"
-lazy-regex = "2.4.1"
+lemmeknow = "0.7.0"
+log = "0.4"
+num = "0.4"
+once_cell = "1.17.1"
+rayon = "1.7.0"
 regex = "1.7.1"
+text_io = "0.1.12"
+
+# Dependencies used for decoding
+base64 = "0.21.0"
+base65536 = "1.0.1"
+base91 = "0.1.0"
+bs58 = "0.4.0"
+data-encoding = "2.3.3"
 urlencoding = "2.1.2"
 
 [dev-dependencies]
 cargo-deny = "0.13.7"
-cargo-nextest = "0.9.49"
+cargo-nextest = "0.9.51"
 criterion = "0.4.0"
 
 [profile.release]
