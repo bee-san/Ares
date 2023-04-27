@@ -26,6 +26,7 @@ use crate::decoders::interface::{Crack, Decoder};
 use crate::decoders::morse_code::MorseCodeDecoder;
 use crate::decoders::railfence_decoder::RailfenceDecoder;
 use crate::decoders::reverse_decoder::ReverseDecoder;
+use crate::decoders::rot47_decoder::ROT47Decoder;
 use crate::decoders::url_decoder::URLDecoder;
 
 use log::trace;
@@ -124,6 +125,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let atbashdecoder = Decoder::<AtbashDecoder>::new();
     let caesardecoder = Decoder::<CaesarDecoder>::new();
     let railfencedecoder = Decoder::<RailfenceDecoder>::new();
+    let rot47decoder = Decoder::<ROT47Decoder>::new();
     Decoders {
         components: vec![
             Box::new(reversedecoder),
@@ -144,6 +146,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(citrix_ctx1),
             Box::new(url),
             Box::new(base64_url),
+            Box::new(rot47decoder),
         ],
     }
 }
