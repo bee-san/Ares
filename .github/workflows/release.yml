@@ -138,6 +138,7 @@ jobs:
   
   # Publish the package to crates.io
   publish-cargo:
+    needs: publish-release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
