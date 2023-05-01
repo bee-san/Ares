@@ -24,7 +24,9 @@ use crate::decoders::citrix_ctx1_decoder::CitrixCTX1Decoder;
 use crate::decoders::crack_results::CrackResult;
 use crate::decoders::interface::{Crack, Decoder};
 use crate::decoders::morse_code::MorseCodeDecoder;
+use crate::decoders::railfence_decoder::RailfenceDecoder;
 use crate::decoders::reverse_decoder::ReverseDecoder;
+use crate::decoders::url_decoder::URLDecoder;
 
 use log::trace;
 use rayon::prelude::*;
@@ -115,21 +117,22 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let base64_url = Decoder::<Base64URLDecoder>::new();
     let base65536 = Decoder::<Base65536Decoder>::new();
     let citrix_ctx1 = Decoder::<CitrixCTX1Decoder>::new();
+    let url = Decoder::<URLDecoder>::new();
     let base32 = Decoder::<Base32Decoder>::new();
     let reversedecoder = Decoder::<ReverseDecoder>::new();
     let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
     let atbashdecoder = Decoder::<AtbashDecoder>::new();
     let caesardecoder = Decoder::<CaesarDecoder>::new();
+    let railfencedecoder = Decoder::<RailfenceDecoder>::new();
     Decoders {
         components: vec![
             Box::new(reversedecoder),
+            Box::new(base64),
             Box::new(base58_bitcoin),
             Box::new(base58_monero),
             Box::new(base58_ripple),
             Box::new(base58_flickr),
-            Box::new(base64),
             Box::new(base91),
-            Box::new(base64_url),
             Box::new(base65536),
             Box::new(binary),
             Box::new(hexadecimal),
@@ -137,7 +140,10 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(morsecodedecoder),
             Box::new(atbashdecoder),
             Box::new(caesardecoder),
+            Box::new(railfencedecoder),
             Box::new(citrix_ctx1),
+            Box::new(url),
+            Box::new(base64_url),
         ],
     }
 }

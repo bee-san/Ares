@@ -32,7 +32,7 @@ impl Check for Checker<RegexChecker> {
 
         let regex_check_result = re.is_match(text);
         let mut plaintext_found = false;
-        let printed_name = format!("Regex matched: {}", re);
+        let printed_name = format!("Regex matched: {re}");
         if regex_check_result {
             plaintext_found = true;
         }
