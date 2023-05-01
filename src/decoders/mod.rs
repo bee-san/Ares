@@ -56,3 +56,6 @@ pub mod morse_code;
 
 /// For the caesar cipher decoder
 pub mod caesar_decoder;
+
+/// For the railfence cipher decoder
+pub mod railfence_decoder;
