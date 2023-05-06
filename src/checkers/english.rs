@@ -82,7 +82,7 @@ impl Check for Checker<EnglishChecker> {
             if words_found / (input.split(' ').count()) as f64 > PLAINTEXT_DETECTION_PERCENTAGE {
                 debug!("Found {} words in {}", words_found, original_input);
                 debug!(
-                    "Returning from English chekcer successfully with {}",
+                    "Returning from English checker successfully with {}",
                     original_input
                 );
                 result.is_identified = true;
