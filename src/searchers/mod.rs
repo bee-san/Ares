@@ -3,11 +3,19 @@
 //! Click here to find out more:
 //! https://broadleaf-angora-7db.notion.site/Search-Nodes-Edges-What-should-they-look-like-b74c43ca7ac341a1a5cfdbeb84a7eef0
 
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
+use std::thread;
+
+use crossbeam::channel::bounded;
+use log::debug;
+
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
+use crate::config::get_config;
 use crate::filtration_system::{filter_and_get_decoders, MyResults};
-use crate::DecoderResult;
+use crate::{timer, DecoderResult};
 /// This module provides access to the breadth first search
 /// which searches for the plaintext.
 mod bfs;
@@ -30,7 +38,30 @@ mod bfs;
 /// Else if we return an array, we add it to the children and go again.
 pub fn search_for_plaintext(input: &str) -> Option<DecoderResult> {
     // Change this to select which search algorithm we want to use.
-    bfs::bfs(input)
+    let config = get_config();
+    let timer = timer::start(config.timeout);
+    let (result_sender, result_recv) = bounded::<DecoderResult>(1);
+    let input = input.to_owned();
+    // For stopping the thread
+    let stop = Arc::new(AtomicBool::new(false));
+    let s = stop.clone();
+    let handle = thread::spawn(move || bfs::bfs(input, result_sender, s));
+
+    loop {
+        if let Ok(res) = result_recv.try_recv() {
+            debug!("Found exit result: {:?}", res);
+            handle.join().unwrap();
+            return Some(res);
+        }
+
+        if timer.try_recv().is_ok() {
+            stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            debug!("Ares has failed to decode");
+            // this would wait for whole iteration to finish!
+            // handle.join().unwrap();
+            return None;
+        }
+    }
 }
 
 /// Performs the decodings by getting all of the decoders
