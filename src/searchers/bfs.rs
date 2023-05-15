@@ -1,17 +1,17 @@
+use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::MyResults;
-use crate::{cli_pretty_printing::decoded_how_many_times};
 use crossbeam::channel::Sender;
 
-use log::{trace};
+use log::trace;
 use std::collections::HashSet;
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
 
-use crate::{DecoderResult};
+use crate::DecoderResult;
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
-pub fn bfs(input: String, result_sender: Sender<DecoderResult>, stop: Arc<AtomicBool>) {
+pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
     let initial = DecoderResult {
         text: vec![input],
         path: vec![],
@@ -46,8 +46,8 @@ pub fn bfs(input: String, result_sender: Sender<DecoderResult>, stop: Arc<Atomic
 
                     decoded_how_many_times(curr_depth);
                     result_sender
-                        .send(result_text)
-                        .expect("Succesfully send the result");
+                        .send(Some(result_text))
+                        .expect("Should succesfully send the result");
 
                     // stop further iterations
                     stop.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -88,6 +88,7 @@ pub fn bfs(input: String, result_sender: Sender<DecoderResult>, stop: Arc<Atomic
 
         trace!("Refreshed the vector, {:?}", current_strings);
     }
+    result_sender.try_send(None).ok();
 }
 
 /// If this returns False it will not attempt to decode that string
@@ -97,12 +98,17 @@ fn check_if_string_cant_be_decoded(text: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use crossbeam::channel::bounded;
+
     use super::*;
 
     #[test]
     fn bfs_succeeds() {
         // this will work after english checker can identify "CANARY: hello"
-        let result = bfs("b2xsZWg=");
+        let (tx, rx) = bounded::<Option<DecoderResult>>(1);
+        let stopper = Arc::new(AtomicBool::new(false));
+        bfs("b2xsZWg=".into(), tx, stopper);
+        let result = rx.recv().unwrap();
         assert!(result.is_some());
         let txt = result.unwrap().text;
         assert!(txt[0] == "hello");
@@ -120,7 +126,10 @@ mod tests {
     #[test]
     fn non_deterministic_like_behaviour_regression_test() {
         // Caesar Cipher (Rot13) -> Base64
-        let result = bfs("MTkyLjE2OC4wLjE=");
+        let (tx, rx) = bounded::<Option<DecoderResult>>(1);
+        let stopper = Arc::new(AtomicBool::new(false));
+        bfs("MTkyLjE2OC4wLjE=".into(), tx, stopper);
+        let result = rx.recv().unwrap();
         assert!(result.is_some());
         assert_eq!(result.unwrap().text[0], "192.168.0.1");
     }

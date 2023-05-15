@@ -36,22 +36,22 @@ mod bfs;
 /// We can return an Option? An Enum? And then match on that
 /// So if we return CrackSuccess we return
 /// Else if we return an array, we add it to the children and go again.
-pub fn search_for_plaintext(input: &str) -> Option<DecoderResult> {
-    // Change this to select which search algorithm we want to use.
-    let config = get_config();
-    let timer = timer::start(config.timeout);
-    let (result_sender, result_recv) = bounded::<DecoderResult>(1);
-    let input = input.to_owned();
+pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
+    let timeout = get_config().timeout;
+    let timer = timer::start(timeout);
+
+    let (result_sender, result_recv) = bounded::<Option<DecoderResult>>(1);
     // For stopping the thread
     let stop = Arc::new(AtomicBool::new(false));
     let s = stop.clone();
+    // Change this to select which search algorithm we want to use.
     let handle = thread::spawn(move || bfs::bfs(input, result_sender, s));
 
     loop {
         if let Ok(res) = result_recv.try_recv() {
             debug!("Found exit result: {:?}", res);
             handle.join().unwrap();
-            return Some(res);
+            return res;
         }
 
         if timer.try_recv().is_ok() {
