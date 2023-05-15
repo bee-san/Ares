@@ -54,45 +54,36 @@ pub fn bfs(input: String, result_sender: Sender<DecoderResult>, stop: Arc<Atomic
                     None // short-circuits the iterator
                 }
                 MyResults::Continue(results_vec) => {
-                    new_strings.extend(
-                        results_vec
-                            .into_iter()
-                            .map(|r| {
-                                let mut decoders_used = current_string.path.clone();
-                                // text is a vector of strings
-                                let text = r.unencrypted_text.clone().unwrap_or_default();
-                                decoders_used.push(r);
-                                DecoderResult {
-                                    // and this is a vector of strings
-                                    // TODO we should probably loop through all `text` and create Text structs for each one
-                                    // and append those structs
-                                    // I think we should keep text as a single string
-                                    // and just create more of them....
-                                    text,
-                                    path: decoders_used.to_vec(),
-                                }
-                            })
-                            .filter(|s| seen_strings.insert(s.text.clone())),
-                    );
+                    new_strings.extend(results_vec.into_iter().flat_map(|mut r| {
+                        let mut decoders_used = current_string.path.clone();
+                        // text is a vector of strings
+                        let mut text = r.unencrypted_text.take().unwrap_or_default();
+
+                        text.retain(|s| {
+                            !check_if_string_cant_be_decoded(s) && seen_strings.insert(s.clone())
+                        });
+
+                        if text.is_empty() {
+                            return None;
+                        }
+
+                        decoders_used.push(r);
+                        Some(DecoderResult {
+                            // and this is a vector of strings
+                            // TODO we should probably loop through all `text` and create Text structs for each one
+                            // and append those structs
+                            // I think we should keep text as a single string
+                            // and just create more of them....
+                            text,
+                            path: decoders_used.to_vec(),
+                        })
+                    }));
                     Some(()) // indicate we want to continue processing
                 }
             }
         });
 
-        let mut new_strings_to_be_added = Vec::new();
-        for text_struct in new_strings {
-            for decoded_text in text_struct.text {
-                if check_if_string_cant_be_decoded(&decoded_text) {
-                    continue;
-                }
-                new_strings_to_be_added.push(DecoderResult {
-                    text: vec![decoded_text],
-                    // quick hack
-                    path: text_struct.path.clone(),
-                })
-            }
-        }
-        current_strings = new_strings_to_be_added;
+        current_strings = new_strings;
         curr_depth += 1;
 
         trace!("Refreshed the vector, {:?}", current_strings);
