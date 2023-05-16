@@ -29,7 +29,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     };
     println!(
         "The plaintext is: \n{}\nand {}",
-        ansi_term::Colour::Yellow.bold().paint(&plaintext[0]),
+        ansi_term::Colour::Yellow.bold().paint(&plaintext),
         decoded_path_string
     );
 }

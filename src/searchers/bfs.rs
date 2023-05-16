@@ -13,7 +13,7 @@ use crate::DecoderResult;
 /// https://en.wikipedia.org/wiki/Breadth-first_search
 pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
     let initial = DecoderResult {
-        text: vec![input],
+        text: input,
         path: vec![],
     };
     let mut seen_strings = HashSet::new();
@@ -35,9 +35,10 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
             match res {
                 // if it's Break variant, we have cracked the text successfully
                 // so just stop processing further.
-                MyResults::Break(res) => {
+                MyResults::Break(mut res) => {
                     let mut decoders_used = current_string.path;
-                    let text = res.unencrypted_text.clone().unwrap_or_default();
+                    // succesfully result must have only one string as unencrypted_text
+                    let text = res.unencrypted_text.as_mut().and_then(|s| s.pop()).unwrap();
                     decoders_used.push(res);
                     let result_text = DecoderResult {
                         text,
@@ -54,30 +55,31 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
                     None // short-circuits the iterator
                 }
                 MyResults::Continue(results_vec) => {
-                    new_strings.extend(results_vec.into_iter().flat_map(|mut r| {
-                        let mut decoders_used = current_string.path.clone();
-                        // text is a vector of strings
-                        let mut text = r.unencrypted_text.take().unwrap_or_default();
+                    new_strings.extend(
+                        results_vec
+                            .into_iter()
+                            .flat_map(|mut r| {
+                                let mut decoders_used = current_string.path.clone();
+                                // text is a vector of strings
+                                let mut text = r.unencrypted_text.take().unwrap_or_default();
 
-                        text.retain(|s| {
-                            !check_if_string_cant_be_decoded(s) && seen_strings.insert(s.clone())
-                        });
+                                text.retain(|s| {
+                                    !check_if_string_cant_be_decoded(s)
+                                        && seen_strings.insert(s.clone())
+                                });
 
-                        if text.is_empty() {
-                            return None;
-                        }
+                                if text.is_empty() {
+                                    return None;
+                                }
 
-                        decoders_used.push(r);
-                        Some(DecoderResult {
-                            // and this is a vector of strings
-                            // TODO we should probably loop through all `text` and create Text structs for each one
-                            // and append those structs
-                            // I think we should keep text as a single string
-                            // and just create more of them....
-                            text,
-                            path: decoders_used.to_vec(),
-                        })
-                    }));
+                                decoders_used.push(r);
+                                Some(text.into_iter().map(move |t| DecoderResult {
+                                    text: t,
+                                    path: decoders_used.to_vec(),
+                                }))
+                            })
+                            .flatten(),
+                    );
                     Some(()) // indicate we want to continue processing
                 }
             }
@@ -111,7 +113,7 @@ mod tests {
         let result = rx.recv().unwrap();
         assert!(result.is_some());
         let txt = result.unwrap().text;
-        assert!(txt[0] == "hello");
+        assert!(txt == "hello");
     }
 
     // Vector storing the strings to perform decoding in next iteraion
@@ -131,7 +133,7 @@ mod tests {
         bfs("MTkyLjE2OC4wLjE=".into(), tx, stopper);
         let result = rx.recv().unwrap();
         assert!(result.is_some());
-        assert_eq!(result.unwrap().text[0], "192.168.0.1");
+        assert_eq!(result.unwrap().text, "192.168.0.1");
     }
 
     #[test]

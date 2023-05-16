@@ -63,7 +63,7 @@ use self::decoders::crack_results::CrackResult;
 /// // The text is a vector of strings because some decoders return more than 1 text (Caesar)
 /// // Becuase the program has returned True, the first result is the plaintext (and it will only have 1 result).
 /// // This is some tech debt we need to clean up https://github.com/bee-san/Ares/issues/130
-/// assert!(result.unwrap().text[0] == "The main function to call which performs the cracking.");
+/// assert!(result.unwrap().text == "The main function to call which performs the cracking.");
 /// ```
 /// The human checker defaults to off in the config, but it returns the first thing it finds currently.
 /// We have an issue for that here https://github.com/bee-san/Ares/issues/129
@@ -94,7 +94,7 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
         crack_result.checker_name = initial_check_for_plaintext.checker_name;
 
         let output = DecoderResult {
-            text: vec![text],
+            text,
             path: vec![crack_result],
         };
 
@@ -119,9 +119,8 @@ fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
 /// DecoderResult is the result of decoders
 #[derive(Debug)]
 pub struct DecoderResult {
-    /// The text we have from the decoder, as a vector
-    /// because the decoder might return more than 1 text (caesar)
-    pub text: Vec<String>,
+    /// Decoded text
+    pub text: String,
     /// The list of decoders we have so far
     /// The CrackResult contains more than just each decoder, such as the keys used
     /// or the checkers used.
@@ -132,7 +131,7 @@ pub struct DecoderResult {
 impl Default for DecoderResult {
     fn default() -> Self {
         DecoderResult {
-            text: vec!["Default".to_string()],
+            text: "Default".to_string(),
             path: vec![CrackResult::new(&Decoder::default(), "Default".to_string())],
         }
     }
@@ -143,7 +142,7 @@ impl DecoderResult {
     /// It's only used in tests so it thinks its dead code
     fn _new(text: &str) -> Self {
         DecoderResult {
-            text: vec![text.to_string()],
+            text: text.to_string(),
             path: vec![CrackResult::new(&Decoder::default(), "Default".to_string())],
         }
     }
@@ -169,7 +168,7 @@ mod tests {
         let config = Config::default();
         let result = perform_cracking("b2xsZWg=", config);
         assert!(result.is_some());
-        assert!(result.unwrap().text[0] == "hello");
+        assert!(result.unwrap().text == "hello");
     }
     #[test]
     fn test_perform_cracking_returns_failure() {
@@ -183,7 +182,7 @@ mod tests {
         let config = Config::default();
         let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", config);
         assert!(result.is_some());
-        assert!(result.unwrap().text[0] == "hello there general")
+        assert!(result.unwrap().text == "hello there general")
     }
 
     #[test]
@@ -203,7 +202,7 @@ mod tests {
         let config = Config::default();
         let result = perform_cracking("Ebgngr zr 13 cynprf!", config);
         // We return None since the input is the plaintext
-        assert!(result.unwrap().text[0] == "Rotate me 13 places!");
+        assert!(result.unwrap().text == "Rotate me 13 places!");
     }
 
     #[test]
@@ -212,7 +211,7 @@ mod tests {
         let result = perform_cracking("Hello, World!", config);
         // We return None since the input is the plaintext
         let res_unwrapped = result.unwrap();
-        assert!(&res_unwrapped.text[0] == "Hello, World!");
+        assert!(&res_unwrapped.text == "Hello, World!");
         // Since our input is the plaintext we did not decode it
         // Therefore we return with the default decoder
         assert!(res_unwrapped.path[0].decoder == "Default decoder");

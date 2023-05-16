@@ -29,7 +29,7 @@ fn test_program_parses_files_and_cracks() {
     let to_crack = read_and_parse_file(file_path.to_string());
     let result = perform_cracking(&to_crack, config);
     assert_eq!(true, true);
-    assert!(result.unwrap().text[0] == "Multiple base64 encodings");
+    assert!(result.unwrap().text == "Multiple base64 encodings");
 }
 
 #[test]
@@ -40,5 +40,5 @@ fn test_program_parses_files_with_new_line_and_cracks() {
     let to_crack = read_and_parse_file(file_path.to_string());
     let result = perform_cracking(&to_crack, config);
     assert_eq!(true, true);
-    assert!(result.unwrap().text[0] == "This is a test!");
+    assert!(result.unwrap().text == "This is a test!");
 }
