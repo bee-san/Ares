@@ -1,32 +1,26 @@
 use std::sync::mpsc::channel;
 
 use crate::checkers::CheckerTypes;
-use crate::decoders::atbash_decoder::AtbashDecoder;
-use crate::decoders::base32_decoder::Base32Decoder;
-use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
-use crate::decoders::base58_monero_decoder::Base58MoneroDecoder;
-use crate::decoders::binary_decoder::BinaryDecoder;
-use crate::decoders::hexadecimal_decoder::HexadecimalDecoder;
 use crate::DecoderResult;
 
-use crate::decoders::base58_flickr_decoder::Base58FlickrDecoder;
-use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
-
+use crate::decoders::crack_results::CrackResult;
+use crate::decoders::interface::{Crack, Decoder};
 ///! Proposal: https://broadleaf-angora-7db.notion.site/Filtration-System-7143b36a42f1466faea3077bfc7e859e
 ///! Given a filter object, return an array of decoders/crackers which have been filtered
 ///
-use crate::decoders::base64_decoder::Base64Decoder;
-use crate::decoders::base64_url_decoder::Base64URLDecoder;
-use crate::decoders::base65536_decoder::Base65536Decoder;
-use crate::decoders::base91_decoder::Base91Decoder;
-use crate::decoders::caesar_decoder::CaesarDecoder;
-use crate::decoders::citrix_ctx1_decoder::CitrixCTX1Decoder;
-use crate::decoders::crack_results::CrackResult;
-use crate::decoders::interface::{Crack, Decoder};
-use crate::decoders::morse_code::MorseCodeDecoder;
-use crate::decoders::railfence_decoder::RailfenceDecoder;
-use crate::decoders::reverse_decoder::ReverseDecoder;
-use crate::decoders::url_decoder::URLDecoder;
+
+/// Import all of the decoders
+use crate::decoders::{
+    atbash_decoder::AtbashDecoder, base32_decoder::Base32Decoder,
+    base58_bitcoin_decoder::Base58BitcoinDecoder, base58_flickr_decoder::Base58FlickrDecoder,
+    base58_monero_decoder::Base58MoneroDecoder, base58_ripple_decoder::Base58RippleDecoder,
+    base64_decoder::Base64Decoder, base64_url_decoder::Base64URLDecoder,
+    base65536_decoder::Base65536Decoder, base91_decoder::Base91Decoder,
+    binary_decoder::BinaryDecoder, caesar_decoder::CaesarDecoder,
+    citrix_ctx1_decoder::CitrixCTX1Decoder, hexadecimal_decoder::HexadecimalDecoder,
+    morse_code::MorseCodeDecoder, railfence_decoder::RailfenceDecoder,
+    reverse_decoder::ReverseDecoder, url_decoder::URLDecoder,
+};
 
 use log::trace;
 use rayon::prelude::*;
@@ -50,100 +44,83 @@ impl Decoders {
     /// https://doc.rust-lang.org/book/ch17-02-trait-objects.html
     /// Which allows us to have multiple different structs in the same vector
     /// But each struct shares the same `.crack()` method, so it's fine.
-    pub fn run(&self, text: &str, checker: CheckerTypes) -> MyResults {
+    pub fn run(&self, text: &str, checker: CheckerTypes) -> CrackResults {
         trace!("Running .crack() on all decoders");
         let (sender, receiver) = channel();
         self.components
             .into_par_iter()
-            .try_for_each_with(sender, |s, i| {
+            .try_for_each_with(sender, |s, i| -> Option<()> {
                 let results = i.crack(text, &checker);
                 if results.success {
-                    s.send(results).expect("expected no send error!");
-                    // returning None short-circuits the iterator
-                    // we don't process any further as we got success
-                    return None;
+                    s.send(results).expect("Failed to send results!");
+                    return None; // Short-circuit the iterator
                 }
-                s.send(results).expect("expected no send error!");
-                // return Some(()) to indicate that continue processing
-                Some(())
+                s.send(results).expect("Failed to send results!");
+                Some(()) // Continue the iterator
             });
 
         let mut all_results: Vec<CrackResult> = Vec::new();
 
-        while let Ok(result) = receiver.recv() {
-            // if we recv success, break.
+        for result in receiver.iter() {
             if result.success {
-                return MyResults::Break(result);
+                return CrackResults::Break(result);
             }
-            all_results.push(result)
+            all_results.push(result);
         }
 
-        MyResults::Continue(all_results)
+        CrackResults::Continue(all_results)
     }
 }
 
-/// [`Enum`] for our custom results.
-/// if our checker succeed, we return `Break` variant contining [`CrackResult`]
-/// else we return `Continue` with the decoded results.
-pub enum MyResults {
-    /// Variant containing successful [`CrackResult`]
+/// Enum representing the result of a cracking operation.
+/// If the checker succeeds, it returns the `Break` variant containing `CrackResult`.
+/// Otherwise, it returns the `Continue` variant with a vector of `CrackResult` for further processing.
+pub enum CrackResults {
+    /// Variant containing a successful `CrackResult`.
     Break(CrackResult),
-    /// Contains [`Vec`] of [`CrackResult`] for further processing
+    /// Contains a vector of `CrackResult` for further processing.
     Continue(Vec<CrackResult>),
 }
 
-impl MyResults {
-    /// named with _ to pass dead_code warning
-    /// as we aren't using it, it's just used in tests
-    pub fn _break_value(self) -> Option<CrackResult> {
+impl CrackResults {
+    #[allow(dead_code)]
+    pub fn break_value(self) -> Option<CrackResult> {
         match self {
-            MyResults::Break(val) => Some(val),
-            MyResults::Continue(_) => None,
+            CrackResults::Break(val) => Some(val),
+            CrackResults::Continue(_) => None,
         }
     }
+}
+
+macro_rules! create_decoder {
+    ($decoder:ty) => {
+        Box::new(Decoder::<$decoder>::new())
+    };
 }
 
 /// Currently takes no args as this is just a spike to get all the basic functionality working
 pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     trace!("Filtering and getting all decoders");
-    let binary = Decoder::<BinaryDecoder>::new();
-    let hexadecimal = Decoder::<HexadecimalDecoder>::new();
-    let base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
-    let base58_monero = Decoder::<Base58MoneroDecoder>::new();
-    let base58_ripple = Decoder::<Base58RippleDecoder>::new();
-    let base58_flickr = Decoder::<Base58FlickrDecoder>::new();
-    let base64 = Decoder::<Base64Decoder>::new();
-    let base91 = Decoder::<Base91Decoder>::new();
-    let base64_url = Decoder::<Base64URLDecoder>::new();
-    let base65536 = Decoder::<Base65536Decoder>::new();
-    let citrix_ctx1 = Decoder::<CitrixCTX1Decoder>::new();
-    let url = Decoder::<URLDecoder>::new();
-    let base32 = Decoder::<Base32Decoder>::new();
-    let reversedecoder = Decoder::<ReverseDecoder>::new();
-    let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
-    let atbashdecoder = Decoder::<AtbashDecoder>::new();
-    let caesardecoder = Decoder::<CaesarDecoder>::new();
-    let railfencedecoder = Decoder::<RailfenceDecoder>::new();
     Decoders {
         components: vec![
-            Box::new(reversedecoder),
-            Box::new(base64),
-            Box::new(base58_bitcoin),
-            Box::new(base58_monero),
-            Box::new(base58_ripple),
-            Box::new(base58_flickr),
-            Box::new(base91),
-            Box::new(base65536),
-            Box::new(binary),
-            Box::new(hexadecimal),
-            Box::new(base32),
-            Box::new(morsecodedecoder),
-            Box::new(atbashdecoder),
-            Box::new(caesardecoder),
-            Box::new(railfencedecoder),
-            Box::new(citrix_ctx1),
-            Box::new(url),
-            Box::new(base64_url),
+            create_decoder!(ReverseDecoder),
+            create_decoder!(Base64Decoder),
+            create_decoder!(Base58BitcoinDecoder),
+            create_decoder!(Base58MoneroDecoder),
+            create_decoder!(Base58RippleDecoder),
+            create_decoder!(Base58FlickrDecoder),
+            create_decoder!(Base91Decoder),
+            create_decoder!(Base65536Decoder),
+            create_decoder!(BinaryDecoder),
+            create_decoder!(HexadecimalDecoder),
+            create_decoder!(Base32Decoder),
+            create_decoder!(MorseCodeDecoder),
+            create_decoder!(AtbashDecoder),
+            create_decoder!(CaesarDecoder),
+            create_decoder!(RailfenceDecoder),
+            create_decoder!(CitrixCTX1Decoder),
+            create_decoder!(URLDecoder),
+            create_decoder!(Base64URLDecoder),
         ],
     }
 }

@@ -14,7 +14,7 @@ use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::config::get_config;
-use crate::filtration_system::{filter_and_get_decoders, MyResults};
+use crate::filtration_system::{filter_and_get_decoders, CrackResults};
 use crate::{timer, DecoderResult};
 /// This module provides access to the breadth first search
 /// which searches for the plaintext.
@@ -67,7 +67,7 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
 /// Performs the decodings by getting all of the decoders
 /// and calling `.run` which in turn loops through them and calls
 /// `.crack()`.
-fn perform_decoding(text: &DecoderResult) -> MyResults {
+fn perform_decoding(text: &DecoderResult) -> CrackResults {
     let decoders = filter_and_get_decoders(text);
     let athena_checker = Checker::<Athena>::new();
     let checker = CheckerTypes::CheckAthena(athena_checker);
@@ -105,7 +105,7 @@ mod tests {
         let result = perform_decoding(&dc);
         assert!(
             result
-                ._break_value()
+                .break_value()
                 .expect("expected successful value, none found")
                 .success
         );
@@ -116,6 +116,6 @@ mod tests {
         // Some decoders like base64 return even when the string is empty.
         let dc = DecoderResult::_new("");
         let result = perform_decoding(&dc);
-        assert!(result._break_value().is_none());
+        assert!(result.break_value().is_none());
     }
 }

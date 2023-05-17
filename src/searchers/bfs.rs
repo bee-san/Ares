@@ -1,5 +1,5 @@
 use crate::cli_pretty_printing::decoded_how_many_times;
-use crate::filtration_system::MyResults;
+use crate::filtration_system::CrackResults;
 use crossbeam::channel::Sender;
 
 use log::trace;
@@ -35,7 +35,7 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
             match res {
                 // if it's Break variant, we have cracked the text successfully
                 // so just stop processing further.
-                MyResults::Break(res) => {
+                CrackResults::Break(res) => {
                     let mut decoders_used = current_string.path;
                     let text = res.unencrypted_text.clone().unwrap_or_default();
                     decoders_used.push(res);
@@ -53,7 +53,7 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
                     stop.store(true, std::sync::atomic::Ordering::Relaxed);
                     None // short-circuits the iterator
                 }
-                MyResults::Continue(results_vec) => {
+                CrackResults::Continue(results_vec) => {
                     new_strings.extend(results_vec.into_iter().flat_map(|mut r| {
                         let mut decoders_used = current_string.path.clone();
                         // text is a vector of strings
