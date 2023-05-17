@@ -84,6 +84,7 @@ pub enum CrackResults {
 
 impl CrackResults {
     #[allow(dead_code)]
+    /// Returns the `CrackResult` if the checker succeeds.
     pub fn break_value(self) -> Option<CrackResult> {
         match self {
             CrackResults::Break(val) => Some(val),
@@ -92,6 +93,7 @@ impl CrackResults {
     }
 }
 
+/// Create a decoder and return it as a Box<dyn Crack>
 macro_rules! create_decoder {
     ($decoder:ty) => {
         Box::new(Decoder::<$decoder>::new())
