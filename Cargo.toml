@@ -46,7 +46,7 @@ urlencoding = "2.1.2"
 # Dev dependencies
 [dev-dependencies]
 cargo-deny = "0.13.7"
-cargo-nextest = "0.9.51"
+cargo-nextest = "0.9.52"
 criterion = "0.4.0"
 
 [profile.release]
