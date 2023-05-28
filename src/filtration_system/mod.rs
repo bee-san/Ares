@@ -1,8 +1,8 @@
 use std::sync::mpsc::channel;
 
 use crate::checkers::CheckerTypes;
-use crate::decoders::atbash_decoder::AtbashDecoder;
 use crate::decoders::ascii85_decoder::ASCII85Decoder;
+use crate::decoders::atbash_decoder::AtbashDecoder;
 use crate::decoders::base32_decoder::Base32Decoder;
 use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
 use crate::decoders::base58_monero_decoder::Base58MoneroDecoder;

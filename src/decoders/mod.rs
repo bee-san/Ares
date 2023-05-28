@@ -5,10 +5,10 @@
 //! mod.rs file
 //! you will also need to make it a public module in this file.
 
-/// The atbash_decoder module decodes atbash
-pub mod atbash_decoder;
 /// The ascii85_decoder module decodes ascii85
 pub mod ascii85_decoder;
+/// The atbash_decoder module decodes atbash
+pub mod atbash_decoder;
 /// The base32_decoder module decodes base32
 pub mod base32_decoder;
 /// The base58_bitcoin_decoder module decodes base58 bitcoin
