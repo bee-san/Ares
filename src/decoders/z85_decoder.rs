@@ -115,11 +115,11 @@ mod tests {
     fn successful_decoding() {
         let z85_decoder = Decoder::<Z85Decoder>::new();
 
-        let result = z85_decoder.crack("xK#0@zY<mxA+]m", &get_athena_checker());
+        let result = z85_decoder.crack("nm=QNzY&b1A+]nf", &get_athena_checker());
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for z85");
-        assert_eq!(decoded_str[0], "hello world");
+        assert_eq!(decoded_str[0], "Hello World!");
     }
 
     #[test]
@@ -157,22 +157,6 @@ mod tests {
         let z85_decoder = Decoder::<Z85Decoder>::new();
         let result = z85_decoder
             .crack("", &get_athena_checker())
-            .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
-    }
-
-    #[test]
-    fn z85_work_if_string_not_z85() {
-        // You can z85 decode a string that is not z85
-        // This string decodes to:
-        // ```.ée¢
-        // (uÖ²```
-        // https://gchq.github.io/CyberChef/#recipe=From_Z85('A-Za-z0-9%2B/%3D',true)&input=aGVsbG8gZ29vZCBkYXkh
-        let z85_decoder = Decoder::<Z85Decoder>::new();
-        let result = z85_decoder
-            .crack("hello good day!", &get_athena_checker())
             .unencrypted_text;
         if result.is_some() {
             assert_eq!(true, true);
