@@ -1,17 +1,19 @@
+use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::MyResults;
-use crate::{cli_pretty_printing::decoded_how_many_times, config::get_config};
-use crossbeam::{channel::bounded, select};
-use log::{debug, trace};
-use std::collections::HashSet;
+use crossbeam::channel::Sender;
 
-use crate::{timer, DecoderResult};
+use log::trace;
+use std::collections::HashSet;
+use std::sync::atomic::AtomicBool;
+use std::sync::Arc;
+
+use crate::DecoderResult;
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
-pub fn bfs(input: &str) -> Option<DecoderResult> {
-    let config = get_config();
+pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
     let initial = DecoderResult {
-        text: vec![input.to_string()],
+        text: vec![input],
         path: vec![],
     };
     let mut seen_strings = HashSet::new();
@@ -20,11 +22,8 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
 
     let mut curr_depth: u32 = 1; // as we have input string, so we start from 1
 
-    let (result_send, result_recv) = bounded(1);
-    let timer = timer::start(config.timeout);
-
     // loop through all of the strings in the vec
-    while !current_strings.is_empty() {
+    while !current_strings.is_empty() && !stop.load(std::sync::atomic::Ordering::Relaxed) {
         trace!("Number of potential decodings: {}", current_strings.len());
         trace!("Current depth is {:?}", curr_depth);
 
@@ -45,76 +44,51 @@ pub fn bfs(input: &str) -> Option<DecoderResult> {
                         path: decoders_used,
                     };
 
-                    result_send
-                        .send(result_text)
-                        .expect("Succesfully send the result");
+                    decoded_how_many_times(curr_depth);
+                    result_sender
+                        .send(Some(result_text))
+                        .expect("Should succesfully send the result");
+
+                    // stop further iterations
+                    stop.store(true, std::sync::atomic::Ordering::Relaxed);
                     None // short-circuits the iterator
                 }
                 MyResults::Continue(results_vec) => {
-                    new_strings.extend(
-                        results_vec
-                            .into_iter()
-                            .map(|r| {
-                                let mut decoders_used = current_string.path.clone();
-                                // text is a vector of strings
-                                let text = r.unencrypted_text.clone().unwrap_or_default();
-                                decoders_used.push(r);
-                                DecoderResult {
-                                    // and this is a vector of strings
-                                    // TODO we should probably loop through all `text` and create Text structs for each one
-                                    // and append those structs
-                                    // I think we should keep text as a single string
-                                    // and just create more of them....
-                                    text,
-                                    path: decoders_used.to_vec(),
-                                }
-                            })
-                            .filter(|s| seen_strings.insert(s.text.clone())),
-                    );
+                    new_strings.extend(results_vec.into_iter().flat_map(|mut r| {
+                        let mut decoders_used = current_string.path.clone();
+                        // text is a vector of strings
+                        let mut text = r.unencrypted_text.take().unwrap_or_default();
+
+                        text.retain(|s| {
+                            !check_if_string_cant_be_decoded(s) && seen_strings.insert(s.clone())
+                        });
+
+                        if text.is_empty() {
+                            return None;
+                        }
+
+                        decoders_used.push(r);
+                        Some(DecoderResult {
+                            // and this is a vector of strings
+                            // TODO we should probably loop through all `text` and create Text structs for each one
+                            // and append those structs
+                            // I think we should keep text as a single string
+                            // and just create more of them....
+                            text,
+                            path: decoders_used.to_vec(),
+                        })
+                    }));
                     Some(()) // indicate we want to continue processing
                 }
             }
         });
-        let mut new_strings_to_be_added = Vec::new();
-        for text_struct in new_strings {
-            for decoded_text in text_struct.text {
-                if check_if_string_cant_be_decoded(&decoded_text) {
-                    continue;
-                }
-                new_strings_to_be_added.push(DecoderResult {
-                    text: vec![decoded_text],
-                    // quick hack
-                    path: text_struct.path.clone(),
-                })
-            }
-        }
-        current_strings = new_strings_to_be_added;
-        curr_depth += 1;
 
-        select! {
-            recv(result_recv) -> exit_result => {
-                // if we find an element that matches our exit condition, return it!
-                // technically this won't check if the initial string matches our exit condition
-                // but this is a demo and i'll be lazy :P
-                let exit_result = exit_result.ok(); // convert Result to Some
-                if exit_result.is_some() {
-                    decoded_how_many_times(curr_depth);
-                    debug!("Found exit result: {:?}", exit_result);
-                    return exit_result;
-                }
-            },
-            recv(timer) -> _ => {
-                decoded_how_many_times(curr_depth);
-                debug!("Ares has failed to decode");
-                return None;
-            },
-            default => continue,
-        };
+        current_strings = new_strings;
+        curr_depth += 1;
 
         trace!("Refreshed the vector, {:?}", current_strings);
     }
-
-    None
+    result_sender.try_send(None).ok();
 }
 
 /// If this returns False it will not attempt to decode that string
@@ -124,12 +98,17 @@ fn check_if_string_cant_be_decoded(text: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use crossbeam::channel::bounded;
+
     use super::*;
 
     #[test]
     fn bfs_succeeds() {
         // this will work after english checker can identify "CANARY: hello"
-        let result = bfs("b2xsZWg=");
+        let (tx, rx) = bounded::<Option<DecoderResult>>(1);
+        let stopper = Arc::new(AtomicBool::new(false));
+        bfs("b2xsZWg=".into(), tx, stopper);
+        let result = rx.recv().unwrap();
         assert!(result.is_some());
         let txt = result.unwrap().text;
         assert!(txt[0] == "hello");
@@ -147,7 +126,10 @@ mod tests {
     #[test]
     fn non_deterministic_like_behaviour_regression_test() {
         // Caesar Cipher (Rot13) -> Base64
-        let result = bfs("MTkyLjE2OC4wLjE=");
+        let (tx, rx) = bounded::<Option<DecoderResult>>(1);
+        let stopper = Arc::new(AtomicBool::new(false));
+        bfs("MTkyLjE2OC4wLjE=".into(), tx, stopper);
+        let result = rx.recv().unwrap();
         assert!(result.is_some());
         assert_eq!(result.unwrap().text[0], "192.168.0.1");
     }

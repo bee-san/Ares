@@ -48,7 +48,7 @@ impl Check for Checker<EnglishChecker> {
         };
 
         // After we've normalised our string, if we find it's a length 0 we don't do anything
-        // This can happen if our string is a single puncuation mark, for example.
+        // This can happen if our string is a single punctuation mark, for example.
         if input.is_empty() {
             return result;
         }
@@ -63,7 +63,7 @@ impl Check for Checker<EnglishChecker> {
             // This is inefficient and makes it harder to compute what dictionary the word came from.
             // We should probably just use a single dictionary and assign the filenames to the values in the dictionary.
             // Like {"hello": "English.txt"} etc.
-            // If we're using muiltiple dictionaries we may also have duplicated words which is inefficient.
+            // If we're using multiple dictionaries we may also have duplicated words which is inefficient.
             if storage::DICTIONARIES
                 .iter()
                 .any(|(_, words)| words.contains(word))
@@ -82,7 +82,7 @@ impl Check for Checker<EnglishChecker> {
             if words_found / (input.split(' ').count()) as f64 > PLAINTEXT_DETECTION_PERCENTAGE {
                 debug!("Found {} words in {}", words_found, original_input);
                 debug!(
-                    "Returning from English chekcer successfully with {}",
+                    "Returning from English checker successfully with {}",
                     original_input
                 );
                 result.is_identified = true;
@@ -97,11 +97,11 @@ impl Check for Checker<EnglishChecker> {
 ///! Strings look funny, they might have commas, be uppercase etc
 ///! This normalises the string so English checker can work on it
 ///! In particular it:
-///! Removes puncuation from the string
+///! Removes punctuation from the string
 ///! Lowercases the string
 fn normalise_string(input: &str) -> String {
     // The replace function supports patterns https://doc.rust-lang.org/std/str/pattern/trait.Pattern.html#impl-Pattern%3C%27a%3E-3
-    // TODO add more puncuation
+    // TODO add more punctuation
     input
         .to_ascii_lowercase()
         .chars()
