@@ -37,7 +37,7 @@ impl Crack for Decoder<Z85Decoder> {
     fn new() -> Decoder<Z85Decoder> {
         Decoder {
             name: "Z85",
-            description: "Z85 is a group of binary-to-text encoding schemes that represent binary data (more specifically, a sequence of 8-bit bytes) in an ASCII string format by translating the data into a radix-64 representation.",
+            description: "Ascii85, also called Base85, is a form of binary-to-text encoding that uses five ASCII characters to represent four bytes of binary data. […] Other base-85 encodings like Z85 and RFC 1924 are designed to be safe in source code.",
             link: "https://en.wikipedia.org/wiki/Ascii85",
             tags: vec!["z85", "decoder", "ascii85"],
             popularity: 1.0,
