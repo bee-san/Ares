@@ -2,6 +2,7 @@ use std::sync::mpsc::channel;
 
 use crate::checkers::CheckerTypes;
 use crate::decoders::atbash_decoder::AtbashDecoder;
+use crate::decoders::ascii85_decoder::ASCII85Decoder;
 use crate::decoders::base32_decoder::Base32Decoder;
 use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
 use crate::decoders::base58_monero_decoder::Base58MoneroDecoder;
@@ -106,6 +107,7 @@ impl MyResults {
 /// Currently takes no args as this is just a spike to get all the basic functionality working
 pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     trace!("Filtering and getting all decoders");
+    let ascii85 = Decoder::<ASCII85Decoder>::new();
     let binary = Decoder::<BinaryDecoder>::new();
     let hexadecimal = Decoder::<HexadecimalDecoder>::new();
     let base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
@@ -126,6 +128,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let railfencedecoder = Decoder::<RailfenceDecoder>::new();
     Decoders {
         components: vec![
+            Box::new(ascii85),
             Box::new(reversedecoder),
             Box::new(base64),
             Box::new(base58_bitcoin),
