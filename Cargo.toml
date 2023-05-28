@@ -41,6 +41,7 @@ base91 = "0.1.0"
 bs58 = "0.4.0"
 data-encoding = "2.4.0"
 urlencoding = "2.1.2"
+z85 = "3.0.5"
 
 # Dev dependencies
 [dev-dependencies]
