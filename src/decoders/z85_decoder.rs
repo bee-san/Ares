@@ -27,9 +27,9 @@ use log::{debug, info, trace};
 /// let athena_checker = Checker::<Athena>::new();
 /// let checker = CheckerTypes::CheckAthena(athena_checker);
 ///
-/// let result = decode_z85.crack("aGVsbG8gd29ybGQ=", &checker).unencrypted_text;
+/// let result = decode_z85.crack("nm=QNzY&b1A+]nf", &checker).unencrypted_text;
 /// assert!(result.is_some());
-/// assert_eq!(result.unwrap()[0], "hello world");
+/// assert_eq!(result.unwrap()[0], "Hello World!");
 /// ```
 pub struct Z85Decoder;
 
