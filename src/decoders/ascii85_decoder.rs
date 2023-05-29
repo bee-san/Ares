@@ -37,10 +37,10 @@ impl Crack for Decoder<ASCII85Decoder> {
     fn new() -> Decoder<ASCII85Decoder> {
         Decoder {
             name: "ASCII85",
-            description: "Ascii85, also called Base85, is a form of binary-to-text encoding that uses five ASCII characters to represent four bytes of binary data.",
-            link: "https://en.wikipedia.org/wiki/Ascii85",
-            tags: vec!["decoder", "ascii85"],
-            popularity: 1.0,
+            description: "Ascii85, also called Base85, is a form of binary-to-text encoding that uses five ASCII characters to represent four bytes of binary data. Adobe adopted the basic btoa encoding, but with slight changes, and gave it the name Ascii85. The characters used are the ASCII characters 33 (!) through 117 (u) inclusive (to represent the base-85 digits 0 through 84), together with the letter z (as a special case to represent a 32-bit 0 value), and white space is ignored.",
+            link: "https://en.wikipedia.org/wiki/Ascii85#Adobe_version",
+            tags: vec!["decoder", "ascii85", "base85"],
+            popularity: 0.6,
             phantom: std::marker::PhantomData,
         }
     }
@@ -112,7 +112,7 @@ mod tests {
     }
 
     #[test]
-    fn successful_decoding() {
+    fn ascii85_successful_decoding_short_string() {
         let ascii85_decoder = Decoder::<ASCII85Decoder>::new();
 
         let result = ascii85_decoder.crack("BOu!rD]j7BEbo7", &get_athena_checker());
@@ -123,14 +123,14 @@ mod tests {
     }
 
     #[test]
-    fn ascii85_decode_empty_string() {
-        // Bsae64 returns an empty string, this is a valid ascii85 string
-        // but returns False on check_string_success
+    fn ascii85_successful_decoding_long_string() {
         let ascii85_decoder = Decoder::<ASCII85Decoder>::new();
-        let result = ascii85_decoder
-            .crack("", &get_athena_checker())
-            .unencrypted_text;
-        assert!(result.is_none());
+
+        let result = ascii85_decoder.crack("<+ohcEHPu*CER),Dg-(AAoDo:C3=B4ARlp%G%G\\:FD,5.CghX8+CoD'F\"Re,.j-*V1ZF\"f+iC*l+Msit_kP,8_P[", &get_athena_checker());
+        let decoded_str = &result
+            .unencrypted_text
+            .expect("No unencrypted text for ascii85");
+        assert_eq!(decoded_str[0], "The quick brown fox jumped over the lazy dogs.\n\n+ $p3€!äl ¢#âŕ§");
     }
 
     #[test]
@@ -154,6 +154,8 @@ mod tests {
 
     #[test]
     fn ascii85_handle_panic_if_empty_string() {
+        // This tests if ASCII85 can handle an empty string
+        // It should return None
         let ascii85_decoder = Decoder::<ASCII85Decoder>::new();
         let result = ascii85_decoder
             .crack("", &get_athena_checker())
