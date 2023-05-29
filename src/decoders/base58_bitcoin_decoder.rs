@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn base58_bitcoin_decode_empty_string() {
-        // Bsae58_bitcoin returns an empty string, this is a valid base58_bitcoin string
+        // Base58_bitcoin returns an empty string, this is a valid base58_bitcoin string
         // but returns False on check_string_success
         let base58_bitcoin_decoder = Decoder::<Base58BitcoinDecoder>::new();
         let result = base58_bitcoin_decoder
