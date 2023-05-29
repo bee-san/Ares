@@ -114,25 +114,27 @@ mod tests {
     #[test]
     fn ascii85_successful_decoding_short_string() {
         let ascii85_decoder = Decoder::<ASCII85Decoder>::new();
-
         let result = ascii85_decoder.crack("BOu!rD]j7BEbo7", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for ascii85");
-        assert_eq!(decoded_str[0], "hello world");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world");
     }
 
     #[test]
     fn ascii85_successful_decoding_long_string() {
         let ascii85_decoder = Decoder::<ASCII85Decoder>::new();
-
         let result = ascii85_decoder.crack("<+ohcEHPu*CER),Dg-(AAoDo:C3=B4ARlp%G%G\\:FD,5.CghX8+CoD'F\"Re,.j-*V1ZF\"f+iC*l+Msit_kP,8_P[", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for ascii85");
         assert_eq!(
-            decoded_str[0],
+            result.unencrypted_text.unwrap()[0],
             "The quick brown fox jumped over the lazy dogs.\n\n+ $p3€!äl ¢#âŕ§"
+        );
+    }
+
+    #[test]
+    fn ascii85_successful_decoding_links() {
+        let ascii85_decoder = Decoder::<ASCII85Decoder>::new();
+        let result = ascii85_decoder.crack("BQS?8F#ks-GB\6`H#IhIF^eo7@rH3;G@>T'BKpZ'A5RP-G<&`;=CY2TE,[scB2r&CD,rDq=@m./1-'JdD+/)@12J^L;aN?N1KA'u=@\"5h6i", &get_athena_checker());
+        assert_eq!(
+            result.unencrypted_text.unwrap()[0],
+            "https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUXbmV2ZXIgZ29ubmEgZ2l2ZSB5b3UgdXA%3D"
         );
     }
 
@@ -145,14 +147,7 @@ mod tests {
                 &get_athena_checker(),
             )
             .unencrypted_text;
-        if result.is_some() {
-            panic!("Decode_ascii85 did not return an option with Some<t>.")
-        } else {
-            // If we get here, the test passed
-            // Because the ascii85_decoder.crack function returned None
-            // as it should do for the input
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -163,9 +158,7 @@ mod tests {
         let result = ascii85_decoder
             .crack("", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -174,8 +167,6 @@ mod tests {
         let result = ascii85_decoder
             .crack("😂", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 }
