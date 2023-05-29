@@ -130,7 +130,10 @@ mod tests {
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for ascii85");
-        assert_eq!(decoded_str[0], "The quick brown fox jumped over the lazy dogs.\n\n+ $p3€!äl ¢#âŕ§");
+        assert_eq!(
+            decoded_str[0],
+            "The quick brown fox jumped over the lazy dogs.\n\n+ $p3€!äl ¢#âŕ§"
+        );
     }
 
     #[test]
