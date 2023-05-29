@@ -120,8 +120,7 @@ mod tests {
 
     #[test]
     fn z85_fail_decode_ascii85() {
-        // Bsae64 returns an empty string, this is a valid z85 string
-        // but returns False on check_string_success
+        // Try to decode ASCII85 string, this should fail
         let z85_decoder = Decoder::<Z85Decoder>::new();
         let result = z85_decoder
             .crack("87cURD]j.8ATD?*", &get_athena_checker())
@@ -131,7 +130,7 @@ mod tests {
 
     #[test]
     fn z85_decode_empty_string() {
-        // Bsae64 returns an empty string, this is a valid z85 string
+        // Z85 returns an empty string, this is a valid z85 string
         // but returns False on check_string_success
         let z85_decoder = Decoder::<Z85Decoder>::new();
         let result = z85_decoder
