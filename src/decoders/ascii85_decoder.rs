@@ -131,7 +131,7 @@ mod tests {
     #[test]
     fn ascii85_successful_decoding_links() {
         let ascii85_decoder = Decoder::<ASCII85Decoder>::new();
-        let result = ascii85_decoder.crack("BQS?8F#ks-GB\6`H#IhIF^eo7@rH3;G@>T'BKpZ'A5RP-G<&`;=CY2TE,[scB2r&CD,rDq=@m./1-'JdD+/)@12J^L;aN?N1KA'u=@\"5h6i", &get_athena_checker());
+        let result = ascii85_decoder.crack("BQS?8F#ks-GB\\6`H#IhIF^eo7@rH3;G@>T'BKpZ'A5RP-G<&`;=CY2TE,[scB2r&CD,rDq=@m./1-'JdD+/)@12J^L;aN?N1KA'u=@\"5h6i", &get_athena_checker());
         assert_eq!(
             result.unencrypted_text.unwrap()[0],
             "https://www.youtube.com/watch?v=dQw4w9WgXcQ&pp=ygUXbmV2ZXIgZ29ubmEgZ2l2ZSB5b3UgdXA%3D"
