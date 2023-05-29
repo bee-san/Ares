@@ -39,8 +39,8 @@ impl Crack for Decoder<Z85Decoder> {
             name: "Z85",
             description: "Ascii85, also called Base85, is a form of binary-to-text encoding that uses five ASCII characters to represent four bytes of binary data. […] Other base-85 encodings like Z85 and RFC 1924 are designed to be safe in source code.",
             link: "https://en.wikipedia.org/wiki/Ascii85",
-            tags: vec!["z85", "decoder", "ascii85"],
-            popularity: 1.0,
+            tags: vec!["z85", "decoder", "base85"],
+            popularity: 0.6,
             phantom: std::marker::PhantomData,
         }
     }
@@ -114,12 +114,8 @@ mod tests {
     #[test]
     fn successful_decoding() {
         let z85_decoder = Decoder::<Z85Decoder>::new();
-
         let result = z85_decoder.crack("nm=QNzY&b1A+]nf", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for z85");
-        assert_eq!(decoded_str[0], "Hello World!");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "Hello World!");
     }
 
     #[test]
@@ -142,14 +138,7 @@ mod tests {
                 &get_athena_checker(),
             )
             .unencrypted_text;
-        if result.is_some() {
-            panic!("Decode_z85 did not return an option with Some<t>.")
-        } else {
-            // If we get here, the test passed
-            // Because the z85_decoder.crack function returned None
-            // as it should do for the input
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -158,9 +147,7 @@ mod tests {
         let result = z85_decoder
             .crack("", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -169,8 +156,6 @@ mod tests {
         let result = z85_decoder
             .crack("😂", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 }
