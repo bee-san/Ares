@@ -112,10 +112,21 @@ mod tests {
     }
 
     #[test]
-    fn successful_decoding() {
+    fn z85_successful_decoding() {
         let z85_decoder = Decoder::<Z85Decoder>::new();
         let result = z85_decoder.crack("nm=QNzY&b1A+]nf", &get_athena_checker());
         assert_eq!(result.unencrypted_text.unwrap()[0], "Hello World!");
+    }
+
+    #[test]
+    fn z85_fail_decode_ascii85() {
+        // Bsae64 returns an empty string, this is a valid z85 string
+        // but returns False on check_string_success
+        let z85_decoder = Decoder::<Z85Decoder>::new();
+        let result = z85_decoder
+            .crack("87cURD]j.8ATD?*", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none());
     }
 
     #[test]
