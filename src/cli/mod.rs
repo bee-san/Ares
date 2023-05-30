@@ -1,7 +1,7 @@
 use std::{fs::File, io::Read};
 
 use crate::{cli_pretty_printing::panic_failure_both_input_and_fail_provided, config::Config};
-/// This doc string acts as a help message when the usees run '--help' in CLI mode
+/// This doc string acts as a help message when the uses run '--help' in CLI mode
 /// as do all doc strings on fields
 use clap::Parser;
 use lemmeknow::Identifier;
@@ -29,8 +29,8 @@ pub struct Opts {
     // I propose we just call it `cracking_timeout`.
     #[arg(short, long)]
     cracking_timeout: Option<u32>,
-    /// Run in API mode, this will return the results instead of printing them
-    /// Default is False
+    /// Run in API mode, this will return the results instead of printing them.
+    /// Default is false
     #[arg(short, long)]
     api_mode: Option<bool>,
     /// Opens a file for decoding
