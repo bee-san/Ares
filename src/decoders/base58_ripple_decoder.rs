@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn base58_ripple_decode_empty_string() {
-        // Bsae58_ripple returns an empty string, this is a valid base58_ripple string
+        // Base58_ripple returns an empty string, this is a valid base58_ripple string
         // but returns False on check_string_success
         let base58_ripple_decoder = Decoder::<Base58RippleDecoder>::new();
         let result = base58_ripple_decoder
