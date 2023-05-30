@@ -146,6 +146,17 @@ mod tests {
     }
 
     #[test]
+    fn z85_decode_invalid_string() {
+        // Z85 can only decode strings of length multiple 5
+        // This should fail to decode
+        let z85_decoder = Decoder::<Z85Decoder>::new();
+        let result = z85_decoder
+            .crack("12ab", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none());
+    }
+
+    #[test]
     fn z85_decode_handles_panics() {
         let z85_decoder = Decoder::<Z85Decoder>::new();
         let result = z85_decoder
