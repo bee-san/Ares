@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn base58_flickr_decode_empty_string() {
-        // Bsae58_flickr returns an empty string, this is a valid base58_flickr string
+        // Base58_flickr returns an empty string, this is a valid base58_flickr string
         // but returns False on check_string_success
         let base58_flickr_decoder = Decoder::<Base58FlickrDecoder>::new();
         let result = base58_flickr_decoder
