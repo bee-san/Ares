@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn base58_monero_decode_empty_string() {
-        // Bsae58_monero returns an empty string, this is a valid base58_monero string
+        // Base58_monero returns an empty string, this is a valid base58_monero string
         // but returns False on check_string_success
         let base58_monero_decoder = Decoder::<Base58MoneroDecoder>::new();
         let result = base58_monero_decoder
