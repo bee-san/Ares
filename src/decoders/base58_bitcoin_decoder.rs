@@ -118,7 +118,7 @@ mod tests {
     fn successful_decoding() {
         let base58_bitcoin_decoder = Decoder::<Base58BitcoinDecoder>::new();
         let result = base58_bitcoin_decoder.crack("StV1DL6CwTryKyV", &get_athena_checker());
-        assert_eq!(esult.unencrypted_text.unwrap()[0], "hello world");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world");
     }
 
     #[test]
