@@ -7,7 +7,7 @@ use super::interface::Decoder;
 
 use log::{info, trace};
 
-///! Railfence Decoder
+//! Railfence Decoder
 pub struct RailfenceDecoder;
 
 impl Crack for Decoder<RailfenceDecoder> {
@@ -69,7 +69,7 @@ impl Crack for Decoder<RailfenceDecoder> {
     }
 }
 
-///! Decodes a text encoded with the Rail Fence Cipher with the specified number of rails and offset
+//! Decodes a text encoded with the Rail Fence Cipher with the specified number of rails and offset
 fn railfence_decoder(text: &str, rails: usize, offset: usize) -> String {
     let mut indexes: Vec<_> = zigzag(rails, offset).zip(1..).take(text.len()).collect();
     indexes.sort();
@@ -82,7 +82,7 @@ fn railfence_decoder(text: &str, rails: usize, offset: usize) -> String {
     char_with_index.iter().map(|(_, c)| c).collect()
 }
 
-///! Returns an iterator that yields the indexes of a zigzag pattern with the specified number of rails and offset
+//! Returns an iterator that yields the indexes of a zigzag pattern with the specified number of rails and offset
 fn zigzag(n: usize, offset: usize) -> impl Iterator<Item = usize> {
     (0..n - 1).chain((1..n).rev()).cycle().skip(offset)
 }

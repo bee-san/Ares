@@ -7,9 +7,9 @@ use super::interface::Decoder;
 
 use log::{debug, info, trace};
 
-///! Morse Code Decoder
-///! Does not support decoding of morse code with / instead of a space
-///! or new lines for new words.
+//! Morse Code Decoder
+//! Does not support decoding of morse code with / instead of a space
+//! or new lines for new words.
 pub struct MorseCodeDecoder;
 
 impl Crack for Decoder<MorseCodeDecoder> {
