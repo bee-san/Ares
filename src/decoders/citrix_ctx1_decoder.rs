@@ -7,10 +7,10 @@ use super::interface::Decoder;
 
 use log::{debug, info, trace};
 
-///! Citrix CTX1 Decoder
+/// Citrix CTX1 Decoder
 pub struct CitrixCTX1Decoder;
 
-///! Error enum
+/// Error enum
 #[derive(Debug)]
 enum Error {
     ///! Error when the input is not divisible by 4

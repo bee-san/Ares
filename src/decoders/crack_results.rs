@@ -1,9 +1,7 @@
+//! This module contains CrackSuccess and CrackFailure
 use crate::checkers::checker_result::CheckResult;
 
 use super::interface::Decoder;
-
-///! This module contains CrackSuccess and CrackFailure
-///
 
 /// Every cracker returns this object which
 /// Either indicates success or failure among other things.

@@ -1,12 +1,12 @@
+//! Decodes a base91 string
+//! Performs error handling and returns a string
+//! Call base91_decoder.crack to use. It returns option<String> and check with
+//! `result.is_some()` to see if it returned okay.
+
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
 
 use super::crack_results::CrackResult;
-///! Decodes a base91 string
-///! Performs error handling and returns a string
-///! Call base91_decoder.crack to use. It returns option<String> and check with
-///! `result.is_some()` to see if it returned okay.
-///
 use super::interface::Crack;
 use super::interface::Decoder;
 
