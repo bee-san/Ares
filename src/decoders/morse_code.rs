@@ -6,6 +6,7 @@ use super::interface::Crack;
 use super::interface::Decoder;
 
 use log::{debug, info, trace};
+use regex::Regex;
 
 /// Morse Code Decoder
 /// Does not support decoding of morse code with / instead of a space
@@ -32,6 +33,10 @@ impl Crack for Decoder<MorseCodeDecoder> {
         // TODO support new line and slash morse code
         let text = normalise_morse_string(text);
         let decoded_text: Option<String> = text.split(' ').map(morse_to_alphanumeric).collect();
+
+        // remove leading and trailing spaces, and collapse repeated spaces into a single space
+        let re = Regex::new(r"\s+").unwrap();
+        let decoded_text = decoded_text.map(|s| re.replace_all(s.trim(), " ").into_owned());
 
         trace!("Decoded text for morse code: {:?}", decoded_text);
         let mut results = CrackResult::new(self, text.to_string());
@@ -67,14 +72,12 @@ impl Crack for Decoder<MorseCodeDecoder> {
     }
 }
 
-/// We want to remove new lines / line breaks so all the morse is on 1 line and we can parse it better
+/// Replace new lines, line breaks, and other delimiters with the standard delimiter '/'
 fn normalise_morse_string(text: &str) -> String {
     // The replace function supports patterns https://doc.rust-lang.org/std/str/pattern/trait.Pattern.html#impl-Pattern%3C%27a%3E-3
+    // Spaces are included before and after so that '/' gets split into a separate token
     text.to_lowercase()
-        .replace(['\n', '\r'], "")
-        .replace("\\n", "")
-        .replace("\\r", "")
-        .replace('\\', "")
+        .replace(['/', '\\', ':', ',', '\n', '\r'], " / ")
 }
 
 /// Maps morse code to its alphanumeric character, returns None for invalid morse-code
@@ -189,7 +192,7 @@ mod tests {
         assert_eq!(result.unencrypted_text.unwrap()[0], "192.168.0.1");
     }
     #[test]
-    fn test_morse_code_carrage_arrage_return_with_space() {
+    fn test_morse_code_carriage_return_with_space() {
         let decoder = Decoder::<MorseCodeDecoder>::new();
         let result = decoder.crack(
             ".---- ----. ..--- .-.-.- .---- -.... ---.. .-.-.- ----- .-.-.- .---- \r",
@@ -199,31 +202,56 @@ mod tests {
     }
 
     #[test]
-    fn test_morse_code_both_new_line_and_carrage_return() {
+    fn test_morse_code_both_new_line_and_carriage_return() {
         let decoder = Decoder::<MorseCodeDecoder>::new();
         let result = decoder.crack(
-            ".---- ----. \n..--- .-.-.- \r.---- -.... ---.. .-.-.- ----- .-.-.- .---- \r",
+            ".... . .-.. .-.. --- \n.-- --- .-. .-.. -.. -.-.-- \r.---- ..--- ...-- \r",
             &get_athena_checker(),
         );
-        assert_eq!(result.unencrypted_text.unwrap()[0], "192.168.0.1");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO WORLD! 123");
     }
 
     #[test]
-    // We cannot decode this because backslashes are not supported
-    #[ignore]
+    fn test_morse_code_slash() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            r".... . .-.. .-.. --- / .-- --- .-. .-.. -.. -.-.--",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO WORLD!");
+    }
+
+    #[test]
+    fn test_morse_code_slash_tight() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            r".... . .-.. .-.. ---/.-- --- .-. .-.. -.. -.-.--",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO WORLD!");
+    }
+
+    #[test]
     fn test_morse_code_backslash() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            r".... . .-.. .-.. --- \ .-- --- .-. .-.. -.. -.-.--",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO WORLD!");
+    }
+
+    #[test]
+    fn test_morse_code_backslash_tight() {
         let decoder = Decoder::<MorseCodeDecoder>::new();
         let result = decoder.crack(
             r".... . .-.. .-.. ---\.-- --- .-. .-.. -.. -.-.--",
             &get_athena_checker(),
         );
-        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world!");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO WORLD!");
     }
+
     #[test]
-    // We cannot decode this because linefeeds are not supported
-    // This is the default on CyberChef
-    // Maybe file input would be better here, does it detect the new line in the text?
-    #[ignore]
     fn test_morse_code_line_feed() {
         let decoder = Decoder::<MorseCodeDecoder>::new();
         let result = decoder.crack(
@@ -231,31 +259,46 @@ mod tests {
             .-- --- .-. .-.. -.. -.-.--",
             &get_athena_checker(),
         );
-        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world!");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO WORLD!");
     }
+
     #[test]
-    // This is broken because we split on spaces in our code
-    // And because the comma is not a space it is not split
-    #[ignore]
     fn test_morse_code_comma() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            r".... . .-.. .-.. --- , .-- --- .-. .-.. -.. -.-.--",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO WORLD!");
+    }
+
+    #[test]
+    fn test_morse_code_comma_tight() {
         let decoder = Decoder::<MorseCodeDecoder>::new();
         let result = decoder.crack(
             r".... . .-.. .-.. ---,.-- --- .-. .-.. -.. -.-.--",
             &get_athena_checker(),
         );
-        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world!");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO WORLD!");
     }
 
     #[test]
-    // This is broken because we split on spaces in our code
-    // And because the colon is not a space it is not split
-    #[ignore]
     fn test_morse_code_colon() {
+        let decoder = Decoder::<MorseCodeDecoder>::new();
+        let result = decoder.crack(
+            r".... . .-.. .-.. --- : .-- --- .-. .-.. -.. -.-.--",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO WORLD!");
+    }
+
+    #[test]
+    fn test_morse_code_colon_tight() {
         let decoder = Decoder::<MorseCodeDecoder>::new();
         let result = decoder.crack(
             r".... . .-.. .-.. ---:.-- --- .-. .-.. -.. -.-.--",
             &get_athena_checker(),
         );
-        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world!");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLO WORLD!");
     }
 }
