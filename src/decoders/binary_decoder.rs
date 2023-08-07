@@ -7,7 +7,7 @@ use super::interface::Decoder;
 
 use log::{debug, info, trace};
 
-//! Binary Decoder
+/// Binary Decoder
 pub struct BinaryDecoder;
 
 impl Crack for Decoder<BinaryDecoder> {

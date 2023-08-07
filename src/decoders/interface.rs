@@ -2,7 +2,7 @@ use crate::checkers::CheckerTypes;
 
 use super::crack_results::CrackResult;
 
-//! The Interface defines what the struct for each decoder looks like
+/// The Interface defines what the struct for each decoder looks like
 //TODO: rename this file
 pub struct Decoder<Type> {
     /// The English name of the decoder.

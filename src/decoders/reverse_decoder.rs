@@ -1,11 +1,11 @@
-use crate::checkers::CheckerTypes;
-
-use super::crack_results::CrackResult;
 //! Reverses the input string
 //! Performs error handling and returns a string
 //! Call reverse_decoder.crack to use. It returns option<String> and check with
 //! `result.is_some()` to see if it returned okay.
-///
+
+use crate::checkers::CheckerTypes;
+
+use super::crack_results::CrackResult;
 use super::interface::Crack;
 use super::interface::Decoder;
 

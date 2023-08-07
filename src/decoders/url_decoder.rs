@@ -2,7 +2,7 @@
 //! Performs error handling and returns a string
 //! Call url_decoder.crack to use. It returns option<String> and check with
 //! `result.is_some()` to see if it returned okay.
-///
+
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
 
