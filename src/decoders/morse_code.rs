@@ -32,10 +32,10 @@ impl Crack for Decoder<MorseCodeDecoder> {
         trace!("Trying Morse Code with text {:?}", text);
         // TODO support new line and slash morse code
         let text = normalise_morse_string(text);
-        let re = Regex::new(r"\s+").unwrap();
         let decoded_text: Option<String> = text.split(' ').map(morse_to_alphanumeric).collect();
 
         // remove leading and trailing spaces, and collapse repeated spaces into a single space
+        let re = Regex::new(r"\s+").unwrap();
         let decoded_text = decoded_text.map(|s| re.replace_all(s.trim(), " ").into_owned());
 
         trace!("Decoded text for morse code: {:?}", decoded_text);
