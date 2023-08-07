@@ -53,7 +53,7 @@ impl Crack for Decoder<CaesarDecoder> {
         trace!("Trying Caesar Cipher with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
         let mut decoded_strings = Vec::new();
-        for shift in 1..25 {
+        for shift in 1..=25 {
             let decoded_text = caesar(text, shift);
             decoded_strings.push(decoded_text);
             let borrowed_decoded_text = &decoded_strings[decoded_strings.len() - 1];
@@ -141,6 +141,28 @@ mod tests {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
 
         let result = caesar_decoder.crack("fyyfhp", &get_athena_checker());
+        let decoded_str = &result
+            .unencrypted_text
+            .expect("No unencrypted text for caesar");
+        assert_eq!(decoded_str[0], "attack");
+    }
+
+    #[test]
+    fn successful_decoding_one_step_forward() {
+        let caesar_decoder = Decoder::<CaesarDecoder>::new();
+
+        let result = caesar_decoder.crack("buubdl", &get_athena_checker());
+        let decoded_str = &result
+            .unencrypted_text
+            .expect("No unencrypted text for caesar");
+        assert_eq!(decoded_str[0], "attack");
+    }
+
+    #[test]
+    fn successful_decoding_one_step_backward() {
+        let caesar_decoder = Decoder::<CaesarDecoder>::new();
+
+        let result = caesar_decoder.crack("zsszbj", &get_athena_checker());
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for caesar");
