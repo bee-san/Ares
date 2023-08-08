@@ -24,7 +24,7 @@ clap = {version = "4.3.19", features = ["derive"]}
 crossbeam = "0.8"
 env_logger = "0.10.0"
 include_dir = "0.7.3"
-lazy-regex = "2.5.0"
+lazy-regex = "3.0.1"
 lazy_static = "1.4.0"
 lemmeknow = "0.8.0"
 log = "0.4"
