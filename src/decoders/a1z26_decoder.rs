@@ -26,6 +26,20 @@ impl Crack for Decoder<A1Z26Decoder> {
     /// Decode using the A1Z26 encoding
     /// It returns an Option<string> if it was successful
     /// Else the Option returns nothing and the error is logged in Trace
+    ///
+    /// A1Z26 is an encoding that maps each letter to its numeric position in the alphabet. This
+    /// encoding cannot represent spaces or punctuation. The output of a successful decoding will
+    /// be a string of capital letters with no spaces or punctuation.
+    ///
+    /// This implementation accepts a list of decimal numbers separated by any combination of
+    /// delimiters including `,` `;` `:` '-' and whitespace. For successful decoding, the input
+    /// must contain at least one numeric digit, and every number must be in the range 1 to 26. The
+    /// input is allowed to start and end with delimiters.
+    ///
+    /// If the input includes any characters other than numeric digits and recognized delimiters,
+    /// then decoding will fail.
+    ///
+    /// Note that the string `-1` decodes to `A` because the `-` is interpreted as a delimiter, not a negative sign.
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying A1Z26 with text {:?}", text);
 
@@ -133,100 +147,119 @@ mod tests {
 
     #[test]
     fn test_pangram() {
-        let result = decode_a1z26("20 8 5 17 21 9 3 11 2 18 15 23 14 6 15 24 10 21 13 16 5 4 15 22 5 18 20 8 5 12 1 26 25 4 15 7");
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack("20 8 5 17 21 9 3 11 2 18 15 23 14 6 15 24 10 21 13 16 5 4 15 22 5 18 20 8 5 12 1 26 25 4 15 7", &get_athena_checker());
         assert_eq!(
-            result,
-            Some("THEQUICKBROWNFOXJUMPEDOVERTHELAZYDOG".to_owned())
+            result.unencrypted_text.unwrap()[0],
+            "THEQUICKBROWNFOXJUMPEDOVERTHELAZYDOG"
         );
     }
 
     #[test]
     fn test_empty_ctext() {
-        let result = decode_a1z26("");
-        assert_eq!(result, None);
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack("", &get_athena_checker());
+        assert_eq!(result.unencrypted_text, None);
     }
 
     #[test]
     fn test_whitespace_1() {
-        let result = decode_a1z26(" ");
-        assert_eq!(result, None);
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack(" ", &get_athena_checker());
+        assert_eq!(result.unencrypted_text, None);
     }
 
     #[test]
     fn test_whitespace_2() {
-        let result = decode_a1z26("  ");
-        assert_eq!(result, None);
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack("  ", &get_athena_checker());
+        assert_eq!(result.unencrypted_text, None);
     }
 
     #[test]
     fn test_delimiters_only() {
-        let result = decode_a1z26(" \t-:,;\n \r\n \n\r \r ");
-        assert_eq!(result, None);
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack(" \t-:,;\n \r\n \n\r \r ", &get_athena_checker());
+        assert_eq!(result.unencrypted_text, None);
     }
 
     #[test]
     fn test_invalid_chars() {
-        let result = decode_a1z26("1 2 3 x 4 5 6");
-        assert_eq!(result, None);
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack("1 2 3 x 4 5 6", &get_athena_checker());
+        assert_eq!(result.unencrypted_text, None);
     }
 
     #[test]
     fn test_zero() {
-        let result = decode_a1z26("0");
-        assert_eq!(result, None);
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack("0", &get_athena_checker());
+        assert_eq!(result.unencrypted_text, None);
     }
 
     #[test]
     fn test_large_number() {
-        let result = decode_a1z26("27");
-        assert_eq!(result, None);
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack("27", &get_athena_checker());
+        assert_eq!(result.unencrypted_text, None);
     }
 
     #[test]
     fn test_excessive_number() {
-        let result = decode_a1z26("1234567890123456789012345678901234567890");
-        assert_eq!(result, None);
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack(
+            "1234567890123456789012345678901234567890",
+            &get_athena_checker(),
+        );
+        assert_eq!(result.unencrypted_text, None);
     }
 
     #[test]
     fn test_fractional_number() {
-        let result = decode_a1z26("3.5");
-        assert_eq!(result, None);
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack("3.5", &get_athena_checker());
+        assert_eq!(result.unencrypted_text, None);
     }
 
     #[test]
     fn test_short_ctext() {
-        let result = decode_a1z26("9");
-        assert_eq!(result, Some("I".to_owned()));
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack("9", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "I");
     }
 
     #[test]
     fn test_short_ctext_extra_delimiters_1() {
-        let result = decode_a1z26(" 9 ");
-        assert_eq!(result, Some("I".to_owned()));
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack(" 9 ", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "I");
     }
 
     #[test]
     fn test_short_ctext_extra_delimiters_2() {
-        let result = decode_a1z26("-9");
-        assert_eq!(result, Some("I".to_owned()));
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack("-9", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "I");
     }
 
     #[test]
     fn test_short_ctext_extra_delimiters_3() {
-        let result = decode_a1z26("9\n");
-        assert_eq!(result, Some("I".to_owned()));
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack("9\n", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "I");
     }
 
     #[test]
     fn test_short_ctext_extra_delimiters_4() {
-        let result = decode_a1z26(":\n-\t,9;\r,");
-        assert_eq!(result, Some("I".to_owned()));
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack(":\n-\t,9;\r,", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "I");
     }
 
     #[test]
     fn test_delimited_ctext() {
-        let result = decode_a1z26(",8-5:12,12;15\t23\r15\n18:,12-;4-");
-        assert_eq!(result, Some("HELLOWORLD".to_owned()));
+        let decoder = Decoder::<A1Z26Decoder>::new();
+        let result = decoder.crack(",8-5:12,12;15\t23\r15\n18:,12-;4-", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "HELLOWORLD");
     }
 }
