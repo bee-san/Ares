@@ -7,7 +7,7 @@ use super::interface::Decoder;
 
 use log::{info, trace};
 
-///! Atbash Decoder
+/// Atbash Decoder
 pub struct AtbashDecoder;
 
 impl Crack for Decoder<AtbashDecoder> {

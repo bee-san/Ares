@@ -7,6 +7,8 @@
 
 /// The ascii85_decoder module decodes ascii85
 pub mod ascii85_decoder;
+/// The a1z26_decoder module decodes A1Z26
+pub mod a1z26_decoder;
 /// The atbash_decoder module decodes atbash
 pub mod atbash_decoder;
 /// The base32_decoder module decodes base32
