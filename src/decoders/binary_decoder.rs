@@ -33,7 +33,6 @@ impl Crack for Decoder<BinaryDecoder> {
         for shift in 1..25 {
             let decoded_text = binary_to_string(text, shift);
 
-            let decoded_text = decoded_text;
             decoded_strings.push(decoded_text);
             let borrowed_decoded_text = &decoded_strings[decoded_strings.len() - 1];
             if !check_string_success(borrowed_decoded_text, text) {
