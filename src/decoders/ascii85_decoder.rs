@@ -37,7 +37,7 @@ impl Crack for Decoder<ASCII85Decoder> {
     fn new() -> Decoder<ASCII85Decoder> {
         Decoder {
             name: "ASCII85",
-            description: "Ascii85, also called Base85, is a form of binary-to-text encoding that uses five ASCII characters to represent four bytes of binary data. Adobe adopted the basic btoa encoding, but with slight changes, and gave it the name Ascii85. The characters used are the ASCII characters 33 (!) through 117 (u) inclusive (to represent the base-85 digits 0 through 84), together with the letter z (as a special case to represent a 32-bit 0 value), and white space is ignored.",
+            description: "Adobe adopted the basic btoa encoding, but with slight changes, and gave it the name Ascii85. The characters used are the ASCII characters 33 (!) through 117 (u) inclusive (to represent the base-85 digits 0 through 84), together with the letter z (as a special case to represent a 32-bit 0 value), and white space is ignored.",
             link: "https://en.wikipedia.org/wiki/Ascii85#Adobe_version",
             tags: vec!["decoder", "ascii85", "base85"],
             popularity: 0.6,
