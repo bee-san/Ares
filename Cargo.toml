@@ -21,7 +21,7 @@ bench = false
 # Please keep this list in alphabetical order
 [dependencies]
 ansi_term = "0.12.1"
-clap = {version = "4.3.21", features = ["derive"]}
+clap = {version = "4.3.23", features = ["derive"]}
 crossbeam = "0.8"
 env_logger = "0.10.0"
 include_dir = "0.7.3"
