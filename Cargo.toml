@@ -37,6 +37,7 @@ regex = "1.9.1"
 text_io = "0.1.12"
 
 # Dependencies used for decoding
+ascii85 = "0.2.1"
 base64 = "0.21.2"
 base65536 = "1.0.1"
 base91 = "0.1.0"
