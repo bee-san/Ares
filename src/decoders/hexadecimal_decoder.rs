@@ -7,10 +7,10 @@ use super::interface::Decoder;
 
 use log::{debug, info, trace};
 
-///! Hexadecimal Decoder
+/// Hexadecimal Decoder
 pub struct HexadecimalDecoder;
 
-///! Error enum
+/// Error enum
 #[derive(Debug)]
 enum Error {
     ///! Error when the input is not divisible by 2

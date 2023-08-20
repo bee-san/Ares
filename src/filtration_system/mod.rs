@@ -1,3 +1,6 @@
+//! Proposal: https://broadleaf-angora-7db.notion.site/Filtration-System-7143b36a42f1466faea3077bfc7e859e
+//! Given a filter object, return an array of decoders/crackers which have been filtered
+
 use std::sync::mpsc::channel;
 
 use crate::checkers::CheckerTypes;
@@ -12,9 +15,7 @@ use crate::DecoderResult;
 use crate::decoders::base58_flickr_decoder::Base58FlickrDecoder;
 use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
 
-///! Proposal: https://broadleaf-angora-7db.notion.site/Filtration-System-7143b36a42f1466faea3077bfc7e859e
-///! Given a filter object, return an array of decoders/crackers which have been filtered
-///
+use crate::decoders::a1z26_decoder::A1Z26Decoder;
 use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::base64_url_decoder::Base64URLDecoder;
 use crate::decoders::base65536_decoder::Base65536Decoder;
@@ -126,6 +127,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let caesardecoder = Decoder::<CaesarDecoder>::new();
     let railfencedecoder = Decoder::<RailfenceDecoder>::new();
     let z85 = Decoder::<Z85Decoder>::new();
+    let a1z26decoder = Decoder::<A1Z26Decoder>::new();
     Decoders {
         components: vec![
             Box::new(reversedecoder),
@@ -147,6 +149,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(url),
             Box::new(base64_url),
             Box::new(z85),
+            Box::new(a1z26decoder),
         ],
     }
 }
