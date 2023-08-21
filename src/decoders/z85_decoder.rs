@@ -1,7 +1,7 @@
-///! Decode a z85 string
-///! Performs error handling and returns a string
-///! Call z85_decoder.crack to use. It returns option<String> and check with
-///! `result.is_some()` to see if it returned okay.
+//! Decode a z85 string
+//! Performs error handling and returns a string
+//! Call z85_decoder.crack to use. It returns option<String> and check with
+//! `result.is_some()` to see if it returned okay.
 ///
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
