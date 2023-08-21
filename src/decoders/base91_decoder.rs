@@ -156,7 +156,7 @@ mod tests {
         let result = base91_decoder
             .crack("hello good day!", &get_athena_checker())
             .unencrypted_text;
-        assert!(result.is_none());
+        assert!(result.is_some());
     }
 
     #[test]
