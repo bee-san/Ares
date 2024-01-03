@@ -139,12 +139,8 @@ mod tests {
     #[test]
     fn successful_decoding() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-
         let result = caesar_decoder.crack("fyyfhp", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str[0], "attack");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "attack");
     }
 
     #[test]
@@ -172,23 +168,21 @@ mod tests {
     #[test]
     fn successful_decoding_longer_text() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-
         let result = caesar_decoder.crack("uryyb guvf vf ybat grkg", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str[0], "hello this is long text");
+        assert_eq!(
+            result.unencrypted_text.unwrap()[0],
+            "hello this is long text"
+        );
     }
 
     #[test]
     fn successful_decoding_longer_text_with_puncuation() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-
         let result = caesar_decoder.crack("Uryyb! guvf vf ybat grkg?", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str[0], "Hello! this is long text?");
+        assert_eq!(
+            result.unencrypted_text.unwrap()[0],
+            "Hello! this is long text?"
+        );
     }
 
     #[test]
@@ -208,13 +202,6 @@ mod tests {
         let result = caesar_decoder
             .crack("#", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            panic!("Decode_caesar did not return an option with Some<t>.")
-        } else {
-            // If we get here, the test passed
-            // Because the caesar_decoder.crack function returned None
-            // as it should do for the input
-            assert!(true)
-        }
+        assert!(result.is_none());
     }
 }
