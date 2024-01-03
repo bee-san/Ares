@@ -17,7 +17,7 @@ impl Check for Checker<EnglishChecker> {
             link: "https://en.wikipedia.org/wiki/List_of_English_words",
             tags: vec!["english"],
             expected_runtime: 0.1,
-            /// English is the most popular language
+            // English is the most popular language
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
             _phantom: std::marker::PhantomData,
