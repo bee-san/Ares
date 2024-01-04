@@ -117,12 +117,8 @@ mod tests {
     #[test]
     fn successful_decoding() {
         let base58_bitcoin_decoder = Decoder::<Base58BitcoinDecoder>::new();
-
         let result = base58_bitcoin_decoder.crack("StV1DL6CwTryKyV", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for base58_bitcoin");
-        assert_eq!(decoded_str[0], "hello world");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world");
     }
 
     #[test]
@@ -145,14 +141,7 @@ mod tests {
                 &get_athena_checker(),
             )
             .unencrypted_text;
-        if result.is_some() {
-            panic!("Decode_base58_bitcoin did not return an option with Some<t>.")
-        } else {
-            // If we get here, the test passed
-            // Because the base58_bitcoin_decoder.crack function returned None
-            // as it should do for the input
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -161,9 +150,7 @@ mod tests {
         let result = base58_bitcoin_decoder
             .crack("", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -177,9 +164,7 @@ mod tests {
         let result = base58_bitcoin_decoder
             .crack("hello good day!", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -188,8 +173,6 @@ mod tests {
         let result = base58_bitcoin_decoder
             .crack("😂", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 }
