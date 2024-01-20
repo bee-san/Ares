@@ -25,6 +25,37 @@ pub static DICTIONARIES: Lazy<HashMap<&str, HashSet<&str>>> = Lazy::new(|| {
     entries
 });
 
+/// Loads invisible character list into a HashSet
+pub static INVISIBLE_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
+    /// The directory where the unicode of invisible characters are stored.
+    static INVIS_CHARS_DIR: Dir<'_> =
+        include_dir!("$CARGO_MANIFEST_DIR/src/storage/invisible_chars");
+    let mut entries: HashSet<char> = HashSet::new();
+    for entry in INVIS_CHARS_DIR.files() {
+        let content = entry.contents_utf8().expect(
+            "The file you moved into the invisible_chars folder is not UTF-8. \
+            The storage module only works on UTF-8 files.",
+        );
+        let content_lines = content.split('\n');
+        for line in content_lines {
+            if line.is_empty() {
+                continue;
+            }
+            let unicode_line_split: Vec<&str> = line.split_ascii_whitespace().collect();
+            let unicode_literal = unicode_line_split[0].trim_start_matches("U+");
+            let unicode_char = u32::from_str_radix(unicode_literal, 16)
+                .ok()
+                .and_then(char::from_u32)
+                .expect(
+                    "The file you moved into the invisible_chars folder should \
+                    contain valid unicode literals in the first column.",
+                );
+            entries.insert(unicode_char);
+        }
+    }
+    entries
+});
+
 // Rust tests
 #[cfg(test)]
 mod tests {

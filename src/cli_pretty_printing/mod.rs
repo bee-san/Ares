@@ -2,10 +2,19 @@
 /// and make sure each one is up to our standards. Previously a rogue print statement that went off at an edge case
 /// would look a bit ugly and not the same UI as others.
 /// We can also do things like check for logic or share information / functions which would be a bit messy in the main code.
+use crate::storage;
 use crate::DecoderResult;
+use std::env;
+use std::fs::write;
+use text_io::read;
 
 /// The output function is used to print the output of the program.
 /// If the API mode is on, it will not print.
+///
+/// # Panics
+///
+/// Panics if there is an error writing to file when output_method is set to a
+/// file
 pub fn program_exiting_successful_decoding(result: DecoderResult) {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -27,6 +36,44 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     } else {
         format!("the decoders used are {decoded_path_coloured}")
     };
+    /// If 30% of the characters are invisible characters, then prompt the
+    /// user to save the resulting plaintext into a file
+    const INVIS_CHARS_DETECTION_PERCENTAGE: f64 = 0.3;
+    let mut invis_chars_found: f64 = 0.0;
+    for char in plaintext[0].chars() {
+        if storage::INVISIBLE_CHARS
+            .iter()
+            .any(|invis_chars| *invis_chars == char)
+        {
+            invis_chars_found += 1.0;
+        }
+    }
+
+    // If the percentage of invisible characters in the plaintext exceeds
+    // the detection percentage, prompt the user asking if they want to
+    // save the plaintext into a file
+    let invis_char_percentage = invis_chars_found / plaintext[0].len() as f64;
+    if invis_char_percentage > INVIS_CHARS_DETECTION_PERCENTAGE {
+        println!("{:2.0}% of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", (invis_char_percentage * 100.0));
+        let reply: String = read!("{}\n");
+        let result = reply.to_ascii_lowercase().starts_with('y');
+        if result {
+            println!(
+                "Please enter a filename: (default: {}/ares_text.txt)",
+                env::var("HOME").unwrap_or_default()
+            );
+            let mut file_path: String = read!("{}\n");
+            if file_path.is_empty() {
+                file_path = format!("{}/ares_text.txt", env::var("HOME").unwrap_or_default());
+            }
+            println!(
+                "Outputting plaintext to file: {}\n\n{}",
+                file_path, decoded_path_string
+            );
+            write(file_path, &plaintext[0]).expect("Error writing to file.");
+            return;
+        }
+    }
     println!(
         "The plaintext is: \n{}\nand {}",
         ansi_term::Colour::Yellow.bold().paint(&plaintext[0]),
