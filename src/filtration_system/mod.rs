@@ -19,6 +19,7 @@ use crate::decoders::a1z26_decoder::A1Z26Decoder;
 use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::base64_url_decoder::Base64URLDecoder;
 use crate::decoders::base65536_decoder::Base65536Decoder;
+use crate::decoders::base8_decoder::Base8Decoder;
 use crate::decoders::base91_decoder::Base91Decoder;
 use crate::decoders::caesar_decoder::CaesarDecoder;
 use crate::decoders::citrix_ctx1_decoder::CitrixCTX1Decoder;
@@ -114,6 +115,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let base58_ripple = Decoder::<Base58RippleDecoder>::new();
     let base58_flickr = Decoder::<Base58FlickrDecoder>::new();
     let base64 = Decoder::<Base64Decoder>::new();
+    let base8 = Decoder::<Base8Decoder>::new();
     let base91 = Decoder::<Base91Decoder>::new();
     let base64_url = Decoder::<Base64URLDecoder>::new();
     let base65536 = Decoder::<Base65536Decoder>::new();
@@ -134,6 +136,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(base58_monero),
             Box::new(base58_ripple),
             Box::new(base58_flickr),
+            Box::new(base8),
             Box::new(base91),
             Box::new(base65536),
             Box::new(binary),

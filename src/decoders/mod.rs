@@ -15,6 +15,8 @@ pub mod base32_decoder;
 pub mod base58_bitcoin_decoder;
 /// The base58_monero_decoder module decodes base58 monero
 pub mod base58_monero_decoder;
+/// The base8_decoder module decodes base8 (octal)
+pub mod base8_decoder;
 /// The binary_decoder module decodes binary
 pub mod binary_decoder;
 /// The hexadecimal_decoder module decodes hexadecimal
