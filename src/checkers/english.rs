@@ -24,8 +24,11 @@ impl Check for Checker<EnglishChecker> {
     }
 
     fn check(&self, text: &str) -> CheckResult {
+        // Normalize before checking
+        let text = normalise_string(text);
+        
         let mut result = CheckResult {
-            is_identified: !is_gibberish(text),
+            is_identified: !is_gibberish(&text),
             text: text.to_string(),
             checker_name: self.name,
             checker_description: self.description,
@@ -33,8 +36,8 @@ impl Check for Checker<EnglishChecker> {
             link: self.link,
         };
 
-        // Handle edge case of very short strings
-        if text.len() < 3 {
+        // Handle edge case of very short strings after normalization
+        if text.len() < 2 {  // Reduced from 3 since normalization may remove punctuation
             result.is_identified = false;
         }
 
