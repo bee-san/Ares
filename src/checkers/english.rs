@@ -80,7 +80,7 @@ mod tests {
     #[test]
     fn test_check_multiple_words() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("zzz zu'lkadah zenelophon").is_identified);
+        assert!(checker.check("zzz zulkedah zenelophon").is_identified);
     }
 
     #[test]
