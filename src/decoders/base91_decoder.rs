@@ -88,7 +88,7 @@ fn decode_base91_no_error_handling(text: &str) -> Option<String> {
     // Runs the code to decode base91
     // Doesn't perform error handling, call from_base91
     let decoded_text = base91::slice_decode(text.as_bytes());
-    return Some(String::from_utf8_lossy(&decoded_text).to_string());
+    Some(String::from_utf8_lossy(&decoded_text).to_string())
 }
 
 #[cfg(test)]

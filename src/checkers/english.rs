@@ -1,7 +1,6 @@
 use crate::checkers::checker_result::CheckResult;
 use gibberish_or_not::is_gibberish;
 use lemmeknow::Identifier;
-use log::{debug, trace};
 
 use crate::checkers::checker_type::{Check, Checker};
 

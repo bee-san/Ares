@@ -69,7 +69,7 @@ fn rot47_to_alphabet(text: &str, shift: u8) -> String {
     let mut result = String::new();
     for c in text.chars() {
         let mut c = c as u8;
-        if c >= 33 && c <= 126 {
+        if (33..=126).contains(&c) {
             c = ((c - 33 + shift) % 94) + 33;
         }
         result.push(c as char);
