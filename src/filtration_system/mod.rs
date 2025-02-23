@@ -29,6 +29,7 @@ use crate::decoders::railfence_decoder::RailfenceDecoder;
 use crate::decoders::reverse_decoder::ReverseDecoder;
 use crate::decoders::rot47_decoder::ROT47Decoder;
 use crate::decoders::url_decoder::URLDecoder;
+use crate::decoders::z85_decoder::Z85Decoder;
 
 use log::trace;
 use rayon::prelude::*;
@@ -127,6 +128,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let caesardecoder = Decoder::<CaesarDecoder>::new();
     let railfencedecoder = Decoder::<RailfenceDecoder>::new();
     let rot47decoder = Decoder::<ROT47Decoder>::new();
+    let z85 = Decoder::<Z85Decoder>::new();
     let a1z26decoder = Decoder::<A1Z26Decoder>::new();
     Decoders {
         components: vec![
@@ -149,6 +151,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(url),
             Box::new(base64_url),
             Box::new(rot47decoder),
+            Box::new(z85),
             Box::new(a1z26decoder),
         ],
     }

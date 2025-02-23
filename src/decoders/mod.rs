@@ -63,3 +63,6 @@ pub mod caesar_decoder;
 pub mod railfence_decoder;
 /// For the rot47 decoder
 pub mod rot47_decoder;
+
+/// For the z85 cipher decoder
+pub mod z85_decoder;
