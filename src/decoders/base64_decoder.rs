@@ -1,8 +1,8 @@
-///! Decode a base64 string
-///! Performs error handling and returns a string
-///! Call base64_decoder.crack to use. It returns option<String> and check with
-///! `result.is_some()` to see if it returned okay.
-///
+//! Decode a base64 string
+//! Performs error handling and returns a string
+//! Call base64_decoder.crack to use. It returns option<String> and check with
+//! `result.is_some()` to see if it returned okay.
+
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
 use base64::{engine::general_purpose, Engine as _};
@@ -127,7 +127,7 @@ mod tests {
 
     #[test]
     fn base64_decode_empty_string() {
-        // Bsae64 returns an empty string, this is a valid base64 string
+        // Base64 returns an empty string, this is a valid base64 string
         // but returns False on check_string_success
         let base64_decoder = Decoder::<Base64Decoder>::new();
         let result = base64_decoder

@@ -1,12 +1,12 @@
+//! Decodes a base91 string
+//! Performs error handling and returns a string
+//! Call base91_decoder.crack to use. It returns option<String> and check with
+//! `result.is_some()` to see if it returned okay.
+
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
 
 use super::crack_results::CrackResult;
-///! Decodes a base91 string
-///! Performs error handling and returns a string
-///! Call base91_decoder.crack to use. It returns option<String> and check with
-///! `result.is_some()` to see if it returned okay.
-///
 use super::interface::Crack;
 use super::interface::Decoder;
 
@@ -112,12 +112,8 @@ mod tests {
     #[test]
     fn successful_decoding() {
         let base91_decoder = Decoder::<Base91Decoder>::new();
-
         let result = base91_decoder.crack("TPwJh>Io2Tv!lE", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for base91");
-        assert_eq!(decoded_str[0], "hello world");
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world");
     }
 
     #[test]
@@ -137,14 +133,7 @@ mod tests {
         let result = base91_decoder
             .crack("😈", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            panic!("Decode_base91 did not return an option with Some<t>.")
-        } else {
-            // If we get here, the test passed
-            // Because the base91_decoder.crack function returned None
-            // as it should do for the input
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -153,9 +142,7 @@ mod tests {
         let result = base91_decoder
             .crack("", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -169,9 +156,7 @@ mod tests {
         let result = base91_decoder
             .crack("hello good day!", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_some());
     }
 
     #[test]
@@ -180,8 +165,6 @@ mod tests {
         let result = base91_decoder
             .crack("😂", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 }

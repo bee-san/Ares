@@ -7,19 +7,19 @@ use super::interface::Decoder;
 
 use log::{debug, info, trace};
 
-///! Citrix CTX1 Decoder
+/// Citrix CTX1 Decoder
 pub struct CitrixCTX1Decoder;
 
-///! Error enum
+/// Error enum
 #[derive(Debug)]
 enum Error {
-    ///! Error when the input is not divisible by 4
+    /// Error when the input is not divisible by 4
     InvalidLength,
-    ///! Error with left-hand side subtraction
+    /// Error with left-hand side subtraction
     LhsOverflow,
-    ///! Error with right-hand side subtraction
+    /// Error with right-hand side subtraction
     RhsOverflow,
-    ///! Error if the result isn't UTF-8
+    /// Error if the result isn't UTF-8
     InvalidUtf8,
 }
 

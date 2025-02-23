@@ -7,7 +7,7 @@ use super::interface::Decoder;
 
 use log::{info, trace};
 
-///! Atbash Decoder
+/// Atbash Decoder
 pub struct AtbashDecoder;
 
 impl Crack for Decoder<AtbashDecoder> {
@@ -136,14 +136,7 @@ mod tests {
         let result = atbash_decoder
             .crack("583920482058430191", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            panic!("Decode_atbash did not return an option with Some<t>.")
-        } else {
-            // If we get here, the test passed
-            // Because the atbash_decoder.crack function returned None
-            // as it should do for the input
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -152,9 +145,7 @@ mod tests {
         let result = atbash_decoder
             .crack("", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 
     #[test]
@@ -163,9 +154,7 @@ mod tests {
         let result = atbash_decoder
             .crack("hello good day!", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_some());
     }
 
     #[test]
@@ -174,8 +163,6 @@ mod tests {
         let result = atbash_decoder
             .crack("😂", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            assert_eq!(true, true);
-        }
+        assert!(result.is_none());
     }
 }

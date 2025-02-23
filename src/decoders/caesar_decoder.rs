@@ -1,8 +1,8 @@
-///! Decode a caesar cipher string
-///! Performs error handling and returns a string
-///! Call caesar_decoder.crack to use. It returns option<String> and check with
-///! `result.is_some()` to see if it returned okay.
-///
+//! Decode a caesar cipher string
+//! Performs error handling and returns a string
+//! Call caesar_decoder.crack to use. It returns option<String> and check with
+//! `result.is_some()` to see if it returned okay.
+
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
 
@@ -53,7 +53,7 @@ impl Crack for Decoder<CaesarDecoder> {
         trace!("Trying Caesar Cipher with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
         let mut decoded_strings = Vec::new();
-        for shift in 1..25 {
+        for shift in 1..=25 {
             let decoded_text = caesar(text, shift);
             decoded_strings.push(decoded_text);
             let borrowed_decoded_text = &decoded_strings[decoded_strings.len() - 1];
@@ -86,7 +86,7 @@ impl Crack for Decoder<CaesarDecoder> {
     }
 }
 
-///! Caesar cipher to rotate cipher text by shift and return an owned String.
+/// Caesar cipher to rotate cipher text by shift and return an owned String.
 fn caesar(cipher: &str, shift: u8) -> String {
     cipher
         .chars()
@@ -139,8 +139,26 @@ mod tests {
     #[test]
     fn successful_decoding() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-
         let result = caesar_decoder.crack("fyyfhp", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "attack");
+    }
+
+    #[test]
+    fn successful_decoding_one_step_forward() {
+        let caesar_decoder = Decoder::<CaesarDecoder>::new();
+
+        let result = caesar_decoder.crack("buubdl", &get_athena_checker());
+        let decoded_str = &result
+            .unencrypted_text
+            .expect("No unencrypted text for caesar");
+        assert_eq!(decoded_str[0], "attack");
+    }
+
+    #[test]
+    fn successful_decoding_one_step_backward() {
+        let caesar_decoder = Decoder::<CaesarDecoder>::new();
+
+        let result = caesar_decoder.crack("zsszbj", &get_athena_checker());
         let decoded_str = &result
             .unencrypted_text
             .expect("No unencrypted text for caesar");
@@ -150,23 +168,21 @@ mod tests {
     #[test]
     fn successful_decoding_longer_text() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-
         let result = caesar_decoder.crack("uryyb guvf vf ybat grkg", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str[0], "hello this is long text");
+        assert_eq!(
+            result.unencrypted_text.unwrap()[0],
+            "hello this is long text"
+        );
     }
 
     #[test]
     fn successful_decoding_longer_text_with_puncuation() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-
         let result = caesar_decoder.crack("Uryyb! guvf vf ybat grkg?", &get_athena_checker());
-        let decoded_str = &result
-            .unencrypted_text
-            .expect("No unencrypted text for caesar");
-        assert_eq!(decoded_str[0], "Hello! this is long text?");
+        assert_eq!(
+            result.unencrypted_text.unwrap()[0],
+            "Hello! this is long text?"
+        );
     }
 
     #[test]
@@ -186,13 +202,6 @@ mod tests {
         let result = caesar_decoder
             .crack("#", &get_athena_checker())
             .unencrypted_text;
-        if result.is_some() {
-            panic!("Decode_caesar did not return an option with Some<t>.")
-        } else {
-            // If we get here, the test passed
-            // Because the caesar_decoder.crack function returned None
-            // as it should do for the input
-            assert!(true)
-        }
+        assert!(result.is_none());
     }
 }

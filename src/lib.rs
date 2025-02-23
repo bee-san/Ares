@@ -81,7 +81,8 @@ use self::decoders::crack_results::CrackResult;
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     config::set_global_config(config);
-    let initial_check_for_plaintext = check_if_input_text_is_plaintext(text);
+    let text = text.to_string();
+    let initial_check_for_plaintext = check_if_input_text_is_plaintext(&text);
     if initial_check_for_plaintext.is_identified {
         debug!(
             "The input text provided to the program {} is the plaintext. Returning early.",
@@ -89,11 +90,11 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
         );
         cli_pretty_printing::return_early_because_input_text_is_plaintext();
 
-        let mut crack_result = CrackResult::new(&Decoder::default(), (&text).to_string());
+        let mut crack_result = CrackResult::new(&Decoder::default(), text.to_string());
         crack_result.checker_name = initial_check_for_plaintext.checker_name;
 
         let output = DecoderResult {
-            text: vec![(&text).to_string()],
+            text: vec![text],
             path: vec![crack_result],
         };
 
