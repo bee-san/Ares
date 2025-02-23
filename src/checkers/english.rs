@@ -26,7 +26,7 @@ impl Check for Checker<EnglishChecker> {
     fn check(&self, text: &str) -> CheckResult {
         // Normalize before checking
         let text = normalise_string(text);
-        
+
         let mut result = CheckResult {
             is_identified: !is_gibberish(&text),
             text: text.to_string(),
@@ -37,7 +37,8 @@ impl Check for Checker<EnglishChecker> {
         };
 
         // Handle edge case of very short strings after normalization
-        if text.len() < 2 {  // Reduced from 3 since normalization may remove punctuation
+        if text.len() < 2 {
+            // Reduced from 3 since normalization may remove punctuation
             result.is_identified = false;
         }
 
@@ -83,7 +84,11 @@ mod tests {
     #[test]
     fn test_check_multiple_words() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("this is a valid english sentence").is_identified);
+        assert!(
+            checker
+                .check("this is a valid english sentence")
+                .is_identified
+        );
     }
 
     #[test]
