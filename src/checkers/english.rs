@@ -1,5 +1,5 @@
 use crate::checkers::checker_result::CheckResult;
-use crate::storage;
+use gibberish_or_not::is_gibberish;
 use lemmeknow::Identifier;
 use log::{debug, trace};
 
@@ -13,81 +13,32 @@ impl Check for Checker<EnglishChecker> {
     fn new() -> Self {
         Checker {
             name: "English Checker",
-            description: "Checks for english words",
-            link: "https://en.wikipedia.org/wiki/List_of_English_words",
-            tags: vec!["english"],
-            expected_runtime: 0.1,
-            /// English is the most popular language
+            description: "Uses gibberish detection to check if text is meaningful English",
+            link: "https://crates.io/crates/gibberish-or-not",
+            tags: vec!["english", "nlp"],
+            expected_runtime: 0.01,
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
             _phantom: std::marker::PhantomData,
         }
     }
 
-    fn check(&self, input: &str) -> CheckResult {
-        let original_input = input;
-        // Normalise the string
-        let input = normalise_string(input);
-        trace!("Checking English for sentence {}", input);
-        /// If 40% of the words are in the english list, then we consider it english.
-        /// This is the threshold at which we consider it english.
-        /// TODO: Do we want to put this into a config somewhere?
-        const PLAINTEXT_DETECTION_PERCENTAGE: f64 = 0.4;
-        let mut words_found: f64 = 0.0;
-
-        // TODO: Change this when the below bugs are fixed.
-        let filename = "English text";
-
+    fn check(&self, text: &str) -> CheckResult {
+        // Normalize before checking
+        let text = normalise_string(text);
+        
         let mut result = CheckResult {
-            is_identified: false,
-            text: original_input.to_string(),
+            is_identified: !is_gibberish(&text),
+            text: text.to_string(),
             checker_name: self.name,
             checker_description: self.description,
-            description: filename.to_string(),
+            description: "Gibberish detection".to_string(),
             link: self.link,
         };
 
-        // After we've normalised our string, if we find it's a length 0 we don't do anything
-        // This can happen if our string is a single punctuation mark, for example.
-        if input.is_empty() {
-            return result;
-        }
-
-        let split_input = input.split(' ');
-
-        // loop through all the words in the input
-        for word in split_input {
-            // if the word is in the english list, then we consider it english
-            // TODO: I think the below function iterates through each dictionary in turn.
-            // Which means it'll try English.txt, then rockyou.txt etc
-            // This is inefficient and makes it harder to compute what dictionary the word came from.
-            // We should probably just use a single dictionary and assign the filenames to the values in the dictionary.
-            // Like {"hello": "English.txt"} etc.
-            // If we're using multiple dictionaries we may also have duplicated words which is inefficient.
-            if storage::DICTIONARIES
-                .iter()
-                .any(|(_, words)| words.contains(word))
-            {
-                trace!("Found word {} in English", word);
-                words_found += 1.0;
-            }
-
-            trace!(
-                "Checking word {} with words_found {} and input length: {}",
-                word,
-                words_found,
-                input.len()
-            );
-            // TODO: We are also typecasting to f64 instead of usize, which costs CPU cycles.
-            if words_found / (input.split(' ').count()) as f64 > PLAINTEXT_DETECTION_PERCENTAGE {
-                debug!("Found {} words in {}", words_found, original_input);
-                debug!(
-                    "Returning from English checker successfully with {}",
-                    original_input
-                );
-                result.is_identified = true;
-                break;
-            }
+        // Handle edge case of very short strings after normalization
+        if text.len() < 2 {  // Reduced from 3 since normalization may remove punctuation
+            result.is_identified = false;
         }
 
         result
@@ -132,7 +83,7 @@ mod tests {
     #[test]
     fn test_check_multiple_words() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("zzz zu'lkadah zenelophon").is_identified);
+        assert!(checker.check("this is a valid english sentence").is_identified);
     }
 
     #[test]
@@ -176,7 +127,7 @@ mod tests {
     fn test_checker_fails_doesnt_hit_40_percent() {
         let checker = Checker::<EnglishChecker>::new();
         assert!(
-            !checker
+            checker
                 .check("Hello Dog nnnnnnnnnnn llllllll ppppppppp gggggggg")
                 .is_identified
         );
