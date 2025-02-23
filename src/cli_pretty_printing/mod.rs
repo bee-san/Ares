@@ -63,6 +63,16 @@ pub fn human_checker_check(description: &str, text: &str) {
     )
 }
 
+/// When the given input is empty, print this message
+pub fn return_early_because_input_is_empty() {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return;
+    }
+
+    println!("🤔 The provided input is empty.");
+}
+
 /// When Ares has failed to decode something, print this message
 pub fn failed_to_decode() {
     let config = crate::config::get_config();

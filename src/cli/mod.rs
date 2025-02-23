@@ -61,7 +61,7 @@ pub fn parse_cli_args() -> (String, Config) {
         env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, min_log_level),
     );
 
-    // If both the file and text are proivded, panic because we're not sure which one to use
+    // If both the file and text are provided, panic because we're not sure which one to use
     if opts.file.is_some() && opts.text.is_some() {
         panic_failure_both_input_and_fail_provided();
     }

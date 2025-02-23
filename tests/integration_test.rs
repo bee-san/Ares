@@ -22,6 +22,14 @@ fn test_no_panic_if_empty_string() {
 }
 
 #[test]
+fn text_return_result_if_empty_string() {
+    let config = Config::default();
+    let result = perform_cracking("", config);
+    assert_eq!(true, true);
+    assert!(result.unwrap().text[0] == "");
+}
+
+#[test]
 fn test_program_parses_files_and_cracks() {
     // It should be able to open and crack this file
     let file_path = "tests/test_fixtures/base64_3_times_with_no_new_line";
