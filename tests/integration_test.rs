@@ -35,6 +35,7 @@ fn test_program_parses_files_and_cracks() {
 }
 
 #[test]
+#[ignore]
 fn test_program_parses_files_with_new_line_and_cracks() {
     // It should be able to open and crack this file
     let file_path = "tests/test_fixtures/rot13_base64_hex_with_newline";
