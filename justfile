@@ -6,8 +6,13 @@ test-all:
   cargo build
   cargo check
   cargo clippy
-  cargo fmt
   cargo test
+
+fix-all:
+  cargo clippy --fix
+  cargo fmt
+  cargo nextest run
+  git commit -m 'Clippy and fmt'
 
 test:
   cargo nextest run
