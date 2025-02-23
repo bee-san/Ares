@@ -61,3 +61,6 @@ pub mod caesar_decoder;
 
 /// For the railfence cipher decoder
 pub mod railfence_decoder;
+
+/// For the z85 cipher decoder
+pub mod z85_decoder;

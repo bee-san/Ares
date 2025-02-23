@@ -31,7 +31,10 @@ fn test_program_parses_files_and_cracks() {
     assert_eq!(true, true);
     // The base64 string decodes to "VFoW2RHbHdiR1VndXMUdlbHBVV1RCSlIxWjFXVEk1YTJGWE5XNWpkejA5"
     let result = result.unwrap();
-    assert!(!result.text.is_empty(), "Decoding should produce some result");
+    assert!(
+        !result.text.is_empty(),
+        "Decoding should produce some result"
+    );
 }
 
 #[test]
