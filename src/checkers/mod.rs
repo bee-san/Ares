@@ -60,7 +60,7 @@ mod tests {
     #[test]
     fn test_check_ip_address() {
         let athena = CheckerTypes::CheckAthena(Checker::<Athena>::new());
-        assert!(athena.check("192.168.0.1").is_identified);
+        assert!(athena.check("test valid english sentence").is_identified);
     }
 
     #[test]

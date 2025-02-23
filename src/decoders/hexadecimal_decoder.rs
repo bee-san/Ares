@@ -13,9 +13,9 @@ pub struct HexadecimalDecoder;
 /// Error enum
 #[derive(Debug)]
 enum Error {
-    ///! Error when the input is not divisible by 2
+    /// Error when the input is not divisible by 2
     InvalidLength,
-    ///! Error if the result isn't UTF-8
+    /// Error if the result isn't UTF-8
     InvalidUtf8,
 }
 
