@@ -30,6 +30,7 @@ use crate::decoders::reverse_decoder::ReverseDecoder;
 use crate::decoders::rot47_decoder::ROT47Decoder;
 use crate::decoders::url_decoder::URLDecoder;
 use crate::decoders::z85_decoder::Z85Decoder;
+use crate::decoders::braille_decoder::BrailleDecoder;
 
 use log::trace;
 use rayon::prelude::*;
@@ -130,6 +131,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let rot47decoder = Decoder::<ROT47Decoder>::new();
     let z85 = Decoder::<Z85Decoder>::new();
     let a1z26decoder = Decoder::<A1Z26Decoder>::new();
+    let brailledecoder = Decoder::<BrailleDecoder>::new();
     Decoders {
         components: vec![
             Box::new(reversedecoder),
@@ -153,6 +155,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(rot47decoder),
             Box::new(z85),
             Box::new(a1z26decoder),
+            Box::new(brailledecoder),
         ],
     }
 }
