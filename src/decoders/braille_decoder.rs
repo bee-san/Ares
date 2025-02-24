@@ -1,7 +1,7 @@
-use crate::checkers::CheckerTypes;
 use super::crack_results::CrackResult;
 use super::interface::Crack;
 use super::interface::Decoder;
+use crate::checkers::CheckerTypes;
 
 use log::trace;
 use std::collections::HashMap;
@@ -108,14 +108,8 @@ mod tests {
     #[test]
     fn braille_decodes_successfully() {
         let braille_decoder = Decoder::<BrailleDecoder>::new();
-        let result = braille_decoder.crack(
-            "⠓⠑⠇⠇⠕⠀⠺⠕⠗⠇⠙",
-            &get_athena_checker(),
-        );
-        assert_eq!(
-            result.unencrypted_text.unwrap()[0],
-            "hello world"
-        );
+        let result = braille_decoder.crack("⠓⠑⠇⠇⠕⠀⠺⠕⠗⠇⠙", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "hello world");
     }
 
     #[test]
@@ -132,17 +126,11 @@ mod tests {
         let braille_decoder = Decoder::<BrailleDecoder>::new();
         let test_string = "⠓⠑⠇⠇⠕⠀⠍⠽⠀⠝⠁⠍⠑⠀⠊⠎⠀⠃⠑⠑⠀⠁⠝⠙⠀⠊⠀⠇⠊⠅⠑⠀⠙⠕⠛⠀⠁⠝⠙⠀⠁⠏⠏⠇⠑⠀⠁⠝⠙⠀⠞⠗⠑⠑";
         let expected = "hello my name is bee and i like dog and apple and tree";
-        
-        let result = braille_decoder.crack(
-            test_string,
-            &get_athena_checker(),
-        );
+
+        let result = braille_decoder.crack(test_string, &get_athena_checker());
 
         assert!(result.unencrypted_text.is_some());
-        assert_eq!(
-            result.unencrypted_text.unwrap()[0].to_lowercase(),
-            expected
-        );
+        assert_eq!(result.unencrypted_text.unwrap()[0].to_lowercase(), expected);
     }
 
     #[test]

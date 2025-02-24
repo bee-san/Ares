@@ -20,6 +20,7 @@ use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::base64_url_decoder::Base64URLDecoder;
 use crate::decoders::base65536_decoder::Base65536Decoder;
 use crate::decoders::base91_decoder::Base91Decoder;
+use crate::decoders::braille_decoder::BrailleDecoder;
 use crate::decoders::caesar_decoder::CaesarDecoder;
 use crate::decoders::citrix_ctx1_decoder::CitrixCTX1Decoder;
 use crate::decoders::crack_results::CrackResult;
@@ -30,7 +31,6 @@ use crate::decoders::reverse_decoder::ReverseDecoder;
 use crate::decoders::rot47_decoder::ROT47Decoder;
 use crate::decoders::url_decoder::URLDecoder;
 use crate::decoders::z85_decoder::Z85Decoder;
-use crate::decoders::braille_decoder::BrailleDecoder;
 
 use log::trace;
 use rayon::prelude::*;
