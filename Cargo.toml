@@ -48,7 +48,7 @@ gibberish-or-not = "1.1.0"
 
 # Dev dependencies
 [dev-dependencies]
-cargo-nextest = "0.9.54"
+cargo-nextest = "0.9.92"
 criterion = "0.5.1"
 
 [profile.release]
