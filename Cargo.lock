@@ -924,6 +924,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "34aa73646ffb006b8f5147f3dc182bd4bcb190227ce861fc4a4844bf8e3cb2c0"
 
 [[package]]
+name = "encoding_rs"
+version = "0.8.35"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
+dependencies = [
+ "cfg-if",
+]
+
+[[package]]
 name = "env_logger"
 version = "0.10.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1180,10 +1189,11 @@ dependencies = [
 
 [[package]]
 name = "gibberish-or-not"
-version = "0.7.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "456b9fce5122d9a61a95e2c45eb7250402c5edbdab040f90f458a6ecf1d68c66"
+checksum = "c369baad17342ae6dea5aaeb5fd02f701888917a9da87f054be2e66b4efc9691"
 dependencies = [
+ "encoding_rs",
  "lazy_static",
  "once_cell",
  "phf",
