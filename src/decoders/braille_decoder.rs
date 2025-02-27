@@ -6,7 +6,7 @@ use crate::checkers::CheckerTypes;
 use log::trace;
 use std::collections::HashMap;
 
-///! Braille Decoder
+//! Braille Decoder
 pub struct BrailleDecoder;
 
 impl Crack for Decoder<BrailleDecoder> {
@@ -52,6 +52,10 @@ impl Crack for Decoder<BrailleDecoder> {
     }
 }
 
+/// Converts Braille Unicode characters to their corresponding Latin alphabet characters
+/// 
+/// This function maps each Braille character to its corresponding Latin letter
+/// and returns the decoded text as a String.
 fn braille_to_text(text: &str) -> String {
     let mut mapping = HashMap::new();
     mapping.insert('⠁', 'a');
