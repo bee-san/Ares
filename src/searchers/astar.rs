@@ -3,7 +3,6 @@ use crate::filtration_system::{get_decoder_tagged_decoders, get_non_decoder_tagg
 use crossbeam::channel::Sender;
 
 use log::trace;
-use rand::Rng;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;
