@@ -4,7 +4,7 @@ use crate::filtration_system::{
 };
 use crossbeam::channel::Sender;
 
-use log::trace;
+use log::{trace, warn};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;
@@ -14,6 +14,7 @@ use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::DecoderResult;
+use crate::decoders::crack_results::CrackResult;
 
 /// A* search node with priority based on f = g + h
 #[derive(Debug)]
@@ -53,6 +54,9 @@ impl PartialEq for AStarNode {
 
 impl Eq for AStarNode {}
 
+// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
+const PRUNE_THRESHOLD: usize = 10000;
+
 /// A* search implementation
 /// This algorithm prioritizes decoders using a heuristic function
 /// and executes "decoder"-tagged decoders immediately at each level
@@ -64,6 +68,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
     // Set to track visited states to prevent cycles
     let mut seen_strings = HashSet::new();
+    let mut seen_count = 0;
 
     // Priority queue for open set
     let mut open_set = BinaryHeap::new();
@@ -88,8 +93,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
         // Get the node with the lowest f value
         let current_node = open_set.pop().unwrap();
-        let current_string = current_node.state;
-
+        
         trace!(
             "Processing node with cost {}, heuristic {}, total cost {}",
             current_node.cost,
@@ -98,7 +102,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         );
 
         // First, execute all "decoder"-tagged decoders immediately
-        let decoder_tagged_decoders = get_decoder_tagged_decoders(&current_string);
+        let decoder_tagged_decoders = get_decoder_tagged_decoders(&current_node.state);
 
         if !decoder_tagged_decoders.components.is_empty() {
             trace!(
@@ -108,14 +112,14 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
             let athena_checker = Checker::<Athena>::new();
             let checker = CheckerTypes::CheckAthena(athena_checker);
-            let decoder_results = decoder_tagged_decoders.run(&current_string.text[0], checker);
+            let decoder_results = decoder_tagged_decoders.run(&current_node.state.text[0], checker);
 
             // Process decoder results
             match decoder_results {
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with decoder-tagged decoder");
-                    let mut decoders_used = current_string.path;
+                    let mut decoders_used = current_node.state.path.clone();
                     let text = res.unencrypted_text.clone().unwrap_or_default();
                     decoders_used.push(res);
                     let result_text = DecoderResult {
@@ -140,12 +144,36 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                     );
 
                     for mut r in results_vec {
-                        let mut decoders_used = current_string.path.clone();
+                        let mut decoders_used = current_node.state.path.clone();
                         let mut text = r.unencrypted_text.take().unwrap_or_default();
 
                         // Filter out strings that can't be decoded or have been seen before
                         text.retain(|s| {
-                            !check_if_string_cant_be_decoded(s) && seen_strings.insert(s.clone())
+                            if check_if_string_cant_be_decoded(s) {
+                                return false;
+                            }
+                            
+                            if seen_strings.insert(s.clone()) {
+                                seen_count += 1;
+                                
+                                // Prune the HashSet if it gets too large
+                                if seen_count > PRUNE_THRESHOLD {
+                                    warn!("Pruning seen_strings HashSet (size: {})", seen_strings.len());
+                                    
+                                    // Keep strings that are more likely to lead to a solution
+                                    // This heuristic keeps shorter strings as they're often more valuable
+                                    let before_size = seen_strings.len();
+                                    seen_strings.retain(|s| s.len() < 100);
+                                    let after_size = seen_strings.len();
+                                    
+                                    warn!("Pruned {} entries from seen_strings HashSet", before_size - after_size);
+                                    seen_count = after_size;
+                                }
+                                
+                                true
+                            } else {
+                                false
+                            }
                         });
 
                         if text.is_empty() {
@@ -155,20 +183,19 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         decoders_used.push(r);
 
                         // Create new node with updated cost and heuristic
+                        let cost = current_node.cost + 1;
+                        let heuristic = generate_heuristic();
+                        let total_cost = cost as f32 + heuristic;
+                        
                         let new_node = AStarNode {
                             state: DecoderResult {
                                 text,
                                 path: decoders_used,
                             },
-                            cost: current_node.cost + 1,
-                            heuristic: generate_heuristic(),
-                            total_cost: 0.0, // Will be calculated below
+                            cost,
+                            heuristic,
+                            total_cost,
                         };
-
-                        // Calculate total cost f(n) = g(n) + h(n)
-                        let total_cost = new_node.cost as f32 + new_node.heuristic;
-                        let mut new_node = new_node;
-                        new_node.total_cost = total_cost;
 
                         // Add to open set
                         open_set.push(new_node);
@@ -178,7 +205,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         }
 
         // Then, process non-"decoder"-tagged decoders with heuristic prioritization
-        let non_decoder_decoders = get_non_decoder_tagged_decoders(&current_string);
+        let non_decoder_decoders = get_non_decoder_tagged_decoders(&current_node.state);
 
         if !non_decoder_decoders.components.is_empty() {
             trace!(
@@ -188,14 +215,14 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
             let athena_checker = Checker::<Athena>::new();
             let checker = CheckerTypes::CheckAthena(athena_checker);
-            let decoder_results = non_decoder_decoders.run(&current_string.text[0], checker);
+            let decoder_results = non_decoder_decoders.run(&current_node.state.text[0], checker);
 
             // Process decoder results
             match decoder_results {
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with non-decoder-tagged decoder");
-                    let mut decoders_used = current_string.path;
+                    let mut decoders_used = current_node.state.path.clone();
                     let text = res.unencrypted_text.clone().unwrap_or_default();
                     decoders_used.push(res);
                     let result_text = DecoderResult {
@@ -220,12 +247,36 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                     );
 
                     for mut r in results_vec {
-                        let mut decoders_used = current_string.path.clone();
+                        let mut decoders_used = current_node.state.path.clone();
                         let mut text = r.unencrypted_text.take().unwrap_or_default();
 
                         // Filter out strings that can't be decoded or have been seen before
                         text.retain(|s| {
-                            !check_if_string_cant_be_decoded(s) && seen_strings.insert(s.clone())
+                            if check_if_string_cant_be_decoded(s) {
+                                return false;
+                            }
+                            
+                            if seen_strings.insert(s.clone()) {
+                                seen_count += 1;
+                                
+                                // Prune the HashSet if it gets too large
+                                if seen_count > PRUNE_THRESHOLD {
+                                    warn!("Pruning seen_strings HashSet (size: {})", seen_strings.len());
+                                    
+                                    // Keep strings that are more likely to lead to a solution
+                                    // This heuristic keeps shorter strings as they're often more valuable
+                                    let before_size = seen_strings.len();
+                                    seen_strings.retain(|s| s.len() < 100);
+                                    let after_size = seen_strings.len();
+                                    
+                                    warn!("Pruned {} entries from seen_strings HashSet", before_size - after_size);
+                                    seen_count = after_size;
+                                }
+                                
+                                true
+                            } else {
+                                false
+                            }
                         });
 
                         if text.is_empty() {
@@ -235,20 +286,19 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         decoders_used.push(r);
 
                         // Create new node with updated cost and heuristic
+                        let cost = current_node.cost + 1;
+                        let heuristic = generate_heuristic();
+                        let total_cost = cost as f32 + heuristic;
+                        
                         let new_node = AStarNode {
                             state: DecoderResult {
                                 text,
                                 path: decoders_used,
                             },
-                            cost: current_node.cost + 1,
-                            heuristic: generate_heuristic(),
-                            total_cost: 0.0, // Will be calculated below
+                            cost,
+                            heuristic,
+                            total_cost,
                         };
-
-                        // Calculate total cost f(n) = g(n) + h(n)
-                        let total_cost = new_node.cost as f32 + new_node.heuristic;
-                        let mut new_node = new_node;
-                        new_node.total_cost = total_cost;
 
                         // Add to open set
                         open_set.push(new_node);
