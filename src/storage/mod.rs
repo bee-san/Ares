@@ -7,6 +7,7 @@ use std::collections::HashSet;
 /// Tells Rust to load the dictionaries into the binary
 /// at compile time. Which means that we do not waste
 /// time loading them at runtime.
+#[allow(dead_code)]
 pub static DICTIONARIES: Lazy<HashMap<&str, HashSet<&str>>> = Lazy::new(|| {
     /// The directory where our dictionaries are stored.
     static DICTIONARIES_DIR: Dir<'_> = include_dir!("$CARGO_MANIFEST_DIR/src/storage/dictionaries");

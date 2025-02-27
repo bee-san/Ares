@@ -36,9 +36,10 @@ mod bfs;
 /// We need to loop through these and determine:
 /// 1. Did we reach our exit condition?
 /// 2. If not, create new nodes out of them and add them to the queue.
-/// We can return an Option? An Enum? And then match on that
-/// So if we return CrackSuccess we return
-/// Else if we return an array, we add it to the children and go again.
+///
+///    We can return an Option? An Enum? And then match on that
+///    So if we return CrackSuccess we return
+///    Else if we return an array, we add it to the children and go again.
 pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
     let timeout = get_config().timeout;
     let timer = timer::start(timeout);
@@ -70,6 +71,7 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
 /// Performs the decodings by getting all of the decoders
 /// and calling `.run` which in turn loops through them and calls
 /// `.crack()`.
+#[allow(dead_code)]
 fn perform_decoding(text: &DecoderResult) -> MyResults {
     let decoders = filter_and_get_decoders(text);
     let athena_checker = Checker::<Athena>::new();

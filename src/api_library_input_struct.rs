@@ -7,6 +7,7 @@ use lemmeknow::Identifier;
 
 /// Library input is the default API input
 /// The CLI turns its arguments into a LibraryInput struct
+#[allow(dead_code)]
 pub struct LibraryInput<Type> {
     /// The input to be decoded.
     /// Given to us by the user.

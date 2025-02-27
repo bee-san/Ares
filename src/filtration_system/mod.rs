@@ -108,8 +108,9 @@ impl MyResults {
 
 /// Filter struct for decoder filtering
 pub struct DecoderFilter {
-    // Filter criteria
+    /// Tags to include in the filter - decoders must have at least one of these tags
     include_tags: Vec<String>,
+    /// Tags to exclude from the filter - decoders must not have any of these tags
     exclude_tags: Vec<String>,
 }
 
@@ -135,6 +136,7 @@ impl DecoderFilter {
     }
 
     /// Check if a decoder matches the filter
+    #[allow(clippy::borrowed_box)]
     pub fn matches(&self, decoder: &Box<dyn Crack + Sync>) -> bool {
         let tags = decoder.get_tags();
 
@@ -181,7 +183,7 @@ pub fn get_non_decoder_tagged_decoders(text_struct: &DecoderResult) -> Decoders 
 }
 
 /// Filter decoders based on custom tags
-pub fn filter_decoders_by_tags(text_struct: &DecoderResult, filter: &DecoderFilter) -> Decoders {
+pub fn filter_decoders_by_tags(_text_struct: &DecoderResult, filter: &DecoderFilter) -> Decoders {
     trace!("Filtering decoders by tags");
 
     // Get all decoders

@@ -12,7 +12,6 @@ use once_cell::sync::OnceCell;
 /// let config = get_config();
 /// assert_eq!(config.verbose, 0);
 /// ```
-
 pub struct Config {
     /// A level of verbosity to determine.
     /// How much we print in logs.
