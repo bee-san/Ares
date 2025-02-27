@@ -6,14 +6,14 @@ use std::path::Path;
 /// Loads invisible character list into a HashSet
 pub static INVISIBLE_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
     let mut entries: HashSet<char> = HashSet::new();
-    
+
     // Path to the invisible characters file
     let chars_file_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("src")
         .join("storage")
         .join("invisible_chars")
         .join("chars.txt");
-    
+
     // Read the file content
     if let Ok(content) = fs::read_to_string(&chars_file_path) {
         let content_lines = content.split('\n');
@@ -33,7 +33,7 @@ pub static INVISIBLE_CHARS: Lazy<HashSet<char>> = Lazy::new(|| {
             }
         }
     }
-    
+
     entries
 });
 
