@@ -6,7 +6,7 @@ use crate::checkers::CheckerTypes;
 use log::trace;
 use std::collections::HashMap;
 
-//! Braille Decoder
+/// Braille Decoder
 pub struct BrailleDecoder;
 
 impl Crack for Decoder<BrailleDecoder> {
