@@ -19,6 +19,9 @@ use crate::{timer, DecoderResult};
 /// This module provides access to the breadth first search
 /// which searches for the plaintext.
 mod bfs;
+/// This module provides access to the A* search algorithm
+/// which uses a heuristic to prioritize decoders.
+mod astar;
 
 /*pub struct Tree <'a> {
     // Wrap in a box because
@@ -44,8 +47,8 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
     // For stopping the thread
     let stop = Arc::new(AtomicBool::new(false));
     let s = stop.clone();
-    // Change this to select which search algorithm we want to use.
-    let handle = thread::spawn(move || bfs::bfs(input, result_sender, s));
+    // Use A* search algorithm instead of BFS
+    let handle = thread::spawn(move || astar::astar(input, result_sender, s));
 
     loop {
         if let Ok(res) = result_recv.try_recv() {
