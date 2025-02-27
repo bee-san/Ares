@@ -1,25 +1,25 @@
 //! # A* Search Implementation for Decoding
-//! 
+//!
 //! This module implements the A* search algorithm for finding the correct sequence of decoders
 //! to decode an encrypted or encoded text. The A* algorithm is a best-first search algorithm
 //! that uses a heuristic function to prioritize which paths to explore.
-//! 
+//!
 //! ## Algorithm Overview
-//! 
+//!
 //! 1. Start with the initial input text
 //! 2. At each step:
 //!    - First run all "decoder"-tagged decoders (these are prioritized)
 //!    - Then run all other decoders with heuristic prioritization
 //! 3. For each successful decoding, create a new node and add it to the priority queue
 //! 4. Continue until a plaintext is found or the search space is exhausted
-//! 
+//!
 //! ## Node Prioritization
-//! 
+//!
 //! Nodes are prioritized using an f-score where:
 //! - f = g + h
 //! - g = depth in the search tree (cost so far)
 //! - h = heuristic value (estimated cost to goal)
-//! 
+//!
 //! The current implementation uses a simple placeholder heuristic of 1.0,
 //! but this could be improved with more sophisticated cipher identification.
 
@@ -41,7 +41,7 @@ use crate::checkers::CheckerTypes;
 use crate::DecoderResult;
 
 /// A* search node with priority based on f = g + h
-/// 
+///
 /// Each node represents a state in the search space, with:
 /// - The current decoded text
 /// - The path of decoders used to reach this state
@@ -50,17 +50,17 @@ use crate::DecoderResult;
 struct AStarNode {
     /// Current state containing the decoded text and path of decoders used
     state: DecoderResult,
-    
+
     /// Cost so far (g) - represents the depth in the search tree
     /// This increases by 1 for each decoder applied
     cost: u32,
-    
+
     /// Heuristic value (h) - estimated cost to reach the goal
     /// Currently a placeholder value, but could be improved with
     /// cipher identification techniques to better estimate how close
     /// we are to finding plaintext
     heuristic: f32,
-    
+
     /// Total cost (f = g + h) used for prioritization in the queue
     /// Nodes with lower total_cost are explored first
     total_cost: f32,
@@ -95,32 +95,32 @@ impl Eq for AStarNode {}
 const PRUNE_THRESHOLD: usize = 10000;
 
 /// A* search implementation for finding the correct sequence of decoders
-/// 
-/// This algorithm prioritizes decoders using a heuristic function and executes 
-/// "decoder"-tagged decoders immediately at each level. The search proceeds in a 
+///
+/// This algorithm prioritizes decoders using a heuristic function and executes
+/// "decoder"-tagged decoders immediately at each level. The search proceeds in a
 /// best-first manner, exploring the most promising nodes first based on the f-score.
-/// 
+///
 /// ## Execution Order
-/// 
+///
 /// 1. At each node, first run all "decoder"-tagged decoders
 ///    - These are considered more likely to produce meaningful results
 ///    - If any of these decoders produces plaintext, we return immediately
-/// 
+///
 /// 2. Then run all non-"decoder"-tagged decoders
 ///    - These are prioritized using the heuristic function
 ///    - Results are added to the priority queue for future exploration
-/// 
+///
 /// ## Pruning Mechanism
-/// 
+///
 /// To prevent memory exhaustion and avoid cycles:
-/// 
+///
 /// 1. We maintain a HashSet of seen strings to avoid revisiting states
 /// 2. When the HashSet grows beyond PRUNE_THRESHOLD (10,000 entries):
 ///    - We retain only strings shorter than 100 characters
 ///    - This is based on the heuristic that shorter strings are more likely to be valuable
-/// 
+///
 /// ## Parameters
-/// 
+///
 /// - `input`: The initial text to decode
 /// - `result_sender`: Channel to send the result when found
 /// - `stop`: Atomic boolean to signal when to stop the search
@@ -391,41 +391,41 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 }
 
 /// Generate a heuristic value for A* search prioritization
-/// 
+///
 /// The heuristic estimates how close a state is to being plaintext.
 /// A lower value indicates a more promising state.
-/// 
+///
 /// ## Current Implementation
-/// 
+///
 /// Currently returns a constant value of 1.0 as a placeholder.
-/// 
+///
 /// ## Future Improvements
-/// 
+///
 /// TODO: Use cipher identifier from SkeletalDemise to generate more
 /// accurate heuristics based on:
 /// - Character frequency analysis
 /// - N-gram statistics
 /// - Entropy measurements
 /// - Language detection scores
-/// 
+///
 /// A more sophisticated heuristic would significantly improve search efficiency.
 fn generate_heuristic() -> f32 {
     1.0
 }
 
 /// Determines if a string is too short to be meaningfully decoded
-/// 
+///
 /// ## Decision Criteria
-/// 
+///
 /// A string is considered undecodeble if:
 /// - It has 2 or fewer characters
-/// 
+///
 /// ## Rationale
-/// 
+///
 /// 1. The gibberish_or_not library requires at least 3 characters to work effectively
 /// 2. LemmeKnow and other pattern matchers perform poorly on very short strings
 /// 3. Most encoding schemes produce output of at least 3 characters
-/// 
+///
 /// Filtering out these strings early saves computational resources and
 /// prevents the search from exploring unproductive paths.
 fn check_if_string_cant_be_decoded(text: &str) -> bool {
