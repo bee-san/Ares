@@ -16,12 +16,12 @@ use crate::checkers::CheckerTypes;
 use crate::config::get_config;
 use crate::filtration_system::{filter_and_get_decoders, MyResults};
 use crate::{timer, DecoderResult};
-/// This module provides access to the breadth first search
-/// which searches for the plaintext.
-mod bfs;
 /// This module provides access to the A* search algorithm
 /// which uses a heuristic to prioritize decoders.
 mod astar;
+/// This module provides access to the breadth first search
+/// which searches for the plaintext.
+mod bfs;
 
 /*pub struct Tree <'a> {
     // Wrap in a box because

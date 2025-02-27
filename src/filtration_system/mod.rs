@@ -121,45 +121,47 @@ impl DecoderFilter {
             exclude_tags: Vec::new(),
         }
     }
-    
+
     /// Add a tag to include
     pub fn include_tag(mut self, tag: &str) -> Self {
         self.include_tags.push(tag.to_string());
         self
     }
-    
+
     /// Add a tag to exclude
     pub fn exclude_tag(mut self, tag: &str) -> Self {
         self.exclude_tags.push(tag.to_string());
         self
     }
-    
+
     /// Check if a decoder matches the filter
     pub fn matches(&self, decoder: &Box<dyn Crack + Sync>) -> bool {
         let tags = decoder.get_tags();
-        
+
         // If include_tags is not empty, at least one tag must match
         if !self.include_tags.is_empty() {
-            let has_included_tag = self.include_tags.iter().any(|include_tag| {
-                tags.iter().any(|tag| *tag == include_tag)
-            });
-            
+            let has_included_tag = self
+                .include_tags
+                .iter()
+                .any(|include_tag| tags.iter().any(|tag| *tag == include_tag));
+
             if !has_included_tag {
                 return false;
             }
         }
-        
+
         // If exclude_tags is not empty, no tag must match
         if !self.exclude_tags.is_empty() {
-            let has_excluded_tag = self.exclude_tags.iter().any(|exclude_tag| {
-                tags.iter().any(|tag| *tag == exclude_tag)
-            });
-            
+            let has_excluded_tag = self
+                .exclude_tags
+                .iter()
+                .any(|exclude_tag| tags.iter().any(|tag| *tag == exclude_tag));
+
             if has_excluded_tag {
                 return false;
             }
         }
-        
+
         true
     }
 }
@@ -181,16 +183,17 @@ pub fn get_non_decoder_tagged_decoders(text_struct: &DecoderResult) -> Decoders 
 /// Filter decoders based on custom tags
 pub fn filter_decoders_by_tags(text_struct: &DecoderResult, filter: &DecoderFilter) -> Decoders {
     trace!("Filtering decoders by tags");
-    
+
     // Get all decoders
     let all_decoders = get_all_decoders();
-    
+
     // Filter decoders based on tags
-    let filtered_components = all_decoders.components
+    let filtered_components = all_decoders
+        .components
         .into_iter()
         .filter(|decoder| filter.matches(decoder))
         .collect();
-    
+
     Decoders {
         components: filtered_components,
     }
@@ -263,7 +266,10 @@ mod tests {
         DecoderResult,
     };
 
-    use super::{filter_and_get_decoders, get_decoder_tagged_decoders, get_non_decoder_tagged_decoders, DecoderFilter, filter_decoders_by_tags};
+    use super::{
+        filter_and_get_decoders, filter_decoders_by_tags, get_decoder_tagged_decoders,
+        get_non_decoder_tagged_decoders, DecoderFilter,
+    };
 
     #[test]
     fn it_works() {
@@ -279,93 +285,123 @@ mod tests {
         decoders.run("TXIgUm9ib3QgaXMgZ3JlYXQ=", checker);
         assert_eq!(true, true);
     }
-    
+
     #[test]
     fn test_decoder_filter_include_tag() {
         let filter = DecoderFilter::new().include_tag("base");
         let decoders = filter_decoders_by_tags(&DecoderResult::default(), &filter);
-        
+
         // Verify all returned decoders have the "base" tag or a tag starting with "base"
         for decoder in decoders.components.iter() {
             let tags = decoder.get_tags();
-            let has_base_tag = tags.iter().any(|tag| *tag == "base" || tag.starts_with("base"));
-            assert!(has_base_tag,
-                   "Decoder {} should have 'base' tag or tag starting with 'base', but has tags: {:?}",
-                   decoder.get_name(), tags);
+            let has_base_tag = tags
+                .iter()
+                .any(|tag| *tag == "base" || tag.starts_with("base"));
+            assert!(
+                has_base_tag,
+                "Decoder {} should have 'base' tag or tag starting with 'base', but has tags: {:?}",
+                decoder.get_name(),
+                tags
+            );
         }
-        
+
         // Ensure we have at least one decoder with the "base" tag
-        assert!(!decoders.components.is_empty(), "Should have at least one decoder with 'base' tag");
+        assert!(
+            !decoders.components.is_empty(),
+            "Should have at least one decoder with 'base' tag"
+        );
     }
-    
+
     #[test]
     fn test_decoder_filter_exclude_tag() {
         let filter = DecoderFilter::new().exclude_tag("base64");
         let decoders = filter_decoders_by_tags(&DecoderResult::default(), &filter);
-        
+
         // Verify none of the returned decoders have the "base64" tag
         for decoder in decoders.components.iter() {
             let tags = decoder.get_tags();
-            assert!(!tags.contains(&"base64"),
-                   "Decoder {} should not have 'base64' tag, but has tags: {:?}",
-                   decoder.get_name(), tags);
+            assert!(
+                !tags.contains(&"base64"),
+                "Decoder {} should not have 'base64' tag, but has tags: {:?}",
+                decoder.get_name(),
+                tags
+            );
         }
-        
+
         // Ensure we have some decoders without the "base64" tag
-        assert!(!decoders.components.is_empty(), "Should have some decoders without 'base64' tag");
+        assert!(
+            !decoders.components.is_empty(),
+            "Should have some decoders without 'base64' tag"
+        );
     }
-    
+
     #[test]
     fn test_decoder_filter_combined() {
         let filter = DecoderFilter::new()
             .include_tag("base")
             .exclude_tag("base64");
-        
+
         let decoders = filter_decoders_by_tags(&DecoderResult::default(), &filter);
-        
+
         // Verify all returned decoders have the "base" tag but not the "base64" tag
         for decoder in decoders.components.iter() {
             let tags = decoder.get_tags();
-            let has_base_tag = tags.iter().any(|tag| *tag == "base" || tag.starts_with("base"));
-            assert!(has_base_tag,
-                   "Decoder {} should have 'base' tag or tag starting with 'base', but has tags: {:?}",
-                   decoder.get_name(), tags);
-            assert!(!tags.contains(&"base64"),
-                   "Decoder {} should not have 'base64' tag, but has tags: {:?}",
-                   decoder.get_name(), tags);
+            let has_base_tag = tags
+                .iter()
+                .any(|tag| *tag == "base" || tag.starts_with("base"));
+            assert!(
+                has_base_tag,
+                "Decoder {} should have 'base' tag or tag starting with 'base', but has tags: {:?}",
+                decoder.get_name(),
+                tags
+            );
+            assert!(
+                !tags.contains(&"base64"),
+                "Decoder {} should not have 'base64' tag, but has tags: {:?}",
+                decoder.get_name(),
+                tags
+            );
         }
     }
-    
+
     #[test]
     fn test_get_decoder_tagged_decoders() {
         let decoders = get_decoder_tagged_decoders(&DecoderResult::default());
-        
+
         // Check if we have any decoders with the "decoder" tag
-        let has_decoder_tag = decoders.components.iter().any(|decoder| {
-            decoder.get_tags().contains(&"decoder")
-        });
-        
+        let has_decoder_tag = decoders
+            .components
+            .iter()
+            .any(|decoder| decoder.get_tags().contains(&"decoder"));
+
         // This test might pass or fail depending on whether any decoders have the "decoder" tag
         // If none have it, we should at least get an empty list
         if !has_decoder_tag {
-            assert!(decoders.components.is_empty(),
-                   "If no decoders have the 'decoder' tag, the result should be empty");
+            assert!(
+                decoders.components.is_empty(),
+                "If no decoders have the 'decoder' tag, the result should be empty"
+            );
         }
     }
-    
+
     #[test]
     fn test_get_non_decoder_tagged_decoders() {
         let decoders = get_non_decoder_tagged_decoders(&DecoderResult::default());
-        
+
         // Verify none of the returned decoders have the "decoder" tag
         for decoder in decoders.components.iter() {
-            assert!(!decoder.get_tags().contains(&"decoder"),
-                   "Decoder {} should not have 'decoder' tag, but has tags: {:?}",
-                   decoder.get_name(), decoder.get_tags());
+            assert!(
+                !decoder.get_tags().contains(&"decoder"),
+                "Decoder {} should not have 'decoder' tag, but has tags: {:?}",
+                decoder.get_name(),
+                decoder.get_tags()
+            );
         }
-        
+
         // We should have at least some decoders without the "decoder" tag
-        assert!(!decoders.components.is_empty(),
-                "Should have some decoders without 'decoder' tag");
+        assert!(
+            !decoders.components.is_empty(),
+            "Should have some decoders without 'decoder' tag"
+        );
     }
 }
