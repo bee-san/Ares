@@ -7,9 +7,8 @@ use super::interface::Decoder;
 
 use log::{info, trace};
 
-///! ROT47 Decoder
+/// ROT47 Decoder
 pub struct ROT47Decoder;
-
 impl Crack for Decoder<ROT47Decoder> {
     fn new() -> Decoder<ROT47Decoder> {
         Decoder {

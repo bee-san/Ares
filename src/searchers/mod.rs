@@ -16,6 +16,9 @@ use crate::checkers::CheckerTypes;
 use crate::config::get_config;
 use crate::filtration_system::{filter_and_get_decoders, MyResults};
 use crate::{timer, DecoderResult};
+/// This module provides access to the A* search algorithm
+/// which uses a heuristic to prioritize decoders.
+mod astar;
 /// This module provides access to the breadth first search
 /// which searches for the plaintext.
 mod bfs;
@@ -33,9 +36,10 @@ mod bfs;
 /// We need to loop through these and determine:
 /// 1. Did we reach our exit condition?
 /// 2. If not, create new nodes out of them and add them to the queue.
-/// We can return an Option? An Enum? And then match on that
-/// So if we return CrackSuccess we return
-/// Else if we return an array, we add it to the children and go again.
+///
+///    We can return an Option? An Enum? And then match on that
+///    So if we return CrackSuccess we return
+///    Else if we return an array, we add it to the children and go again.
 pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
     let timeout = get_config().timeout;
     let timer = timer::start(timeout);
@@ -44,8 +48,8 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
     // For stopping the thread
     let stop = Arc::new(AtomicBool::new(false));
     let s = stop.clone();
-    // Change this to select which search algorithm we want to use.
-    let handle = thread::spawn(move || bfs::bfs(input, result_sender, s));
+    // Use A* search algorithm instead of BFS
+    let handle = thread::spawn(move || astar::astar(input, result_sender, s));
 
     loop {
         if let Ok(res) = result_recv.try_recv() {
@@ -67,6 +71,7 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
 /// Performs the decodings by getting all of the decoders
 /// and calling `.run` which in turn loops through them and calls
 /// `.crack()`.
+#[allow(dead_code)]
 fn perform_decoding(text: &DecoderResult) -> MyResults {
     let decoders = filter_and_get_decoders(text);
     let athena_checker = Checker::<Athena>::new();

@@ -11,6 +11,7 @@ use crate::DecoderResult;
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
+#[allow(dead_code)]
 pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
     let initial = DecoderResult {
         text: vec![input],
@@ -92,6 +93,7 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
 }
 
 /// If this returns False it will not attempt to decode that string
+#[allow(dead_code)]
 fn check_if_string_cant_be_decoded(text: &str) -> bool {
     text.len() <= 2
 }
