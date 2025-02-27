@@ -66,3 +66,6 @@ pub mod rot47_decoder;
 
 /// For the z85 cipher decoder
 pub mod z85_decoder;
+
+/// For the braille decoder
+pub mod braille_decoder;

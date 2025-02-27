@@ -20,6 +20,7 @@ use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::base64_url_decoder::Base64URLDecoder;
 use crate::decoders::base65536_decoder::Base65536Decoder;
 use crate::decoders::base91_decoder::Base91Decoder;
+use crate::decoders::braille_decoder::BrailleDecoder;
 use crate::decoders::caesar_decoder::CaesarDecoder;
 use crate::decoders::citrix_ctx1_decoder::CitrixCTX1Decoder;
 use crate::decoders::crack_results::CrackResult;
@@ -230,6 +231,7 @@ fn get_all_decoders() -> Decoders {
     let rot47decoder = Decoder::<ROT47Decoder>::new();
     let z85 = Decoder::<Z85Decoder>::new();
     let a1z26decoder = Decoder::<A1Z26Decoder>::new();
+    let brailledecoder = Decoder::<BrailleDecoder>::new();
     Decoders {
         components: vec![
             Box::new(reversedecoder),
@@ -253,6 +255,7 @@ fn get_all_decoders() -> Decoders {
             Box::new(rot47decoder),
             Box::new(z85),
             Box::new(a1z26decoder),
+            Box::new(brailledecoder),
         ],
     }
 }
