@@ -91,7 +91,7 @@ impl PartialEq for AStarNode {
 
 impl Eq for AStarNode {}
 
-// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
+/// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
 const PRUNE_THRESHOLD: usize = 10000;
 
 /// A* search implementation for finding the correct sequence of decoders
