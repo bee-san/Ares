@@ -31,6 +31,8 @@ mod filtration_system;
 mod searchers;
 /// Timer for internal use
 mod timer;
+/// Storage module for dictionaries and invisible characters
+pub mod storage;
 
 use checkers::{
     athena::Athena,
