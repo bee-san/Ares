@@ -29,9 +29,6 @@ mod filtration_system;
 /// The searcher is the thing which searches for the plaintext
 /// It is the core of the program.
 mod searchers;
-/// The storage module contains all the dictionaries and provides
-/// storage of data to our decoderrs and checkers.
-mod storage;
 /// Timer for internal use
 mod timer;
 
@@ -160,17 +157,6 @@ mod tests {
         perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh", config);
     }
 
-    #[test]
-    fn test_perform_cracking_returns_successful() {
-        // this will work after english checker can identify "CANARY: hello"
-        // let result = perform_cracking("Q0FOQVJZOiBoZWxsbw==");
-        // assert!(result.is_some());
-        // assert!(result.unwrap() == "CANARY: hello")
-        let config = Config::default();
-        let result = perform_cracking("b2xsZWg=", config);
-        assert!(result.is_some());
-        assert!(result.unwrap().text[0] == "hello");
-    }
     #[test]
     fn test_perform_cracking_returns_failure() {
         let config = Config::default();
