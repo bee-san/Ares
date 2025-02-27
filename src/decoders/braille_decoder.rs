@@ -53,7 +53,7 @@ impl Crack for Decoder<BrailleDecoder> {
 }
 
 /// Converts Braille Unicode characters to their corresponding Latin alphabet characters
-/// 
+///
 /// This function maps each Braille character to its corresponding Latin letter
 /// and returns the decoded text as a String.
 fn braille_to_text(text: &str) -> String {
