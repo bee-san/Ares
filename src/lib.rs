@@ -29,6 +29,8 @@ mod filtration_system;
 /// The searcher is the thing which searches for the plaintext
 /// It is the core of the program.
 mod searchers;
+/// Storage module for dictionaries and invisible characters
+pub mod storage;
 /// Timer for internal use
 mod timer;
 
