@@ -14,7 +14,6 @@ use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::DecoderResult;
-use crate::decoders::crack_results::CrackResult;
 
 /// A* search node with priority based on f = g + h
 #[derive(Debug)]
@@ -93,7 +92,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
         // Get the node with the lowest f value
         let current_node = open_set.pop().unwrap();
-        
+
         trace!(
             "Processing node with cost {}, heuristic {}, total cost {}",
             current_node.cost,
@@ -152,24 +151,30 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                             if check_if_string_cant_be_decoded(s) {
                                 return false;
                             }
-                            
+
                             if seen_strings.insert(s.clone()) {
                                 seen_count += 1;
-                                
+
                                 // Prune the HashSet if it gets too large
                                 if seen_count > PRUNE_THRESHOLD {
-                                    warn!("Pruning seen_strings HashSet (size: {})", seen_strings.len());
-                                    
+                                    warn!(
+                                        "Pruning seen_strings HashSet (size: {})",
+                                        seen_strings.len()
+                                    );
+
                                     // Keep strings that are more likely to lead to a solution
                                     // This heuristic keeps shorter strings as they're often more valuable
                                     let before_size = seen_strings.len();
                                     seen_strings.retain(|s| s.len() < 100);
                                     let after_size = seen_strings.len();
-                                    
-                                    warn!("Pruned {} entries from seen_strings HashSet", before_size - after_size);
+
+                                    warn!(
+                                        "Pruned {} entries from seen_strings HashSet",
+                                        before_size - after_size
+                                    );
                                     seen_count = after_size;
                                 }
-                                
+
                                 true
                             } else {
                                 false
@@ -186,7 +191,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         let cost = current_node.cost + 1;
                         let heuristic = generate_heuristic();
                         let total_cost = cost as f32 + heuristic;
-                        
+
                         let new_node = AStarNode {
                             state: DecoderResult {
                                 text,
@@ -255,24 +260,30 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                             if check_if_string_cant_be_decoded(s) {
                                 return false;
                             }
-                            
+
                             if seen_strings.insert(s.clone()) {
                                 seen_count += 1;
-                                
+
                                 // Prune the HashSet if it gets too large
                                 if seen_count > PRUNE_THRESHOLD {
-                                    warn!("Pruning seen_strings HashSet (size: {})", seen_strings.len());
-                                    
+                                    warn!(
+                                        "Pruning seen_strings HashSet (size: {})",
+                                        seen_strings.len()
+                                    );
+
                                     // Keep strings that are more likely to lead to a solution
                                     // This heuristic keeps shorter strings as they're often more valuable
                                     let before_size = seen_strings.len();
                                     seen_strings.retain(|s| s.len() < 100);
                                     let after_size = seen_strings.len();
-                                    
-                                    warn!("Pruned {} entries from seen_strings HashSet", before_size - after_size);
+
+                                    warn!(
+                                        "Pruned {} entries from seen_strings HashSet",
+                                        before_size - after_size
+                                    );
                                     seen_count = after_size;
                                 }
-                                
+
                                 true
                             } else {
                                 false
@@ -289,7 +300,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         let cost = current_node.cost + 1;
                         let heuristic = generate_heuristic();
                         let total_cost = cost as f32 + heuristic;
-                        
+
                         let new_node = AStarNode {
                             state: DecoderResult {
                                 text,
