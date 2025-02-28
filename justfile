@@ -12,6 +12,7 @@ fix-all:
   cargo clippy --fix
   cargo fmt
   cargo nextest run
+  git add .
   git commit -m 'Clippy and fmt'
 
 test:
