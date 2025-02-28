@@ -46,11 +46,22 @@ impl Crack for Decoder<SubstitutionGenericDecoder> {
         let mut decoded_strings = HashSet::new();
 
         for perm in permutations {
-            let mapping: HashMap<_, _> = unique_symbols.iter().zip(perm).map(|(&k, v)| (k, v)).collect();
-            let substituted: String = text.chars().map(|c| *mapping.get(&c).unwrap_or(&c)).collect();
+            let mapping: HashMap<_, _> = unique_symbols
+                .iter()
+                .zip(perm)
+                .map(|(&k, v)| (k, v))
+                .collect();
+            let substituted: String = text
+                .chars()
+                .map(|c| *mapping.get(&c).unwrap_or(&c))
+                .collect();
 
-            trace!("Trying substitution mapping: {:?} -> {:?}", mapping, substituted);
-            
+            trace!(
+                "Trying substitution mapping: {:?} -> {:?}",
+                mapping,
+                substituted
+            );
+
             let decoder_result = match target_type {
                 "binary" => Decoder::<BinaryDecoder>::new().crack(&substituted, checker),
                 "morse" => Decoder::<MorseCodeDecoder>::new().crack(&substituted, checker),
@@ -129,18 +140,22 @@ mod tests {
     fn test_morse_substitution() {
         let decoder = Decoder::<SubstitutionGenericDecoder>::new();
         let result = decoder.crack("00002020100201002111", &get_athena_checker());
-        
+
         // Print debug info if test fails
         if !result.success {
             println!("Morse substitution test failed. Result: {:?}", result);
         }
-        
+
         assert!(result.success);
-        
+
         // Check if any of the decoded strings contains "HELLO"
         if let Some(texts) = result.unencrypted_text {
             let contains_hello = texts.iter().any(|s| s.contains("HELLO"));
-            assert!(contains_hello, "Expected to find 'HELLO' in decoded texts: {:?}", texts);
+            assert!(
+                contains_hello,
+                "Expected to find 'HELLO' in decoded texts: {:?}",
+                texts
+            );
         } else {
             assert!(false, "No decoded texts found");
         }
@@ -150,14 +165,14 @@ mod tests {
     fn test_binary_substitution() {
         let decoder = Decoder::<SubstitutionGenericDecoder>::new();
         let result = decoder.crack("AABBA", &get_athena_checker());
-        
+
         // Print debug info if test fails
         if !result.success {
             println!("Binary substitution test failed. Result: {:?}", result);
         }
-        
+
         assert!(result.success);
-        
+
         // For binary, we're looking for any valid binary string that might decode to something
         if let Some(texts) = result.unencrypted_text {
             println!("Decoded binary texts: {:?}", texts);
