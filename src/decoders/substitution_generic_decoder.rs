@@ -47,7 +47,7 @@ impl Crack for Decoder<SubstitutionGenericDecoder> {
 
         for perm in permutations {
             let mapping: HashMap<_, _> = unique_symbols.iter().zip(perm).map(|(&k, v)| (k, v)).collect();
-            let substituted: String = text.chars().map(|c| mapping.get(&c).unwrap_or(&c)).collect();
+            let substituted: String = text.chars().map(|c| *mapping.get(&c).unwrap_or(&c)).collect();
 
             trace!("Trying substitution mapping: {:?} -> {:?}", mapping, substituted);
             
