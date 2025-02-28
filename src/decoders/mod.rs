@@ -69,3 +69,6 @@ pub mod z85_decoder;
 
 /// For the braille decoder
 pub mod braille_decoder;
+
+/// The substitution_generic_decoder module handles generic substitution ciphers
+pub mod substitution_generic_decoder;
