@@ -30,13 +30,13 @@ use crate::filtration_system::{
 use crossbeam::channel::Sender;
 
 use log::{trace, warn};
+use once_cell::sync::Lazy;
 use rand::Rng;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
-use once_cell::sync::Lazy;
-use std::collections::HashMap;
 use std::sync::Mutex;
 
 use crate::checkers::athena::Athena;
@@ -68,7 +68,7 @@ static CIPHER_MAPPING: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| 
 });
 
 /// Track decoder success rates for adaptive learning
-static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> = 
+static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
 /// Update decoder statistics based on success or failure
@@ -80,12 +80,12 @@ static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
 fn update_decoder_stats(decoder: &str, success: bool) {
     let mut stats = DECODER_SUCCESS_RATES.lock().unwrap();
     let (successes, total) = stats.entry(decoder.to_string()).or_insert((0, 0));
-    
+
     if success {
         *successes += 1;
     }
     *total += 1;
-    
+
     // TODO: Write this data to a file for persistence
 }
 
@@ -105,7 +105,7 @@ fn get_decoder_success_rate(decoder: &String) -> f32 {
             return *successes as f32 / *total as f32;
         }
     }
-    
+
     // Default for unknown decoders
     0.5
 }
@@ -121,13 +121,13 @@ fn get_decoder_success_rate(decoder: &String) -> f32 {
 /// * A tuple containing the identified cipher and its score
 fn get_cipher_identifier_score(text: &str) -> (String, f32) {
     let results = cipher_identifier::identify_cipher::identify_cipher(text, 5, None);
-    
+
     for (cipher, score) in results {
         if let Some(_decoder) = CIPHER_MAPPING.get(cipher.as_str()) {
             return (cipher, (score / 10.0) as f32);
         }
     }
-    
+
     // Default if no match
     let mut rng = rand::thread_rng();
     ("unknown".to_string(), rng.gen_range(0.5..1.0) as f32)
@@ -173,7 +173,6 @@ fn calculate_string_quality(s: &str) -> f32 {
         1.0 - (s.len() as f32 - 100.0).abs() / 900.0
     }
 }
-
 
 /// A* search node with priority based on f = g + h
 ///
@@ -259,10 +258,10 @@ impl Eq for AStarNode {}
 pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
     // Calculate heuristic before moving input
     let initial_heuristic = generate_heuristic(&input);
-    
+
     let initial = DecoderResult {
         text: vec![input],
-        path: vec![]
+        path: vec![],
     };
 
     // Set to track visited states to prevent cycles
@@ -560,15 +559,15 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 fn generate_heuristic(text: &str) -> f32 {
     // Use Cipher Identifier to identify the most likely ciphers
     let results = cipher_identifier::identify_cipher::identify_cipher(text, 5, None);
-    
+
     // Check if any of the identified ciphers have a corresponding decoder in Ares
     for (cipher, score) in results {
         if let Some(_decoder) = CIPHER_MAPPING.get(cipher.as_str()) {
             // Use the actual score from Cipher Identifier (normalized)
-            return (score / 10.0) as f32;  // Normalize to a reasonable range
+            return (score / 10.0) as f32; // Normalize to a reasonable range
         }
     }
-    
+
     // If no match is found, return a random value between 0.5 and 1.0
     let mut rng = rand::thread_rng();
     rng.gen_range(0.5..1.0) as f32
@@ -623,12 +622,12 @@ mod tests {
         let result = rx.recv().unwrap();
         assert!(result.is_some());
     }
-    
+
     #[test]
     fn test_generate_heuristic() {
         // Test with a Caesar cipher (should return 0.1)
         // Just test that the function runs without errors
         let h = generate_heuristic("KHOOR ZRUOG"); // "HELLO WORLD" with Caesar shift of 3
-        assert!(h >= 0.0 && h <= 1.0);
+        assert!((0.0..=1.0).contains(&h));
     }
 }
