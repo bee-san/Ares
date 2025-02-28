@@ -42,8 +42,8 @@ use std::sync::Mutex;
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
-use crate::DecoderResult;
 use crate::CrackResult;
+use crate::DecoderResult;
 
 /// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
 const PRUNE_THRESHOLD: usize = 10000;
@@ -54,7 +54,15 @@ const INITIAL_PRUNE_THRESHOLD: usize = PRUNE_THRESHOLD;
 /// Maximum depth for search (used for dynamic threshold adjustment)
 const MAX_DEPTH: u32 = 100;
 
-// Define a mapping between Cipher Identifier ciphers and Ares decoders
+/// Mapping between Cipher Identifier's cipher names and Ares decoder names
+/// 
+/// This static mapping allows us to translate between the cipher types identified by
+/// Cipher Identifier and the corresponding decoders available in Ares.
+/// 
+/// For example:
+/// - "fractionatedMorse" maps to "MorseCodeDecoder"
+/// - "atbash" maps to "AtbashDecoder"
+/// - "caesar" maps to "CaesarDecoder"
 static CIPHER_MAPPING: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     let mut map = HashMap::new();
     map.insert("fractionatedMorse", "MorseCodeDecoder");
@@ -106,7 +114,7 @@ fn get_decoder_success_rate(decoder: &str) -> f32 {
             return *successes as f32 / *total as f32;
         }
     }
-    
+
     // Default for unknown decoders
     0.5
 }
@@ -308,7 +316,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         // Prevent reciprocal decoders from being applied consecutively
         if let Some(last_decoder) = current_node.state.path.last() {
             if last_decoder.checker_description.contains("reciprocal") {
-                let excluded_name = last_decoder.decoder.clone();
+                let excluded_name = last_decoder.decoder;
                 decoder_tagged_decoders
                     .components
                     .retain(|d| d.get_name() != excluded_name);
@@ -373,16 +381,18 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                         "Pruning seen_strings HashSet (size: {})",
                                         seen_strings.len()
                                     );
-                                    
+
                                     // Calculate quality scores for all strings
                                     let mut quality_scores: Vec<(String, f32)> = seen_strings
                                         .iter()
                                         .map(|s| (s.clone(), calculate_string_quality(s)))
                                         .collect();
-                                    
+
                                     // Sort by quality (higher is better)
-                                    quality_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
-                                    
+                                    quality_scores.sort_by(|a, b| {
+                                        b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal)
+                                    });
+
                                     // Keep only the top 50% highest quality strings
                                     let keep_count = seen_strings.len() / 2;
                                     let strings_to_keep: HashSet<String> = quality_scores
@@ -390,16 +400,19 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                         .take(keep_count)
                                         .map(|(s, _)| s)
                                         .collect();
-                                    
+
                                     seen_strings = strings_to_keep;
                                     seen_count = seen_strings.len();
-                                    
+
                                     // Adjust threshold based on search progress
                                     let progress_factor = curr_depth as f32 / MAX_DEPTH as f32;
-                                    prune_threshold = INITIAL_PRUNE_THRESHOLD - (progress_factor * 5000.0) as usize;
-                                    
-                                    warn!("Pruned to {} high-quality entries (new threshold: {})", 
-                                          seen_count, prune_threshold);
+                                    prune_threshold = INITIAL_PRUNE_THRESHOLD
+                                        - (progress_factor * 5000.0) as usize;
+
+                                    warn!(
+                                        "Pruned to {} high-quality entries (new threshold: {})",
+                                        seen_count, prune_threshold
+                                    );
                                 }
 
                                 true
@@ -433,8 +446,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         open_set.push(new_node);
 
                         // When processing results, update decoder stats
-                        update_decoder_stats(&r.decoder, true);  // For successful decodings
-                        update_decoder_stats(&r.decoder, false); // For unsuccessful attempts
+                        update_decoder_stats(r.decoder, true); // For successful decodings
+                        update_decoder_stats(r.decoder, false); // For unsuccessful attempts
                     }
                 }
             }
@@ -446,7 +459,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         // Prevent reciprocal decoders from being applied consecutively
         if let Some(last_decoder) = current_node.state.path.last() {
             if last_decoder.checker_description.contains("reciprocal") {
-                let excluded_name = last_decoder.decoder.clone();
+                let excluded_name = last_decoder.decoder;
                 non_decoder_decoders
                     .components
                     .retain(|d| d.get_name() != excluded_name);
@@ -511,16 +524,18 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                         "Pruning seen_strings HashSet (size: {})",
                                         seen_strings.len()
                                     );
-                                    
+
                                     // Calculate quality scores for all strings
                                     let mut quality_scores: Vec<(String, f32)> = seen_strings
                                         .iter()
                                         .map(|s| (s.clone(), calculate_string_quality(s)))
                                         .collect();
-                                    
+
                                     // Sort by quality (higher is better)
-                                    quality_scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal));
-                                    
+                                    quality_scores.sort_by(|a, b| {
+                                        b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal)
+                                    });
+
                                     // Keep only the top 50% highest quality strings
                                     let keep_count = seen_strings.len() / 2;
                                     let strings_to_keep: HashSet<String> = quality_scores
@@ -528,16 +543,19 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                         .take(keep_count)
                                         .map(|(s, _)| s)
                                         .collect();
-                                    
+
                                     seen_strings = strings_to_keep;
                                     seen_count = seen_strings.len();
-                                    
+
                                     // Adjust threshold based on search progress
                                     let progress_factor = curr_depth as f32 / MAX_DEPTH as f32;
-                                    prune_threshold = INITIAL_PRUNE_THRESHOLD - (progress_factor * 5000.0) as usize;
-                                    
-                                    warn!("Pruned to {} high-quality entries (new threshold: {})", 
-                                          seen_count, prune_threshold);
+                                    prune_threshold = INITIAL_PRUNE_THRESHOLD
+                                        - (progress_factor * 5000.0) as usize;
+
+                                    warn!(
+                                        "Pruned to {} high-quality entries (new threshold: {})",
+                                        seen_count, prune_threshold
+                                    );
                                 }
 
                                 true
@@ -571,8 +589,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         open_set.push(new_node);
 
                         // When processing results, update decoder stats
-                        update_decoder_stats(&r.decoder, true);  // For successful decodings
-                        update_decoder_stats(&r.decoder, false); // For unsuccessful attempts
+                        update_decoder_stats(r.decoder, true); // For successful decodings
+                        update_decoder_stats(r.decoder, false); // For unsuccessful attempts
                     }
                 }
             }
@@ -601,24 +619,24 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
     // Get base score from Cipher Identifier
     let (cipher, base_score) = get_cipher_identifier_score(text);
-    
+
     // Adjust based on path context
     let mut final_score = base_score;
-    
+
     if let Some(last_result) = path.last() {
         // Adjust based on common sequences
-        if is_common_sequence(&last_result.decoder, &cipher) {
-            final_score *= 0.8;  // Bonus for common sequences
+        if is_common_sequence(last_result.decoder, &cipher) {
+            final_score *= 0.8; // Bonus for common sequences
         }
-        
+
         // Adjust based on decoder success rate
-        let success_rate = get_decoder_success_rate(&last_result.decoder);
-        final_score *= 1.0 - success_rate * 0.2;  // Success rate can reduce score by up to 20%
+        let success_rate = get_decoder_success_rate(last_result.decoder);
+        final_score *= 1.0 - success_rate * 0.2; // Success rate can reduce score by up to 20%
     }
-    
+
     // Adjust based on string quality
     final_score *= calculate_string_quality(text);
-    
+
     final_score
 }
 
