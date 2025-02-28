@@ -55,10 +55,10 @@ const INITIAL_PRUNE_THRESHOLD: usize = PRUNE_THRESHOLD;
 const MAX_DEPTH: u32 = 100;
 
 /// Mapping between Cipher Identifier's cipher names and Ares decoder names
-/// 
+///
 /// This static mapping allows us to translate between the cipher types identified by
 /// Cipher Identifier and the corresponding decoders available in Ares.
-/// 
+///
 /// For example:
 /// - "fractionatedMorse" maps to "MorseCodeDecoder"
 /// - "atbash" maps to "AtbashDecoder"
