@@ -170,8 +170,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
         // Prevent reciprocal decoders from being applied consecutively
         if let Some(last_decoder) = current_node.state.path.last() {
-            if last_decoder.decoder_tags.contains(&"reciprocal".to_string()) {
-                let excluded_name = last_decoder.decoder_name.clone();
+            if last_decoder.decoder_description.contains("reciprocal") {
+                let excluded_name = last_decoder.decoder.clone();
                 decoder_tagged_decoders.components.retain(|d| d.get_name() != excluded_name);
             }
         }
@@ -287,8 +287,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
         // Prevent reciprocal decoders from being applied consecutively
         if let Some(last_decoder) = current_node.state.path.last() {
-            if last_decoder.decoder_tags.contains(&"reciprocal".to_string()) {
-                let excluded_name = last_decoder.decoder_name.clone();
+            if last_decoder.decoder_description.contains("reciprocal") {
+                let excluded_name = last_decoder.decoder.clone();
                 non_decoder_decoders.components.retain(|d| d.get_name() != excluded_name);
             }
         }
