@@ -46,7 +46,7 @@ impl Crack for Decoder<SubstitutionGenericDecoder> {
         let mut decoded_strings = HashSet::new();
 
         for perm in permutations {
-            let mapping: HashMap<_, _> = unique_symbols.iter().zip(perm).map(|(&k, &v)| (k, v)).collect();
+            let mapping: HashMap<_, _> = unique_symbols.iter().zip(perm).map(|(&k, v)| (k, v)).collect();
             let substituted: String = text.chars().map(|c| *mapping.get(&c).unwrap_or(&c)).collect();
 
             let decoder_result = match target_type {
