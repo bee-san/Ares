@@ -166,7 +166,15 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         );
 
         // First, execute all "decoder"-tagged decoders immediately
-        let decoder_tagged_decoders = get_decoder_tagged_decoders(&current_node.state);
+        let mut decoder_tagged_decoders = get_decoder_tagged_decoders(&current_node.state);
+
+        // Prevent reciprocal decoders from being applied consecutively
+        if let Some(last_decoder) = current_node.state.path.last() {
+            if last_decoder.decoder_tags.contains(&"reciprocal".to_string()) {
+                let excluded_name = last_decoder.decoder_name.clone();
+                decoder_tagged_decoders.components.retain(|d| d.get_name() != excluded_name);
+            }
+        }
 
         if !decoder_tagged_decoders.components.is_empty() {
             trace!(
@@ -275,7 +283,15 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         }
 
         // Then, process non-"decoder"-tagged decoders with heuristic prioritization
-        let non_decoder_decoders = get_non_decoder_tagged_decoders(&current_node.state);
+        let mut non_decoder_decoders = get_non_decoder_tagged_decoders(&current_node.state);
+
+        // Prevent reciprocal decoders from being applied consecutively
+        if let Some(last_decoder) = current_node.state.path.last() {
+            if last_decoder.decoder_tags.contains(&"reciprocal".to_string()) {
+                let excluded_name = last_decoder.decoder_name.clone();
+                non_decoder_decoders.components.retain(|d| d.get_name() != excluded_name);
+            }
+        }
 
         if !non_decoder_decoders.components.is_empty() {
             trace!(
