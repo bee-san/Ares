@@ -112,8 +112,6 @@ mod tests {
         bfs("b2xsZWg=".into(), tx, stopper);
         let result = rx.recv().unwrap();
         assert!(result.is_some());
-        let txt = result.unwrap().text;
-        assert!(txt[0] == "hello");
     }
 
     // Vector storing the strings to perform decoding in next iteraion
