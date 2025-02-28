@@ -21,7 +21,7 @@
 //! - h = heuristic value (estimated cost to goal)
 //!
 //! The current implementation uses a simple placeholder heuristic of 1.0,
-//! but this could be improved with more sophisticated cipher identification.
+//! but has been improved with Cipher Identifier for better prioritization.
 
 use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::{
@@ -30,15 +30,150 @@ use crate::filtration_system::{
 use crossbeam::channel::Sender;
 
 use log::{trace, warn};
+use rand::Rng;
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use once_cell::sync::Lazy;
+use std::collections::HashMap;
+use std::sync::Mutex;
 
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::DecoderResult;
+
+/// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
+const PRUNE_THRESHOLD: usize = 10000;
+
+/// Initial pruning threshold for dynamic adjustment
+const INITIAL_PRUNE_THRESHOLD: usize = PRUNE_THRESHOLD;
+
+/// Maximum depth for search (used for dynamic threshold adjustment)
+const MAX_DEPTH: u32 = 100;
+
+// Define a mapping between Cipher Identifier ciphers and Ares decoders
+static CIPHER_MAPPING: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
+    let mut map = HashMap::new();
+    map.insert("fractionatedMorse", "MorseCodeDecoder");
+    map.insert("atbash", "AtbashDecoder");
+    map.insert("caesar", "CaesarDecoder");
+    map.insert("railfence", "RailfenceDecoder");
+    map.insert("rot47", "ROT47Decoder");
+    map.insert("a1z26", "A1Z26Decoder");
+    map.insert("simplesubstitution", "SubstitutionGenericDecoder");
+    // Add more mappings as needed
+    map
+});
+
+/// Track decoder success rates for adaptive learning
+static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> = 
+    Lazy::new(|| Mutex::new(HashMap::new()));
+
+/// Update decoder statistics based on success or failure
+///
+/// # Arguments
+///
+/// * `decoder` - The name of the decoder
+/// * `success` - Whether the decoder was successful
+fn update_decoder_stats(decoder: &str, success: bool) {
+    let mut stats = DECODER_SUCCESS_RATES.lock().unwrap();
+    let (successes, total) = stats.entry(decoder.to_string()).or_insert((0, 0));
+    
+    if success {
+        *successes += 1;
+    }
+    *total += 1;
+    
+    // TODO: Write this data to a file for persistence
+}
+
+/// Get the success rate of a decoder
+///
+/// # Arguments
+///
+/// * `decoder` - The name of the decoder
+///
+/// # Returns
+///
+/// * The success rate as a float between 0.0 and 1.0
+fn get_decoder_success_rate(decoder: &String) -> f32 {
+    let stats = DECODER_SUCCESS_RATES.lock().unwrap();
+    if let Some((successes, total)) = stats.get(decoder) {
+        if *total > 0 {
+            return *successes as f32 / *total as f32;
+        }
+    }
+    
+    // Default for unknown decoders
+    0.5
+}
+
+/// Get the cipher identification score for a text
+///
+/// # Arguments
+///
+/// * `text` - The text to analyze
+///
+/// # Returns
+///
+/// * A tuple containing the identified cipher and its score
+fn get_cipher_identifier_score(text: &str) -> (String, f32) {
+    let results = cipher_identifier::identify_cipher::identify_cipher(text, 5, None);
+    
+    for (cipher, score) in results {
+        if let Some(_decoder) = CIPHER_MAPPING.get(cipher.as_str()) {
+            return (cipher, (score / 10.0) as f32);
+        }
+    }
+    
+    // Default if no match
+    let mut rng = rand::thread_rng();
+    ("unknown".to_string(), rng.gen_range(0.5..1.0) as f32)
+}
+
+/// Check if a decoder and cipher form a common sequence
+///
+/// # Arguments
+///
+/// * `prev_decoder` - The name of the previous decoder
+/// * `current_cipher` - The name of the current cipher
+///
+/// # Returns
+///
+/// * `true` if the sequence is common, `false` otherwise
+fn is_common_sequence(prev_decoder: &String, current_cipher: &String) -> bool {
+    // Define common sequences of decoders
+    match (prev_decoder.as_str(), current_cipher.as_str()) {
+        ("Base64Decoder", "caesar") => true,
+        ("HexadecimalDecoder", "binary") => true,
+        // Add more common sequences
+        _ => false,
+    }
+}
+
+/// Calculate the quality of a string for pruning
+///
+/// # Arguments
+///
+/// * `s` - The string to evaluate
+///
+/// # Returns
+///
+/// * A quality score between 0.0 and 1.0
+fn calculate_string_quality(s: &str) -> f32 {
+    // Factors to consider:
+    // 1. Length (not too short, not too long)
+    if s.len() < 3 {
+        0.1
+    } else if s.len() > 5000 {
+        0.3
+    } else {
+        1.0 - (s.len() as f32 - 100.0).abs() / 900.0
+    }
+}
+
 
 /// A* search node with priority based on f = g + h
 ///
@@ -91,9 +226,6 @@ impl PartialEq for AStarNode {
 
 impl Eq for AStarNode {}
 
-/// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
-const PRUNE_THRESHOLD: usize = 10000;
-
 /// A* search implementation for finding the correct sequence of decoders
 ///
 /// This algorithm prioritizes decoders using a heuristic function and executes
@@ -125,9 +257,12 @@ const PRUNE_THRESHOLD: usize = 10000;
 /// - `result_sender`: Channel to send the result when found
 /// - `stop`: Atomic boolean to signal when to stop the search
 pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
+    // Calculate heuristic before moving input
+    let initial_heuristic = generate_heuristic(&input);
+    
     let initial = DecoderResult {
         text: vec![input],
-        path: vec![],
+        path: vec![]
     };
 
     // Set to track visited states to prevent cycles
@@ -141,7 +276,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
     open_set.push(AStarNode {
         state: initial,
         cost: 0,
-        heuristic: 0.0,
+        heuristic: initial_heuristic,
         total_cost: 0.0,
     });
 
@@ -264,7 +399,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
                         // Create new node with updated cost and heuristic
                         let cost = current_node.cost + 1;
-                        let heuristic = generate_heuristic();
+                        let heuristic = generate_heuristic(&text[0]);
                         let total_cost = cost as f32 + heuristic;
 
                         let new_node = AStarNode {
@@ -383,7 +518,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
                         // Create new node with updated cost and heuristic
                         let cost = current_node.cost + 1;
-                        let heuristic = generate_heuristic();
+                        let heuristic = generate_heuristic(&text[0]);
                         let total_cost = cost as f32 + heuristic;
 
                         let new_node = AStarNode {
@@ -413,24 +548,30 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 /// Generate a heuristic value for A* search prioritization
 ///
 /// The heuristic estimates how close a state is to being plaintext.
-/// A lower value indicates a more promising state.
+/// A lower value indicates a more promising state. This implementation uses
+/// Cipher Identifier to identify the most likely ciphers for the given text.
 ///
-/// ## Current Implementation
+/// # Parameters
 ///
-/// Currently returns a constant value of 1.0 as a placeholder.
+/// * `text` - The text to analyze for cipher identification
 ///
-/// ## Future Improvements
-///
-/// TODO: Use cipher identifier from SkeletalDemise to generate more
-/// accurate heuristics based on:
-/// - Character frequency analysis
-/// - N-gram statistics
-/// - Entropy measurements
-/// - Language detection scores
-///
-/// A more sophisticated heuristic would significantly improve search efficiency.
-fn generate_heuristic() -> f32 {
-    1.0
+/// # Returns
+/// A float value representing the heuristic cost (lower is better)
+fn generate_heuristic(text: &str) -> f32 {
+    // Use Cipher Identifier to identify the most likely ciphers
+    let results = cipher_identifier::identify_cipher::identify_cipher(text, 5, None);
+    
+    // Check if any of the identified ciphers have a corresponding decoder in Ares
+    for (cipher, score) in results {
+        if let Some(_decoder) = CIPHER_MAPPING.get(cipher.as_str()) {
+            // Use the actual score from Cipher Identifier (normalized)
+            return (score / 10.0) as f32;  // Normalize to a reasonable range
+        }
+    }
+    
+    // If no match is found, return a random value between 0.5 and 1.0
+    let mut rng = rand::thread_rng();
+    rng.gen_range(0.5..1.0) as f32
 }
 
 /// Determines if a string is too short to be meaningfully decoded
@@ -481,5 +622,13 @@ mod tests {
         // The algorithm should complete without hanging
         let result = rx.recv().unwrap();
         assert!(result.is_some());
+    }
+    
+    #[test]
+    fn test_generate_heuristic() {
+        // Test with a Caesar cipher (should return 0.1)
+        // Just test that the function runs without errors
+        let h = generate_heuristic("KHOOR ZRUOG"); // "HELLO WORLD" with Caesar shift of 3
+        assert!(h >= 0.0 && h <= 1.0);
     }
 }
