@@ -388,7 +388,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         text.retain(|s| {
                             if check_if_string_cant_be_decoded(s) {
                                 // Add stats update for failed decoding
-                                update_decoder_stats(&r.decoder, false);
+                                update_decoder_stats(r.decoder, false);
                                 return false;
                             }
 
@@ -443,7 +443,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
                         if text.is_empty() {
                             // Add stats update for failed decoding (no valid outputs)
-                            update_decoder_stats(&r.decoder, false);
+                            update_decoder_stats(r.decoder, false);
                             continue;
                         }
 
@@ -534,7 +534,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         text.retain(|s| {
                             if check_if_string_cant_be_decoded(s) {
                                 // Add stats update for failed decoding
-                                update_decoder_stats(&r.decoder, false);
+                                update_decoder_stats(r.decoder, false);
                                 return false;
                             }
 
@@ -589,7 +589,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
                         if text.is_empty() {
                             // Add stats update for failed decoding (no valid outputs)
-                            update_decoder_stats(&r.decoder, false);
+                            update_decoder_stats(r.decoder, false);
                             continue;
                         }
 
