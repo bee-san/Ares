@@ -21,7 +21,7 @@
 //! - h = heuristic value (estimated cost to goal)
 //!
 //! The current implementation uses a simple placeholder heuristic of 1.0,
-//! but this could be improved with more sophisticated cipher identification.
+//! but has been improved with Cipher Identifier for better prioritization.
 
 use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::{
@@ -30,15 +30,176 @@ use crate::filtration_system::{
 use crossbeam::channel::Sender;
 
 use log::{trace, warn};
+use once_cell::sync::Lazy;
+use rand::Rng;
 use std::cmp::Ordering;
+use std::collections::HashMap;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
+use std::sync::Mutex;
 
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
+use crate::CrackResult;
 use crate::DecoderResult;
+
+/// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
+const PRUNE_THRESHOLD: usize = 10000;
+
+/// Initial pruning threshold for dynamic adjustment
+const INITIAL_PRUNE_THRESHOLD: usize = PRUNE_THRESHOLD;
+
+/// Maximum depth for search (used for dynamic threshold adjustment)
+const MAX_DEPTH: u32 = 100;
+
+/// Mapping between Cipher Identifier's cipher names and Ares decoder names
+///
+/// This static mapping allows us to translate between the cipher types identified by
+/// Cipher Identifier and the corresponding decoders available in Ares.
+///
+/// For example:
+/// - "fractionatedMorse" maps to "MorseCodeDecoder"
+/// - "atbash" maps to "AtbashDecoder"
+/// - "caesar" maps to "CaesarDecoder"
+static CIPHER_MAPPING: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
+    let mut map = HashMap::new();
+    map.insert("fractionatedMorse", "morseCode");
+    map.insert("atbash", "atbash");
+    map.insert("caesar", "caesar");
+    map.insert("railfence", "railfence");
+    map.insert("rot47", "rot47");
+    map.insert("a1z26", "a1z26");
+    map.insert("simplesubstitution", "simplesubstitution");
+    // Add more mappings as needed
+    map
+});
+
+/// Track decoder success rates for adaptive learning
+static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
+    Lazy::new(|| Mutex::new(HashMap::new()));
+
+/// Update decoder statistics based on success or failure
+///
+/// # Arguments
+///
+/// * `decoder` - The name of the decoder
+/// * `success` - Whether the decoder was successful
+fn update_decoder_stats(decoder: &str, success: bool) {
+    let mut stats = DECODER_SUCCESS_RATES.lock().unwrap();
+    let (successes, total) = stats.entry(decoder.to_string()).or_insert((0, 0));
+
+    if success {
+        *successes += 1;
+    }
+    *total += 1;
+
+    // TODO: Write this data to a file for persistence
+}
+
+/// Get the success rate of a decoder
+///
+/// # Arguments
+///
+/// * `decoder` - The name of the decoder
+///
+/// # Returns
+///
+/// * The success rate as a float between 0.0 and 1.0
+fn get_decoder_success_rate(decoder: &str) -> f32 {
+    let stats = DECODER_SUCCESS_RATES.lock().unwrap();
+    if let Some((successes, total)) = stats.get(decoder) {
+        if *total > 0 {
+            return *successes as f32 / *total as f32;
+        }
+    }
+
+    // Default for unknown decoders
+    0.5
+}
+
+/// Get the cipher identification score for a text
+///
+/// # Arguments
+///
+/// * `text` - The text to analyze
+///
+/// # Returns
+///
+/// * A tuple containing the identified cipher and its score
+fn get_cipher_identifier_score(text: &str) -> (String, f32) {
+    let results = cipher_identifier::identify_cipher::identify_cipher(text, 5, None);
+
+    for (cipher, score) in results {
+        if let Some(_decoder) = CIPHER_MAPPING.get(cipher.as_str()) {
+            return (cipher, (score / 10.0) as f32);
+        }
+    }
+
+    // Default if no match
+    let mut rng = rand::thread_rng();
+    ("unknown".to_string(), rng.gen_range(0.5..1.0) as f32)
+}
+
+/// Check if a decoder and cipher form a common sequence
+///
+/// # Arguments
+///
+/// * `prev_decoder` - The name of the previous decoder
+/// * `current_cipher` - The name of the current cipher
+///
+/// # Returns
+///
+/// * `true` if the sequence is common, `false` otherwise
+fn is_common_sequence(prev_decoder: &str, current_cipher: &str) -> bool {
+    // Define common sequences focusing on base decoders
+    match (prev_decoder, current_cipher) {
+        // Base64 commonly followed by other encodings
+        ("Base64Decoder", "Base32Decoder") => true,
+        ("Base64Decoder", "Base58Decoder") => true,
+        ("Base64Decoder", "Base85Decoder") => true,
+        ("Base64Decoder", "Base64Decoder") => true,
+
+        // Base32 sequences
+        ("Base32Decoder", "Base64Decoder") => true,
+        ("Base32Decoder", "Base85Decoder") => true,
+        ("Base32Decoder", "Base32Decoder") => true,
+
+        // Base58 sequences
+        ("Base58Decoder", "Base64Decoder") => true,
+        ("Base58Decoder", "Base32Decoder") => true,
+        ("Base58Decoder", "Base58Decoder") => true,
+
+        // Base85 sequences
+        ("Base85Decoder", "Base64Decoder") => true,
+        ("Base85Decoder", "Base32Decoder") => true,
+        ("Base85Decoder", "Base85Decoder") => true,
+        // No match found
+        _ => false,
+    }
+}
+
+/// Calculate the quality of a string for pruning
+///
+/// # Arguments
+///
+/// * `s` - The string to evaluate
+///
+/// # Returns
+///
+/// * A quality score between 0.0 and 1.0
+fn calculate_string_quality(s: &str) -> f32 {
+    // Factors to consider:
+    // 1. Length (not too short, not too long
+    if s.len() < 3 {
+        0.1
+    } else if s.len() > 5000 {
+        0.3
+    } else {
+        1.0 - (s.len() as f32 - 100.0).abs() / 900.0
+    }
+}
 
 /// A* search node with priority based on f = g + h
 ///
@@ -91,9 +252,6 @@ impl PartialEq for AStarNode {
 
 impl Eq for AStarNode {}
 
-/// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
-const PRUNE_THRESHOLD: usize = 10000;
-
 /// A* search implementation for finding the correct sequence of decoders
 ///
 /// This algorithm prioritizes decoders using a heuristic function and executes
@@ -125,6 +283,9 @@ const PRUNE_THRESHOLD: usize = 10000;
 /// - `result_sender`: Channel to send the result when found
 /// - `stop`: Atomic boolean to signal when to stop the search
 pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
+    // Calculate heuristic before moving input
+    let initial_heuristic = generate_heuristic(&input, &[]);
+
     let initial = DecoderResult {
         text: vec![input],
         path: vec![],
@@ -141,11 +302,13 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
     open_set.push(AStarNode {
         state: initial,
         cost: 0,
-        heuristic: 0.0,
+        heuristic: initial_heuristic,
         total_cost: 0.0,
     });
 
     let mut curr_depth: u32 = 1;
+
+    let mut prune_threshold = INITIAL_PRUNE_THRESHOLD;
 
     // Main A* loop
     while !open_set.is_empty() && !stop.load(std::sync::atomic::Ordering::Relaxed) {
@@ -195,7 +358,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                     trace!("Found successful decoding with decoder-tagged decoder");
                     let mut decoders_used = current_node.state.path.clone();
                     let text = res.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(res);
+                    decoders_used.push(res.clone());
                     let result_text = DecoderResult {
                         text,
                         path: decoders_used,
@@ -224,6 +387,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         // Filter out strings that can't be decoded or have been seen before
                         text.retain(|s| {
                             if check_if_string_cant_be_decoded(s) {
+                                // Add stats update for failed decoding
+                                update_decoder_stats(r.decoder, false);
                                 return false;
                             }
 
@@ -231,23 +396,43 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                 seen_count += 1;
 
                                 // Prune the HashSet if it gets too large
-                                if seen_count > PRUNE_THRESHOLD {
+                                if seen_count > prune_threshold {
                                     warn!(
                                         "Pruning seen_strings HashSet (size: {})",
                                         seen_strings.len()
                                     );
 
-                                    // Keep strings that are more likely to lead to a solution
-                                    // This heuristic keeps shorter strings as they're often more valuable
-                                    let before_size = seen_strings.len();
-                                    seen_strings.retain(|s| s.len() < 100);
-                                    let after_size = seen_strings.len();
+                                    // Calculate quality scores for all strings
+                                    let mut quality_scores: Vec<(String, f32)> = seen_strings
+                                        .iter()
+                                        .map(|s| (s.clone(), calculate_string_quality(s)))
+                                        .collect();
+
+                                    // Sort by quality (higher is better)
+                                    quality_scores.sort_by(|a, b| {
+                                        b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal)
+                                    });
+
+                                    // Keep only the top 50% highest quality strings
+                                    let keep_count = seen_strings.len() / 2;
+                                    let strings_to_keep: HashSet<String> = quality_scores
+                                        .into_iter()
+                                        .take(keep_count)
+                                        .map(|(s, _)| s)
+                                        .collect();
+
+                                    seen_strings = strings_to_keep;
+                                    seen_count = seen_strings.len();
+
+                                    // Adjust threshold based on search progress
+                                    let progress_factor = curr_depth as f32 / MAX_DEPTH as f32;
+                                    prune_threshold = INITIAL_PRUNE_THRESHOLD
+                                        - (progress_factor * 5000.0) as usize;
 
                                     warn!(
-                                        "Pruned {} entries from seen_strings HashSet",
-                                        before_size - after_size
+                                        "Pruned to {} high-quality entries (new threshold: {})",
+                                        seen_count, prune_threshold
                                     );
-                                    seen_count = after_size;
                                 }
 
                                 true
@@ -257,14 +442,16 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         });
 
                         if text.is_empty() {
+                            // Add stats update for failed decoding (no valid outputs)
+                            update_decoder_stats(r.decoder, false);
                             continue;
                         }
 
-                        decoders_used.push(r);
+                        decoders_used.push(r.clone());
 
                         // Create new node with updated cost and heuristic
                         let cost = current_node.cost + 1;
-                        let heuristic = generate_heuristic();
+                        let heuristic = generate_heuristic(&text[0], &decoders_used);
                         let total_cost = cost as f32 + heuristic;
 
                         let new_node = AStarNode {
@@ -279,6 +466,9 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
                         // Add to open set
                         open_set.push(new_node);
+
+                        // Update decoder stats - mark as successful since it produced valid output
+                        update_decoder_stats(r.decoder, true);
                     }
                 }
             }
@@ -314,7 +504,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                     trace!("Found successful decoding with non-decoder-tagged decoder");
                     let mut decoders_used = current_node.state.path.clone();
                     let text = res.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(res);
+                    decoders_used.push(res.clone());
                     let result_text = DecoderResult {
                         text,
                         path: decoders_used,
@@ -343,6 +533,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         // Filter out strings that can't be decoded or have been seen before
                         text.retain(|s| {
                             if check_if_string_cant_be_decoded(s) {
+                                // Add stats update for failed decoding
+                                update_decoder_stats(r.decoder, false);
                                 return false;
                             }
 
@@ -350,23 +542,43 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                 seen_count += 1;
 
                                 // Prune the HashSet if it gets too large
-                                if seen_count > PRUNE_THRESHOLD {
+                                if seen_count > prune_threshold {
                                     warn!(
                                         "Pruning seen_strings HashSet (size: {})",
                                         seen_strings.len()
                                     );
 
-                                    // Keep strings that are more likely to lead to a solution
-                                    // This heuristic keeps shorter strings as they're often more valuable
-                                    let before_size = seen_strings.len();
-                                    seen_strings.retain(|s| s.len() < 100);
-                                    let after_size = seen_strings.len();
+                                    // Calculate quality scores for all strings
+                                    let mut quality_scores: Vec<(String, f32)> = seen_strings
+                                        .iter()
+                                        .map(|s| (s.clone(), calculate_string_quality(s)))
+                                        .collect();
+
+                                    // Sort by quality (higher is better)
+                                    quality_scores.sort_by(|a, b| {
+                                        b.1.partial_cmp(&a.1).unwrap_or(Ordering::Equal)
+                                    });
+
+                                    // Keep only the top 50% highest quality strings
+                                    let keep_count = seen_strings.len() / 2;
+                                    let strings_to_keep: HashSet<String> = quality_scores
+                                        .into_iter()
+                                        .take(keep_count)
+                                        .map(|(s, _)| s)
+                                        .collect();
+
+                                    seen_strings = strings_to_keep;
+                                    seen_count = seen_strings.len();
+
+                                    // Adjust threshold based on search progress
+                                    let progress_factor = curr_depth as f32 / MAX_DEPTH as f32;
+                                    prune_threshold = INITIAL_PRUNE_THRESHOLD
+                                        - (progress_factor * 5000.0) as usize;
 
                                     warn!(
-                                        "Pruned {} entries from seen_strings HashSet",
-                                        before_size - after_size
+                                        "Pruned to {} high-quality entries (new threshold: {})",
+                                        seen_count, prune_threshold
                                     );
-                                    seen_count = after_size;
                                 }
 
                                 true
@@ -376,14 +588,16 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         });
 
                         if text.is_empty() {
+                            // Add stats update for failed decoding (no valid outputs)
+                            update_decoder_stats(r.decoder, false);
                             continue;
                         }
 
-                        decoders_used.push(r);
+                        decoders_used.push(r.clone());
 
                         // Create new node with updated cost and heuristic
                         let cost = current_node.cost + 1;
-                        let heuristic = generate_heuristic();
+                        let heuristic = generate_heuristic(&text[0], &decoders_used);
                         let total_cost = cost as f32 + heuristic;
 
                         let new_node = AStarNode {
@@ -398,6 +612,9 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
                         // Add to open set
                         open_set.push(new_node);
+
+                        // Update decoder stats - mark as successful since it produced valid output
+                        update_decoder_stats(r.decoder, true);
                     }
                 }
             }
@@ -413,24 +630,38 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 /// Generate a heuristic value for A* search prioritization
 ///
 /// The heuristic estimates how close a state is to being plaintext.
-/// A lower value indicates a more promising state.
+/// A lower value indicates a more promising state. This implementation uses
+/// Cipher Identifier to identify the most likely ciphers for the given text.
 ///
-/// ## Current Implementation
+/// # Parameters
 ///
-/// Currently returns a constant value of 1.0 as a placeholder.
+/// * `text` - The text to analyze for cipher identification
+/// * `path` - The path of decoders used to reach the current state
 ///
-/// ## Future Improvements
-///
-/// TODO: Use cipher identifier from SkeletalDemise to generate more
-/// accurate heuristics based on:
-/// - Character frequency analysis
-/// - N-gram statistics
-/// - Entropy measurements
-/// - Language detection scores
-///
-/// A more sophisticated heuristic would significantly improve search efficiency.
-fn generate_heuristic() -> f32 {
-    1.0
+/// # Returns
+/// A float value representing the heuristic cost (lower is better)
+fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
+    // Get base score from Cipher Identifier
+    let (cipher, base_score) = get_cipher_identifier_score(text);
+
+    // Adjust based on path context
+    let mut final_score = base_score;
+
+    if let Some(last_result) = path.last() {
+        // Adjust based on common sequences
+        if is_common_sequence(last_result.decoder, &cipher) {
+            final_score *= 0.8; // Bonus for common sequences
+        }
+
+        // Adjust based on decoder success rate
+        let success_rate = get_decoder_success_rate(last_result.decoder);
+        final_score *= 1.0 - success_rate * 0.2; // Success rate can reduce score by up to 20%
+    }
+
+    // Adjust based on string quality
+    final_score *= calculate_string_quality(text);
+
+    final_score
 }
 
 /// Determines if a string is too short to be meaningfully decoded
@@ -481,5 +712,13 @@ mod tests {
         // The algorithm should complete without hanging
         let result = rx.recv().unwrap();
         assert!(result.is_some());
+    }
+
+    #[test]
+    fn test_generate_heuristic() {
+        // Test with a Caesar cipher (should return 0.1)
+        // Just test that the function runs without errors
+        let h = generate_heuristic("KHOOR ZRUOG", &[]);
+        assert!((0.0..=1.0).contains(&h));
     }
 }

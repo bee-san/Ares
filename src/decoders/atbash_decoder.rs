@@ -13,7 +13,7 @@ pub struct AtbashDecoder;
 impl Crack for Decoder<AtbashDecoder> {
     fn new() -> Decoder<AtbashDecoder> {
         Decoder {
-            name: "Atbash",
+            name: "atbash",
             description: "Atbash is a monoalphabetic substitution cipher originally used to encrypt the Hebrew alphabet. It can be modified for use with any known writing system with a standard collating order.",
             link: "https://en.wikipedia.org/wiki/Atbash",
             tags: vec!["atbash", "substitution", "decoder", "reciprocal"],

@@ -48,7 +48,7 @@ The main checkers include:
 
 Search algorithms determine the order in which decoders are applied and manage the search for plaintext. Ares implements two main search algorithms:
 
-- **A* Search** (`src/searchers/astar.rs`): Uses heuristics to prioritize promising decoders
+- **A* Search** (`src/searchers/astar.rs`): Uses heuristics to prioritize promising decoders, enhanced with Cipher Identifier for statistical analysis of ciphertext
 - **BFS** (`src/searchers/bfs.rs`): Systematically explores all possible decodings
 
 The search process is managed by the `search_for_plaintext` function in `src/searchers/mod.rs`, which runs the search algorithm in a separate thread with a timeout.
@@ -146,7 +146,8 @@ Several optimizations contribute to Ares's performance:
 1. **Efficient Decoders**: Decoders are implemented with performance in mind
 2. **Parallel Processing**: Multi-threading for CPU-intensive operations
 3. **Early Termination**: The system stops as soon as plaintext is found
-4. **Timeout Mechanism**: Prevents infinite processing on difficult inputs
+4. **Cipher Identification**: Uses statistical analysis to prioritize likely decoders
+5. **Timeout Mechanism**: Prevents infinite processing on difficult inputs
 5. **Heuristic-Based Search**: A* search prioritizes promising decoders
 
 ## Extensibility
@@ -162,8 +163,8 @@ Ares is designed to be extensible:
 
 Planned improvements to the architecture include:
 
-1. **More Sophisticated Heuristics**: Enhance the A* search with better heuristics
-2. **Improved English Detection**: Address limitations in the current English checker
+1. **Adaptive Learning**: Enhance the A* search with adaptive learning based on decoder success rates
+2. **Contextual Heuristics**: Consider the path of decoders used so far when prioritizing next steps
 3. **Decoder Dependencies**: Allow decoders to specify dependencies or prerequisites
 4. **Dynamic Loading**: Support for dynamically loading decoders as plugins
 5. **Distributed Processing**: Support for distributing work across multiple machines

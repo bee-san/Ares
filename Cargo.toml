@@ -45,6 +45,8 @@ data-encoding = "2.4.0"
 urlencoding = "2.1.3"
 z85 = "3.0.5"
 gibberish-or-not = "1.3.0"
+cipher_identifier = "0.2.0"
+rand = "0.8.5"  # For generating random values
 
 # Dev dependencies
 [dev-dependencies]

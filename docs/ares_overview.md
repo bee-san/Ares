@@ -30,7 +30,7 @@ Ares is designed with a library-first approach, separating core functionality fr
 
 Ares employs sophisticated search algorithms to efficiently navigate the space of possible decodings:
 
-- **A* Search**: Uses heuristics to prioritize the most promising decoders
+- **A* Search**: Uses heuristics to prioritize the most promising decoders, enhanced with Cipher Identifier for statistical analysis of ciphertext
 - **BFS (Breadth-First Search)**: Systematically explores all possible decodings
 
 These algorithms allow Ares to handle multi-level encodings (e.g., Base64 → Hex → ROT13) efficiently, a capability that was limited in Ciphey due to performance constraints.
@@ -150,6 +150,7 @@ Ares is under active development, with plans to:
 
 - Add more decoders (aiming to match and exceed Ciphey's ~50 decoders)
 - Improve plaintext detection accuracy
+- Enhance A* search with adaptive learning and contextual heuristics
 - Enhance performance further
 - Add more configuration options
 - Expand platform support
