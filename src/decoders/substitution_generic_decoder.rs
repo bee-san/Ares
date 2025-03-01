@@ -13,7 +13,7 @@ pub struct SubstitutionGenericDecoder;
 impl Crack for Decoder<SubstitutionGenericDecoder> {
     fn new() -> Decoder<SubstitutionGenericDecoder> {
         Decoder {
-            name: "Substitution Generic Decoder",
+            name: "simplesubstitution",
             description: "Decodes substitution ciphers where symbols are replaced with Morse code or binary elements. Tries all possible mappings for inputs with up to 4 unique symbols.",
             link: "https://en.wikipedia.org/wiki/Substitution_cipher",
             tags: vec!["substitution", "binary", "morse"],

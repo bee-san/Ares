@@ -65,13 +65,13 @@ const MAX_DEPTH: u32 = 100;
 /// - "caesar" maps to "CaesarDecoder"
 static CIPHER_MAPPING: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     let mut map = HashMap::new();
-    map.insert("fractionatedMorse", "MorseCodeDecoder");
-    map.insert("atbash", "AtbashDecoder");
-    map.insert("caesar", "CaesarDecoder");
-    map.insert("railfence", "RailfenceDecoder");
-    map.insert("rot47", "ROT47Decoder");
-    map.insert("a1z26", "A1Z26Decoder");
-    map.insert("simplesubstitution", "SubstitutionGenericDecoder");
+    map.insert("fractionatedMorse", "morseCode");
+    map.insert("atbash", "atbash");
+    map.insert("caesar", "caesar");
+    map.insert("railfence", "railfence");
+    map.insert("rot47", "rot47");
+    map.insert("a1z26", "a1z26");
+    map.insert("simplesubstitution", "simplesubstitution");
     // Add more mappings as needed
     map
 });
@@ -153,11 +153,29 @@ fn get_cipher_identifier_score(text: &str) -> (String, f32) {
 ///
 /// * `true` if the sequence is common, `false` otherwise
 fn is_common_sequence(prev_decoder: &str, current_cipher: &str) -> bool {
-    // Define common sequences of decoders
+    // Define common sequences focusing on base decoders
     match (prev_decoder, current_cipher) {
-        ("Base64Decoder", "caesar") => true,
-        ("HexadecimalDecoder", "binary") => true,
-        // Add more common sequences
+        // Base64 commonly followed by other encodings
+        ("Base64Decoder", "Base32Decoder") => true,
+        ("Base64Decoder", "Base58Decoder") => true,
+        ("Base64Decoder", "Base85Decoder") => true,
+        ("Base64Decoder", "Base64Decoder") => true,
+
+        // Base32 sequences
+        ("Base32Decoder", "Base64Decoder") => true,
+        ("Base32Decoder", "Base85Decoder") => true,
+        ("Base32Decoder", "Base32Decoder") => true,
+
+        // Base58 sequences
+        ("Base58Decoder", "Base64Decoder") => true,
+        ("Base58Decoder", "Base32Decoder") => true,
+        ("Base58Decoder", "Base58Decoder") => true,
+
+        // Base85 sequences
+        ("Base85Decoder", "Base64Decoder") => true,
+        ("Base85Decoder", "Base32Decoder") => true,
+        ("Base85Decoder", "Base85Decoder") => true,
+        // No match found
         _ => false,
     }
 }
@@ -173,7 +191,7 @@ fn is_common_sequence(prev_decoder: &str, current_cipher: &str) -> bool {
 /// * A quality score between 0.0 and 1.0
 fn calculate_string_quality(s: &str) -> f32 {
     // Factors to consider:
-    // 1. Length (not too short, not too long)
+    // 1. Length (not too short, not too long
     if s.len() < 3 {
         0.1
     } else if s.len() > 5000 {
@@ -369,6 +387,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         // Filter out strings that can't be decoded or have been seen before
                         text.retain(|s| {
                             if check_if_string_cant_be_decoded(s) {
+                                // Add stats update for failed decoding
+                                update_decoder_stats(&r.decoder, false);
                                 return false;
                             }
 
@@ -422,6 +442,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         });
 
                         if text.is_empty() {
+                            // Add stats update for failed decoding (no valid outputs)
+                            update_decoder_stats(&r.decoder, false);
                             continue;
                         }
 
@@ -445,9 +467,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         // Add to open set
                         open_set.push(new_node);
 
-                        // When processing results, update decoder stats
-                        update_decoder_stats(r.decoder, true); // For successful decodings
-                        update_decoder_stats(r.decoder, false); // For unsuccessful attempts
+                        // Update decoder stats - mark as successful since it produced valid output
+                        update_decoder_stats(r.decoder, true);
                     }
                 }
             }
@@ -512,6 +533,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         // Filter out strings that can't be decoded or have been seen before
                         text.retain(|s| {
                             if check_if_string_cant_be_decoded(s) {
+                                // Add stats update for failed decoding
+                                update_decoder_stats(&r.decoder, false);
                                 return false;
                             }
 
@@ -565,6 +588,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         });
 
                         if text.is_empty() {
+                            // Add stats update for failed decoding (no valid outputs)
+                            update_decoder_stats(&r.decoder, false);
                             continue;
                         }
 
@@ -588,9 +613,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         // Add to open set
                         open_set.push(new_node);
 
-                        // When processing results, update decoder stats
-                        update_decoder_stats(r.decoder, true); // For successful decodings
-                        update_decoder_stats(r.decoder, false); // For unsuccessful attempts
+                        // Update decoder stats - mark as successful since it produced valid output
+                        update_decoder_stats(r.decoder, true);
                     }
                 }
             }

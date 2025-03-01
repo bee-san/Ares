@@ -13,7 +13,7 @@ pub struct RailfenceDecoder;
 impl Crack for Decoder<RailfenceDecoder> {
     fn new() -> Decoder<RailfenceDecoder> {
         Decoder {
-            name: "Railfence",
+            name: "railfence",
             description: "The rail fence cipher (also called a zigzag cipher) is a classical type of transposition cipher. It derives its name from the manner in which encryption is performed, in analogy to a fence built with horizontal rails.",
             link: "https://en.wikipedia.org/wiki/Rail_fence_cipher",
             tags: vec!["railfence", "cipher", "classic", "transposition"],
