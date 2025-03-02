@@ -11,7 +11,8 @@ use crate::storage::ENGLISH_FREQS;
 use gibberish_or_not::Sensitivity;
 use log::{debug, info, trace};
 
-const EXPECTED_IOC: f64 = 0.0667; // Expected Index of Coincidence for English text
+/// Expected Index of Coincidence for English text
+const EXPECTED_IOC: f64 = 0.0667;
 
 /// The Vigenère decoder struct
 pub struct VigenereDecoder;
