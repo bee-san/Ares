@@ -34,8 +34,7 @@ impl Check for Checker<Athena> {
         let config = get_config();
         if config.regex.is_some() {
             trace!("running regex");
-            let regex_checker = Checker::<RegexChecker>::new()
-                .with_sensitivity(self.sensitivity);
+            let regex_checker = Checker::<RegexChecker>::new().with_sensitivity(self.sensitivity);
             let regex_result = regex_checker.check(text);
             if regex_result.is_identified {
                 let mut check_res = CheckResult::new(&regex_checker);
@@ -46,8 +45,7 @@ impl Check for Checker<Athena> {
             // In Ciphey if the user uses the regex checker all the other checkers turn off
             // This is because they are looking for one specific bit of information so will not want the other checkers
             // TODO: wrap all checkers in oncecell so we only create them once!
-            let lemmeknow = Checker::<LemmeKnow>::new()
-                .with_sensitivity(self.sensitivity);
+            let lemmeknow = Checker::<LemmeKnow>::new().with_sensitivity(self.sensitivity);
             let lemmeknow_result = lemmeknow.check(text);
             if lemmeknow_result.is_identified {
                 let mut check_res = CheckResult::new(&lemmeknow);
@@ -55,8 +53,7 @@ impl Check for Checker<Athena> {
                 return check_res;
             }
 
-            let english = Checker::<EnglishChecker>::new()
-                .with_sensitivity(self.sensitivity);
+            let english = Checker::<EnglishChecker>::new().with_sensitivity(self.sensitivity);
             let english_result = english.check(text);
             if english_result.is_identified {
                 let mut check_res = CheckResult::new(&english);
