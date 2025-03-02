@@ -31,8 +31,8 @@ use crate::decoders::reverse_decoder::ReverseDecoder;
 use crate::decoders::rot47_decoder::ROT47Decoder;
 use crate::decoders::substitution_generic_decoder::SubstitutionGenericDecoder;
 use crate::decoders::url_decoder::URLDecoder;
-use crate::decoders::z85_decoder::Z85Decoder;
 use crate::decoders::vigenere_decoder::VigenereDecoder;
+use crate::decoders::z85_decoder::Z85Decoder;
 
 use log::trace;
 use rayon::prelude::*;

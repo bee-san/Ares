@@ -1,8 +1,8 @@
 /// Checker_type is a type used to define checkers
 /// This means that we can standardise the way we check for plaintext
 use crate::checkers::checker_result::CheckResult;
-use lemmeknow::Identifier;
 use gibberish_or_not::Sensitivity;
+use lemmeknow::Identifier;
 
 /// Every checker is of type CheckerType
 /// This will let us pick & choose which checkers to use

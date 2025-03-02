@@ -3,18 +3,18 @@
 //! Returns Option<String> with the decrypted text if successful
 //! Uses Medium sensitivity for gibberish detection as the default.
 
-use crate::checkers::CheckerTypes;
-use gibberish_or_not::Sensitivity;
-use crate::decoders::interface::check_string_success;
 use super::crack_results::CrackResult;
 use super::interface::{Crack, Decoder};
+use crate::checkers::CheckerTypes;
+use crate::decoders::interface::check_string_success;
+use gibberish_or_not::Sensitivity;
 use log::{debug, info, trace};
 
 const ENGLISH_FREQS: [f64; 26] = [
-    0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228, 0.02015,  // A-G
-    0.06094, 0.06966, 0.00153, 0.00772, 0.04025, 0.02406, 0.06749,  // H-N
-    0.07507, 0.01929, 0.00095, 0.05987, 0.06327, 0.09056, 0.02758,  // O-U
-    0.00978, 0.02360, 0.00150, 0.01974, 0.00074                      // V-Z
+    0.08167, 0.01492, 0.02782, 0.04253, 0.12702, 0.02228, 0.02015, // A-G
+    0.06094, 0.06966, 0.00153, 0.00772, 0.04025, 0.02406, 0.06749, // H-N
+    0.07507, 0.01929, 0.00095, 0.05987, 0.06327, 0.09056, 0.02758, // O-U
+    0.00978, 0.02360, 0.00150, 0.01974, 0.00074, // V-Z
 ];
 
 const EXPECTED_IOC: f64 = 0.0667; // Expected Index of Coincidence for English text
@@ -37,12 +37,10 @@ impl Crack for Decoder<VigenereDecoder> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Attempting Vigenère decryption on text: {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
-        
+
         // Clean the input text (remove non-alphabetic characters)
-        let clean_text: String = text.chars()
-            .filter(|c| c.is_ascii_alphabetic())
-            .collect();
-            
+        let clean_text: String = text.chars().filter(|c| c.is_ascii_alphabetic()).collect();
+
         if clean_text.is_empty() {
             debug!("No valid characters found in input text");
             return results;
@@ -51,7 +49,7 @@ impl Crack for Decoder<VigenereDecoder> {
         // Try key lengths from 1 to 20 (typical Vigenère key length range)
         let mut best_key_length = 0;
         let mut best_ioc = 0.0;
-        
+
         for key_length in 1..=20 {
             let ioc = calculate_average_ioc(&clean_text, key_length);
             if (ioc - EXPECTED_IOC).abs() < (best_ioc - EXPECTED_IOC).abs() {
@@ -67,10 +65,10 @@ impl Crack for Decoder<VigenereDecoder> {
 
         // Find the key using frequency analysis
         let key = find_key(&clean_text, best_key_length);
-        
+
         // Decrypt using the found key
         let decrypted = decrypt(&clean_text, &key);
-        
+
         // Reconstruct original formatting
         let final_text = reconstruct_formatting(text, &decrypted);
 
@@ -82,7 +80,7 @@ impl Crack for Decoder<VigenereDecoder> {
         // Use Medium sensitivity for Vigenere decoder
         let checker_with_sensitivity = checker.with_sensitivity(Sensitivity::Medium);
         let checker_result = checker_with_sensitivity.check(&final_text);
-        
+
         results.unencrypted_text = Some(vec![final_text]);
         results.update_checker(&checker_result);
 
@@ -242,7 +240,7 @@ mod tests {
                 &get_athena_checker(),
             )
             .unencrypted_text;
-        
+
         assert!(result.is_some());
         let _decoded_text = &result.as_ref().unwrap()[0];
     }
@@ -256,7 +254,7 @@ mod tests {
                 &get_athena_checker(),
             )
             .unencrypted_text;
-        
+
         assert!(result.is_some());
         let _decoded_text = &result.as_ref().unwrap()[0];
     }
@@ -264,7 +262,9 @@ mod tests {
     #[test]
     fn test_empty_input() {
         let vigenere_decoder = Decoder::<VigenereDecoder>::new();
-        let result = vigenere_decoder.crack("", &get_athena_checker()).unencrypted_text;
+        let result = vigenere_decoder
+            .crack("", &get_athena_checker())
+            .unencrypted_text;
         assert!(result.is_none());
     }
 
@@ -276,4 +276,4 @@ mod tests {
             .unencrypted_text;
         assert!(result.is_none());
     }
-} 
+}

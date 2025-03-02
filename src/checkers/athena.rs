@@ -1,7 +1,7 @@
 use crate::{checkers::checker_result::CheckResult, config::get_config};
+use gibberish_or_not::Sensitivity;
 use lemmeknow::Identifier;
 use log::trace;
-use gibberish_or_not::Sensitivity;
 
 use super::{
     checker_type::{Check, Checker},
@@ -65,14 +65,13 @@ impl Check for Checker<Athena> {
 
         CheckResult::new(self)
     }
-    
+
     fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
         self.sensitivity = sensitivity;
         self
     }
-    
+
     fn get_sensitivity(&self) -> Sensitivity {
         self.sensitivity
     }
-
 }

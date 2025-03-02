@@ -1,5 +1,5 @@
-use lemmeknow::Identifier;
 use gibberish_or_not::Sensitivity;
+use lemmeknow::Identifier;
 
 use super::checker_type::{Check, Checker};
 use crate::{checkers::checker_result::CheckResult, config::get_config};
@@ -48,14 +48,13 @@ impl Check for Checker<RegexChecker> {
             link: self.link,
         }
     }
-    
+
     fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
         self.sensitivity = sensitivity;
         self
     }
-    
+
     fn get_sensitivity(&self) -> Sensitivity {
         self.sensitivity
     }
-
 }

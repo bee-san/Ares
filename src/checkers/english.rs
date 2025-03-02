@@ -44,16 +44,15 @@ impl Check for Checker<EnglishChecker> {
 
         result
     }
-    
+
     fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
         self.sensitivity = sensitivity;
         self
     }
-    
+
     fn get_sensitivity(&self) -> Sensitivity {
         self.sensitivity
     }
-
 }
 
 /// Strings look funny, they might have commas, be uppercase etc
@@ -155,31 +154,31 @@ mod tests {
         let checker = Checker::<EnglishChecker>::new();
         assert!(!checker.check("#").is_identified);
     }
-    
+
     #[test]
     fn test_default_sensitivity_is_medium() {
         let checker = Checker::<EnglishChecker>::new();
         assert!(matches!(checker.get_sensitivity(), Sensitivity::Medium));
     }
-    
+
     #[test]
     fn test_with_sensitivity_changes_sensitivity() {
         let checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::Low);
         assert!(matches!(checker.get_sensitivity(), Sensitivity::Low));
-        
+
         let checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::High);
         assert!(matches!(checker.get_sensitivity(), Sensitivity::High));
     }
-    
+
     #[test]
     fn test_sensitivity_affects_gibberish_detection() {
         // This text has one English word "iron" but is otherwise gibberish
         let text = "Rcl maocr otmwi lit dnoen oehc 13 iron seah.";
-        
+
         // With Low sensitivity, it should be classified as gibberish
         let low_checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::Low);
         assert!(!low_checker.check(text).is_identified);
-        
+
         // With High sensitivity, it should be classified as English
         let high_checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::High);
         assert!(high_checker.check(text).is_identified);

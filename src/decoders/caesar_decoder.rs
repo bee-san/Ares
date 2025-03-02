@@ -5,8 +5,8 @@
 //! Uses Low sensitivity for gibberish detection as classical ciphers produce more English-like results.
 
 use crate::checkers::CheckerTypes;
-use gibberish_or_not::Sensitivity;
 use crate::decoders::interface::check_string_success;
+use gibberish_or_not::Sensitivity;
 
 use super::crack_results::CrackResult;
 use super::interface::Crack;
@@ -55,10 +55,10 @@ impl Crack for Decoder<CaesarDecoder> {
         trace!("Trying Caesar Cipher with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
         let mut decoded_strings = Vec::new();
-        
+
         // Use the checker with Low sensitivity for Caesar cipher
         let checker_with_sensitivity = checker.with_sensitivity(Sensitivity::Low);
-        
+
         for shift in 1..=25 {
             let decoded_text = caesar(text, shift);
             decoded_strings.push(decoded_text);
@@ -115,7 +115,8 @@ mod tests {
     use crate::{
         checkers::{
             athena::Athena,
-            checker_type::{Check, Checker}, english::EnglishChecker,
+            checker_type::{Check, Checker},
+            english::EnglishChecker,
             CheckerTypes,
         },
         decoders::interface::{Crack, Decoder},
@@ -210,17 +211,17 @@ mod tests {
             .unencrypted_text;
         assert!(result.is_none());
     }
-    
+
     #[test]
     fn test_caesar_uses_low_sensitivity() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-        
+
         // This text has one English word "iron" but is otherwise gibberish when shifted
         let text = "Sdm nbpds punxj mju eopfo pfid 13 jspo tfbi."; // "iron" shifted by 1
-        
+
         // Create a checker with Medium sensitivity (default)
         let medium_checker = CheckerTypes::CheckEnglish(Checker::<EnglishChecker>::new());
-        
+
         // The Caesar decoder uses Low sensitivity internally
         let result = caesar_decoder.crack(text, &medium_checker);
         assert!(result.unencrypted_text.is_some()); // The test passes if we get a result

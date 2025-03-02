@@ -48,7 +48,7 @@ impl CheckerTypes {
             CheckerTypes::CheckRegex(regex_checker) => regex_checker.check(text),
         }
     }
-    
+
     /// Sets the sensitivity level for gibberish detection
     pub fn with_sensitivity(&self, sensitivity: Sensitivity) -> Self {
         match self {
@@ -74,7 +74,7 @@ impl CheckerTypes {
             }
         }
     }
-    
+
     /// Gets the current sensitivity level
     pub fn get_sensitivity(&self) -> Sensitivity {
         match self {
