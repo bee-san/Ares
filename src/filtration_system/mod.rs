@@ -32,6 +32,7 @@ use crate::decoders::rot47_decoder::ROT47Decoder;
 use crate::decoders::substitution_generic_decoder::SubstitutionGenericDecoder;
 use crate::decoders::url_decoder::URLDecoder;
 use crate::decoders::z85_decoder::Z85Decoder;
+use crate::decoders::vigenere_decoder::VigenereDecoder;
 
 use log::trace;
 use rayon::prelude::*;
@@ -206,11 +207,7 @@ pub fn filter_decoders_by_tags(_text_struct: &DecoderResult, filter: &DecoderFil
 /// Currently takes no args as this is just a spike to get all the basic functionality working
 pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     trace!("Filtering and getting all decoders");
-    get_all_decoders()
-}
-
-/// Get all available decoders
-fn get_all_decoders() -> Decoders {
+    let vigenere = Decoder::<VigenereDecoder>::new();
     let binary = Decoder::<BinaryDecoder>::new();
     let hexadecimal = Decoder::<HexadecimalDecoder>::new();
     let base58_bitcoin = Decoder::<Base58BitcoinDecoder>::new();
@@ -236,6 +233,7 @@ fn get_all_decoders() -> Decoders {
     let substitution_generic = Decoder::<SubstitutionGenericDecoder>::new();
     Decoders {
         components: vec![
+            Box::new(vigenere),
             Box::new(reversedecoder),
             Box::new(base64),
             Box::new(base58_bitcoin),
