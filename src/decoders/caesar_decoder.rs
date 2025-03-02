@@ -213,17 +213,20 @@ mod tests {
     }
 
     #[test]
-    fn test_caesar_uses_low_sensitivity() {
+    fn test_caesar_uses_medium_sensitivity() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
 
-        // This text has one English word "iron" but is otherwise gibberish when shifted
+        // This text should be gibberish when shifted with Medium sensitivity
         let text = "Wlm retgw tyrbc qny istjs tjmh 13 mvsr xjfm."; // "iron" shifted by 1
 
         // Create a checker with Medium sensitivity (default)
         let medium_checker = CheckerTypes::CheckEnglish(Checker::<EnglishChecker>::new());
 
         // The Caesar decoder uses Medium sensitivity internally
-        let result = caesar_decoder.crack(text, &medium_checker);
-        assert!(result.unencrypted_text.is_none()); // Test should fail with Medium sensitivity
+        let result = caesar_decoder
+            .crack(text, &medium_checker)
+            .unencrypted_text
+            .unwrap();
+        assert_eq!(result.len(), 25); // Should have all 25 attempts since none matched with Medium sensitivity
     }
 }
