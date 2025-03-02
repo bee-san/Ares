@@ -204,6 +204,12 @@ pub fn filter_decoders_by_tags(_text_struct: &DecoderResult, filter: &DecoderFil
     }
 }
 
+/// Get all available decoders
+pub fn get_all_decoders() -> Decoders {
+    trace!("Getting all decoders");
+    filter_and_get_decoders(&DecoderResult::default())
+}
+
 /// Currently takes no args as this is just a spike to get all the basic functionality working
 pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     trace!("Filtering and getting all decoders");

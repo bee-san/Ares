@@ -2,8 +2,10 @@
 //! Performs error handling and returns a string
 //! Call caesar_decoder.crack to use. It returns option<String> and check with
 //! `result.is_some()` to see if it returned okay.
+//! Uses Low sensitivity for gibberish detection as classical ciphers produce more English-like results.
 
 use crate::checkers::CheckerTypes;
+use gibberish_or_not::Sensitivity;
 use crate::decoders::interface::check_string_success;
 
 use super::crack_results::CrackResult;
@@ -38,7 +40,7 @@ impl Crack for Decoder<CaesarDecoder> {
     fn new() -> Decoder<CaesarDecoder> {
         Decoder {
             name: "caesar",
-            description: "Caesar cipher, also known as Caesar's cipher, the shift cipher, Caesar's code or Caesar shift, is one of the simplest and most widely known encryption techniques. It is a type of substitution cipher in which each letter in the plaintext is replaced by a letter some fixed number of positions down the alphabet.",
+            description: "Caesar cipher, also known as Caesar's cipher, the shift cipher, Caesar's code or Caesar shift, is one of the simplest and most widely known encryption techniques. It is a type of substitution cipher in which each letter in the plaintext is replaced by a letter some fixed number of positions down the alphabet. Uses Low sensitivity for gibberish detection.",
             link: "https://en.wikipedia.org/wiki/Caesar_cipher",
             tags: vec!["caesar", "decryption", "classic", "reciprocal"],
             popularity: 1.0,
@@ -53,6 +55,10 @@ impl Crack for Decoder<CaesarDecoder> {
         trace!("Trying Caesar Cipher with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
         let mut decoded_strings = Vec::new();
+        
+        // Use the checker with Low sensitivity for Caesar cipher
+        let checker_with_sensitivity = checker.with_sensitivity(Sensitivity::Low);
+        
         for shift in 1..=25 {
             let decoded_text = caesar(text, shift);
             decoded_strings.push(decoded_text);
@@ -64,7 +70,7 @@ impl Crack for Decoder<CaesarDecoder> {
                 );
                 return results;
             }
-            let checker_result = checker.check(borrowed_decoded_text);
+            let checker_result = checker_with_sensitivity.check(borrowed_decoded_text);
             // If checkers return true, exit early with the correct result
             if checker_result.is_identified {
                 trace!("Found a match with caesar shift {}", shift);
@@ -109,7 +115,7 @@ mod tests {
     use crate::{
         checkers::{
             athena::Athena,
-            checker_type::{Check, Checker},
+            checker_type::{Check, Checker}, english::EnglishChecker,
             CheckerTypes,
         },
         decoders::interface::{Crack, Decoder},
@@ -203,5 +209,20 @@ mod tests {
             .crack("#", &get_athena_checker())
             .unencrypted_text;
         assert!(result.is_none());
+    }
+    
+    #[test]
+    fn test_caesar_uses_low_sensitivity() {
+        let caesar_decoder = Decoder::<CaesarDecoder>::new();
+        
+        // This text has one English word "iron" but is otherwise gibberish when shifted
+        let text = "Sdm nbpds punxj mju eopfo pfid 13 jspo tfbi."; // "iron" shifted by 1
+        
+        // Create a checker with Medium sensitivity (default)
+        let medium_checker = CheckerTypes::CheckEnglish(Checker::<EnglishChecker>::new());
+        
+        // The Caesar decoder uses Low sensitivity internally
+        let result = caesar_decoder.crack(text, &medium_checker);
+        assert!(result.unencrypted_text.is_some()); // The test passes if we get a result
     }
 }

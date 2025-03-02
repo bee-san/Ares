@@ -1,4 +1,5 @@
 use lemmeknow::Identifier;
+use gibberish_or_not::Sensitivity;
 
 use super::{
     checker_result::CheckResult,
@@ -19,6 +20,7 @@ impl Check for Checker<DefaultChecker> {
             expected_runtime: 0.0,
             popularity: 0.0,
             lemmeknow_config: Identifier::default(),
+            sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
             _phantom: std::marker::PhantomData,
         }
     }
@@ -26,6 +28,16 @@ impl Check for Checker<DefaultChecker> {
     fn check(&self, _text: &str) -> CheckResult {
         CheckResult::new(self)
     }
+    
+    fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
+        self.sensitivity = sensitivity;
+        self
+    }
+    
+    fn get_sensitivity(&self) -> Sensitivity {
+        self.sensitivity
+    }
+
 }
 
 #[cfg(test)]

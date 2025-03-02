@@ -1,6 +1,7 @@
 use super::checker_type::{Check, Checker};
 use crate::checkers::checker_result::CheckResult;
 use lemmeknow::{Data, Identifier};
+use gibberish_or_not::Sensitivity;
 
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 /// This is the struct for it.
@@ -17,6 +18,7 @@ impl Check for Checker<LemmeKnow> {
             expected_runtime: 0.01,
             popularity: 1.0,
             lemmeknow_config: Identifier::default().min_rarity(0.1),
+            sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
             _phantom: std::marker::PhantomData,
         }
     }
@@ -40,6 +42,16 @@ impl Check for Checker<LemmeKnow> {
             link: self.link,
         }
     }
+    
+    fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
+        self.sensitivity = sensitivity;
+        self
+    }
+    
+    fn get_sensitivity(&self) -> Sensitivity {
+        self.sensitivity
+    }
+
 }
 
 /// Formats the data result to a string
