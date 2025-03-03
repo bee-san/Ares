@@ -88,9 +88,14 @@ fn color_string(text: &str, role: &str) -> String {
     }
 }
 
-/// Color text as informational
-fn informational(text: &str) -> String {
-    color_string(text, "informational")
+/// Color text as informational or statement (default white)
+/// If role is None, text will be colored white (statement)
+/// If role is Some("informational"), text will use the informational color from config
+fn statement(text: &str, role: Option<&str>) -> String {
+    match role {
+        Some(r) => color_string(text, r),
+        None => text.white().to_string(),
+    }
 }
 
 /// Color text as a warning
@@ -105,13 +110,9 @@ fn success(text: &str) -> String {
 }
 
 /// Color text as error
+#[allow(dead_code)]
 fn error(text: &str) -> String {
     color_string(text, "error")
-}
-
-/// Color text as a statement (default white)
-fn statement(text: &str) -> String {
-    text.white().to_string()
 }
 
 /// Color text as a question
@@ -140,7 +141,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
         .collect::<Vec<_>>()
         .join(" → ");
 
-    let decoded_path_coloured = informational(&decoded_path);
+    let decoded_path_coloured = statement(&decoded_path, Some("informational"));
     let decoded_path_string = if !decoded_path.contains('→') {
         // handles case where only 1 decoder is used
         format!("the decoder used is {decoded_path_coloured}")
@@ -188,7 +189,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
             }
             println!(
                 "Outputting plaintext to file: {}\n\n{}",
-                statement(&file_path),
+                statement(&file_path, None),
                 decoded_path_string
             );
             write(file_path, &plaintext[0]).expect("Error writing to file.");
@@ -215,7 +216,7 @@ pub fn decoded_how_many_times(depth: u32) {
     let decoded_times_int = depth * (decoders.components.len() as u32 + 40); //TODO 40 is how many decoders we have. Calculate automatically
     println!(
         "\n🥳 Ares has decoded {} times.\n",
-        statement(&decoded_times_int.to_string())
+        statement(&decoded_times_int.to_string(), None)
     );
 }
 
@@ -225,8 +226,8 @@ pub fn decoded_how_many_times(depth: u32) {
 pub fn human_checker_check(description: &str, text: &str) {
     println!(
         "🕵️ I think the plaintext is {}.\nPossible plaintext: '{}' (y/N): ",
-        informational(description),
-        informational(text)
+        statement(description, Some("informational")),
+        statement(text, Some("informational"))
     );
 }
 
@@ -257,8 +258,8 @@ pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
         }
         println!(
             "{} seconds have passed. {} remaining",
-            statement(&seconds_spent_running.to_string()),
-            statement(&time_left.to_string())
+            statement(&seconds_spent_running.to_string(), None),
+            statement(&time_left.to_string(), None)
         );
     }
 }
