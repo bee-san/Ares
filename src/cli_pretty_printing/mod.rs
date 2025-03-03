@@ -166,10 +166,14 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     let invis_char_percentage = invis_chars_found / plaintext[0].len() as f64;
     if invis_char_percentage > INVIS_CHARS_DETECTION_PERCENTAGE {
         let invis_char_percentage_string = format!("{:2.0}%", invis_char_percentage * 100.0);
-        question(
         println!(
-            "{} of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", 
-            invis_char_percentage_string.white().bold()
+            "{}",
+            question(
+                &format!(
+                    "{} of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", 
+                    invis_char_percentage_string.white().bold()
+                )
+            )
         );
         let reply: String = read!("{}\n");
         let result = reply.to_ascii_lowercase().starts_with('y');
