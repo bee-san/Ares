@@ -1,4 +1,5 @@
 use std::{fs::File, io::Read};
+use std::collections::HashMap;
 
 use crate::{cli_pretty_printing::panic_failure_both_input_and_fail_provided, config::Config};
 /// This doc string acts as a help message when the uses run '--help' in CLI mode
@@ -123,6 +124,14 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
             },
             api_mode: opts.api_mode.is_some(),
             regex: opts.regex,
+            colourscheme: {
+                let mut map = HashMap::new();
+                map.insert(String::from("informational"), String::from("255,215,0")); // Gold yellow
+                map.insert(String::from("warning"), String::from("255,0,0")); // Red
+                map.insert(String::from("success"), String::from("0,255,0")); // Green
+                map.insert(String::from("error"), String::from("255,0,0")); // Red
+                map
+            },
         },
     )
 }

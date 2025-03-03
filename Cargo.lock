@@ -467,7 +467,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "380f99bb2655f193e5099ba749c2d229857d57e1b687958d1d73dd9eac3328c7"
 dependencies = [
  "clap",
- "colored",
+ "colored 2.2.0",
  "lazy_static",
  "prettytable-rs",
  "regex",
@@ -558,6 +558,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "117725a109d387c937a1533ce01b450cbde6b88abceea8473c4d7a85853cda3c"
 dependencies = [
  "lazy_static",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
+name = "colored"
+version = "3.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fde0e0ec90c9dfb3b4b1a0891a7dcd0e2bffde2f7efed5fe7c9bb00e5bfb915e"
+dependencies = [
  "windows-sys 0.59.0",
 ]
 
@@ -2406,6 +2415,7 @@ dependencies = [
  "cargo-nextest",
  "cipher_identifier",
  "clap",
+ "colored 3.0.0",
  "criterion",
  "crossbeam",
  "data-encoding",

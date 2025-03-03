@@ -1,6 +1,7 @@
 /// import general checker
 use lemmeknow::Identifier;
 use once_cell::sync::OnceCell;
+use std::collections::HashMap;
 
 /// Library input is the default API input
 /// The CLI turns its arguments into a LibraryInput struct
@@ -30,6 +31,8 @@ pub struct Config {
     pub api_mode: bool,
     /// Regex enables the user to search for a specific regex or crib
     pub regex: Option<String>,
+    /// Colourscheme hashmap
+    pub colourscheme: HashMap<String, String>,
 }
 
 /// Cell for storing global Config
@@ -65,6 +68,14 @@ impl Default for Config {
             timeout: 5,
             api_mode: true,
             regex: None,
+            colourscheme: {
+                let mut map = HashMap::new();
+                map.insert(String::from("informational"), String::from("255,215,0")); // Gold yellow
+                map.insert(String::from("warning"), String::from("255,0,0")); // Red
+                map.insert(String::from("success"), String::from("0,255,0")); // Green
+                map.insert(String::from("error"), String::from("255,0,0")); // Red
+                map
+            },
         }
     }
 }

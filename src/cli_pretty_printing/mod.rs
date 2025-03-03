@@ -8,7 +8,101 @@ use crate::storage;
 use crate::DecoderResult;
 use std::env;
 use std::fs::write;
+use colored::Colorize;
 use text_io::read;
+
+/// Parse RGB string in format "r,g,b" to RGB values.
+/// 
+/// The input string should be in the format "r,g,b" where r, g, and b are integers between 0 and 255.
+/// Spaces around numbers are allowed.
+/// 
+/// # Examples
+/// ```
+/// // Valid formats:
+/// "255,0,0"     // Pure red
+/// "0, 255, 0"   // Pure green with spaces
+/// "0,0,255"     // Pure blue
+/// ```
+/// 
+/// Returns None if:
+/// - The string is not in the correct format (must have exactly 2 commas)
+/// - Any value cannot be parsed as a u8 (must be 0-255)
+fn parse_rgb(rgb: &str) -> Option<(u8, u8, u8)> {
+    let parts: Vec<&str> = rgb.split(',').collect();
+    if parts.len() != 3 {
+        eprintln!("Invalid RGB format: '{}'. Expected format: 'r,g,b' where r,g,b are numbers between 0-255", rgb);
+        return None;
+    }
+
+    let r = match parts[0].trim().parse::<u8>() {
+        Ok(val) => val,
+        Err(_) => {
+            eprintln!("Invalid red value '{}': must be a number between 0-255", parts[0]);
+            return None;
+        }
+    };
+
+    let g = match parts[1].trim().parse::<u8>() {
+        Ok(val) => val,
+        Err(_) => {
+            eprintln!("Invalid green value '{}': must be a number between 0-255", parts[1]);
+            return None;
+        }
+    };
+
+    let b = match parts[2].trim().parse::<u8>() {
+        Ok(val) => val,
+        Err(_) => {
+            eprintln!("Invalid blue value '{}': must be a number between 0-255", parts[2]);
+            return None;
+        }
+    };
+    
+    Some((r, g, b))
+}
+
+/// Color a string based on its role using RGB values from the config
+fn color_string(text: &str, role: &str) -> String {
+    let config = crate::config::get_config();
+    
+    // Get the RGB color string, defaulting to white if not found
+    let rgb = match config.colourscheme.get(role) {
+        Some(color) => color,
+        None => "255,255,255",
+    };
+    
+    if let Some((r, g, b)) = parse_rgb(rgb) {
+        text.truecolor(r, g, b).bold().to_string()
+    } else {
+        // Default to white if hex code is invalid
+        text.truecolor(255, 255, 255).bold().to_string()
+    }
+}
+
+/// Color text as informational
+fn informational(text: &str) -> String {
+    color_string(text, "informational")
+}
+
+/// Color text as a warning
+fn warning(text: &str) -> String {
+    color_string(text, "warning")
+}
+
+/// Color text as success
+fn success(text: &str) -> String {
+    color_string(text, "success")
+}
+
+/// Color text as error
+fn error(text: &str) -> String {
+    color_string(text, "error")
+}
+
+/// Color text as a statement (default white)
+fn statement(text: &str) -> String {
+    text.white().to_string()
+}
 
 /// The output function is used to print the output of the program.
 /// If the API mode is on, it will not print.
@@ -31,7 +125,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
         .collect::<Vec<_>>()
         .join(" → ");
 
-    let decoded_path_coloured = warning_colour().paint(&decoded_path);
+    let decoded_path_coloured = informational(&decoded_path);
     let decoded_path_string = if !decoded_path.contains('→') {
         // handles case where only 1 decoder is used
         format!("the decoder used is {decoded_path_coloured}")
@@ -56,41 +150,41 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     // save the plaintext into a file
     let invis_char_percentage = invis_chars_found / plaintext[0].len() as f64;
     if invis_char_percentage > INVIS_CHARS_DETECTION_PERCENTAGE {
-        question_colour().paint(
+        println!(
+            "{}",
             format!(
-                "{:2.0}% of the plaintext is invisible characters, would you like to save to a file instead? (y/N)",
-                (invis_char_percentage * 100.0)
-            )
-            .as_str(),
+                "{:2.0}% of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", 
+                (invis_char_percentage * 100.0)).white().bold()
         );
         let reply: String = read!("{}\n");
         let result = reply.to_ascii_lowercase().starts_with('y');
         if result {
-            question_colour().paint(
+            println!(
+                "{}",
                 format!(
                     "Please enter a filename: (default: {}/ares_text.txt)",
                     env::var("HOME").unwrap_or_default() //TODO use xdg here
-                )
-                .as_str(),
+                ).white().bold()
             );
             let mut file_path: String = read!("{}\n");
             if file_path.is_empty() {
                 file_path = format!("{}/ares_text.txt", env::var("HOME").unwrap_or_default());
             }
-            normal_colour().paint(
+            println!(
+                "{}",
                 format!(
                     "Outputting plaintext to file: {}\n\n{}",
-                    file_path, decoded_path_string
+                    statement(&file_path), decoded_path_string
                 )
-                .as_str(),
             );
             write(file_path, &plaintext[0]).expect("Error writing to file.");
             return;
         }
     }
     println!(
-        "The plaintext is: \n{}\nand {}",
-        success_colour().paint(&plaintext[0]),
+        "{}\n{}\n{}",
+        statement("The plaintext is:"),
+        success(&plaintext[0]),
         decoded_path_string
     );
 }
@@ -106,12 +200,11 @@ pub fn decoded_how_many_times(depth: u32) {
     // Then we add 25 for Caesar
     let decoders = crate::filtration_system::filter_and_get_decoders(&DecoderResult::default());
     let decoded_times_int = depth * (decoders.components.len() as u32 + 40); //TODO 40 is how many decoders we have. Calculate automatically
-    normal_colour().paint(
+    println!(
+        "{}",
         format!(
-            "\n🥳 Ares has decoded {decoded_times_int} times.\nIf you would have used Ciphey, it would have taken you {time_took}\n"
-        )
-        .as_str(),
-    );
+            "\n🥳 Ares has decoded {} times.\n", statement(&decoded_times_int.to_string())
+        ));
 }
 
 /// Whenever the human checker checks for text, this function is run.
@@ -120,8 +213,8 @@ pub fn decoded_how_many_times(depth: u32) {
 pub fn human_checker_check(description: &str, text: &str) {
     println!(
         "🕵️ I think the plaintext is {}.\nPossible plaintext: '{}' (y/N): ",
-        warning_colour().paint(description),
-        warning_colour().paint(text)
+        informational(description),
+        informational(text)
     )
 }
 
@@ -132,12 +225,12 @@ pub fn failed_to_decode() {
         return;
     }
 
-    normal_colour().paint(
+    println!(
+        "{}",
         format!(
-            "⛔️ Ares has failed to decode the text.\nIf you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog"
-        )
-        .as_str(),
-    );
+            "{}",
+            error("⛔️ Ares has failed to decode the text.\nIf you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog")
+        ));
 }
 
 /// Every second the timer ticks once
@@ -153,12 +246,12 @@ pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
         if time_left == 0 {
             return;
         }
-        normal_colour().paint(
+        println!("{}",
             format!(
-                "{seconds_spent_running} seconds have passed. {time_left} remaining"
-            )
-            .as_str(),
-        );
+                "{} seconds have passed. {} remaining",
+                statement(&seconds_spent_running.to_string()),
+                statement(&time_left.to_string())
+            ));
     }
 }
 
@@ -169,12 +262,10 @@ pub fn return_early_because_input_text_is_plaintext() {
     if config.api_mode {
         return;
     }
-    success_colour().paint(
-        format!(
+    println!("{}",
+        success(
             "Your input text is the plaintext 🥳"
-        )
-        .as_str(),
-    );
+        ));
 }
 
 /// The user has provided both textual input and file input
@@ -197,24 +288,4 @@ pub fn panic_failure_no_input_provided() {
         return;
     }
     panic!("Failed -- no input was provided. Please use -t for text or -f for files.")
-}
-
-fn warning_colour() -> ansi_term::Style {
-    ansi_term::Colour::Yellow.bold()
-}
-
-fn alert_colour() -> ansi_term::Style {
-    ansi_term::Colour::Red.bold()
-}
-
-fn success_colour() -> ansi_term::Style {
-    ansi_term::Colour::Green.bold()
-}
-
-fn question_colour() -> ansi_term::Style {
-    ansi_term::Colour::White.bold()
-}
-
-fn normal_colour() -> ansi_term::Color {
-    ansi_term::Colour::White
 }
