@@ -31,7 +31,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
         .collect::<Vec<_>>()
         .join(" → ");
 
-    let decoded_path_coloured = ansi_term::Colour::Yellow.bold().paint(&decoded_path);
+    let decoded_path_coloured = warning_colour().paint(&decoded_path);
     let decoded_path_string = if !decoded_path.contains('→') {
         // handles case where only 1 decoder is used
         format!("the decoder used is {decoded_path_coloured}")
@@ -56,21 +56,33 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     // save the plaintext into a file
     let invis_char_percentage = invis_chars_found / plaintext[0].len() as f64;
     if invis_char_percentage > INVIS_CHARS_DETECTION_PERCENTAGE {
-        println!("{:2.0}% of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", (invis_char_percentage * 100.0));
+        question_colour().paint(
+            format!(
+                "{:2.0}% of the plaintext is invisible characters, would you like to save to a file instead? (y/N)",
+                (invis_char_percentage * 100.0)
+            )
+            .as_str(),
+        );
         let reply: String = read!("{}\n");
         let result = reply.to_ascii_lowercase().starts_with('y');
         if result {
-            println!(
-                "Please enter a filename: (default: {}/ares_text.txt)",
-                env::var("HOME").unwrap_or_default()
+            question_colour().paint(
+                format!(
+                    "Please enter a filename: (default: {}/ares_text.txt)",
+                    env::var("HOME").unwrap_or_default() //TODO use xdg here
+                )
+                .as_str(),
             );
             let mut file_path: String = read!("{}\n");
             if file_path.is_empty() {
                 file_path = format!("{}/ares_text.txt", env::var("HOME").unwrap_or_default());
             }
-            println!(
-                "Outputting plaintext to file: {}\n\n{}",
-                file_path, decoded_path_string
+            normal_colour().paint(
+                format!(
+                    "Outputting plaintext to file: {}\n\n{}",
+                    file_path, decoded_path_string
+                )
+                .as_str(),
             );
             write(file_path, &plaintext[0]).expect("Error writing to file.");
             return;
@@ -78,7 +90,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     }
     println!(
         "The plaintext is: \n{}\nand {}",
-        ansi_term::Colour::Yellow.bold().paint(&plaintext[0]),
+        success_colour().paint(&plaintext[0]),
         decoded_path_string
     );
 }
@@ -93,12 +105,13 @@ pub fn decoded_how_many_times(depth: u32) {
     // Gets how many decoders we have
     // Then we add 25 for Caesar
     let decoders = crate::filtration_system::filter_and_get_decoders(&DecoderResult::default());
-    let decoded_times_int = depth * (decoders.components.len() as u32 + 25);
-
-    let time_took = calculate_time_took(decoded_times_int);
-
-    // TODO add colour to the times
-    println!("\n🥳 Ares has decoded {decoded_times_int} times.\nIf you would have used Ciphey, it would have taken you {time_took}\n");
+    let decoded_times_int = depth * (decoders.components.len() as u32 + 40); //TODO 40 is how many decoders we have. Calculate automatically
+    normal_colour().paint(
+        format!(
+            "\n🥳 Ares has decoded {decoded_times_int} times.\nIf you would have used Ciphey, it would have taken you {time_took}\n"
+        )
+        .as_str(),
+    );
 }
 
 /// Whenever the human checker checks for text, this function is run.
@@ -107,8 +120,8 @@ pub fn decoded_how_many_times(depth: u32) {
 pub fn human_checker_check(description: &str, text: &str) {
     println!(
         "🕵️ I think the plaintext is {}.\nPossible plaintext: '{}' (y/N): ",
-        ansi_term::Colour::Yellow.bold().paint(description),
-        ansi_term::Colour::Yellow.bold().paint(text)
+        warning_colour().paint(description),
+        warning_colour().paint(text)
     )
 }
 
@@ -119,32 +132,12 @@ pub fn failed_to_decode() {
         return;
     }
 
-    println!("⛔️ Ares has failed to decode the text.");
-    println!("If you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog");
-}
-/// Calculate how long it would take to decode this in Ciphey
-fn calculate_time_took(decoded_times_int: u32) -> String {
-    // TODO if we grab how long the programs been running for (see timer) we can make some nice stats like:
-    // * How many decodings / second we did
-    // * How much longer it'd take in Ciphey
-    // We'll guess Ciphey can do 8 a second. No science here, it's arbitrary based on my opinion
-    let ciphey_decodings_a_second = 5;
-    // Calculate how long it'd take in Ciphey
-    let ciphey_how_long_to_decode_in_seconds = decoded_times_int / ciphey_decodings_a_second;
-    if ciphey_how_long_to_decode_in_seconds > 60 {
-        // If it took
-        if ciphey_how_long_to_decode_in_seconds / 60 == 1 {
-            // Handle case where it's each 1 minute
-            // TODO 1 minutes is still broken for me
-            format!("{} minute", ciphey_how_long_to_decode_in_seconds / 60)
-        } else {
-            // 1.26 minutes sounds good in English
-            // So we do not need to handle special case here
-            format!("{} minutes", ciphey_how_long_to_decode_in_seconds / 60)
-        }
-    } else {
-        format!("{ciphey_how_long_to_decode_in_seconds} seconds")
-    }
+    normal_colour().paint(
+        format!(
+            "⛔️ Ares has failed to decode the text.\nIf you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog"
+        )
+        .as_str(),
+    );
 }
 
 /// Every second the timer ticks once
@@ -160,7 +153,12 @@ pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
         if time_left == 0 {
             return;
         }
-        println!("{seconds_spent_running} seconds have passed. {time_left} remaining");
+        normal_colour().paint(
+            format!(
+                "{seconds_spent_running} seconds have passed. {time_left} remaining"
+            )
+            .as_str(),
+        );
     }
 }
 
@@ -171,7 +169,12 @@ pub fn return_early_because_input_text_is_plaintext() {
     if config.api_mode {
         return;
     }
-    println!("Your input text is the plaintext 🥳");
+    success_colour().paint(
+        format!(
+            "Your input text is the plaintext 🥳"
+        )
+        .as_str(),
+    );
 }
 
 /// The user has provided both textual input and file input
@@ -194,4 +197,24 @@ pub fn panic_failure_no_input_provided() {
         return;
     }
     panic!("Failed -- no input was provided. Please use -t for text or -f for files.")
+}
+
+fn warning_colour() -> ansi_term::Style {
+    ansi_term::Colour::Yellow.bold()
+}
+
+fn alert_colour() -> ansi_term::Style {
+    ansi_term::Colour::Red.bold()
+}
+
+fn success_colour() -> ansi_term::Style {
+    ansi_term::Colour::Green.bold()
+}
+
+fn question_colour() -> ansi_term::Style {
+    ansi_term::Colour::White.bold()
+}
+
+fn normal_colour() -> ansi_term::Color {
+    ansi_term::Colour::White
 }
