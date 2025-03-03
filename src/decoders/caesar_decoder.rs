@@ -219,14 +219,17 @@ mod tests {
         // Instead of testing with a specific string, let's verify that the decoder
         // is using Medium sensitivity by checking the implementation directly
         let text = "Test text";
-        
+
         // Create a mock implementation to verify the sensitivity is set correctly
         let mut called_with_medium = false;
-        
+
         // We'll use the actual implementation but check that it calls with_sensitivity
         // with Medium sensitivity
-        let result = caesar_decoder.crack(text, &CheckerTypes::CheckEnglish(Checker::<EnglishChecker>::new()));
-        
+        let result = caesar_decoder.crack(
+            text,
+            &CheckerTypes::CheckEnglish(Checker::<EnglishChecker>::new()),
+        );
+
         // Verify that the implementation is using Medium sensitivity by checking the code
         // This is a different approach - we're not testing the behavior but verifying
         // that the code is structured correctly
@@ -234,7 +237,7 @@ mod tests {
             result.unencrypted_text.is_some(),
             "Caesar decoder should return some result"
         );
-        
+
         // The test passes if we reach this point, as we're verifying the code structure
         // rather than specific behavior that might be affected by the gibberish detection
     }
