@@ -114,6 +114,11 @@ fn statement(text: &str) -> String {
     text.white().to_string()
 }
 
+/// Color text as a question
+fn question(text: &str) -> String {
+    color_string(text, "question")
+}
+
 /// The output function is used to print the output of the program.
 /// If the API mode is on, it will not print.
 ///
@@ -160,9 +165,11 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     // save the plaintext into a file
     let invis_char_percentage = invis_chars_found / plaintext[0].len() as f64;
     if invis_char_percentage > INVIS_CHARS_DETECTION_PERCENTAGE {
+        let invis_char_percentage_string = format!("{:2.0}%", invis_char_percentage * 100.0);
+        question(
         println!(
-            "{:2.0}% of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", 
-            (invis_char_percentage * 100.0).white().bold()
+            "{} of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", 
+            invis_char_percentage_string.white().bold()
         );
         let reply: String = read!("{}\n");
         let result = reply.to_ascii_lowercase().starts_with('y');
