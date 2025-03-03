@@ -94,6 +94,7 @@ fn informational(text: &str) -> String {
 }
 
 /// Color text as a warning
+#[allow(dead_code)]
 fn warning(text: &str) -> String {
     color_string(text, "warning")
 }
