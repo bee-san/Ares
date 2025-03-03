@@ -161,42 +161,31 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     let invis_char_percentage = invis_chars_found / plaintext[0].len() as f64;
     if invis_char_percentage > INVIS_CHARS_DETECTION_PERCENTAGE {
         println!(
-            "{}",
-            format!(
-                "{:2.0}% of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", 
-                (invis_char_percentage * 100.0)).white().bold()
+            "{:2.0}% of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", 
+            (invis_char_percentage * 100.0).white().bold()
         );
         let reply: String = read!("{}\n");
         let result = reply.to_ascii_lowercase().starts_with('y');
         if result {
             println!(
-                "{}",
-                format!(
-                    "Please enter a filename: (default: {}/ares_text.txt)",
-                    env::var("HOME").unwrap_or_default() //TODO use xdg here
-                )
-                .white()
-                .bold()
+                "Please enter a filename: (default: {}/ares_text.txt)",
+                env::var("HOME").unwrap_or_default().white().bold()
             );
             let mut file_path: String = read!("{}\n");
             if file_path.is_empty() {
                 file_path = format!("{}/ares_text.txt", env::var("HOME").unwrap_or_default());
             }
             println!(
-                "{}",
-                format!(
-                    "Outputting plaintext to file: {}\n\n{}",
-                    statement(&file_path),
-                    decoded_path_string
-                )
+                "Outputting plaintext to file: {}\n\n{}",
+                statement(&file_path),
+                decoded_path_string
             );
             write(file_path, &plaintext[0]).expect("Error writing to file.");
             return;
         }
     }
     println!(
-        "{}\n{}\n{}",
-        statement("The plaintext is:"),
+        "The plaintext is:\n{}\n{}",
         success(&plaintext[0]),
         decoded_path_string
     );
@@ -214,11 +203,8 @@ pub fn decoded_how_many_times(depth: u32) {
     let decoders = crate::filtration_system::filter_and_get_decoders(&DecoderResult::default());
     let decoded_times_int = depth * (decoders.components.len() as u32 + 40); //TODO 40 is how many decoders we have. Calculate automatically
     println!(
-        "{}",
-        format!(
-            "\n🥳 Ares has decoded {} times.\n",
-            statement(&decoded_times_int.to_string())
-        )
+        "\n🥳 Ares has decoded {} times.\n",
+        statement(&decoded_times_int.to_string())
     );
 }
 
@@ -230,7 +216,7 @@ pub fn human_checker_check(description: &str, text: &str) {
         "🕵️ I think the plaintext is {}.\nPossible plaintext: '{}' (y/N): ",
         informational(description),
         informational(text)
-    )
+    );
 }
 
 /// When Ares has failed to decode something, print this message
@@ -241,11 +227,8 @@ pub fn failed_to_decode() {
     }
 
     println!(
-        "{}",
-        format!(
-            "{}",
-            error("⛔️ Ares has failed to decode the text.\nIf you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog")
-        ));
+        "⛔️ Ares has failed to decode the text.\nIf you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog"
+    );
 }
 
 /// Every second the timer ticks once
@@ -262,12 +245,9 @@ pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
             return;
         }
         println!(
-            "{}",
-            format!(
-                "{} seconds have passed. {} remaining",
-                statement(&seconds_spent_running.to_string()),
-                statement(&time_left.to_string())
-            )
+            "{} seconds have passed. {} remaining",
+            statement(&seconds_spent_running.to_string()),
+            statement(&time_left.to_string())
         );
     }
 }
