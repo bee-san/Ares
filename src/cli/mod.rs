@@ -1,5 +1,5 @@
-use std::{fs::File, io::Read};
 use std::collections::HashMap;
+use std::{fs::File, io::Read};
 
 use crate::{cli_pretty_printing::panic_failure_both_input_and_fail_provided, config::Config};
 /// This doc string acts as a help message when the uses run '--help' in CLI mode

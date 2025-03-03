@@ -6,16 +6,16 @@
 mod tests;
 use crate::storage;
 use crate::DecoderResult;
+use colored::Colorize;
 use std::env;
 use std::fs::write;
-use colored::Colorize;
 use text_io::read;
 
 /// Parse RGB string in format "r,g,b" to RGB values.
-/// 
+///
 /// The input string should be in the format "r,g,b" where r, g, and b are integers between 0 and 255.
 /// Spaces around numbers are allowed.
-/// 
+///
 /// # Examples
 /// ```
 /// // Valid formats:
@@ -23,7 +23,7 @@ use text_io::read;
 /// "0, 255, 0"   // Pure green with spaces
 /// "0,0,255"     // Pure blue
 /// ```
-/// 
+///
 /// Returns None if:
 /// - The string is not in the correct format (must have exactly 2 commas)
 /// - Any value cannot be parsed as a u8 (must be 0-255)
@@ -37,7 +37,10 @@ fn parse_rgb(rgb: &str) -> Option<(u8, u8, u8)> {
     let r = match parts[0].trim().parse::<u8>() {
         Ok(val) => val,
         Err(_) => {
-            eprintln!("Invalid red value '{}': must be a number between 0-255", parts[0]);
+            eprintln!(
+                "Invalid red value '{}': must be a number between 0-255",
+                parts[0]
+            );
             return None;
         }
     };
@@ -45,7 +48,10 @@ fn parse_rgb(rgb: &str) -> Option<(u8, u8, u8)> {
     let g = match parts[1].trim().parse::<u8>() {
         Ok(val) => val,
         Err(_) => {
-            eprintln!("Invalid green value '{}': must be a number between 0-255", parts[1]);
+            eprintln!(
+                "Invalid green value '{}': must be a number between 0-255",
+                parts[1]
+            );
             return None;
         }
     };
@@ -53,24 +59,27 @@ fn parse_rgb(rgb: &str) -> Option<(u8, u8, u8)> {
     let b = match parts[2].trim().parse::<u8>() {
         Ok(val) => val,
         Err(_) => {
-            eprintln!("Invalid blue value '{}': must be a number between 0-255", parts[2]);
+            eprintln!(
+                "Invalid blue value '{}': must be a number between 0-255",
+                parts[2]
+            );
             return None;
         }
     };
-    
+
     Some((r, g, b))
 }
 
 /// Color a string based on its role using RGB values from the config
 fn color_string(text: &str, role: &str) -> String {
     let config = crate::config::get_config();
-    
+
     // Get the RGB color string, defaulting to white if not found
     let rgb = match config.colourscheme.get(role) {
         Some(color) => color,
         None => "255,255,255",
     };
-    
+
     if let Some((r, g, b)) = parse_rgb(rgb) {
         text.truecolor(r, g, b).bold().to_string()
     } else {
@@ -164,7 +173,9 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
                 format!(
                     "Please enter a filename: (default: {}/ares_text.txt)",
                     env::var("HOME").unwrap_or_default() //TODO use xdg here
-                ).white().bold()
+                )
+                .white()
+                .bold()
             );
             let mut file_path: String = read!("{}\n");
             if file_path.is_empty() {
@@ -174,7 +185,8 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
                 "{}",
                 format!(
                     "Outputting plaintext to file: {}\n\n{}",
-                    statement(&file_path), decoded_path_string
+                    statement(&file_path),
+                    decoded_path_string
                 )
             );
             write(file_path, &plaintext[0]).expect("Error writing to file.");
@@ -203,8 +215,10 @@ pub fn decoded_how_many_times(depth: u32) {
     println!(
         "{}",
         format!(
-            "\n🥳 Ares has decoded {} times.\n", statement(&decoded_times_int.to_string())
-        ));
+            "\n🥳 Ares has decoded {} times.\n",
+            statement(&decoded_times_int.to_string())
+        )
+    );
 }
 
 /// Whenever the human checker checks for text, this function is run.
@@ -246,12 +260,14 @@ pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
         if time_left == 0 {
             return;
         }
-        println!("{}",
+        println!(
+            "{}",
             format!(
                 "{} seconds have passed. {} remaining",
                 statement(&seconds_spent_running.to_string()),
                 statement(&time_left.to_string())
-            ));
+            )
+        );
     }
 }
 
@@ -262,10 +278,7 @@ pub fn return_early_because_input_text_is_plaintext() {
     if config.api_mode {
         return;
     }
-    println!("{}",
-        success(
-            "Your input text is the plaintext 🥳"
-        ));
+    println!("{}", success("Your input text is the plaintext 🥳"));
 }
 
 /// The user has provided both textual input and file input
