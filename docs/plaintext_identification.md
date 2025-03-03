@@ -56,7 +56,7 @@ This checker is particularly useful for identifying structured data that might n
 
 ### English Checker
 
-The English checker (`src/checkers/english.rs`) determines if text is valid English language. It uses the [gibberish-or-not](https://crates.io/crates/gibberish-or-not) library to distinguish meaningful English text from random character sequences.
+The English checker (`src/checkers/english.rs`) determines if text is valid English language. It uses the [gibberish-or-not](https://crates.io/crates/gibberish-or-not) library to distinguish meaningful English text from random character sequences, with configurable sensitivity levels.
 
 The process works as follows:
 
@@ -65,13 +65,23 @@ The process works as follows:
    - Removing all ASCII punctuation
    - This helps ensure consistent checking regardless of formatting
 
-2. **Gibberish Detection**: The normalized text is passed to the `is_gibberish` function
+2. **Gibberish Detection**: The normalized text is passed to the `is_gibberish` function with a sensitivity level
    - If the function returns `false`, the text is considered valid English
    - If it returns `true`, the text is considered gibberish
 
 3. **Edge Case Handling**: Very short strings (less than 2 characters after normalization) are automatically considered not plaintext, as they're too short for reliable detection
 
-The English checker is effective for detecting natural language text but may struggle with specialized technical content or very short texts.
+#### Sensitivity Levels
+
+The English checker supports three sensitivity levels:
+
+- **Low Sensitivity**: Most strict classification, requires very high confidence to classify text as English. Used by classical ciphers like Caesar cipher that produce more English-like results.
+
+- **Medium Sensitivity (Default)**: Balanced approach for general use, suitable for most applications. Used by most decoders in Ares.
+
+- **High Sensitivity**: Most lenient classification, favors classifying text as English. Useful when input is mostly gibberish and any English-like patterns are significant.
+
+The English checker is effective for detecting natural language text but may struggle with specialized technical content or very short texts. The sensitivity level can be adjusted based on the specific decoder's needs.
 
 ### Regex Checker
 
@@ -149,6 +159,7 @@ Users can customize the plaintext detection process through several configuratio
 - **Regex Pattern**: Provide a custom regex pattern to match against decoded text
 - **Human Checker**: Enable or disable human verification of results
 - **Timeout**: Adjust the maximum time spent trying to decode
+- **Sensitivity Level**: Different decoders use different sensitivity levels based on their characteristics
 
 These options allow users to tailor the plaintext detection to their specific needs and expectations.
 

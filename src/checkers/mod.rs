@@ -7,6 +7,8 @@ use self::{
     regex_checker::RegexChecker,
 };
 
+use gibberish_or_not::Sensitivity;
+
 /// The default checker we use which simply calls all other checkers in order.
 pub mod athena;
 /// The checkerResult struct is used to store the results of a checker.
@@ -44,6 +46,42 @@ impl CheckerTypes {
             CheckerTypes::CheckEnglish(english_checker) => english_checker.check(text),
             CheckerTypes::CheckAthena(athena_checker) => athena_checker.check(text),
             CheckerTypes::CheckRegex(regex_checker) => regex_checker.check(text),
+        }
+    }
+
+    /// Sets the sensitivity level for gibberish detection
+    pub fn with_sensitivity(&self, sensitivity: Sensitivity) -> Self {
+        match self {
+            CheckerTypes::CheckLemmeKnow(_checker) => {
+                let mut new_checker = Checker::<LemmeKnow>::new();
+                new_checker.sensitivity = sensitivity;
+                CheckerTypes::CheckLemmeKnow(new_checker)
+            }
+            CheckerTypes::CheckEnglish(_checker) => {
+                let mut new_checker = Checker::<EnglishChecker>::new();
+                new_checker.sensitivity = sensitivity;
+                CheckerTypes::CheckEnglish(new_checker)
+            }
+            CheckerTypes::CheckAthena(_checker) => {
+                let mut new_checker = Checker::<Athena>::new();
+                new_checker.sensitivity = sensitivity;
+                CheckerTypes::CheckAthena(new_checker)
+            }
+            CheckerTypes::CheckRegex(_checker) => {
+                let mut new_checker = Checker::<RegexChecker>::new();
+                new_checker.sensitivity = sensitivity;
+                CheckerTypes::CheckRegex(new_checker)
+            }
+        }
+    }
+
+    /// Gets the current sensitivity level
+    pub fn get_sensitivity(&self) -> Sensitivity {
+        match self {
+            CheckerTypes::CheckLemmeKnow(checker) => checker.get_sensitivity(),
+            CheckerTypes::CheckEnglish(checker) => checker.get_sensitivity(),
+            CheckerTypes::CheckAthena(checker) => checker.get_sensitivity(),
+            CheckerTypes::CheckRegex(checker) => checker.get_sensitivity(),
         }
     }
 }

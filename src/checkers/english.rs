@@ -1,5 +1,5 @@
 use crate::checkers::checker_result::CheckResult;
-use gibberish_or_not::is_gibberish;
+use gibberish_or_not::{is_gibberish, Sensitivity};
 use lemmeknow::Identifier;
 
 use crate::checkers::checker_type::{Check, Checker};
@@ -18,6 +18,7 @@ impl Check for Checker<EnglishChecker> {
             expected_runtime: 0.01,
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
+            sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
             _phantom: std::marker::PhantomData,
         }
     }
@@ -27,7 +28,7 @@ impl Check for Checker<EnglishChecker> {
         let text = normalise_string(text);
 
         let mut result = CheckResult {
-            is_identified: !is_gibberish(&text),
+            is_identified: !is_gibberish(&text, self.sensitivity),
             text: text.to_string(),
             checker_name: self.name,
             checker_description: self.description,
@@ -42,6 +43,15 @@ impl Check for Checker<EnglishChecker> {
         }
 
         result
+    }
+
+    fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
+        self.sensitivity = sensitivity;
+        self
+    }
+
+    fn get_sensitivity(&self) -> Sensitivity {
+        self.sensitivity
     }
 }
 
@@ -67,6 +77,8 @@ mod tests {
         checker_type::{Check, Checker},
         english::EnglishChecker,
     };
+    // Import Sensitivity directly
+    use gibberish_or_not::Sensitivity;
 
     #[test]
     fn test_check_basic() {
@@ -141,5 +153,34 @@ mod tests {
     fn test_check_fail_single_puncuation_char() {
         let checker = Checker::<EnglishChecker>::new();
         assert!(!checker.check("#").is_identified);
+    }
+
+    #[test]
+    fn test_default_sensitivity_is_medium() {
+        let checker = Checker::<EnglishChecker>::new();
+        assert!(matches!(checker.get_sensitivity(), Sensitivity::Medium));
+    }
+
+    #[test]
+    fn test_with_sensitivity_changes_sensitivity() {
+        let checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::Low);
+        assert!(matches!(checker.get_sensitivity(), Sensitivity::Low));
+
+        let checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::High);
+        assert!(matches!(checker.get_sensitivity(), Sensitivity::High));
+    }
+
+    #[test]
+    fn test_sensitivity_affects_gibberish_detection() {
+        // This text has one English word "iron" but is otherwise gibberish
+        let text = "Rcl maocr otmwi lit dnoen oehc 13 iron seah.";
+
+        // With Low sensitivity, it should be classified as gibberish
+        let low_checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::Low);
+        assert!(!low_checker.check(text).is_identified);
+
+        // With High sensitivity, it should be classified as English
+        let high_checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::High);
+        assert!(high_checker.check(text).is_identified);
     }
 }

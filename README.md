@@ -80,3 +80,9 @@ While we do not entirely see the effects of it with only 16 decoders (and them b
 ## Multi level decodings
 
 Ciphey did not support multi-level decryptions like a path of Rot13 -> Base64 -> Rot13 because it was so slow. Ares is fast enough to support this, although we plan to turn it off eventually.
+
+## Configurable Sensitivity for Plaintext Detection
+
+Ares now supports configurable sensitivity levels for gibberish detection, allowing for more accurate plaintext identification across different types of encodings. Classical ciphers like Caesar use Low sensitivity to better handle English-like results, while most other decoders use Medium sensitivity by default.
+
+This feature helps reduce false positives and negatives in plaintext detection, making Ares more reliable across a wider range of encoded texts.

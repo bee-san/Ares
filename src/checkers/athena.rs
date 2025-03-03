@@ -1,4 +1,5 @@
 use crate::{checkers::checker_result::CheckResult, config::get_config};
+use gibberish_or_not::Sensitivity;
 use lemmeknow::Identifier;
 use log::trace;
 
@@ -24,16 +25,16 @@ impl Check for Checker<Athena> {
             expected_runtime: 0.01,
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
+            sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
             _phantom: std::marker::PhantomData,
         }
     }
 
     fn check(&self, text: &str) -> CheckResult {
         let config = get_config();
-        // Only run regex if its in the config
         if config.regex.is_some() {
             trace!("running regex");
-            let regex_checker = Checker::<RegexChecker>::new();
+            let regex_checker = Checker::<RegexChecker>::new().with_sensitivity(self.sensitivity);
             let regex_result = regex_checker.check(text);
             if regex_result.is_identified {
                 let mut check_res = CheckResult::new(&regex_checker);
@@ -44,7 +45,7 @@ impl Check for Checker<Athena> {
             // In Ciphey if the user uses the regex checker all the other checkers turn off
             // This is because they are looking for one specific bit of information so will not want the other checkers
             // TODO: wrap all checkers in oncecell so we only create them once!
-            let lemmeknow = Checker::<LemmeKnow>::new();
+            let lemmeknow = Checker::<LemmeKnow>::new().with_sensitivity(self.sensitivity);
             let lemmeknow_result = lemmeknow.check(text);
             if lemmeknow_result.is_identified {
                 let mut check_res = CheckResult::new(&lemmeknow);
@@ -52,7 +53,7 @@ impl Check for Checker<Athena> {
                 return check_res;
             }
 
-            let english = Checker::<EnglishChecker>::new();
+            let english = Checker::<EnglishChecker>::new().with_sensitivity(self.sensitivity);
             let english_result = english.check(text);
             if english_result.is_identified {
                 let mut check_res = CheckResult::new(&english);
@@ -62,5 +63,14 @@ impl Check for Checker<Athena> {
         }
 
         CheckResult::new(self)
+    }
+
+    fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
+        self.sensitivity = sensitivity;
+        self
+    }
+
+    fn get_sensitivity(&self) -> Sensitivity {
+        self.sensitivity
     }
 }
