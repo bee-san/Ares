@@ -34,6 +34,8 @@ use crate::decoders::url_decoder::URLDecoder;
 use crate::decoders::vigenere_decoder::VigenereDecoder;
 use crate::decoders::z85_decoder::Z85Decoder;
 
+use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
+
 use log::trace;
 use rayon::prelude::*;
 
@@ -237,6 +239,9 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let a1z26decoder = Decoder::<A1Z26Decoder>::new();
     let brailledecoder = Decoder::<BrailleDecoder>::new();
     let substitution_generic = Decoder::<SubstitutionGenericDecoder>::new();
+
+    let brainfuck = Decoder::<BrainfuckInterpreter>::new();
+
     Decoders {
         components: vec![
             Box::new(vigenere),
@@ -263,6 +268,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(a1z26decoder),
             Box::new(brailledecoder),
             Box::new(substitution_generic),
+            Box::new(brainfuck),
         ],
     }
 }
