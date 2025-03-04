@@ -1,7 +1,31 @@
-/// By having all of our print statements in one file it allows us to align what they look like
-/// and make sure each one is up to our standards. Previously a rogue print statement that went off at an edge case
-/// would look a bit ugly and not the same UI as others.
-/// We can also do things like check for logic or share information / functions which would be a bit messy in the main code.
+//! CLI Pretty Printing Module
+//! 
+//! This module provides a unified interface for all CLI output formatting in Ares.
+//! By centralising all print statements here, we ensure:
+//! - Consistent visual appearance across the application
+//! - Standardised color schemes and formatting
+//! - Proper handling of API mode vs CLI mode
+//! - Centralised error message formatting
+//! 
+//! # Color Scheme
+//! The module uses a configurable color scheme with roles:
+//! - Informational: General information and status updates
+//! - Warning: Non-critical warnings and cautions
+//! - Success: Successful operations and confirmations
+//! - Question: Interactive prompts and user queries
+//! - Statement: Standard output and neutral messages
+//! 
+//! # Usage
+//! ```rust
+//! use crate::cli_pretty_printing::{success, warning};
+//! 
+//! // Print a success message
+//! println!("{}", success("Operation completed successfully"));
+//! 
+//! // Print a warning message
+//! println!("{}", warning("Please check your input"));
+//! ```
+
 #[cfg(test)]
 mod tests;
 use crate::storage;
@@ -14,16 +38,24 @@ use text_io::read;
 /// Parse RGB string in format "r,g,b" to RGB values.
 ///
 /// The input string should be in the format "r,g,b" where r, g, and b are integers between 0 and 255.
-/// Spaces around numbers are allowed.
+/// Spaces around numbers are allowed. This function is used internally by the color formatting
+/// functions to convert config-specified RGB strings into usable values.
+///
+/// # Arguments
+/// * `rgb` - The RGB string to parse in format "r,g,b"
+///
+/// # Returns
+/// * `Option<(u8, u8, u8)>` - The parsed RGB values if valid, None if invalid
 ///
 /// # Examples
-/// ```
+/// ```rust
 /// // Valid formats:
 /// "255,0,0"     // Pure red
 /// "0, 255, 0"   // Pure green with spaces
 /// "0,0,255"     // Pure blue
 /// ```
 ///
+/// # Errors
 /// Returns None if:
 /// - The string is not in the correct format (must have exactly 2 commas)
 /// - Any value cannot be parsed as a u8 (must be 0-255)
@@ -70,7 +102,25 @@ fn parse_rgb(rgb: &str) -> Option<(u8, u8, u8)> {
     Some((r, g, b))
 }
 
-/// Color a string based on its role using RGB values from the config
+/// Colors a string based on its role using RGB values from the config.
+///
+/// This function is the core color formatting function that all other color
+/// functions use. It retrieves colors from the global config and applies them
+/// based on the specified role.
+///
+/// # Arguments
+/// * `text` - The text to be colored
+/// * `role` - The role determining which color to use (e.g., "informational", "warning")
+///
+/// # Returns
+/// * `String` - The text colored according to the role's RGB values
+///
+/// # Role Colors
+/// - informational: Used for general information
+/// - warning: Used for warnings and cautions
+/// - success: Used for success messages
+/// - question: Used for interactive prompts
+/// - statement: Used for neutral messages
 fn color_string(text: &str, role: &str) -> String {
     let config = crate::config::get_config();
 
@@ -97,9 +147,20 @@ fn color_string(text: &str, role: &str) -> String {
     }
 }
 
-/// Color text as informational or statement
-/// If role is None, text will be colored using statement color from config
-/// If role is Some("informational"), text will use the informational color from config
+/// Colors text based on its role, defaulting to statement color if no role is specified.
+///
+/// # Arguments
+/// * `text` - The text to be colored
+/// * `role` - Optional role to determine color choice. If None, uses statement color
+///
+/// # Returns
+/// * `String` - The colored text string
+///
+/// # Examples
+/// ```rust
+/// let info = statement("Status update", Some("informational"));
+/// let neutral = statement("Regular text", None);
+/// ```
 fn statement(text: &str, role: Option<&str>) -> String {
     match role {
         Some(r) => color_string(text, r),
@@ -107,36 +168,79 @@ fn statement(text: &str, role: Option<&str>) -> String {
     }
 }
 
-/// Color text as a warning using the warning color from config
+/// Colors text using the warning color from config.
+///
+/// Used for non-critical warnings and cautions that don't prevent
+/// program execution but require user attention.
+///
+/// # Arguments
+/// * `text` - The warning message to be colored
+///
+/// # Returns
+/// * `String` - The text colored in the warning color
 #[allow(dead_code)]
 fn warning(text: &str) -> String {
     color_string(text, "warning")
 }
 
-/// Color text as success using the success color from config
+/// Colors text using the success color from config.
+///
+/// Used for messages indicating successful operations or positive outcomes.
+///
+/// # Arguments
+/// * `text` - The success message to be colored
+///
+/// # Returns
+/// * `String` - The text colored in the success color
 fn success(text: &str) -> String {
     color_string(text, "success")
 }
 
-/// Color text as error using the warning color from config
-/// Note: Uses warning color since error is not defined in the color scheme
+/// Colors text using the warning color from config for error messages.
+///
+/// Note: Uses warning color since error is not defined in the color scheme.
+/// Used for error messages that indicate operation failure.
+///
+/// # Arguments
+/// * `text` - The error message to be colored
+///
+/// # Returns
+/// * `String` - The text colored in the warning color
 #[allow(dead_code)]
 fn error(text: &str) -> String {
     color_string(text, "warning")
 }
 
-/// Color text as a question using the question color from config
+/// Colors text using the question color from config.
+///
+/// Used for interactive prompts and user queries to make them
+/// stand out from regular output.
+///
+/// # Arguments
+/// * `text` - The question or prompt to be colored
+///
+/// # Returns
+/// * `String` - The text colored in the question color
 fn question(text: &str) -> String {
     color_string(text, "question")
 }
 
-/// The output function is used to print the output of the program.
-/// If the API mode is on, it will not print.
+/// Prints the final output of a successful decoding operation.
+///
+/// This function handles the presentation of decoded text, including special
+/// handling for invisible characters and file output options.
+///
+/// # Arguments
+/// * `result` - The DecoderResult containing the decoded text and metadata
+///
+/// # Behavior
+/// - Checks for API mode and returns early if enabled
+/// - Formats the decoder path with arrows
+/// - Handles invisible character detection and file output
+/// - Presents the decoded text with appropriate formatting
 ///
 /// # Panics
-///
-/// Panics if there is an error writing to file when output_method is set to a
-/// file
+/// Panics if there is an error writing to file when output_method is set to a file
 pub fn program_exiting_successful_decoding(result: DecoderResult) {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -213,7 +317,14 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     );
 }
 
-/// The output function is used to print the output of the program.
+/// Prints the number of decoding attempts performed.
+///
+/// # Arguments
+/// * `depth` - The depth of decoding attempts
+///
+/// # Note
+/// This function automatically calculates the total number of attempts
+/// based on the available decoders and the depth parameter.
 pub fn decoded_how_many_times(depth: u32) {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -230,9 +341,15 @@ pub fn decoded_how_many_times(depth: u32) {
     );
 }
 
-/// Whenever the human checker checks for text, this function is run.
-/// The human checker checks to see if API mdoe is runnign inside of it
-/// rather than doing it here at the printing level
+/// Prompts the user to verify potential plaintext during human checking.
+///
+/// # Arguments
+/// * `description` - Description of why this might be plaintext
+/// * `text` - The potential plaintext to verify
+///
+/// # Note
+/// This function is only called when human checking is enabled and
+/// not in API mode.
 pub fn human_checker_check(description: &str, text: &str) {
     println!(
         "🕵️ I think the plaintext is {}.\nPossible plaintext: '{}' (y/N): ",
@@ -241,7 +358,13 @@ pub fn human_checker_check(description: &str, text: &str) {
     );
 }
 
-/// When Ares has failed to decode something, print this message
+/// Prints a failure message when decoding was unsuccessful.
+///
+/// This function provides user guidance by suggesting Discord support
+/// when automated decoding fails.
+///
+/// # Note
+/// This message is suppressed in API mode.
 pub fn failed_to_decode() {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -254,9 +377,14 @@ pub fn failed_to_decode() {
     );
 }
 
-/// Every second the timer ticks once
-/// If the timer hits our countdown, we exit the program.
-/// This function prints the countdown to let the user know the program is still running.
+/// Updates the user on decoding progress with a countdown timer.
+///
+/// # Arguments
+/// * `seconds_spent_running` - Number of seconds elapsed
+/// * `duration` - Total duration allowed for decoding
+///
+/// # Note
+/// Progress updates are shown every 5 seconds until the duration is reached.
 pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -275,8 +403,10 @@ pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
     }
 }
 
-/// The input given to Ares is already plaintext
-/// So we do not need to do anything
+/// Indicates that the input is already plaintext.
+///
+/// This function is called when the input passes plaintext detection
+/// and no decoding is necessary.
 pub fn return_early_because_input_text_is_plaintext() {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -285,9 +415,11 @@ pub fn return_early_because_input_text_is_plaintext() {
     println!("{}", success("Your input text is the plaintext 🥳"));
 }
 
-/// The user has provided both textual input and file input
+/// Handles the error case of receiving both file and text input.
+///
 /// # Panics
-/// This function panics and is only used in the CLI.
+/// This function always panics with a message explaining the input conflict.
+/// Only used in CLI mode.
 pub fn panic_failure_both_input_and_fail_provided() {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -296,9 +428,11 @@ pub fn panic_failure_both_input_and_fail_provided() {
     panic!("Failed -- both file and text were provided. Please only use one.")
 }
 
-/// The user has not provided any input.
+/// Handles the error case of receiving no input.
+///
 /// # Panics
-/// This function panics and is only used in the CLI.
+/// This function always panics with a message explaining the missing input.
+/// Only used in CLI mode.
 pub fn panic_failure_no_input_provided() {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -307,7 +441,13 @@ pub fn panic_failure_no_input_provided() {
     panic!("Failed -- no input was provided. Please use -t for text or -f for files.")
 }
 
-/// Print a warning when an unknown configuration key is found
+/// Warns about unknown configuration keys.
+///
+/// # Arguments
+/// * `key` - The unknown configuration key that was found
+///
+/// # Note
+/// This warning is suppressed in API mode.
 pub fn warning_unknown_config_key(key: &str) {
     let config = crate::config::get_config();
     if config.api_mode {
