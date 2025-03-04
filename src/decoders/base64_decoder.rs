@@ -50,11 +50,20 @@ impl Crack for Decoder<Base64Decoder> {
     /// Else the Option returns nothing and the error is logged in Trace
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying Base64 with text {:?}", text);
+        
+        // Skip if the text contains URL-safe Base64 specific characters (- or _)
+        // This prevents overlap with Base64 URL decoder
+        if (text.contains('-') || text.contains('_')) && !text.contains('+') && !text.contains('/') {
+            debug!("Skipping Base64 decoder because text contains only URL-safe characters");
+            let results = CrackResult::new(self, text.to_string());
+            return results;
+        }
+        
         let decoded_text = decode_base64_no_error_handling(text);
         let mut results = CrackResult::new(self, text.to_string());
 
         if decoded_text.is_none() {
-            debug!("Failed to decode base64 because Base64Decoder::decode_base64_no_error_handling returned None");
+            debug!("Base64 decode failed");
             return results;
         }
 
@@ -212,5 +221,48 @@ mod tests {
         assert!(!current.trim().is_empty(), "Final decoded text is empty");
         // Print the final result to see what we actually got
         println!("Final decoded text: {:?}", current);
+    }
+
+    #[test]
+    fn base64_skips_url_safe_characters() {
+        // This tests if Base64 decoder skips strings with URL-safe characters
+        let base64_decoder = Decoder::<Base64Decoder>::new();
+        
+        // Test with hyphen (URL-safe character)
+        let result = base64_decoder
+            .crack("VGhpcy1pcyBhIHRlc3Q=", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none(), "Base64 decoder should skip strings with hyphens");
+        
+        // Test with underscore (URL-safe character)
+        let result = base64_decoder
+            .crack("VGhpc19pcyBhIHRlc3Q=", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none(), "Base64 decoder should skip strings with underscores");
+    }
+
+    #[test]
+    fn test_github_issue_215() {
+        // This tests the specific example from GitHub issue #215
+        // https://github.com/bee-san/Ares/issues/215
+        let base64_decoder = Decoder::<Base64Decoder>::new();
+        
+        // The example from the issue
+        let input = "VGhpcyBpcyBhbiBleGFtcGxlIG9mIG92ZXJsYXBwaW5n";
+        
+        // This should be decodable by standard Base64 decoder
+        let result = base64_decoder.crack(input, &get_athena_checker());
+        assert!(result.unencrypted_text.is_some(), "Standard Base64 should decode this string");
+        assert_eq!(
+            result.unencrypted_text.unwrap()[0],
+            "This is an example of overlapping",
+            "Decoded text should match expected output"
+        );
+        
+        // Now let's create a Base64 URL decoder and verify it doesn't decode the same string
+        use super::super::base64_url_decoder::Base64URLDecoder;
+        let base64_url_decoder = Decoder::<Base64URLDecoder>::new();
+        let url_result = base64_url_decoder.crack(input, &get_athena_checker());
+        assert!(url_result.unencrypted_text.is_none(), "Base64 URL decoder should skip this string");
     }
 }
