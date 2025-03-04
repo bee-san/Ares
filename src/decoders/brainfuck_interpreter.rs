@@ -48,14 +48,10 @@ impl Crack for Decoder<BrainfuckInterpreter> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying brainfuck with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
-        let tokens_result = bf_tokenize(text);
-        match tokens_result {
-            Ok(tokens) => {
-                let decoded_text = bf_interpret(tokens, text.len());
-
+        match bf_interpret(text) {
+            Ok(decoded_text) => {
                 let checker_result = checker.check(&decoded_text);
                 results.unencrypted_text = Some(vec![decoded_text]);
-
                 results.update_checker(&checker_result);
 
                 return results;
@@ -76,109 +72,70 @@ impl Crack for Decoder<BrainfuckInterpreter> {
     }
 }
 
-// Tokens representing higher-level Brainfuck operations
-#[derive(PartialEq)]
-enum Operation {
-    Add,
-    Move,
-    Print,
-    JumpAhead,
-    JumpBack,
-}
-
-struct Instruction {
-    op: Operation,
-    count: i32, // One might optimize this so the count type is reduced for
-}
-
 #[derive(std::fmt::Debug)]
-enum TokenizingError {
+enum InterpreterError {
     FoundRead,
     NoPrint,
     UnmatchedBracket,
     EmptyInput,
 }
 
-/// Creates a midly optimized list of Tokens from a string
-fn bf_tokenize(text: &str) -> Result<Vec<Instruction>, TokenizingError> {
+// Interprets a list of Tokens
+fn bf_interpret(text: &str) -> Result<String, InterpreterError> {
     if text.is_empty() {
-        return Err(TokenizingError::EmptyInput);
+        return Err(InterpreterError::EmptyInput);
     }
     if !text.contains('.') {
-        return Err(TokenizingError::NoPrint);
+        return Err(InterpreterError::NoPrint);
     }
 
-    let mut jumplist = vec![];
-
-    let mut list = vec![];
-    for c in text.chars() {
-        match c {
-            '+' => push_to_list(&mut list, Operation::Add, 1),
-            '-' => push_to_list(&mut list, Operation::Add, -1),
-            '<' => push_to_list(&mut list, Operation::Move, -1),
-            '>' => push_to_list(&mut list, Operation::Move, 1),
-            '.' => push_to_list(&mut list, Operation::Print, 1),
-            ',' => return Err(TokenizingError::FoundRead),
-            '[' => {
-                jumplist.push(list.len());
-                list.push(Instruction {
-                    op: Operation::JumpAhead,
-                    count: 0,
-                })
-            }
-            ']' => {
-                if let Some(i) = jumplist.pop() {
-                    list[i].count = list.len() as i32;
-                    list.push(Instruction {
-                        op: Operation::JumpBack,
-                        count: i as i32,
-                    })
-                } else {
-                    return Err(TokenizingError::UnmatchedBracket);
-                }
-            }
-            _ => (),
-        }
-    }
-
-    if !jumplist.is_empty() {
-        return Err(TokenizingError::UnmatchedBracket);
-    }
-
-    Ok(list)
-}
-
-// Interprets a list of Tokens
-fn bf_interpret(list: Vec<Instruction>, array_len: usize) -> String {
-    let mut array: Vec<u8> = vec![0; array_len.min(30_000)];
+    let mut array: Vec<u8> = vec![0; text.len().min(30_000)];
     let mut program_pointer = 0;
     let mut output = "".to_string();
 
     let mut exec_cursor = 0;
 
-    while exec_cursor < list.len() {
-        let action = &list[exec_cursor];
-        match action.op {
-            Operation::Add => {
-                array[program_pointer] =
-                    array[program_pointer].wrapping_add_signed(action.count as i8)
-            }
-            Operation::Move => {
-                program_pointer = program_pointer.wrapping_add_signed(action.count as isize);
-                if program_pointer >= array_len {
-                    program_pointer -= array_len
+    while exec_cursor < text.len() {
+        match text.chars().nth(exec_cursor).unwrap_or_default() {
+            '+' => array[program_pointer] = array[program_pointer].wrapping_add(1),
+            '-' => array[program_pointer] = array[program_pointer].wrapping_sub(1),
+            '<' if program_pointer == 0 => program_pointer = array.len() - 1,
+            '<' => program_pointer -= 1,
+            '>' => {
+                program_pointer += 1;
+                if program_pointer >= array.len() {
+                    program_pointer = 0;
                 }
             }
-            Operation::Print => {
-                output += &char::from(array[program_pointer])
-                    .to_string()
-                    .repeat(action.count.try_into().unwrap_or_default())
+            '.' => output.push(char::from(array[program_pointer])),
+            ',' => return Err(InterpreterError::FoundRead),
+            '[' => {
+                if array[program_pointer] == 0 {
+                    let mut counter = 1;
+                    while counter > 0 {
+                        exec_cursor += 1;
+                        match text.chars().nth(exec_cursor) {
+                            Some('[') => counter += 1,
+                            Some(']') => counter -= 1,
+                            None => return Err(InterpreterError::UnmatchedBracket),
+                            _ => (),
+                        }
+                    }
+                }
             }
-            Operation::JumpAhead if array[program_pointer] == 0 => {
-                exec_cursor = action.count as usize
-            }
-            Operation::JumpBack if array[program_pointer] != 0 => {
-                exec_cursor = action.count as usize
+            ']' => {
+                if array[program_pointer] != 0 {
+                    let mut counter = -1;
+                    while counter < 0 {
+                        exec_cursor -= 1;
+                        match text.chars().nth(exec_cursor) {
+                            Some('[') => counter += 1,
+                            Some(']') => counter -= 1,
+                            None => return Err(InterpreterError::UnmatchedBracket),
+                            _ => (),
+                        }
+                    }
+                }
             }
             _ => (),
         }
@@ -186,15 +143,7 @@ fn bf_interpret(list: Vec<Instruction>, array_len: usize) -> String {
         exec_cursor += 1
     }
 
-    output
-}
-
-/// Helper function to add a Instruction to list in an optimized way
-fn push_to_list(list: &mut Vec<Instruction>, op: Operation, count: i32) {
-    match list.last_mut() {
-        Some(t) if t.op == op => t.count += count,
-        _ => list.push(Instruction { op, count }),
-    }
+    Ok(output)
 }
 
 #[cfg(test)]
@@ -252,11 +201,11 @@ mod tests {
     fn brainfuck_fail_unmatched_bracket() {
         let brainfuck_interpreter = Decoder::<BrainfuckInterpreter>::new();
         let result = brainfuck_interpreter
-            .crack("+++++[-.-.-.-.[++]", &get_athena_checker())
+            .crack("[[]", &get_athena_checker())
             .unencrypted_text;
         assert!(result.is_none());
         let result = brainfuck_interpreter
-            .crack("+++++[-.-.-.-.]++]", &get_athena_checker())
+            .crack("[+]]", &get_athena_checker())
             .unencrypted_text;
         assert!(result.is_none());
     }
