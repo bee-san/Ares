@@ -57,6 +57,7 @@ use log::debug;
 use crate::{config::Config, decoders::interface::Decoder};
 
 use self::decoders::crack_results::CrackResult;
+
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ares::perform_cracking;

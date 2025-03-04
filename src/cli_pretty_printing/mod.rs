@@ -466,4 +466,52 @@ pub fn warning_unknown_config_key(key: &str) {
             key
         ))
     );
+/// Creates a statement with optional styling
+pub fn statement(text: &str, style: Option<&str>) -> String {
+    match style {
+        Some("informational") => format!("ℹ️  {}", text),
+        _ => text.to_string(),
+    }
+}
+
+/// Parse an RGB color string in the format "R,G,B" or "R, G, B"
+///
+/// # Errors
+/// * Returns an error if the input string is not in the correct format "R,G,B" or "R, G, B"
+/// * Returns an error if any of the RGB values cannot be parsed as u8 integers
+pub fn parse_rgb(rgb: &str) -> Result<(u8, u8, u8), String> {
+    let parts: Vec<&str> = rgb.split(',').map(|s| s.trim()).collect();
+    if parts.len() != 3 {
+        return Err("Invalid RGB format. Expected 'R,G,B' or 'R, G, B'".to_string());
+    }
+
+    let r = parts[0].parse::<u8>().map_err(|_| "Invalid red value")?;
+    let g = parts[1].parse::<u8>().map_err(|_| "Invalid green value")?;
+    let b = parts[2].parse::<u8>().map_err(|_| "Invalid blue value")?;
+
+    Ok((r, g, b))
+}
+
+#[test]
+fn test_parse_rgb() {
+    let test_cases = vec![
+        "255,0,0",   // Pure red
+        "0, 255, 0", // Pure green with spaces
+        "0,0,255",   // Pure blue
+    ];
+
+    for case in test_cases {
+        let result = parse_rgb(case);
+        assert!(result.is_ok());
+    }
+}
+
+/// Print a success message
+pub fn success(text: &str) -> String {
+    format!("✅ {}", text)
+}
+
+/// Print a warning message
+pub fn warning(text: &str) -> String {
+    format!("⚠️  {}", text)
 }
