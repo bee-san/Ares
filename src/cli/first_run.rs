@@ -119,10 +119,7 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         "\n{}",
         print_statement("🤠 Howdy! This is your first time running Ares.")
     );
-    println!(
-        "{}\n",
-        print_statement("Let me help you configure Ares.")
-    );
+    println!("{}\n", print_statement("Let me help you configure Ares."));
 
     // Ask if the user wants a custom color scheme
     let want_custom = ask_yes_no_question("Do you want a custom colour scheme?", false);
