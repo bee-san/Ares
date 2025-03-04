@@ -205,7 +205,7 @@ pub fn statement(text: &str, style: Option<&str>) -> String {
 }
 
 /// Parse an RGB color string in the format "R,G,B" or "R, G, B"
-/// 
+///
 /// # Errors
 /// * Returns an error if the input string is not in the correct format "R,G,B" or "R, G, B"
 /// * Returns an error if any of the RGB values cannot be parsed as u8 integers
