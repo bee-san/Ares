@@ -5,6 +5,7 @@ use self::{
     english::EnglishChecker,
     lemmeknow_checker::LemmeKnow,
     regex_checker::RegexChecker,
+    password::PasswordChecker,
 };
 
 use gibberish_or_not::Sensitivity;
@@ -25,6 +26,8 @@ pub mod human_checker;
 pub mod lemmeknow_checker;
 /// The Regex checker checks to see if the intended text matches the plaintext
 pub mod regex_checker;
+/// The Password checker checks if the text matches a known common password
+pub mod password;
 
 /// CheckerTypes is a wrapper enum for Checker
 pub enum CheckerTypes {
@@ -36,6 +39,8 @@ pub enum CheckerTypes {
     CheckAthena(Checker<Athena>),
     /// Wrapper for Regex
     CheckRegex(Checker<RegexChecker>),
+    /// Wrapper for Password Checker
+    CheckPassword(Checker<PasswordChecker>),
 }
 
 impl CheckerTypes {
@@ -46,6 +51,7 @@ impl CheckerTypes {
             CheckerTypes::CheckEnglish(english_checker) => english_checker.check(text),
             CheckerTypes::CheckAthena(athena_checker) => athena_checker.check(text),
             CheckerTypes::CheckRegex(regex_checker) => regex_checker.check(text),
+            CheckerTypes::CheckPassword(password_checker) => password_checker.check(text),
         }
     }
 
@@ -72,6 +78,11 @@ impl CheckerTypes {
                 new_checker.sensitivity = sensitivity;
                 CheckerTypes::CheckRegex(new_checker)
             }
+            CheckerTypes::CheckPassword(_checker) => {
+                let mut new_checker = Checker::<PasswordChecker>::new();
+                new_checker.sensitivity = sensitivity;
+                CheckerTypes::CheckPassword(new_checker)
+            }
         }
     }
 
@@ -82,6 +93,7 @@ impl CheckerTypes {
             CheckerTypes::CheckEnglish(checker) => checker.get_sensitivity(),
             CheckerTypes::CheckAthena(checker) => checker.get_sensitivity(),
             CheckerTypes::CheckRegex(checker) => checker.get_sensitivity(),
+            CheckerTypes::CheckPassword(checker) => checker.get_sensitivity(),
         }
     }
 }
