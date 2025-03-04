@@ -117,7 +117,7 @@ fn error(text: &str) -> String {
 
 /// Color text as a question
 fn question(text: &str) -> String {
-    color_string(text, "question")
+    color_string(text, "question") // Now uses the dedicated question color from config
 }
 
 /// The output function is used to print the output of the program.

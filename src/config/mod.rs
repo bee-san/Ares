@@ -109,7 +109,7 @@ impl Default for Config {
             lemmeknow_boundaryless: false,
             human_checker_on: false,
             timeout: 5,
-            api_mode: true,
+            api_mode: false,
             regex: None,
             colourscheme: HashMap::new(),
         };
@@ -128,6 +128,9 @@ impl Default for Config {
             .colourscheme
             .insert(String::from("error"), String::from("255,0,0")); // Red
 
+        config
+            .colourscheme
+            .insert(String::from("question"), String::from("255,215,0")); // Gold yellow (same as informational)
         config
     }
 }
@@ -178,6 +181,7 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "timeout",
             "api_mode",
             "regex",
+            "question",
             "colourscheme",
         ];
         for key in table.keys() {
@@ -196,16 +200,27 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
 /// Get configuration from file or create default if it doesn't exist
 pub fn get_config_file_into_struct() -> Config {
     let path = get_config_file_path();
-    if !path.exists() {
-        create_default_config_file().expect("Could not create default config file");
-        return Config::default();
-    }
 
-    match read_config_file() {
-        Ok(contents) => parse_toml_with_unknown_keys(&contents),
-        Err(e) => {
-            eprintln!("Error reading config file: {}. Using defaults.", e);
-            Config::default()
+    if !path.exists() {
+        // First run - get user preferences
+        let colors = crate::cli::run_first_time_setup();
+        let mut config = Config::default();
+        config.colourscheme = colors;
+        // Save the config to file
+        save_config_to_file(&config, &path);
+        return config;
+    } else {
+        // Existing config - read and parse it
+        return match read_config_file() {
+            Ok(contents) => parse_toml_with_unknown_keys(&contents),
+            Err(e) => { eprintln!("Error reading config file: {}. Using defaults.", e); Config::default() }
         }
     }
+}
+
+/// Save a Config struct to a file
+fn save_config_to_file(config: &Config, path: &std::path::Path) {
+    let toml_string = toml::to_string_pretty(config).expect("Could not serialize config");
+    let mut file = File::create(path).expect("Could not create config file");
+    file.write_all(toml_string.as_bytes()).expect("Could not write to config file");
 }

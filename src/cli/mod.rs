@@ -1,3 +1,7 @@
+// First-run configuration module
+mod first_run;
+pub use first_run::run_first_time_setup;
+
 use std::{fs::File, io::Read};
 
 use crate::config::get_config_file_into_struct;
