@@ -16,7 +16,20 @@ pub mod checkers;
 pub mod cli;
 /// CLI Input Parser parses the input from the CLI and returns a struct.
 mod cli_input_parser;
-/// The CLI Pretty Printing module contains the functions that print the results
+/// CLI Pretty Printing module for consistent output formatting
+///
+/// # Examples
+/// ```
+/// use ares::cli_pretty_printing::{success, warning};
+///
+/// // Print a success message
+/// let success_msg = success("Operation completed successfully");
+/// assert!(!success_msg.is_empty());
+///
+/// // Print a warning message
+/// let warning_msg = warning("Please check your input");
+/// assert!(!warning_msg.is_empty());
+/// ```
 pub mod cli_pretty_printing;
 /// The Config module enables a configuration module
 /// Like a global API to access config details

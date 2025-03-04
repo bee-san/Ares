@@ -86,3 +86,54 @@ Ciphey did not support multi-level decryptions like a path of Rot13 -> Base64 ->
 Ares now supports configurable sensitivity levels for gibberish detection, allowing for more accurate plaintext identification across different types of encodings. Classical ciphers like Caesar use Low sensitivity to better handle English-like results, while most other decoders use Medium sensitivity by default.
 
 This feature helps reduce false positives and negatives in plaintext detection, making Ares more reliable across a wider range of encoded texts.
+
+# New Features
+## Better search algorithm
+We now use A* search. This is very fast.
+
+A* works by using a heuristic to estimate the cost of reaching the goal from the current state.
+
+First, we ignore the heuristic for very fast decoders like Base64 and ensure we run them first each time on each node.
+
+Then, we calculate the heuristic for the remaining decoders using `cipher_identifier` which can determine the probability a given string is a certain cipher.
+
+We store previous results in a cache to avoid recalculating the same path.
+
+We prune the search tree to avoid unnecessary calculations and keep the memory usage down if it gets too bad.
+
+We also keep track of statistics on decoders to dynamically prioritise decoders that work better (example: caesar is popular, but Beaufort is not so Caesar will dynamically be prioritised over Beaufort)
+
+Finally, we keep track of popular pairs. So base64 -> base64 is very popular, so we prioritise that path (among others).
+
+## Custom themes
+
+You can now set a custom theme for Ares. This is useful if you want to make Ares look different.
+
+This also helps with accessibility.
+
+## Vigenere
+
+We now use perhaps the best algorithm for Vigenere.
+
+It's fast, accurate and handles non-letter characters better than any other algorithm.
+
+## Better English checking
+
+We use a qudgaram / trigram / english dict checker to calculate probability of plaintext. 
+
+We change the thresholds depending on the cipher. Example is that Caesar returns text that "looks" like english, whereas base64 does not.
+
+As well as this, we have a database of popular regex (about 500) of api keys, mac addresses, etc.
+
+We also have a `is_password` function to determine if a string is an exact password seen in a data dump.
+
+## More ciphers
+* Braille
+* Atbash
+* Vigenere
+
+## Database
+
+We now store statistics in a database. This is useful for seeing how Ares is doing over time.
+
+
