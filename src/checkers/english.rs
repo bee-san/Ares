@@ -32,7 +32,7 @@ impl Check for Checker<EnglishChecker> {
             text: text.to_string(),
             checker_name: self.name,
             checker_description: self.description,
-            description: "Gibberish detection".to_string(),
+            description: "Words".to_string(),
             link: self.link,
         };
 
