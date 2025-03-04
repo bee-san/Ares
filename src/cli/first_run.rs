@@ -1,5 +1,5 @@
 //! First-run configuration module for Ares
-//! 
+//!
 //! This module handles the initial setup of Ares, including color scheme configuration
 //! and user preferences. It provides functionality for creating and managing color schemes,
 //! handling user input, and converting between different color formats.
@@ -49,10 +49,10 @@ pub enum PredefinedColorScheme {
 }
 
 /// Prints a statement in white color.
-/// 
+///
 /// # Arguments
 /// * `text` - Any type that implements Display trait to be printed in white
-/// 
+///
 /// # Returns
 /// * `String` - The input text formatted in white color
 fn print_statement<T: Display>(text: T) -> String {
@@ -60,10 +60,10 @@ fn print_statement<T: Display>(text: T) -> String {
 }
 
 /// Prints a warning message in red color.
-/// 
+///
 /// # Arguments
 /// * `text` - Any type that implements Display trait to be printed in red
-/// 
+///
 /// # Returns
 /// * `String` - The input text formatted in red color
 fn print_warning<T: Display>(text: T) -> String {
@@ -71,10 +71,10 @@ fn print_warning<T: Display>(text: T) -> String {
 }
 
 /// Prints a question prompt in yellow color.
-/// 
+///
 /// # Arguments
 /// * `text` - Any type that implements Display trait to be printed in yellow
-/// 
+///
 /// # Returns
 /// * `String` - The input text formatted in yellow color
 fn print_question<T: Display>(text: T) -> String {
@@ -82,10 +82,10 @@ fn print_question<T: Display>(text: T) -> String {
 }
 
 /// Prints a success message in green color.
-/// 
+///
 /// # Arguments
 /// * `text` - Any type that implements Display trait to be printed in green
-/// 
+///
 /// # Returns
 /// * `String` - The input text formatted in green color
 fn print_success<T: Display>(text: T) -> String {
@@ -93,11 +93,11 @@ fn print_success<T: Display>(text: T) -> String {
 }
 
 /// Prints text in a specified RGB color.
-/// 
+///
 /// # Arguments
 /// * `text` - The text to be colored
 /// * `rgb` - RGB color string in format "r,g,b" where r,g,b are 0-255
-/// 
+///
 /// # Returns
 /// * `String` - The text colored with the specified RGB values, or uncolored if RGB format is invalid
 fn print_rgb(text: &str, rgb: &str) -> String {
@@ -118,7 +118,7 @@ fn print_rgb(text: &str, rgb: &str) -> String {
 }
 
 /// Returns the Capptucin color scheme with warm, muted colors.
-/// 
+///
 /// # Returns
 /// * `ColorScheme` - A color scheme with Capptucin's signature warm colors
 fn get_capptucin_scheme() -> ColorScheme {
@@ -132,7 +132,7 @@ fn get_capptucin_scheme() -> ColorScheme {
 }
 
 /// Returns the Darcula color scheme matching JetBrains Darcula theme.
-/// 
+///
 /// # Returns
 /// * `ColorScheme` - A color scheme with Darcula's signature colors
 fn get_darcula_scheme() -> ColorScheme {
@@ -146,39 +146,39 @@ fn get_darcula_scheme() -> ColorScheme {
 }
 
 /// Returns Autumn's personal Girly Pop theme with pink and pastel colors.
-/// 
+///
 /// # Returns
 /// * `ColorScheme` - A color scheme with Girly Pop's signature pastel colors
 fn get_girly_pop_scheme() -> ColorScheme {
     ColorScheme {
-        informational: "237,69,146".to_string(),  // rgb(237,69,146)
-        warning: "241,218,165".to_string(),       // rgb(241, 218, 165)
-        success: "243,214,243".to_string(),       // rgb(243, 214, 243)
-        question: "255,128,177".to_string(),      // rgb(255, 128, 177)
-        statement: "255,148,219".to_string(),     // rgb(255, 148, 219)
+        informational: "237,69,146".to_string(), // rgb(237,69,146)
+        warning: "241,218,165".to_string(),      // rgb(241, 218, 165)
+        success: "243,214,243".to_string(),      // rgb(243, 214, 243)
+        question: "255,128,177".to_string(),     // rgb(255, 128, 177)
+        statement: "255,148,219".to_string(),    // rgb(255, 148, 219)
     }
 }
 
 /// Returns the default color scheme with standard terminal colors.
-/// 
+///
 /// # Returns
 /// * `ColorScheme` - A color scheme with standard, high-contrast colors
 fn get_default_scheme() -> ColorScheme {
     ColorScheme {
-        informational: "255,215,0".to_string(),   // Gold yellow
-        warning: "255,0,0".to_string(),           // Red
-        success: "0,255,0".to_string(),           // Green
-        question: "255,215,0".to_string(),        // Gold yellow (same as informational)
-        statement: "255,255,255".to_string(),     // White
+        informational: "255,215,0".to_string(), // Gold yellow
+        warning: "255,0,0".to_string(),         // Red
+        success: "0,255,0".to_string(),         // Green
+        question: "255,215,0".to_string(),      // Gold yellow (same as informational)
+        statement: "255,255,255".to_string(),   // White
     }
 }
 
 /// Runs the first-time setup wizard for Ares, allowing users to configure their color scheme.
-/// 
+///
 /// This function presents users with color scheme options and handles their selection,
 /// including support for custom color schemes. It guides users through the setup process
 /// with clear prompts and visual examples of each color scheme.
-/// 
+///
 /// # Returns
 /// * `HashMap<String, String>` - A mapping of role names to their RGB color values
 pub fn run_first_time_setup() -> HashMap<String, String> {
@@ -283,11 +283,11 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
 }
 
 /// Prompts the user with a yes/no question and returns their response.
-/// 
+///
 /// # Arguments
 /// * `question` - The question to display to the user
 /// * `default_yes` - Whether the default answer (when user presses enter) should be yes
-/// 
+///
 /// # Returns
 /// * `bool` - true for yes, false for no
 fn ask_yes_no_question(question: &str, default_yes: bool) -> bool {
@@ -323,12 +323,12 @@ fn ask_yes_no_question(question: &str, default_yes: bool) -> bool {
 }
 
 /// Gets user input within a specified numeric range.
-/// 
+///
 /// # Arguments
 /// * `prompt` - The prompt to display to the user
 /// * `min` - The minimum acceptable value (inclusive)
 /// * `max` - The maximum acceptable value (inclusive)
-/// 
+///
 /// # Returns
 /// * `u32` - The user's input within the specified range
 fn get_user_input_range(prompt: &str, min: u32, max: u32) -> u32 {
@@ -356,10 +356,10 @@ fn get_user_input_range(prompt: &str, min: u32, max: u32) -> u32 {
 }
 
 /// Gets user input for RGB color values.
-/// 
+///
 /// # Arguments
 /// * `prompt` - The prompt to display to the user
-/// 
+///
 /// # Returns
 /// * `String` - A validated RGB color string in format "r,g,b"
 fn get_user_input_rgb(prompt: &str) -> String {
@@ -384,10 +384,10 @@ fn get_user_input_rgb(prompt: &str) -> String {
 }
 
 /// Parses and validates an RGB input string.
-/// 
+///
 /// # Arguments
 /// * `input` - The RGB string to parse in format "r,g,b"
-/// 
+///
 /// # Returns
 /// * `Option<String>` - Some(rgb) if valid, None if invalid
 fn parse_rgb_input(input: &str) -> Option<String> {
@@ -405,10 +405,10 @@ fn parse_rgb_input(input: &str) -> Option<String> {
 }
 
 /// Converts a ColorScheme struct to a HashMap for configuration storage.
-/// 
+///
 /// # Arguments
 /// * `scheme` - The ColorScheme to convert
-/// 
+///
 /// # Returns
 /// * `HashMap<String, String>` - A mapping of role names to their RGB values
 fn color_scheme_to_hashmap(scheme: ColorScheme) -> HashMap<String, String> {
