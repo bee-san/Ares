@@ -195,3 +195,49 @@ pub fn panic_failure_no_input_provided() {
     }
     panic!("Failed -- no input was provided. Please use -t for text or -f for files.")
 }
+
+/// Creates a statement with optional styling
+pub fn statement(text: &str, style: Option<&str>) -> String {
+    match style {
+        Some("informational") => format!("ℹ️  {}", text),
+        _ => text.to_string(),
+    }
+}
+
+/// Parse an RGB color string in the format "R,G,B" or "R, G, B"
+pub fn parse_rgb(rgb: &str) -> Result<(u8, u8, u8), String> {
+    let parts: Vec<&str> = rgb.split(',').map(|s| s.trim()).collect();
+    if parts.len() != 3 {
+        return Err("Invalid RGB format. Expected 'R,G,B' or 'R, G, B'".to_string());
+    }
+    
+    let r = parts[0].parse::<u8>().map_err(|_| "Invalid red value")?;
+    let g = parts[1].parse::<u8>().map_err(|_| "Invalid green value")?;
+    let b = parts[2].parse::<u8>().map_err(|_| "Invalid blue value")?;
+    
+    Ok((r, g, b))
+}
+
+#[test]
+fn test_parse_rgb() {
+    let test_cases = vec![
+        "255,0,0",     // Pure red
+        "0, 255, 0",   // Pure green with spaces
+        "0,0,255"      // Pure blue
+    ];
+    
+    for case in test_cases {
+        let result = parse_rgb(case);
+        assert!(result.is_ok());
+    }
+}
+
+/// Print a success message
+pub fn success(text: &str) -> String {
+    format!("✅ {}", text)
+}
+
+/// Print a warning message
+pub fn warning(text: &str) -> String {
+    format!("⚠️  {}", text)
+}
