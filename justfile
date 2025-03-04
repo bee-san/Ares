@@ -9,6 +9,8 @@ test-all:
   cargo test
 
 fix-all:
+  git add .
+  git commit -m 'Clippy and fmt'
   cargo clippy --fix
   cargo fmt
   cargo nextest run

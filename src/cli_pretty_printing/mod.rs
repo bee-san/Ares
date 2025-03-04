@@ -295,3 +295,13 @@ pub fn panic_failure_no_input_provided() {
     }
     panic!("Failed -- no input was provided. Please use -t for text or -f for files.")
 }
+
+/// Print a warning when an unknown configuration key is found
+pub fn warning_unknown_config_key(key: &str) {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return;
+    }
+    eprintln!("{}", warning(&format!("Unknown configuration key found in config file: {}", key)));
+}
+
