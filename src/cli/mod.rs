@@ -110,25 +110,22 @@ pub fn read_and_parse_file(file_path: String) -> String {
 fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
     // Get configuration from file first
     let mut config = get_config_file_into_struct();
-    
+
     // Update config with CLI arguments when they're explicitly set
     config.verbose = opts.verbose;
     config.human_checker_on = !opts.disable_human_checker;
-    
+
     if let Some(timeout) = opts.cracking_timeout {
         config.timeout = timeout;
     }
-    
+
     if let Some(api_mode) = opts.api_mode {
         config.api_mode = api_mode;
     }
-    
+
     if let Some(regex) = opts.regex {
         config.regex = Some(regex);
     }
-    
-    (
-        text,
-        config,
-    )
+
+    (text, config)
 }

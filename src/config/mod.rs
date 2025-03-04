@@ -115,10 +115,18 @@ impl Default for Config {
         };
 
         // Set default colors
-        config.colourscheme.insert(String::from("informational"), String::from("255,215,0")); // Gold yellow
-        config.colourscheme.insert(String::from("warning"), String::from("255,0,0")); // Red
-        config.colourscheme.insert(String::from("success"), String::from("0,255,0")); // Green
-        config.colourscheme.insert(String::from("error"), String::from("255,0,0")); // Red
+        config
+            .colourscheme
+            .insert(String::from("informational"), String::from("255,215,0")); // Gold yellow
+        config
+            .colourscheme
+            .insert(String::from("warning"), String::from("255,0,0")); // Red
+        config
+            .colourscheme
+            .insert(String::from("success"), String::from("0,255,0")); // Green
+        config
+            .colourscheme
+            .insert(String::from("error"), String::from("255,0,0")); // Red
 
         config
     }
@@ -136,8 +144,7 @@ pub fn get_config_file_path() -> std::path::PathBuf {
 /// Create a default config file at the specified path
 pub fn create_default_config_file() -> std::io::Result<()> {
     let config = Config::default();
-    let toml_string = toml::to_string_pretty(&config)
-        .expect("Could not serialize config");
+    let toml_string = toml::to_string_pretty(&config).expect("Could not serialize config");
     let path = get_config_file_path();
     let mut file = File::create(path)?;
     file.write_all(toml_string.as_bytes())?;
@@ -156,12 +163,11 @@ fn read_config_file() -> std::io::Result<String> {
 /// Parse a TOML string into a Config struct, handling unknown keys
 fn parse_toml_with_unknown_keys(contents: &str) -> Config {
     // First parse into a generic Value to check for unknown keys
-    let parsed_value: toml::Value = toml::from_str(contents)
-        .expect("Could not parse config file");
+    let parsed_value: toml::Value = toml::from_str(contents).expect("Could not parse config file");
 
     // Check for unknown keys at the root level
     if let toml::Value::Table(table) = &parsed_value {
-        let known_keys = vec![
+        let known_keys = [
             "verbose",
             "lemmeknow_min_rarity",
             "lemmeknow_max_rarity",
@@ -182,8 +188,7 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
     }
 
     // Parse into Config struct
-    let mut config: Config = toml::from_str(contents)
-        .expect("Could not parse config file");
+    let mut config: Config = toml::from_str(contents).expect("Could not parse config file");
     update_identifier_in_config(&mut config);
     config
 }

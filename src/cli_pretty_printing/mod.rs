@@ -302,6 +302,11 @@ pub fn warning_unknown_config_key(key: &str) {
     if config.api_mode {
         return;
     }
-    eprintln!("{}", warning(&format!("Unknown configuration key found in config file: {}", key)));
+    eprintln!(
+        "{}",
+        warning(&format!(
+            "Unknown configuration key found in config file: {}",
+            key
+        ))
+    );
 }
-
