@@ -4,8 +4,8 @@ use self::{
     checker_type::{Check, Checker},
     english::EnglishChecker,
     lemmeknow_checker::LemmeKnow,
-    regex_checker::RegexChecker,
     password::PasswordChecker,
+    regex_checker::RegexChecker,
 };
 
 use gibberish_or_not::Sensitivity;
@@ -24,10 +24,10 @@ pub mod english;
 pub mod human_checker;
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 pub mod lemmeknow_checker;
-/// The Regex checker checks to see if the intended text matches the plaintext
-pub mod regex_checker;
 /// The Password checker checks if the text matches a known common password
 pub mod password;
+/// The Regex checker checks to see if the intended text matches the plaintext
+pub mod regex_checker;
 
 /// CheckerTypes is a wrapper enum for Checker
 pub enum CheckerTypes {

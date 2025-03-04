@@ -53,7 +53,7 @@ impl Check for Checker<Athena> {
                 check_res.is_identified = human_checker::human_checker(&lemmeknow_result);
                 return check_res;
             }
-            
+
             let password = Checker::<PasswordChecker>::new().with_sensitivity(self.sensitivity);
             let password_result = password.check(text);
             if password_result.is_identified {
