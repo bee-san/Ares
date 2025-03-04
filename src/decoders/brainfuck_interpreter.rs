@@ -63,11 +63,11 @@ impl Crack for Decoder<BrainfuckInterpreter> {
                 results.unencrypted_text = Some(vec![decoded_text]);
                 results.update_checker(&checker_result);
 
-                return results;
+                results
             }
             Err(e) => {
                 debug!("Failed to interpret Brainfuck because of error {:?}", e);
-                return results;
+                results
             }
         }
     }
@@ -176,5 +176,12 @@ mod tests {
             .crack("+-<>,.[]", &get_athena_checker())
             .unencrypted_text;
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn brainfuck_successful_wrapping() {
+        let brainfuck_interpreter = Decoder::<BrainfuckInterpreter>::new();
+        let result = brainfuck_interpreter.crack("<-.>-.", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "ÿÿ");
     }
 }
