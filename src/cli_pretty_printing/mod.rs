@@ -74,50 +74,58 @@ fn parse_rgb(rgb: &str) -> Option<(u8, u8, u8)> {
 fn color_string(text: &str, role: &str) -> String {
     let config = crate::config::get_config();
 
-    // Get the RGB color string, defaulting to white if not found
+    // Get the RGB color string, defaulting to statement color if not found
     let rgb = match config.colourscheme.get(role) {
-        Some(color) => color,
-        None => "255,255,255",
+        Some(color) => color.clone(),
+        None => config.colourscheme.get("statement")
+            .map(|s| s.clone())
+            .unwrap_or_else(|| "255,255,255".to_string()),
     };
 
-    if let Some((r, g, b)) = parse_rgb(rgb) {
+    if let Some((r, g, b)) = parse_rgb(&rgb) {
         text.truecolor(r, g, b).bold().to_string()
     } else {
-        // Default to white if hex code is invalid
-        text.truecolor(255, 255, 255).bold().to_string()
+        // Default to statement color if RGB parsing fails
+        if let Some(statement_rgb) = config.colourscheme.get("statement") {
+            if let Some((r, g, b)) = parse_rgb(statement_rgb) {
+                return text.truecolor(r, g, b).bold().to_string();
+            }
+        }
+        text.white().to_string()
     }
 }
 
-/// Color text as informational or statement (default white)
-/// If role is None, text will be colored white (statement)
+/// Color text as informational or statement
+/// If role is None, text will be colored using statement color from config
 /// If role is Some("informational"), text will use the informational color from config
 fn statement(text: &str, role: Option<&str>) -> String {
     match role {
         Some(r) => color_string(text, r),
-        None => text.white().to_string(),
+        None => color_string(text, "statement"),
     }
 }
 
-/// Color text as a warning
+/// Color text as a warning using the warning color from config
 #[allow(dead_code)]
 fn warning(text: &str) -> String {
     color_string(text, "warning")
 }
 
-/// Color text as success
+/// Color text as success using the success color from config
 fn success(text: &str) -> String {
     color_string(text, "success")
 }
 
-/// Color text as error
+/// Color text as error using the warning color from config
+/// Note: Uses warning color since error is not defined in the color scheme
 #[allow(dead_code)]
 fn error(text: &str) -> String {
-    color_string(text, "error")
+    color_string(text, "warning")
 }
 
-/// Color text as a question
+/// Color text as a question using the question color from config
 fn question(text: &str) -> String {
-    color_string(text, "question") // Now uses the dedicated question color from config
+    color_string(text, "question")
 }
 
 /// The output function is used to print the output of the program.
@@ -239,7 +247,8 @@ pub fn failed_to_decode() {
     }
 
     println!(
-        "⛔️ Ares has failed to decode the text.\nIf you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog"
+        "{}",
+        warning("⛔️ Ares has failed to decode the text.\nIf you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog")
     );
 }
 

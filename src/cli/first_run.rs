@@ -31,23 +31,6 @@ pub struct ColorScheme {
     pub statement: String,
 }
 
-/// Predefined color schemes available in Ares.
-/// Each variant represents a complete theme with coordinated colors
-/// for different message types.
-#[derive(Debug)]
-pub enum PredefinedColorScheme {
-    /// Capptucin theme with warm, muted colors optimized for dark backgrounds
-    Capptucin,
-    /// Darcula theme with dark background-optimized colors matching JetBrains Darcula
-    Darcula,
-    /// Default theme with standard terminal colors for maximum compatibility
-    Default,
-    /// Girly Pop theme with pink and pastel colors by Autumn
-    GirlyPop,
-    /// Custom user-defined color scheme with manually specified RGB values
-    Custom,
-}
-
 /// Prints a statement in white color.
 ///
 /// # Arguments
@@ -79,17 +62,6 @@ fn print_warning<T: Display>(text: T) -> String {
 /// * `String` - The input text formatted in yellow color
 fn print_question<T: Display>(text: T) -> String {
     text.to_string().yellow().to_string()
-}
-
-/// Prints a success message in green color.
-///
-/// # Arguments
-/// * `text` - Any type that implements Display trait to be printed in green
-///
-/// # Returns
-/// * `String` - The input text formatted in green color
-fn print_success<T: Display>(text: T) -> String {
-    text.to_string().green().to_string()
 }
 
 /// Prints text in a specified RGB color.
