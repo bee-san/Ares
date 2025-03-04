@@ -1,10 +1,14 @@
+// First-run configuration module
+mod first_run;
+pub use first_run::run_first_time_setup;
+
 use std::{fs::File, io::Read};
 
+use crate::config::get_config_file_into_struct;
 use crate::{cli_pretty_printing::panic_failure_both_input_and_fail_provided, config::Config};
 /// This doc string acts as a help message when the uses run '--help' in CLI mode
 /// as do all doc strings on fields
 use clap::Parser;
-use lemmeknow::Identifier;
 use log::trace;
 
 /// The struct for Clap CLI arguments
@@ -108,21 +112,24 @@ pub fn read_and_parse_file(file_path: String) -> String {
 
 /// Turns our CLI arguments into a config stuct
 fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
-    (
-        text,
-        Config {
-            verbose: opts.verbose,
-            lemmeknow_config: Identifier::default(),
-            // default is false, we want default to be true
-            human_checker_on: !opts.disable_human_checker,
-            // These if statements act as defaults
-            timeout: if opts.cracking_timeout.is_none() {
-                30
-            } else {
-                opts.cracking_timeout.unwrap()
-            },
-            api_mode: opts.api_mode.is_some(),
-            regex: opts.regex,
-        },
-    )
+    // Get configuration from file first
+    let mut config = get_config_file_into_struct();
+
+    // Update config with CLI arguments when they're explicitly set
+    config.verbose = opts.verbose;
+    config.human_checker_on = !opts.disable_human_checker;
+
+    if let Some(timeout) = opts.cracking_timeout {
+        config.timeout = timeout;
+    }
+
+    if let Some(api_mode) = opts.api_mode {
+        config.api_mode = api_mode;
+    }
+
+    if let Some(regex) = opts.regex {
+        config.regex = Some(regex);
+    }
+
+    (text, config)
 }

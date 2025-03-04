@@ -1,22 +1,252 @@
-/// By having all of our print statements in one file it allows us to align what they look like
-/// and make sure each one is up to our standards. Previously a rogue print statement that went off at an edge case
-/// would look a bit ugly and not the same UI as others.
-/// We can also do things like check for logic or share information / functions which would be a bit messy in the main code.
+//! CLI Pretty Printing Module
+//!
+//! This module provides a unified interface for all CLI output formatting in Ares.
+//! By centralising all print statements here, we ensure:
+//! - Consistent visual appearance across the application
+//! - Standardised color schemes and formatting
+//! - Proper handling of API mode vs CLI mode
+//! - Centralised error message formatting
+//!
+//! # Color Scheme
+//! The module uses a configurable color scheme with roles:
+//! - Informational: General information and status updates
+//! - Warning: Non-critical warnings and cautions
+//! - Success: Successful operations and confirmations
+//! - Question: Interactive prompts and user queries
+//! - Statement: Standard output and neutral messages
+//!
+//! # Usage
+//! ```rust
+//! use ares::cli_pretty_printing::{success, warning};
+//!
+//! // Print a success message
+//! println!("{}", success("Operation completed successfully"));
+//!
+//! // Print a warning message
+//! println!("{}", warning("Please check your input"));
+//! ```
+
 #[cfg(test)]
 mod tests;
 use crate::storage;
 use crate::DecoderResult;
+use colored::Colorize;
 use std::env;
 use std::fs::write;
 use text_io::read;
 
-/// The output function is used to print the output of the program.
-/// If the API mode is on, it will not print.
+/// Parse RGB string in format "r,g,b" to RGB values.
+///
+/// The input string should be in the format "r,g,b" where r, g, and b are integers between 0 and 255.
+/// Spaces around numbers are allowed. This function is used internally by the color formatting
+/// functions to convert config-specified RGB strings into usable values.
+///
+/// # Arguments
+/// * `rgb` - The RGB string to parse in format "r,g,b"
+///
+/// # Returns
+/// * `Option<(u8, u8, u8)>` - The parsed RGB values if valid, None if invalid
+///
+/// # Examples
+/// ```
+/// use ares::cli_pretty_printing::parse_rgb;
+///
+/// // Valid formats:
+/// assert!(parse_rgb("255,0,0").is_some());     // Pure red
+/// assert!(parse_rgb("0, 255, 0").is_some());   // Pure green with spaces
+/// assert!(parse_rgb("0,0,255").is_some());     // Pure blue
+/// ```
+///
+/// # Errors
+/// Returns None if:
+/// - The string is not in the correct format (must have exactly 2 commas)
+/// - Any value cannot be parsed as a u8 (must be 0-255)
+pub fn parse_rgb(rgb: &str) -> Option<(u8, u8, u8)> {
+    let parts: Vec<&str> = rgb.split(',').collect();
+    if parts.len() != 3 {
+        eprintln!("Invalid RGB format: '{}'. Expected format: 'r,g,b' where r,g,b are numbers between 0-255", rgb);
+        return None;
+    }
+
+    let r = match parts[0].trim().parse::<u8>() {
+        Ok(val) => val,
+        Err(_) => {
+            eprintln!(
+                "Invalid red value '{}': must be a number between 0-255",
+                parts[0]
+            );
+            return None;
+        }
+    };
+
+    let g = match parts[1].trim().parse::<u8>() {
+        Ok(val) => val,
+        Err(_) => {
+            eprintln!(
+                "Invalid green value '{}': must be a number between 0-255",
+                parts[1]
+            );
+            return None;
+        }
+    };
+
+    let b = match parts[2].trim().parse::<u8>() {
+        Ok(val) => val,
+        Err(_) => {
+            eprintln!(
+                "Invalid blue value '{}': must be a number between 0-255",
+                parts[2]
+            );
+            return None;
+        }
+    };
+
+    Some((r, g, b))
+}
+
+/// Colors a string based on its role using RGB values from the config.
+///
+/// This function is the core color formatting function that all other color
+/// functions use. It retrieves colors from the global config and applies them
+/// based on the specified role.
+///
+/// # Arguments
+/// * `text` - The text to be colored
+/// * `role` - The role determining which color to use (e.g., "informational", "warning")
+///
+/// # Returns
+/// * `String` - The text colored according to the role's RGB values
+///
+/// # Role Colors
+/// - informational: Used for general information
+/// - warning: Used for warnings and cautions
+/// - success: Used for success messages
+/// - question: Used for interactive prompts
+/// - statement: Used for neutral messages
+fn color_string(text: &str, role: &str) -> String {
+    let config = crate::config::get_config();
+
+    // Get the RGB color string, defaulting to statement color if not found
+    let rgb = match config.colourscheme.get(role) {
+        Some(color) => color.clone(),
+        None => config
+            .colourscheme
+            .get("statement")
+            .cloned()
+            .unwrap_or_else(|| "255,255,255".to_string()),
+    };
+
+    if let Some((r, g, b)) = parse_rgb(&rgb) {
+        text.truecolor(r, g, b).bold().to_string()
+    } else {
+        // Default to statement color if RGB parsing fails
+        if let Some(statement_rgb) = config.colourscheme.get("statement") {
+            if let Some((r, g, b)) = parse_rgb(statement_rgb) {
+                return text.truecolor(r, g, b).bold().to_string();
+            }
+        }
+        text.white().to_string()
+    }
+}
+
+/// Colors text based on its role, defaulting to statement color if no role is specified.
+///
+/// # Arguments
+/// * `text` - The text to be colored
+/// * `role` - Optional role to determine color choice. If None, uses statement color
+///
+/// # Returns
+/// * `String` - The colored text string
+///
+/// # Examples
+/// ```
+/// use ares::cli_pretty_printing::statement;
+///
+/// let info = statement("Status update", Some("informational"));
+/// let neutral = statement("Regular text", None);
+/// assert!(!info.is_empty());
+/// assert!(!neutral.is_empty());
+/// ```
+pub fn statement(text: &str, role: Option<&str>) -> String {
+    match role {
+        Some(r) => color_string(text, r),
+        None => color_string(text, "statement"),
+    }
+}
+
+/// Colors text using the warning color from config.
+///
+/// Used for non-critical warnings and cautions that don't prevent
+/// program execution but require user attention.
+///
+/// # Arguments
+/// * `text` - The warning message to be colored
+///
+/// # Returns
+/// * `String` - The text colored in the warning color
+#[allow(dead_code)]
+pub fn warning(text: &str) -> String {
+    color_string(text, "warning")
+}
+
+/// Colors text using the success color from config.
+///
+/// Used for messages indicating successful operations or positive outcomes.
+///
+/// # Arguments
+/// * `text` - The success message to be colored
+///
+/// # Returns
+/// * `String` - The text colored in the success color
+pub fn success(text: &str) -> String {
+    color_string(text, "success")
+}
+
+/// Colors text using the warning color from config for error messages.
+///
+/// Note: Uses warning color since error is not defined in the color scheme.
+/// Used for error messages that indicate operation failure.
+///
+/// # Arguments
+/// * `text` - The error message to be colored
+///
+/// # Returns
+/// * `String` - The text colored in the warning color
+#[allow(dead_code)]
+fn error(text: &str) -> String {
+    color_string(text, "warning")
+}
+
+/// Colors text using the question color from config.
+///
+/// Used for interactive prompts and user queries to make them
+/// stand out from regular output.
+///
+/// # Arguments
+/// * `text` - The question or prompt to be colored
+///
+/// # Returns
+/// * `String` - The text colored in the question color
+fn question(text: &str) -> String {
+    color_string(text, "question")
+}
+
+/// Prints the final output of a successful decoding operation.
+///
+/// This function handles the presentation of decoded text, including special
+/// handling for invisible characters and file output options.
+///
+/// # Arguments
+/// * `result` - The DecoderResult containing the decoded text and metadata
+///
+/// # Behavior
+/// - Checks for API mode and returns early if enabled
+/// - Formats the decoder path with arrows
+/// - Handles invisible character detection and file output
+/// - Presents the decoded text with appropriate formatting
 ///
 /// # Panics
-///
-/// Panics if there is an error writing to file when output_method is set to a
-/// file
+/// Panics if there is an error writing to file when output_method is set to a file
 pub fn program_exiting_successful_decoding(result: DecoderResult) {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -31,7 +261,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
         .collect::<Vec<_>>()
         .join(" → ");
 
-    let decoded_path_coloured = ansi_term::Colour::Yellow.bold().paint(&decoded_path);
+    let decoded_path_coloured = statement(&decoded_path, Some("informational"));
     let decoded_path_string = if !decoded_path.contains('→') {
         // handles case where only 1 decoder is used
         format!("the decoder used is {decoded_path_coloured}")
@@ -56,13 +286,22 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     // save the plaintext into a file
     let invis_char_percentage = invis_chars_found / plaintext[0].len() as f64;
     if invis_char_percentage > INVIS_CHARS_DETECTION_PERCENTAGE {
-        println!("{:2.0}% of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", (invis_char_percentage * 100.0));
+        let invis_char_percentage_string = format!("{:2.0}%", invis_char_percentage * 100.0);
+        println!(
+            "{}",
+            question(
+                &format!(
+                    "{} of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", 
+                    invis_char_percentage_string.white().bold()
+                )
+            )
+        );
         let reply: String = read!("{}\n");
         let result = reply.to_ascii_lowercase().starts_with('y');
         if result {
             println!(
                 "Please enter a filename: (default: {}/ares_text.txt)",
-                env::var("HOME").unwrap_or_default()
+                env::var("HOME").unwrap_or_default().white().bold()
             );
             let mut file_path: String = read!("{}\n");
             if file_path.is_empty() {
@@ -70,20 +309,28 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
             }
             println!(
                 "Outputting plaintext to file: {}\n\n{}",
-                file_path, decoded_path_string
+                statement(&file_path, None),
+                decoded_path_string
             );
             write(file_path, &plaintext[0]).expect("Error writing to file.");
             return;
         }
     }
     println!(
-        "The plaintext is: \n{}\nand {}",
-        ansi_term::Colour::Yellow.bold().paint(&plaintext[0]),
+        "The plaintext is:\n{}\n{}",
+        success(&plaintext[0]),
         decoded_path_string
     );
 }
 
-/// The output function is used to print the output of the program.
+/// Prints the number of decoding attempts performed.
+///
+/// # Arguments
+/// * `depth` - The depth of decoding attempts
+///
+/// # Note
+/// This function automatically calculates the total number of attempts
+/// based on the available decoders and the depth parameter.
 pub fn decoded_how_many_times(depth: u32) {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -93,63 +340,57 @@ pub fn decoded_how_many_times(depth: u32) {
     // Gets how many decoders we have
     // Then we add 25 for Caesar
     let decoders = crate::filtration_system::filter_and_get_decoders(&DecoderResult::default());
-    let decoded_times_int = depth * (decoders.components.len() as u32 + 25);
-
-    let time_took = calculate_time_took(decoded_times_int);
-
-    // TODO add colour to the times
-    println!("\n🥳 Ares has decoded {decoded_times_int} times.\nIf you would have used Ciphey, it would have taken you {time_took}\n");
+    let decoded_times_int = depth * (decoders.components.len() as u32 + 40); //TODO 40 is how many decoders we have. Calculate automatically
+    println!(
+        "\n🥳 Ares has decoded {} times.\n",
+        statement(&decoded_times_int.to_string(), None)
+    );
 }
 
-/// Whenever the human checker checks for text, this function is run.
-/// The human checker checks to see if API mdoe is runnign inside of it
-/// rather than doing it here at the printing level
+/// Prompts the user to verify potential plaintext during human checking.
+///
+/// # Arguments
+/// * `description` - Description of why this might be plaintext
+/// * `text` - The potential plaintext to verify
+///
+/// # Note
+/// This function is only called when human checking is enabled and
+/// not in API mode.
 pub fn human_checker_check(description: &str, text: &str) {
     println!(
         "🕵️ I think the plaintext is {}.\nPossible plaintext: '{}' (y/N): ",
-        ansi_term::Colour::Yellow.bold().paint(description),
-        ansi_term::Colour::Yellow.bold().paint(text)
-    )
+        statement(description, Some("informational")),
+        statement(text, Some("informational"))
+    );
 }
 
-/// When Ares has failed to decode something, print this message
+/// Prints a failure message when decoding was unsuccessful.
+///
+/// This function provides user guidance by suggesting Discord support
+/// when automated decoding fails.
+///
+/// # Note
+/// This message is suppressed in API mode.
 pub fn failed_to_decode() {
     let config = crate::config::get_config();
     if config.api_mode {
         return;
     }
 
-    println!("⛔️ Ares has failed to decode the text.");
-    println!("If you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog");
-}
-/// Calculate how long it would take to decode this in Ciphey
-fn calculate_time_took(decoded_times_int: u32) -> String {
-    // TODO if we grab how long the programs been running for (see timer) we can make some nice stats like:
-    // * How many decodings / second we did
-    // * How much longer it'd take in Ciphey
-    // We'll guess Ciphey can do 8 a second. No science here, it's arbitrary based on my opinion
-    let ciphey_decodings_a_second = 5;
-    // Calculate how long it'd take in Ciphey
-    let ciphey_how_long_to_decode_in_seconds = decoded_times_int / ciphey_decodings_a_second;
-    if ciphey_how_long_to_decode_in_seconds > 60 {
-        // If it took
-        if ciphey_how_long_to_decode_in_seconds / 60 == 1 {
-            // Handle case where it's each 1 minute
-            // TODO 1 minutes is still broken for me
-            format!("{} minute", ciphey_how_long_to_decode_in_seconds / 60)
-        } else {
-            // 1.26 minutes sounds good in English
-            // So we do not need to handle special case here
-            format!("{} minutes", ciphey_how_long_to_decode_in_seconds / 60)
-        }
-    } else {
-        format!("{ciphey_how_long_to_decode_in_seconds} seconds")
-    }
+    println!(
+        "{}",
+        warning("⛔️ Ares has failed to decode the text.\nIf you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog")
+    );
 }
 
-/// Every second the timer ticks once
-/// If the timer hits our countdown, we exit the program.
-/// This function prints the countdown to let the user know the program is still running.
+/// Updates the user on decoding progress with a countdown timer.
+///
+/// # Arguments
+/// * `seconds_spent_running` - Number of seconds elapsed
+/// * `duration` - Total duration allowed for decoding
+///
+/// # Note
+/// Progress updates are shown every 5 seconds until the duration is reached.
 pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -160,23 +401,31 @@ pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
         if time_left == 0 {
             return;
         }
-        println!("{seconds_spent_running} seconds have passed. {time_left} remaining");
+        println!(
+            "{} seconds have passed. {} remaining",
+            statement(&seconds_spent_running.to_string(), None),
+            statement(&time_left.to_string(), None)
+        );
     }
 }
 
-/// The input given to Ares is already plaintext
-/// So we do not need to do anything
+/// Indicates that the input is already plaintext.
+///
+/// This function is called when the input passes plaintext detection
+/// and no decoding is necessary.
 pub fn return_early_because_input_text_is_plaintext() {
     let config = crate::config::get_config();
     if config.api_mode {
         return;
     }
-    println!("Your input text is the plaintext 🥳");
+    println!("{}", success("Your input text is the plaintext 🥳"));
 }
 
-/// The user has provided both textual input and file input
+/// Handles the error case of receiving both file and text input.
+///
 /// # Panics
-/// This function panics and is only used in the CLI.
+/// This function always panics with a message explaining the input conflict.
+/// Only used in CLI mode.
 pub fn panic_failure_both_input_and_fail_provided() {
     let config = crate::config::get_config();
     if config.api_mode {
@@ -185,13 +434,50 @@ pub fn panic_failure_both_input_and_fail_provided() {
     panic!("Failed -- both file and text were provided. Please only use one.")
 }
 
-/// The user has not provided any input.
+/// Handles the error case of receiving no input.
+///
 /// # Panics
-/// This function panics and is only used in the CLI.
+/// This function always panics with a message explaining the missing input.
+/// Only used in CLI mode.
 pub fn panic_failure_no_input_provided() {
     let config = crate::config::get_config();
     if config.api_mode {
         return;
     }
     panic!("Failed -- no input was provided. Please use -t for text or -f for files.")
+}
+
+/// Warns about unknown configuration keys.
+///
+/// # Arguments
+/// * `key` - The unknown configuration key that was found
+///
+/// # Note
+/// This warning is suppressed in API mode.
+pub fn warning_unknown_config_key(key: &str) {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return;
+    }
+    eprintln!(
+        "{}",
+        warning(&format!(
+            "Unknown configuration key found in config file: {}",
+            key
+        ))
+    );
+}
+
+#[test]
+fn test_parse_rgb() {
+    let test_cases = vec![
+        "255,0,0",   // Pure red
+        "0, 255, 0", // Pure green with spaces
+        "0,0,255",   // Pure blue
+    ];
+
+    for case in test_cases {
+        let result = parse_rgb(case);
+        assert!(result.is_some());
+    }
 }
