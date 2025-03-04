@@ -77,8 +77,10 @@ fn color_string(text: &str, role: &str) -> String {
     // Get the RGB color string, defaulting to statement color if not found
     let rgb = match config.colourscheme.get(role) {
         Some(color) => color.clone(),
-        None => config.colourscheme.get("statement")
-            .map(|s| s.clone())
+        None => config
+            .colourscheme
+            .get("statement")
+            .cloned()
             .unwrap_or_else(|| "255,255,255".to_string()),
     };
 
