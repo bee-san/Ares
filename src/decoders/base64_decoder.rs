@@ -192,4 +192,25 @@ mod tests {
             assert_eq!(true, true);
         }
     }
+
+    #[test]
+    fn base64_decode_triple() {
+        let base64_decoder = Decoder::<Base64Decoder>::new();
+        let input = "VVRKc2QyRkhWalZKUjJ4NlNVaE9ka2xIV21oak0xRnpTVWhTYjJGWVRXZGhXRTFuV1ROS2FHVnVhMmc9";
+        
+        let mut current = input.to_string();
+        for _ in 0..3 {
+            let result = base64_decoder.crack(&current, &get_athena_checker());
+            assert!(result.unencrypted_text.is_some(), "Failed to decode base64 layer");
+            current = result.unencrypted_text.unwrap()[0].clone();
+            // Verify we're not getting empty or garbage content
+            assert!(!current.is_empty(), "Decoded to empty string");
+            assert!(current.chars().all(|c| c.is_ascii()), "Decoded to non-ASCII content");
+        }
+        
+        // After triple decoding, we should have readable English text
+        assert!(!current.trim().is_empty(), "Final decoded text is empty");
+        // Print the final result to see what we actually got
+        println!("Final decoded text: {:?}", current);
+    }
 }

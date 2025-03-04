@@ -201,6 +201,22 @@ fn calculate_string_quality(s: &str) -> f32 {
     }
 }
 
+/// Calculate the ratio of non-printable characters in a string
+/// Returns a value between 0.0 (all printable) and 1.0 (all non-printable)
+fn calculate_non_printable_ratio(text: &str) -> f32 {
+    if text.is_empty() {
+        return 1.0;
+    }
+
+    let non_printable_count = text.chars().filter(|&c| {
+        // Same criteria as before for non-printable chars
+        (c.is_control() && c != '\n' && c != '\r' && c != '\t') ||
+        !c.is_ascii_graphic() && !c.is_ascii_whitespace() && !c.is_ascii_punctuation()
+    }).count();
+
+    non_printable_count as f32 / text.len() as f32
+}
+
 /// A* search node with priority based on f = g + h
 ///
 /// Each node represents a state in the search space, with:
@@ -641,25 +657,28 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 /// # Returns
 /// A float value representing the heuristic cost (lower is better)
 fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
-    // Get base score from Cipher Identifier
     let (cipher, base_score) = get_cipher_identifier_score(text);
-
-    // Adjust based on path context
     let mut final_score = base_score;
 
     if let Some(last_result) = path.last() {
-        // Adjust based on common sequences
-        if is_common_sequence(last_result.decoder, &cipher) {
-            final_score *= 0.8; // Bonus for common sequences
+        // Penalize uncommon sequences instead of rewarding common ones
+        if !is_common_sequence(last_result.decoder, &cipher) {
+            final_score *= 1.25; // 25% penalty for uncommon sequences
         }
 
-        // Adjust based on decoder success rate
+        // Penalize low success rates instead of rewarding high ones
         let success_rate = get_decoder_success_rate(last_result.decoder);
-        final_score *= 1.0 - success_rate * 0.2; // Success rate can reduce score by up to 20%
+        final_score *= 1.0 + (1.0 - success_rate); // Penalty scales with failure rate
     }
 
-    // Adjust based on string quality
-    final_score *= calculate_string_quality(text);
+    // Penalize low quality strings
+    final_score *= 1.0 + (1.0 - calculate_string_quality(text));
+
+    // Keep the non-printable penalty as is since it's already using a penalty approach
+    let non_printable_ratio = calculate_non_printable_ratio(text);
+    if non_printable_ratio > 0.0 {
+        final_score *= 1.0 + (non_printable_ratio * 100.0).exp();
+    }
 
     final_score
 }
@@ -680,7 +699,7 @@ fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
 /// Filtering out these strings early saves computational resources and
 /// prevents the search from exploring unproductive paths.
 fn check_if_string_cant_be_decoded(text: &str) -> bool {
-    text.len() <= 2
+    text.len() <= 2  // Only check length now, non-printable chars handled by heuristic
 }
 
 #[cfg(test)]
@@ -716,9 +735,54 @@ mod tests {
 
     #[test]
     fn test_generate_heuristic() {
-        // Test with a Caesar cipher (should return 0.1)
-        // Just test that the function runs without errors
-        let h = generate_heuristic("KHOOR ZRUOG", &[]);
-        assert!((0.0..=1.0).contains(&h));
+        // Test with normal text (should have relatively low score)
+        let normal_h = generate_heuristic("Hello World", &[]);
+        
+        // Test with suspicious text (should have higher score)
+        let suspicious_h = generate_heuristic("H\u{0}ll\u{1} W\u{2}rld", &[]);
+        
+        // Test with all non-printable (should have highest score)
+        let nonprint_h = generate_heuristic("\u{0}\u{1}\u{2}", &[]);
+        
+        // Verify that penalties create appropriate ordering
+        assert!(normal_h < suspicious_h);
+        assert!(suspicious_h < nonprint_h);
+        
+        // Verify base case isn't negative
+        assert!(normal_h >= 0.0);
+    }
+
+    #[test]
+    fn test_calculate_non_printable_ratio() {
+        // Test normal text
+        assert_eq!(calculate_non_printable_ratio("Hello World"), 0.0);
+        assert_eq!(calculate_non_printable_ratio("123!@#\n\t"), 0.0);
+        
+        // Test mixed content
+        let mixed = format!("Hello\u{0}World\u{1}"); // 2 non-printable in 12 chars
+        assert!((calculate_non_printable_ratio(&mixed) - 0.1666).abs() < 0.001);
+        
+        // Test all non-printable
+        assert_eq!(calculate_non_printable_ratio("\u{0}\u{1}\u{2}"), 1.0);
+        
+        // Test empty string
+        assert_eq!(calculate_non_printable_ratio(""), 1.0);
+    }
+
+    #[test]
+    fn test_heuristic_with_non_printable() {
+        // Test normal text
+        let normal = generate_heuristic("Hello World", &[]);
+        
+        // Test text with some non-printable chars
+        let with_non_printable = generate_heuristic("Hello\u{0}World", &[]);
+        
+        // Test text with all non-printable chars
+        let all_non_printable = generate_heuristic("\u{0}\u{1}\u{2}", &[]);
+        
+        // Verify that more non-printable chars result in higher (worse) scores
+        assert!(normal < with_non_printable);
+        assert!(with_non_printable < all_non_printable);
+        assert!(all_non_printable > 100.0); // Should be very high for all non-printable
     }
 }
