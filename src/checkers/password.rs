@@ -24,16 +24,14 @@ impl Check for Checker<PasswordChecker> {
     }
 
     fn check(&self, text: &str) -> CheckResult {
-        let mut result = CheckResult {
+        CheckResult {
             is_identified: is_password(text),
             text: text.to_string(),
             checker_name: self.name,
             checker_description: self.description,
             description: "Common Password".to_string(),
             link: self.link,
-        };
-
-        result
+        }
     }
 
     fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
