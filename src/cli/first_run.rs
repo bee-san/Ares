@@ -5,19 +5,29 @@ use std::io::{self, Write};
 
 /// Represents a color scheme with RGB values for different roles
 pub struct ColorScheme {
-    informational: String, // RGB format "r,g,b"
-    warning: String,
-    success: String,
-    question: String,
-    statement: String,
+    /// RGB color value for informational messages in format "r,g,b"
+    pub informational: String,
+    /// RGB color value for warning messages in format "r,g,b"
+    pub warning: String,
+    /// RGB color value for success messages in format "r,g,b"
+    pub success: String,
+    /// RGB color value for question prompts in format "r,g,b"
+    pub question: String,
+    /// RGB color value for general statements in format "r,g,b"
+    pub statement: String,
 }
 
-/// Predefined color schemes
+/// Predefined color schemes available in Ares
 pub enum PredefinedColorScheme {
+    /// Capptucin theme with warm, muted colors
     Capptucin,
+    /// Darcula theme with dark background-optimized colors
     Darcula,
+    /// Default theme with standard terminal colors
     Default,
+    /// Girly Pop theme with pink and pastel colors
     GirlyPop,
+    /// Custom user-defined color scheme
     Custom,
 }
 
@@ -111,7 +121,7 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     );
     println!(
         "{}\n",
-        print_statement("I need to ask you some questions to make it work better for you.")
+        print_statement("Let me help you configure Ares.")
     );
 
     // Ask if the user wants a custom color scheme
