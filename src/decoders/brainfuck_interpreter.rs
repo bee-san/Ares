@@ -8,6 +8,7 @@ use super::crack_results::CrackResult;
 use super::interface::Crack;
 use super::interface::Decoder;
 
+use brainfuck_exe::Brainfuck;
 use log::{debug, trace};
 
 /// The Brainfuck interpreter, call:
@@ -48,8 +49,16 @@ impl Crack for Decoder<BrainfuckInterpreter> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying brainfuck with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
-        match bf_interpret(text) {
-            Ok(decoded_text) => {
+        if text.contains(',') {
+            return results;
+        }
+        if !text.contains('.') {
+            return results;
+        }
+        let mut buf = vec![];
+        match Brainfuck::new(text).with_output_ref(&mut buf).execute() {
+            Ok(_) => {
+                let decoded_text = String::from_utf8(buf).unwrap_or_default();
                 let checker_result = checker.check(&decoded_text);
                 results.unencrypted_text = Some(vec![decoded_text]);
                 results.update_checker(&checker_result);
@@ -70,80 +79,6 @@ impl Crack for Decoder<BrainfuckInterpreter> {
     fn get_name(&self) -> &str {
         self.name
     }
-}
-
-#[derive(std::fmt::Debug)]
-enum InterpreterError {
-    FoundRead,
-    NoPrint,
-    UnmatchedBracket,
-    EmptyInput,
-}
-
-// Interprets a list of Tokens
-fn bf_interpret(text: &str) -> Result<String, InterpreterError> {
-    if text.is_empty() {
-        return Err(InterpreterError::EmptyInput);
-    }
-    if !text.contains('.') {
-        return Err(InterpreterError::NoPrint);
-    }
-
-    let mut array: Vec<u8> = vec![0; text.len().min(30_000)];
-    let mut program_pointer = 0;
-    let mut output = "".to_string();
-
-    let mut exec_cursor = 0;
-
-    while exec_cursor < text.len() {
-        match text.chars().nth(exec_cursor).unwrap_or_default() {
-            '+' => array[program_pointer] = array[program_pointer].wrapping_add(1),
-            '-' => array[program_pointer] = array[program_pointer].wrapping_sub(1),
-            '<' if program_pointer == 0 => program_pointer = array.len() - 1,
-            '<' => program_pointer -= 1,
-            '>' => {
-                program_pointer += 1;
-                if program_pointer >= array.len() {
-                    program_pointer = 0;
-                }
-            }
-            '.' => output.push(char::from(array[program_pointer])),
-            ',' => return Err(InterpreterError::FoundRead),
-            '[' => {
-                if array[program_pointer] == 0 {
-                    let mut counter = 1;
-                    while counter > 0 {
-                        exec_cursor += 1;
-                        match text.chars().nth(exec_cursor) {
-                            Some('[') => counter += 1,
-                            Some(']') => counter -= 1,
-                            None => return Err(InterpreterError::UnmatchedBracket),
-                            _ => (),
-                        }
-                    }
-                }
-            }
-            ']' => {
-                if array[program_pointer] != 0 {
-                    let mut counter = -1;
-                    while counter < 0 {
-                        exec_cursor -= 1;
-                        match text.chars().nth(exec_cursor) {
-                            Some('[') => counter += 1,
-                            Some(']') => counter -= 1,
-                            None => return Err(InterpreterError::UnmatchedBracket),
-                            _ => (),
-                        }
-                    }
-                }
-            }
-            _ => (),
-        }
-
-        exec_cursor += 1
-    }
-
-    Ok(output)
 }
 
 #[cfg(test)]
@@ -217,6 +152,10 @@ mod tests {
         let brainfuck_interpreter = Decoder::<BrainfuckInterpreter>::new();
         let result = brainfuck_interpreter
             .crack("", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none());
+        let result = brainfuck_interpreter
+            .crack("aeiou", &get_athena_checker())
             .unencrypted_text;
         assert!(result.is_none());
     }

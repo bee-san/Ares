@@ -47,6 +47,7 @@ z85 = "3.0.5"
 gibberish-or-not = "2.0.0"
 cipher_identifier = "0.2.0"
 rand = "0.8.5"  # For generating random values
+brainfuck-exe = { version = "*", default-features = false }
 
 # Dev dependencies
 [dev-dependencies]
