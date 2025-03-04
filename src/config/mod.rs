@@ -208,12 +208,15 @@ pub fn get_config_file_into_struct() -> Config {
         config.colourscheme = colors;
         // Save the config to file
         save_config_to_file(&config, &path);
-        return config;
+        config
     } else {
         // Existing config - read and parse it
-        return match read_config_file() {
+        match read_config_file() {
             Ok(contents) => parse_toml_with_unknown_keys(&contents),
-            Err(e) => { eprintln!("Error reading config file: {}. Using defaults.", e); Config::default() }
+            Err(e) => {
+                eprintln!("Error reading config file: {}. Using defaults.", e);
+                Config::default()
+            }
         }
     }
 }
@@ -222,5 +225,6 @@ pub fn get_config_file_into_struct() -> Config {
 fn save_config_to_file(config: &Config, path: &std::path::Path) {
     let toml_string = toml::to_string_pretty(config).expect("Could not serialize config");
     let mut file = File::create(path).expect("Could not create config file");
-    file.write_all(toml_string.as_bytes()).expect("Could not write to config file");
+    file.write_all(toml_string.as_bytes())
+        .expect("Could not write to config file");
 }
