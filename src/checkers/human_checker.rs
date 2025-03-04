@@ -1,7 +1,7 @@
 use crate::checkers::checker_result::CheckResult;
 use crate::cli_pretty_printing::human_checker_check;
 use crate::config::get_config;
-use crate::timer;
+use crate::{timer, cli_pretty_printing};
 use text_io::read;
 
 /// The Human Checker asks humans if the expected plaintext is real plaintext
@@ -21,8 +21,11 @@ pub fn human_checker(input: &CheckResult) -> bool {
     human_checker_check(&input.description, &input.text);
 
     let reply: String = read!("{}\n");
+    cli_pretty_printing::success(&format!("DEBUG: Human checker received reply: '{}'", reply));
     let result = reply.to_ascii_lowercase().starts_with('y');
     timer::resume();
+    
+    cli_pretty_printing::success(&format!("DEBUG: Human checker returning: {}", result));
 
     if !result {
         return false;

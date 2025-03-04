@@ -52,7 +52,7 @@ use checkers::{
     checker_result::CheckResult,
     checker_type::{Check, Checker},
 };
-use log::debug;
+use log::{debug, info};
 
 use crate::{config::Config, decoders::interface::Decoder};
 
@@ -117,9 +117,15 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
+    cli_pretty_printing::success(&format!("DEBUG: lib.rs - Calling search_for_plaintext with text: {}", text));
     // Perform the search algorithm
     // It will either return a failure or success.
-    searchers::search_for_plaintext(text)
+    let result = searchers::search_for_plaintext(text);
+    cli_pretty_printing::success(&format!("DEBUG: lib.rs - Result from search_for_plaintext: {:?}", result.is_some()));
+    if let Some(ref res) = result {
+        cli_pretty_printing::success(&format!("DEBUG: lib.rs - Result has {} decoders in path", res.path.len()));
+    }
+    result
 }
 
 /// Checks if the given input is plaintext or not

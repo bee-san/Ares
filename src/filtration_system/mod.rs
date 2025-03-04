@@ -4,6 +4,7 @@
 use std::sync::mpsc::channel;
 
 use crate::checkers::CheckerTypes;
+use crate::cli_pretty_printing;
 use crate::decoders::atbash_decoder::AtbashDecoder;
 use crate::decoders::base32_decoder::Base32Decoder;
 use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
@@ -63,12 +64,14 @@ impl Decoders {
             .try_for_each_with(sender, |s, i| {
                 let results = i.crack(text, &checker);
                 if results.success {
-                    s.send(results).expect("expected no send error!");
+                    cli_pretty_printing::success(&format!("DEBUG: filtration_system - Decoder {} succeeded, short-circuiting", results.decoder));
+                    s.send(results.clone()).expect("expected no send error!");
                     // returning None short-circuits the iterator
                     // we don't process any further as we got success
                     return None;
                 }
-                s.send(results).expect("expected no send error!");
+                cli_pretty_printing::success(&format!("DEBUG: filtration_system - Decoder {} failed, continuing", results.decoder));
+                s.send(results.clone()).expect("expected no send error!");
                 // return Some(()) to indicate that continue processing
                 Some(())
             });
@@ -78,11 +81,13 @@ impl Decoders {
         while let Ok(result) = receiver.recv() {
             // if we recv success, break.
             if result.success {
+                cli_pretty_printing::success(&format!("DEBUG: filtration_system - Received successful result from {}, returning Break", result.decoder));
                 return MyResults::Break(result);
             }
             all_results.push(result)
         }
 
+        cli_pretty_printing::success(&format!("DEBUG: filtration_system - No successful results, returning Continue with {} results", all_results.len()));
         MyResults::Continue(all_results)
     }
 }

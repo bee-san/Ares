@@ -27,6 +27,7 @@ use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::{
     get_decoder_tagged_decoders, get_non_decoder_tagged_decoders, MyResults,
 };
+use crate::cli_pretty_printing;
 use crossbeam::channel::Sender;
 
 use log::{trace, warn};
@@ -385,6 +386,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with decoder-tagged decoder");
+                    cli_pretty_printing::success(&format!("DEBUG: astar.rs - decoder-tagged decoder - res.success: {}", res.success));
 
                     // Only exit if the result is truly successful (not rejected by human checker)
                     if res.success {
@@ -397,6 +399,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         };
 
                         decoded_how_many_times(curr_depth);
+                        cli_pretty_printing::success(&format!("DEBUG: astar.rs - decoder-tagged decoder - Sending successful result with {} decoders", result_text.path.len()));
                         result_sender
                             .send(Some(result_text))
                             .expect("Should successfully send the result");
@@ -543,6 +546,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with non-decoder-tagged decoder");
+                    cli_pretty_printing::success(&format!("DEBUG: astar.rs - non-decoder-tagged decoder - res.success: {}", res.success));
 
                     // Only exit if the result is truly successful (not rejected by human checker)
                     if res.success {
@@ -555,6 +559,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         };
 
                         decoded_how_many_times(curr_depth);
+                        cli_pretty_printing::success(&format!("DEBUG: astar.rs - non-decoder-tagged decoder - Sending successful result with {} decoders", result_text.path.len()));
                         result_sender
                             .send(Some(result_text))
                             .expect("Should successfully send the result");
