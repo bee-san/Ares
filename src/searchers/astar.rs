@@ -208,11 +208,14 @@ fn calculate_non_printable_ratio(text: &str) -> f32 {
         return 1.0;
     }
 
-    let non_printable_count = text.chars().filter(|&c| {
-        // Same criteria as before for non-printable chars
-        (c.is_control() && c != '\n' && c != '\r' && c != '\t') ||
-        !c.is_ascii_graphic() && !c.is_ascii_whitespace() && !c.is_ascii_punctuation()
-    }).count();
+    let non_printable_count = text
+        .chars()
+        .filter(|&c| {
+            // Same criteria as before for non-printable chars
+            (c.is_control() && c != '\n' && c != '\r' && c != '\t')
+                || !c.is_ascii_graphic() && !c.is_ascii_whitespace() && !c.is_ascii_punctuation()
+        })
+        .count();
 
     non_printable_count as f32 / text.len() as f32
 }
@@ -382,7 +385,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with decoder-tagged decoder");
-                    
+
                     // Only exit if the result is truly successful (not rejected by human checker)
                     if res.success {
                         let mut decoders_used = current_node.state.path.clone();
@@ -540,7 +543,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with non-decoder-tagged decoder");
-                    
+
                     // Only exit if the result is truly successful (not rejected by human checker)
                     if res.success {
                         let mut decoders_used = current_node.state.path.clone();
@@ -733,7 +736,7 @@ fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
 /// Filtering out these strings early saves computational resources and
 /// prevents the search from exploring unproductive paths.
 fn check_if_string_cant_be_decoded(text: &str) -> bool {
-    text.len() <= 2  // Only check length now, non-printable chars handled by heuristic
+    text.len() <= 2 // Only check length now, non-printable chars handled by heuristic
 }
 
 #[cfg(test)]
@@ -771,17 +774,17 @@ mod tests {
     fn test_generate_heuristic() {
         // Test with normal text (should have relatively low score)
         let normal_h = generate_heuristic("Hello World", &[]);
-        
+
         // Test with suspicious text (should have higher score)
         let suspicious_h = generate_heuristic("H\u{0}ll\u{1} W\u{2}rld", &[]);
-        
+
         // Test with all non-printable (should have highest score)
         let nonprint_h = generate_heuristic("\u{0}\u{1}\u{2}", &[]);
-        
+
         // Verify that penalties create appropriate ordering
         assert!(normal_h < suspicious_h);
         assert!(suspicious_h < nonprint_h);
-        
+
         // Verify base case isn't negative
         assert!(normal_h >= 0.0);
     }
@@ -791,14 +794,14 @@ mod tests {
         // Test normal text
         assert_eq!(calculate_non_printable_ratio("Hello World"), 0.0);
         assert_eq!(calculate_non_printable_ratio("123!@#\n\t"), 0.0);
-        
+
         // Test mixed content
-        let mixed = format!("Hello\u{0}World\u{1}"); // 2 non-printable in 12 chars
+        let mixed = "Hello\u{0}World\u{1}".to_string(); // 2 non-printable in 12 chars
         assert!((calculate_non_printable_ratio(&mixed) - 0.1666).abs() < 0.001);
-        
+
         // Test all non-printable
         assert_eq!(calculate_non_printable_ratio("\u{0}\u{1}\u{2}"), 1.0);
-        
+
         // Test empty string
         assert_eq!(calculate_non_printable_ratio(""), 1.0);
     }
@@ -807,13 +810,13 @@ mod tests {
     fn test_heuristic_with_non_printable() {
         // Test normal text
         let normal = generate_heuristic("Hello World", &[]);
-        
+
         // Test text with some non-printable chars
         let with_non_printable = generate_heuristic("Hello\u{0}World", &[]);
-        
+
         // Test text with all non-printable chars
         let all_non_printable = generate_heuristic("\u{0}\u{1}\u{2}", &[]);
-        
+
         // Verify that more non-printable chars result in higher (worse) scores
         assert!(normal < with_non_printable);
         assert!(with_non_printable < all_non_printable);

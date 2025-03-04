@@ -52,10 +52,10 @@ impl Crack for Decoder<Base64Decoder> {
         trace!("Trying Base64 with text {:?}", text);
 
         let mut results = CrackResult::new(self, text.to_string());
-        
+
         // Determine which decoder to use based on the characters present
         let uses_standard_chars = text.contains('+') || text.contains('=') || text.contains('/');
-        
+
         let decoded_text = if uses_standard_chars {
             debug!("Using standard Base64 decoder");
             decode_base64_no_error_handling(text)
@@ -111,7 +111,7 @@ fn decode_base64_no_error_handling(text: &str) -> Option<String> {
 fn decode_base64_url_no_error_handling(text: &str) -> Option<String> {
     // Strip all padding
     let text = text.replace('=', "");
-    
+
     // Use URL_SAFE_NO_PAD engine to decode URL-safe Base64
     general_purpose::URL_SAFE_NO_PAD
         .decode(text.as_bytes())
@@ -151,19 +151,22 @@ mod tests {
     #[test]
     fn successful_url_safe_decoding() {
         let base64_decoder = Decoder::<Base64Decoder>::new();
-        
+
         // Test URL-safe encoded strings
         let test_cases = vec![
             ("SGVsbG8tV29ybGQ", "Hello-World"),
             ("SGVsbG9fV29ybGQ", "Hello_World"),
-            ("aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8_ZXhhbXBsZT10ZXN0", "https://www.google.com/?example=test")
+            (
+                "aHR0cHM6Ly93d3cuZ29vZ2xlLmNvbS8_ZXhhbXBsZT10ZXN0",
+                "https://www.google.com/?example=test",
+            ),
         ];
 
         for (input, expected) in test_cases {
             let result = base64_decoder.crack(input, &get_athena_checker());
             let decoded_str = &result
                 .unencrypted_text
-                .expect(&format!("Failed to decode URL-safe string: {}", input));
+                .unwrap_or_else(|| panic!("Failed to decode URL-safe string: {}", input));
             assert_eq!(decoded_str[0], expected);
         }
     }
@@ -186,7 +189,10 @@ mod tests {
                 &get_athena_checker(),
             )
             .unencrypted_text;
-        assert!(result.is_none(), "Decode_base64 should return None for invalid input");
+        assert!(
+            result.is_none(),
+            "Decode_base64 should return None for invalid input"
+        );
     }
 
     #[test]
@@ -195,23 +201,30 @@ mod tests {
         let result = base64_decoder
             .crack("😂", &get_athena_checker())
             .unencrypted_text;
-        assert!(result.is_none(), "Decode_base64 should return None for emoji input");
+        assert!(
+            result.is_none(),
+            "Decode_base64 should return None for emoji input"
+        );
     }
 
     #[test]
     fn base64_decode_triple() {
         let base64_decoder = Decoder::<Base64Decoder>::new();
-        let input = "VVRKc2QyRkhWalZKUjJ4NlNVaE9ka2xIV21oak0xRnpTVWhTYjJGWVRXZGhXRTFuV1ROS2FHVnVhMmc9";
-        
+        let input =
+            "VVRKc2QyRkhWalZKUjJ4NlNVaE9ka2xIV21oak0xRnpTVWhTYjJGWVRXZGhXRTFuV1ROS2FHVnVhMmc9";
+
         let mut current = input.to_string();
         for _ in 0..3 {
             let result = base64_decoder.crack(&current, &get_athena_checker());
-            assert!(result.unencrypted_text.is_some(), "Failed to decode base64 layer");
+            assert!(
+                result.unencrypted_text.is_some(),
+                "Failed to decode base64 layer"
+            );
             current = result.unencrypted_text.unwrap()[0].clone();
             assert!(!current.is_empty(), "Decoded to empty string");
-            assert!(current.chars().all(|c| c.is_ascii()), "Decoded to non-ASCII content");
+            assert!(current.is_ascii(), "Decoded to non-ASCII content");
         }
-        
+
         assert!(!current.trim().is_empty(), "Final decoded text is empty");
         println!("Final decoded text: {:?}", current);
     }
@@ -223,10 +236,16 @@ mod tests {
 
         // Test standard Base64 (with standard chars)
         let standard_result = base64_decoder.crack("SGVsbG8+Pz8/Cg==", &checker);
-        assert!(standard_result.unencrypted_text.is_some(), "Failed to decode standard Base64");
+        assert!(
+            standard_result.unencrypted_text.is_some(),
+            "Failed to decode standard Base64"
+        );
 
         // Test URL-safe Base64
         let url_safe_result = base64_decoder.crack("SGVsbG8-Pz8_Cg", &checker);
-        assert!(url_safe_result.unencrypted_text.is_some(), "Failed to decode URL-safe Base64");
+        assert!(
+            url_safe_result.unencrypted_text.is_some(),
+            "Failed to decode URL-safe Base64"
+        );
     }
 }

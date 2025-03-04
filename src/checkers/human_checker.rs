@@ -23,7 +23,7 @@ pub fn human_checker(input: &CheckResult) -> bool {
     let reply: String = read!("{}\n");
     let result = reply.to_ascii_lowercase().starts_with('y');
     timer::resume();
-    
+
     if !result {
         return false;
     }
