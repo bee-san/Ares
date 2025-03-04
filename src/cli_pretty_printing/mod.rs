@@ -50,7 +50,7 @@ use text_io::read;
 /// # Examples
 /// ```
 /// use ares::cli_pretty_printing::parse_rgb;
-/// 
+///
 /// // Valid formats:
 /// assert!(parse_rgb("255,0,0").is_some());     // Pure red
 /// assert!(parse_rgb("0, 255, 0").is_some());   // Pure green with spaces
@@ -161,7 +161,7 @@ fn color_string(text: &str, role: &str) -> String {
 /// # Examples
 /// ```
 /// use ares::cli_pretty_printing::statement;
-/// 
+///
 /// let info = statement("Status update", Some("informational"));
 /// let neutral = statement("Regular text", None);
 /// assert!(!info.is_empty());
