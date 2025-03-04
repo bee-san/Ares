@@ -1,12 +1,12 @@
 //! CLI Pretty Printing Module
-//! 
+//!
 //! This module provides a unified interface for all CLI output formatting in Ares.
 //! By centralising all print statements here, we ensure:
 //! - Consistent visual appearance across the application
 //! - Standardised color schemes and formatting
 //! - Proper handling of API mode vs CLI mode
 //! - Centralised error message formatting
-//! 
+//!
 //! # Color Scheme
 //! The module uses a configurable color scheme with roles:
 //! - Informational: General information and status updates
@@ -14,14 +14,14 @@
 //! - Success: Successful operations and confirmations
 //! - Question: Interactive prompts and user queries
 //! - Statement: Standard output and neutral messages
-//! 
+//!
 //! # Usage
 //! ```rust
 //! use crate::cli_pretty_printing::{success, warning};
-//! 
+//!
 //! // Print a success message
 //! println!("{}", success("Operation completed successfully"));
-//! 
+//!
 //! // Print a warning message
 //! println!("{}", warning("Please check your input"));
 //! ```
