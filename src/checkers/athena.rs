@@ -40,6 +40,8 @@ impl Check for Checker<Athena> {
             if regex_result.is_identified {
                 let mut check_res = CheckResult::new(&regex_checker);
                 check_res.is_identified = human_checker::human_checker(&regex_result);
+                check_res.text = regex_result.text;
+                check_res.description = regex_result.description;
                 return check_res;
             }
         } else {
@@ -51,6 +53,8 @@ impl Check for Checker<Athena> {
             if lemmeknow_result.is_identified {
                 let mut check_res = CheckResult::new(&lemmeknow);
                 check_res.is_identified = human_checker::human_checker(&lemmeknow_result);
+                check_res.text = lemmeknow_result.text;
+                check_res.description = lemmeknow_result.description;
                 return check_res;
             }
 
@@ -59,6 +63,8 @@ impl Check for Checker<Athena> {
             if password_result.is_identified {
                 let mut check_res = CheckResult::new(&password);
                 check_res.is_identified = human_checker::human_checker(&password_result);
+                check_res.text = password_result.text;
+                check_res.description = password_result.description;
                 return check_res;
             }
 
@@ -67,6 +73,8 @@ impl Check for Checker<Athena> {
             if english_result.is_identified {
                 let mut check_res = CheckResult::new(&english);
                 check_res.is_identified = human_checker::human_checker(&english_result);
+                check_res.text = english_result.text;
+                check_res.description = english_result.description;
                 return check_res;
             }
         }

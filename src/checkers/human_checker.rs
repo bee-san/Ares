@@ -15,14 +15,16 @@ pub fn human_checker(input: &CheckResult) -> bool {
     let config = get_config();
     // We still call human checker, just if config is false we return True
     if !config.human_checker_on || config.api_mode {
+        timer::resume();
         return true;
     }
     human_checker_check(&input.description, &input.text);
 
     let reply: String = read!("{}\n");
     let result = reply.to_ascii_lowercase().starts_with('y');
+    timer::resume();
+    
     if !result {
-        timer::resume();
         return false;
     }
     true

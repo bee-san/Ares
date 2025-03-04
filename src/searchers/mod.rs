@@ -54,6 +54,8 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
     loop {
         if let Ok(res) = result_recv.try_recv() {
             debug!("Found exit result: {:?}", res);
+            stop.store(true, std::sync::atomic::Ordering::Relaxed);
+            // Wait for the thread to finish
             handle.join().unwrap();
             return res;
         }
@@ -61,10 +63,13 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
         if timer.try_recv().is_ok() {
             stop.store(true, std::sync::atomic::Ordering::Relaxed);
             debug!("Ares has failed to decode");
-            // this would wait for whole iteration to finish!
-            // handle.join().unwrap();
+            // Wait for the thread to finish to ensure any ongoing human checker interaction completes
+            handle.join().unwrap();
             return None;
         }
+
+        // Small sleep to prevent CPU spinning
+        std::thread::sleep(std::time::Duration::from_millis(10));
     }
 }
 

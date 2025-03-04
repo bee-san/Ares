@@ -344,6 +344,11 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
             current_node.total_cost
         );
 
+        // Check stop signal again before processing node
+        if stop.load(std::sync::atomic::Ordering::Relaxed) {
+            break;
+        }
+
         // First, execute all "decoder"-tagged decoders immediately
         let mut decoder_tagged_decoders = get_decoder_tagged_decoders(&current_node.state);
 
@@ -363,6 +368,11 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 decoder_tagged_decoders.components.len()
             );
 
+            // Check stop signal before processing decoders
+            if stop.load(std::sync::atomic::Ordering::Relaxed) {
+                break;
+            }
+
             let athena_checker = Checker::<Athena>::new();
             let checker = CheckerTypes::CheckAthena(athena_checker);
             let decoder_results = decoder_tagged_decoders.run(&current_node.state.text[0], checker);
@@ -372,22 +382,29 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with decoder-tagged decoder");
-                    let mut decoders_used = current_node.state.path.clone();
-                    let text = res.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(res.clone());
-                    let result_text = DecoderResult {
-                        text,
-                        path: decoders_used,
-                    };
+                    
+                    // Only exit if the result is truly successful (not rejected by human checker)
+                    if res.success {
+                        let mut decoders_used = current_node.state.path.clone();
+                        let text = res.unencrypted_text.clone().unwrap_or_default();
+                        decoders_used.push(res.clone());
+                        let result_text = DecoderResult {
+                            text,
+                            path: decoders_used,
+                        };
 
-                    decoded_how_many_times(curr_depth);
-                    result_sender
-                        .send(Some(result_text))
-                        .expect("Should successfully send the result");
+                        decoded_how_many_times(curr_depth);
+                        result_sender
+                            .send(Some(result_text))
+                            .expect("Should successfully send the result");
 
-                    // Stop further iterations
-                    stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                    return;
+                        // Stop further iterations
+                        stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                        return;
+                    } else {
+                        // If human checker rejected, continue the search
+                        trace!("Human checker rejected the result, continuing search");
+                    }
                 }
                 MyResults::Continue(results_vec) => {
                     // Process results and add to open set
@@ -509,6 +526,11 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 non_decoder_decoders.components.len()
             );
 
+            // Check stop signal before processing decoders
+            if stop.load(std::sync::atomic::Ordering::Relaxed) {
+                break;
+            }
+
             let athena_checker = Checker::<Athena>::new();
             let checker = CheckerTypes::CheckAthena(athena_checker);
             let decoder_results = non_decoder_decoders.run(&current_node.state.text[0], checker);
@@ -518,22 +540,29 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with non-decoder-tagged decoder");
-                    let mut decoders_used = current_node.state.path.clone();
-                    let text = res.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(res.clone());
-                    let result_text = DecoderResult {
-                        text,
-                        path: decoders_used,
-                    };
+                    
+                    // Only exit if the result is truly successful (not rejected by human checker)
+                    if res.success {
+                        let mut decoders_used = current_node.state.path.clone();
+                        let text = res.unencrypted_text.clone().unwrap_or_default();
+                        decoders_used.push(res.clone());
+                        let result_text = DecoderResult {
+                            text,
+                            path: decoders_used,
+                        };
 
-                    decoded_how_many_times(curr_depth);
-                    result_sender
-                        .send(Some(result_text))
-                        .expect("Should successfully send the result");
+                        decoded_how_many_times(curr_depth);
+                        result_sender
+                            .send(Some(result_text))
+                            .expect("Should successfully send the result");
 
-                    // Stop further iterations
-                    stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                    return;
+                        // Stop further iterations
+                        stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                        return;
+                    } else {
+                        // If human checker rejected, continue the search
+                        trace!("Human checker rejected the result, continuing search");
+                    }
                 }
                 MyResults::Continue(results_vec) => {
                     // Process results and add to open set with heuristic prioritization
@@ -639,8 +668,13 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         curr_depth += 1;
     }
 
-    trace!("A* search completed without finding a solution");
-    result_sender.try_send(None).ok();
+    // Check if we were stopped or if we genuinely couldn't find a solution
+    if stop.load(std::sync::atomic::Ordering::Relaxed) {
+        trace!("A* search stopped by external signal");
+    } else {
+        trace!("A* search completed without finding a solution");
+        result_sender.try_send(None).ok();
+    }
 }
 
 /// Generate a heuristic value for A* search prioritization
