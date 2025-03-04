@@ -210,22 +210,22 @@ pub fn parse_rgb(rgb: &str) -> Result<(u8, u8, u8), String> {
     if parts.len() != 3 {
         return Err("Invalid RGB format. Expected 'R,G,B' or 'R, G, B'".to_string());
     }
-    
+
     let r = parts[0].parse::<u8>().map_err(|_| "Invalid red value")?;
     let g = parts[1].parse::<u8>().map_err(|_| "Invalid green value")?;
     let b = parts[2].parse::<u8>().map_err(|_| "Invalid blue value")?;
-    
+
     Ok((r, g, b))
 }
 
 #[test]
 fn test_parse_rgb() {
     let test_cases = vec![
-        "255,0,0",     // Pure red
-        "0, 255, 0",   // Pure green with spaces
-        "0,0,255"      // Pure blue
+        "255,0,0",   // Pure red
+        "0, 255, 0", // Pure green with spaces
+        "0,0,255",   // Pure blue
     ];
-    
+
     for case in test_cases {
         let result = parse_rgb(case);
         assert!(result.is_ok());
