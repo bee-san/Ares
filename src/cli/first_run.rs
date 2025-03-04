@@ -1,57 +1,105 @@
+//! First-run configuration module for Ares
+//! 
+//! This module handles the initial setup of Ares, including color scheme configuration
+//! and user preferences. It provides functionality for creating and managing color schemes,
+//! handling user input, and converting between different color formats.
+
 use colored::Colorize;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::{self, Write};
 
-/// Represents a color scheme with RGB values for different roles
+/// Represents a color scheme with RGB values for different message types and roles.
+/// Each color is stored as a comma-separated RGB string in the format "r,g,b"
+/// where r, g, and b are values between 0 and 255.
+#[derive(Debug)]
 pub struct ColorScheme {
     /// RGB color value for informational messages in format "r,g,b"
+    /// Used for general information and status updates
     pub informational: String,
     /// RGB color value for warning messages in format "r,g,b"
+    /// Used for non-critical warnings and cautions
     pub warning: String,
     /// RGB color value for success messages in format "r,g,b"
+    /// Used for successful operations and confirmations
     pub success: String,
     /// RGB color value for question prompts in format "r,g,b"
+    /// Used for interactive prompts and user queries
     pub question: String,
     /// RGB color value for general statements in format "r,g,b"
+    /// Used for standard output and neutral messages
     pub statement: String,
 }
 
-/// Predefined color schemes available in Ares
+/// Predefined color schemes available in Ares.
+/// Each variant represents a complete theme with coordinated colors
+/// for different message types.
+#[derive(Debug)]
 pub enum PredefinedColorScheme {
-    /// Capptucin theme with warm, muted colors
+    /// Capptucin theme with warm, muted colors optimized for dark backgrounds
     Capptucin,
-    /// Darcula theme with dark background-optimized colors
+    /// Darcula theme with dark background-optimized colors matching JetBrains Darcula
     Darcula,
-    /// Default theme with standard terminal colors
+    /// Default theme with standard terminal colors for maximum compatibility
     Default,
-    /// Girly Pop theme with pink and pastel colors
+    /// Girly Pop theme with pink and pastel colors by Autumn
     GirlyPop,
-    /// Custom user-defined color scheme
+    /// Custom user-defined color scheme with manually specified RGB values
     Custom,
 }
 
-/// Print a statement in white
+/// Prints a statement in white color.
+/// 
+/// # Arguments
+/// * `text` - Any type that implements Display trait to be printed in white
+/// 
+/// # Returns
+/// * `String` - The input text formatted in white color
 fn print_statement<T: Display>(text: T) -> String {
     text.to_string().white().to_string()
 }
 
-/// Print a warning in red
+/// Prints a warning message in red color.
+/// 
+/// # Arguments
+/// * `text` - Any type that implements Display trait to be printed in red
+/// 
+/// # Returns
+/// * `String` - The input text formatted in red color
 fn print_warning<T: Display>(text: T) -> String {
     text.to_string().red().to_string()
 }
 
-/// Print a question in yellow
+/// Prints a question prompt in yellow color.
+/// 
+/// # Arguments
+/// * `text` - Any type that implements Display trait to be printed in yellow
+/// 
+/// # Returns
+/// * `String` - The input text formatted in yellow color
 fn print_question<T: Display>(text: T) -> String {
     text.to_string().yellow().to_string()
 }
 
-/// Print a success message in green
+/// Prints a success message in green color.
+/// 
+/// # Arguments
+/// * `text` - Any type that implements Display trait to be printed in green
+/// 
+/// # Returns
+/// * `String` - The input text formatted in green color
 fn print_success<T: Display>(text: T) -> String {
     text.to_string().green().to_string()
 }
 
-/// Print a text in specified RGB color
+/// Prints text in a specified RGB color.
+/// 
+/// # Arguments
+/// * `text` - The text to be colored
+/// * `rgb` - RGB color string in format "r,g,b" where r,g,b are 0-255
+/// 
+/// # Returns
+/// * `String` - The text colored with the specified RGB values, or uncolored if RGB format is invalid
 fn print_rgb(text: &str, rgb: &str) -> String {
     let parts: Vec<&str> = rgb.split(',').collect();
     if parts.len() != 3 {
@@ -69,7 +117,10 @@ fn print_rgb(text: &str, rgb: &str) -> String {
     }
 }
 
-/// Get the Capptucin color scheme
+/// Returns the Capptucin color scheme with warm, muted colors.
+/// 
+/// # Returns
+/// * `ColorScheme` - A color scheme with Capptucin's signature warm colors
 fn get_capptucin_scheme() -> ColorScheme {
     ColorScheme {
         informational: "238,212,159".to_string(), // rgb(238, 212, 159)
@@ -80,7 +131,10 @@ fn get_capptucin_scheme() -> ColorScheme {
     }
 }
 
-/// Get the Darcula color scheme
+/// Returns the Darcula color scheme matching JetBrains Darcula theme.
+/// 
+/// # Returns
+/// * `ColorScheme` - A color scheme with Darcula's signature colors
 fn get_darcula_scheme() -> ColorScheme {
     ColorScheme {
         informational: "241,250,140".to_string(), // rgb(241, 250, 140)
@@ -91,29 +145,42 @@ fn get_darcula_scheme() -> ColorScheme {
     }
 }
 
-/// Get Autumn's personal theme
+/// Returns Autumn's personal Girly Pop theme with pink and pastel colors.
+/// 
+/// # Returns
+/// * `ColorScheme` - A color scheme with Girly Pop's signature pastel colors
 fn get_girly_pop_scheme() -> ColorScheme {
     ColorScheme {
-        informational: "237,69,146".to_string(), // rgb(237,69,146)
-        warning: "241,218,165".to_string(),      // rgb(241, 218, 165)
-        success: "243,214,243".to_string(),      // rgb(243, 214, 243)
-        question: "255,128,177".to_string(),     // rgb(255, 128, 177)
-        statement: "255,148,219".to_string(),    // rgb(255, 148, 219)
+        informational: "237,69,146".to_string(),  // rgb(237,69,146)
+        warning: "241,218,165".to_string(),       // rgb(241, 218, 165)
+        success: "243,214,243".to_string(),       // rgb(243, 214, 243)
+        question: "255,128,177".to_string(),      // rgb(255, 128, 177)
+        statement: "255,148,219".to_string(),     // rgb(255, 148, 219)
     }
 }
 
-/// Get the default color scheme
+/// Returns the default color scheme with standard terminal colors.
+/// 
+/// # Returns
+/// * `ColorScheme` - A color scheme with standard, high-contrast colors
 fn get_default_scheme() -> ColorScheme {
     ColorScheme {
-        informational: "255,215,0".to_string(), // Gold yellow
-        warning: "255,0,0".to_string(),         // Red
-        success: "0,255,0".to_string(),         // Green
-        question: "255,215,0".to_string(),      // Gold yellow (same as informational)
-        statement: "255,255,255".to_string(),   // White
+        informational: "255,215,0".to_string(),   // Gold yellow
+        warning: "255,0,0".to_string(),           // Red
+        success: "0,255,0".to_string(),           // Green
+        question: "255,215,0".to_string(),        // Gold yellow (same as informational)
+        statement: "255,255,255".to_string(),     // White
     }
 }
 
-/// Run the first-time setup with command-line prompts
+/// Runs the first-time setup wizard for Ares, allowing users to configure their color scheme.
+/// 
+/// This function presents users with color scheme options and handles their selection,
+/// including support for custom color schemes. It guides users through the setup process
+/// with clear prompts and visual examples of each color scheme.
+/// 
+/// # Returns
+/// * `HashMap<String, String>` - A mapping of role names to their RGB color values
 pub fn run_first_time_setup() -> HashMap<String, String> {
     println!(
         "\n{}",
@@ -215,7 +282,14 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     }
 }
 
-/// Ask a yes/no question and return the result
+/// Prompts the user with a yes/no question and returns their response.
+/// 
+/// # Arguments
+/// * `question` - The question to display to the user
+/// * `default_yes` - Whether the default answer (when user presses enter) should be yes
+/// 
+/// # Returns
+/// * `bool` - true for yes, false for no
 fn ask_yes_no_question(question: &str, default_yes: bool) -> bool {
     let prompt = if default_yes {
         format!("{} (Y/n): ", question)
@@ -248,7 +322,15 @@ fn ask_yes_no_question(question: &str, default_yes: bool) -> bool {
     }
 }
 
-/// Get user input within a specified range
+/// Gets user input within a specified numeric range.
+/// 
+/// # Arguments
+/// * `prompt` - The prompt to display to the user
+/// * `min` - The minimum acceptable value (inclusive)
+/// * `max` - The maximum acceptable value (inclusive)
+/// 
+/// # Returns
+/// * `u32` - The user's input within the specified range
 fn get_user_input_range(prompt: &str, min: u32, max: u32) -> u32 {
     print!("{}", print_question(prompt));
     io::stdout().flush().unwrap();
@@ -273,7 +355,13 @@ fn get_user_input_range(prompt: &str, min: u32, max: u32) -> u32 {
     }
 }
 
-/// Get user input for RGB values
+/// Gets user input for RGB color values.
+/// 
+/// # Arguments
+/// * `prompt` - The prompt to display to the user
+/// 
+/// # Returns
+/// * `String` - A validated RGB color string in format "r,g,b"
 fn get_user_input_rgb(prompt: &str) -> String {
     print!("{}", print_question(prompt));
     io::stdout().flush().unwrap();
@@ -295,7 +383,13 @@ fn get_user_input_rgb(prompt: &str) -> String {
     }
 }
 
-/// Parse and validate RGB input
+/// Parses and validates an RGB input string.
+/// 
+/// # Arguments
+/// * `input` - The RGB string to parse in format "r,g,b"
+/// 
+/// # Returns
+/// * `Option<String>` - Some(rgb) if valid, None if invalid
 fn parse_rgb_input(input: &str) -> Option<String> {
     let parts: Vec<&str> = input.split(',').collect();
 
@@ -310,7 +404,13 @@ fn parse_rgb_input(input: &str) -> Option<String> {
     Some(format!("{},{},{}", r, g, b))
 }
 
-/// Convert a ColorScheme to a HashMap for the Config struct
+/// Converts a ColorScheme struct to a HashMap for configuration storage.
+/// 
+/// # Arguments
+/// * `scheme` - The ColorScheme to convert
+/// 
+/// # Returns
+/// * `HashMap<String, String>` - A mapping of role names to their RGB values
 fn color_scheme_to_hashmap(scheme: ColorScheme) -> HashMap<String, String> {
     let mut map = HashMap::new();
     map.insert("informational".to_string(), scheme.informational);
