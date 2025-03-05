@@ -9,7 +9,7 @@ use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::{self, Write};
 
-use super::super::storage::database;
+use super::super::storage::database::{get_database_path, setup_database};
 
 /// Represents a color scheme with RGB values for different message types and roles.
 /// Each color is stored as a comma-separated RGB string in the format "r,g,b"
@@ -163,7 +163,8 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     println!("{}\n", print_statement("Let me help you configure Ares."));
 
     // Set up database
-    let db_result = database::setup_database();
+    let path = get_database_path();
+    let db_result = setup_database(&path);
     match db_result {
         Ok(_) => {
             println!("SQLite database initialized.");
