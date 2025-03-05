@@ -265,7 +265,6 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         }
         _ => color_scheme_to_hashmap(get_default_scheme()), // This should never happen due to input validation
     }
-
 }
 
 /// Prompts the user with a yes/no question and returns their response.

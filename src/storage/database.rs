@@ -29,11 +29,14 @@ pub fn setup_database() -> Result<(), rusqlite::Error> {
             successful BOOLEAN NOT NULL DEFAULT true,
             execution_time_ms INTEGER NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    );", ())?;
+    );",
+        (),
+    )?;
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_cache_encoded_text
-            ON cache(encoded_text);"
-    , ())?;
+            ON cache(encoded_text);",
+        (),
+    )?;
 
     // Initializing statistics table
     conn.execute(
@@ -48,15 +51,17 @@ pub fn setup_database() -> Result<(), rusqlite::Error> {
             prune_threshold INTEGER NOT NULL,
             max_memory_kb INTEGER NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-    );"
-    , ())?;
+    );",
+        (),
+    )?;
     conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_stats_run_id ON statistics(run_id);"
-    , ())?;
+        "CREATE INDEX IF NOT EXISTS idx_stats_run_id ON statistics(run_id);",
+        (),
+    )?;
     conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_stats_decoder ON statistics(decoder_name);"
-    , ())?;
+        "CREATE INDEX IF NOT EXISTS idx_stats_decoder ON statistics(decoder_name);",
+        (),
+    )?;
 
     Ok(())
 }
-
