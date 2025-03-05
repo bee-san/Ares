@@ -50,7 +50,7 @@ urlencoding = "2.1.3"
 z85 = "3.0.5"
 gibberish-or-not = "4.0.3"
 cipher_identifier = "0.2.0"
-rand = "0.8.5"  # For generating random values
+rand = "0.9.0"  # For generating random values
 colored = "3.0.0"
 
 # Dev dependencies

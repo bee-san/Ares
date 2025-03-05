@@ -2457,7 +2457,7 @@ dependencies = [
  "num",
  "once_cell",
  "proc-macro2",
- "rand 0.8.5",
+ "rand 0.9.0",
  "rayon",
  "regex",
  "serde",
