@@ -45,6 +45,7 @@ use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::CrackResult;
 use crate::DecoderResult;
+use crate::decoders::interface::Decoder;
 
 /// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
 const PRUNE_THRESHOLD: usize = 10000;
@@ -685,6 +686,30 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
     }
 }
 
+/// Get the popularity rating of a decoder by its name
+/// Popularity is a value between 0.0 and 1.0 where higher values indicate more common decoders
+fn get_decoder_popularity(decoder: &str) -> f32 {
+    // This is a static mapping of decoder names to their popularity
+    // In a more sophisticated implementation, this could be loaded from a configuration file
+    // or stored in a database
+    match decoder {
+        "Base64" => 1.0,
+        "Hexadecimal" => 1.0,
+        "Binary" => 1.0,
+        "rot13" => 1.0,
+        "rot47" => 1.0,
+        "Base32" => 0.8,
+        "Vigenere" => 0.8,
+        "Base58" => 0.7,
+        "Base85" => 0.5,
+        "simplesubstitution" => 0.5,
+        "Base91" => 0.3,
+        "Citrix Ctx1" => 0.1,
+        // Default for unknown decoders
+        _ => 0.5,
+    }
+}
+
 /// Generate a heuristic value for A* search prioritization
 ///
 /// The heuristic estimates how close a state is to being plaintext.
@@ -711,6 +736,12 @@ fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
         // Penalize low success rates instead of rewarding high ones
         let success_rate = get_decoder_success_rate(last_result.decoder);
         final_score *= 1.0 + (1.0 - success_rate); // Penalty scales with failure rate
+        
+        // Penalize decoders with low popularity
+        let popularity = get_decoder_popularity(last_result.decoder);
+        // Apply a significant penalty for unpopular decoders
+        // The penalty is inversely proportional to the popularity
+        final_score *= 1.0 + (2.0 * (1.0 - popularity)); // Penalty scales with unpopularity
     }
 
     // Penalize low quality strings
@@ -826,5 +857,41 @@ mod tests {
         assert!(normal < with_non_printable);
         assert!(with_non_printable < all_non_printable);
         assert!(all_non_printable > 100.0); // Should be very high for all non-printable
+    }
+
+    #[test]
+    fn test_popularity_affects_heuristic() {
+        // Create two identical paths but with different decoders
+        let popular_decoder = "Base64"; // Popularity 1.0
+        let unpopular_decoder = "Citrix Ctx1"; // Popularity 0.1
+        
+        // Create CrackResults with different decoders
+        let mut popular_result = CrackResult::new(&Decoder::default(), "test".to_string());
+        popular_result.decoder = popular_decoder;
+        
+        let mut unpopular_result = CrackResult::new(&Decoder::default(), "test".to_string());
+        unpopular_result.decoder = unpopular_decoder;
+        
+        // Generate heuristics for both paths
+        let popular_heuristic = generate_heuristic("test", &[popular_result]);
+        let unpopular_heuristic = generate_heuristic("test", &[unpopular_result]);
+        
+        // The unpopular decoder should have a higher heuristic (worse score)
+        assert!(
+            unpopular_heuristic > popular_heuristic,
+            "Unpopular decoder should have a higher (worse) heuristic score. \
+            Popular: {}, Unpopular: {}",
+            popular_heuristic,
+            unpopular_heuristic
+        );
+        
+        // The difference should be significant
+        assert!(
+            unpopular_heuristic >= popular_heuristic * 1.5,
+            "Unpopular decoder should have a significantly higher heuristic. \
+            Popular: {}, Unpopular: {}",
+            popular_heuristic,
+            unpopular_heuristic
+        );
     }
 }
