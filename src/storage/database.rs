@@ -4,10 +4,19 @@
 ///! relations and collecting statistics on the performance of Ares
 ///! search algorithms.
 use rusqlite::Connection;
+use std::path::PathBuf;
+
+/// Returns the path to the database file
+fn get_database_path() -> PathBuf {
+    let mut path = dirs::home_dir().expect("Could not find home directory");
+    path.push("Ares");
+    path.push("database.sqlite");
+    path
+}
 
 /// Initializes database with default schema
 pub fn setup_database() -> Result<(), rusqlite::Error> {
-    let db_path = "./database.sqlite";
+    let db_path = get_database_path();
     let conn = Connection::open(db_path)?;
 
     // Initializing cache table
