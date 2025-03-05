@@ -1286,9 +1286,9 @@ dependencies = [
 
 [[package]]
 name = "gibberish-or-not"
-version = "3.0.0"
+version = "4.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8cfd9cad06bc38e80a721f7661b6e0ac34696af1586cd597296fbe66f68bd87b"
+checksum = "e630b6e3338ff6497f84cc8fabb7a16b08c7158e228127a0a1019d78c368f60b"
 dependencies = [
  "encoding_rs",
  "lazy_static",
