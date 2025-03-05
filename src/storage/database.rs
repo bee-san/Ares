@@ -109,8 +109,28 @@ mod tests {
         assert!(stmt_result.is_ok());
         let mut stmt = stmt_result.unwrap();
 
-        let query_result = stmt.query_map([], |row| row.get::<usize, String>(0));
-        assert!(query_result.is_ok());
-        assert_eq!(query_result.unwrap().count(), 7);
+        let name_result = stmt.query_map([], |row| row.get::<usize, String>(1));
+        assert!(name_result.is_ok());
+        let name_query = name_result.unwrap();
+        let name_list: Vec<String> = name_query.map(|row| row.unwrap()).collect();
+        assert_eq!(name_list[0], "id");
+        assert_eq!(name_list[1], "encoded_text");
+        assert_eq!(name_list[2], "decoded_text");
+        assert_eq!(name_list[3], "path");
+        assert_eq!(name_list[4], "successful");
+        assert_eq!(name_list[5], "execution_time_ms");
+        assert_eq!(name_list[6], "timestamp");
+
+        let type_result = stmt.query_map([], |row| row.get::<usize, String>(2));
+        assert!(type_result.is_ok());
+        let type_query = type_result.unwrap();
+        let type_list: Vec<String> = type_query.map(|row| row.unwrap()).collect();
+        assert_eq!(type_list[0], "INTEGER");
+        assert_eq!(type_list[1], "TEXT");
+        assert_eq!(type_list[2], "TEXT");
+        assert_eq!(type_list[3], "JSON");
+        assert_eq!(type_list[4], "BOOLEAN");
+        assert_eq!(type_list[5], "INTEGER");
+        assert_eq!(type_list[6], "DATETIME");
     }
 }
