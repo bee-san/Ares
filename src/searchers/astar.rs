@@ -45,7 +45,6 @@ use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::CrackResult;
 use crate::DecoderResult;
-use crate::decoders::interface::Decoder;
 
 /// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
 const PRUNE_THRESHOLD: usize = 10000;
@@ -779,6 +778,7 @@ fn check_if_string_cant_be_decoded(text: &str) -> bool {
 mod tests {
     use super::*;
     use crossbeam::channel::bounded;
+    use crate::Decoder;
 
     #[test]
     fn astar_handles_empty_input() {

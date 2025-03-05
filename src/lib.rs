@@ -52,7 +52,7 @@ use checkers::{
     checker_result::CheckResult,
     checker_type::{Check, Checker},
 };
-use log::{debug, info};
+use log::debug;
 
 use crate::{config::Config, decoders::interface::Decoder};
 
