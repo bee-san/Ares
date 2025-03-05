@@ -23,11 +23,11 @@
 //! The current implementation uses a simple placeholder heuristic of 1.0,
 //! but has been improved with Cipher Identifier for better prioritization.
 
+use crate::cli_pretty_printing;
 use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::{
     get_decoder_tagged_decoders, get_non_decoder_tagged_decoders, MyResults,
 };
-use crate::cli_pretty_printing;
 use crossbeam::channel::Sender;
 
 use log::{trace, warn};
@@ -386,7 +386,10 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with decoder-tagged decoder");
-                    cli_pretty_printing::success(&format!("DEBUG: astar.rs - decoder-tagged decoder - res.success: {}", res.success));
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: astar.rs - decoder-tagged decoder - res.success: {}",
+                        res.success
+                    ));
 
                     // Only exit if the result is truly successful (not rejected by human checker)
                     if res.success {
@@ -546,7 +549,10 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with non-decoder-tagged decoder");
-                    cli_pretty_printing::success(&format!("DEBUG: astar.rs - non-decoder-tagged decoder - res.success: {}", res.success));
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: astar.rs - non-decoder-tagged decoder - res.success: {}",
+                        res.success
+                    ));
 
                     // Only exit if the result is truly successful (not rejected by human checker)
                     if res.success {
@@ -735,7 +741,7 @@ fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
         // Penalize low success rates instead of rewarding high ones
         let success_rate = get_decoder_success_rate(last_result.decoder);
         final_score *= 1.0 + (1.0 - success_rate); // Penalty scales with failure rate
-        
+
         // Penalize decoders with low popularity
         let popularity = get_decoder_popularity(last_result.decoder);
         // Apply a significant penalty for unpopular decoders
@@ -777,8 +783,8 @@ fn check_if_string_cant_be_decoded(text: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crossbeam::channel::bounded;
     use crate::Decoder;
+    use crossbeam::channel::bounded;
 
     #[test]
     fn astar_handles_empty_input() {
@@ -864,18 +870,18 @@ mod tests {
         // Create two identical paths but with different decoders
         let popular_decoder = "Base64"; // Popularity 1.0
         let unpopular_decoder = "Citrix Ctx1"; // Popularity 0.1
-        
+
         // Create CrackResults with different decoders
         let mut popular_result = CrackResult::new(&Decoder::default(), "test".to_string());
         popular_result.decoder = popular_decoder;
-        
+
         let mut unpopular_result = CrackResult::new(&Decoder::default(), "test".to_string());
         unpopular_result.decoder = unpopular_decoder;
-        
+
         // Generate heuristics for both paths
         let popular_heuristic = generate_heuristic("test", &[popular_result]);
         let unpopular_heuristic = generate_heuristic("test", &[unpopular_result]);
-        
+
         // The unpopular decoder should have a higher heuristic (worse score)
         assert!(
             unpopular_heuristic > popular_heuristic,
@@ -884,7 +890,7 @@ mod tests {
             popular_heuristic,
             unpopular_heuristic
         );
-        
+
         // The difference should be significant
         assert!(
             unpopular_heuristic >= popular_heuristic * 1.5,

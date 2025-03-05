@@ -64,13 +64,19 @@ impl Decoders {
             .try_for_each_with(sender, |s, i| {
                 let results = i.crack(text, &checker);
                 if results.success {
-                    cli_pretty_printing::success(&format!("DEBUG: filtration_system - Decoder {} succeeded, short-circuiting", results.decoder));
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: filtration_system - Decoder {} succeeded, short-circuiting",
+                        results.decoder
+                    ));
                     s.send(results.clone()).expect("expected no send error!");
                     // returning None short-circuits the iterator
                     // we don't process any further as we got success
                     return None;
                 }
-                cli_pretty_printing::success(&format!("DEBUG: filtration_system - Decoder {} failed, continuing", results.decoder));
+                cli_pretty_printing::success(&format!(
+                    "DEBUG: filtration_system - Decoder {} failed, continuing",
+                    results.decoder
+                ));
                 s.send(results.clone()).expect("expected no send error!");
                 // return Some(()) to indicate that continue processing
                 Some(())
@@ -87,7 +93,10 @@ impl Decoders {
             all_results.push(result)
         }
 
-        cli_pretty_printing::success(&format!("DEBUG: filtration_system - No successful results, returning Continue with {} results", all_results.len()));
+        cli_pretty_printing::success(&format!(
+            "DEBUG: filtration_system - No successful results, returning Continue with {} results",
+            all_results.len()
+        ));
         MyResults::Continue(all_results)
     }
 }

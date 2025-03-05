@@ -1,4 +1,4 @@
-use crate::{checkers::checker_result::CheckResult, config::get_config, cli_pretty_printing};
+use crate::{checkers::checker_result::CheckResult, cli_pretty_printing, config::get_config};
 use gibberish_or_not::Sensitivity;
 use lemmeknow::Identifier;
 use log::trace;
@@ -43,7 +43,10 @@ impl Check for Checker<Athena> {
                 check_res.is_identified = human_result;
                 check_res.text = regex_result.text;
                 check_res.description = regex_result.description;
-                cli_pretty_printing::success(&format!("DEBUG: Athena regex checker - human_result: {}, check_res.is_identified: {}", human_result, check_res.is_identified));
+                cli_pretty_printing::success(&format!(
+                    "DEBUG: Athena regex checker - human_result: {}, check_res.is_identified: {}",
+                    human_result, check_res.is_identified
+                ));
                 return check_res;
             }
         } else {
@@ -82,7 +85,10 @@ impl Check for Checker<Athena> {
                 check_res.is_identified = human_result;
                 check_res.text = english_result.text;
                 check_res.description = english_result.description;
-                cli_pretty_printing::success(&format!("DEBUG: Athena english checker - human_result: {}, check_res.is_identified: {}", human_result, check_res.is_identified));
+                cli_pretty_printing::success(&format!(
+                    "DEBUG: Athena english checker - human_result: {}, check_res.is_identified: {}",
+                    human_result, check_res.is_identified
+                ));
                 return check_res;
             }
         }
