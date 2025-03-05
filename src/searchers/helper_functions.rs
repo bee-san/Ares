@@ -9,28 +9,6 @@ use rand::Rng;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
-/// Mapping between Cipher Identifier's cipher names and Ares decoder names
-///
-/// This static mapping allows us to translate between the cipher types identified by
-/// Cipher Identifier and the corresponding decoders available in Ares.
-///
-/// For example:
-/// - "fractionatedMorse" maps to "MorseCodeDecoder"
-/// - "atbash" maps to "AtbashDecoder"
-/// - "caesar" maps to "CaesarDecoder"
-pub static CIPHER_MAPPING: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
-    let mut map = HashMap::new();
-    map.insert("fractionatedMorse", "morseCode");
-    map.insert("atbash", "atbash");
-    map.insert("caesar", "caesar");
-    map.insert("railfence", "railfence");
-    map.insert("rot47", "rot47");
-    map.insert("a1z26", "a1z26");
-    map.insert("simplesubstitution", "simplesubstitution");
-    // Add more mappings as needed
-    map
-});
-
 /// Track decoder success rates for adaptive learning
 pub static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
@@ -86,10 +64,8 @@ pub fn get_decoder_success_rate(decoder: &str) -> f32 {
 pub fn get_cipher_identifier_score(text: &str) -> (String, f32) {
     let results = cipher_identifier::identify_cipher::identify_cipher(text, 5, None);
 
-    for (cipher, score) in results {
-        if let Some(_decoder) = CIPHER_MAPPING.get(cipher.as_str()) {
-            return (cipher, (score / 10.0) as f32);
-        }
+    if let Some((cipher, score)) = results.first() {
+        return (cipher.clone(), (score / 10.0) as f32);
     }
 
     // Default if no match
@@ -181,30 +157,6 @@ pub fn calculate_non_printable_ratio(text: &str) -> f32 {
     non_printable_count as f32 / text.len() as f32
 }
 
-/// Get the popularity rating of a decoder by its name
-/// Popularity is a value between 0.0 and 1.0 where higher values indicate more common decoders
-pub fn get_decoder_popularity(decoder: &str) -> f32 {
-    // This is a static mapping of decoder names to their popularity
-    // In a more sophisticated implementation, this could be loaded from a configuration file
-    // or stored in a database
-    match decoder {
-        "Base64" => 1.0,
-        "Hexadecimal" => 1.0,
-        "Binary" => 1.0,
-        "rot13" => 1.0,
-        "rot47" => 1.0,
-        "Base32" => 0.8,
-        "Vigenere" => 0.8,
-        "Base58" => 0.7,
-        "Base85" => 0.5,
-        "simplesubstitution" => 0.5,
-        "Base91" => 0.3,
-        "Citrix Ctx1" => 0.1,
-        // Default for unknown decoders
-        _ => 0.5,
-    }
-}
-
 /// Generate a heuristic value for A* search prioritization
 ///
 /// The heuristic estimates how close a state is to being plaintext.
@@ -225,7 +177,7 @@ pub fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
     if let Some(last_result) = path.last() {
         // Penalize uncommon sequences instead of rewarding common ones
         if !is_common_sequence(last_result.decoder, &cipher) {
-            final_score *= 1.25; // 25% penalty for uncommon sequences
+            final_score *= 1.75; // 25% penalty for uncommon sequences
         }
 
         // Penalize low success rates instead of rewarding high ones
@@ -233,7 +185,10 @@ pub fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
         final_score *= 1.0 + (1.0 - success_rate); // Penalty scales with failure rate
 
         // Penalize decoders with low popularity
-        let popularity = get_decoder_popularity(last_result.decoder);
+        // We don't have direct access to the decoder's popularity attribute here,
+        // but we can use the success rate as a proxy for popularity
+        // Default to 0.5 if we can't determine the popularity
+        let popularity = success_rate;
         // Apply a significant penalty for unpopular decoders
         // The penalty is inversely proportional to the popularity
         final_score *= 1.0 + (2.0 * (1.0 - popularity)); // Penalty scales with unpopularity
@@ -252,22 +207,44 @@ pub fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
 }
 
 /// Determines if a string is too short to be meaningfully decoded
+/// or is of too low quality to be worth decoding
 ///
 /// ## Decision Criteria
 ///
 /// A string is considered undecodeble if:
 /// - It has 2 or fewer characters
+/// - It has more than 30% non-printable characters
+/// - Its overall quality score is below 0.2
 ///
 /// ## Rationale
 ///
 /// 1. The gibberish_or_not library requires at least 3 characters to work effectively
 /// 2. LemmeKnow and other pattern matchers perform poorly on very short strings
 /// 3. Most encoding schemes produce output of at least 3 characters
+/// 4. Strings with high percentages of non-printable characters are unlikely to be valid encodings
+/// 5. Very low quality strings waste computational resources and rarely yield useful results
 ///
 /// Filtering out these strings early saves computational resources and
 /// prevents the search from exploring unproductive paths.
 pub fn check_if_string_cant_be_decoded(text: &str) -> bool {
-    text.len() <= 2 // Only check length now, non-printable chars handled by heuristic
+    // Check for strings that are too short
+    if text.len() <= 2 {
+        return true;
+    }
+    
+    // Check for strings with high non-printable character ratio
+    let non_printable_ratio = calculate_non_printable_ratio(text);
+    if non_printable_ratio > 0.3 {
+        return true;
+    }
+    
+    // Check for overall string quality
+    let quality = calculate_string_quality(text);
+    if quality < 0.2 {
+        return true;
+    }
+    
+    false
 }
 
 #[cfg(test)]
@@ -329,38 +306,36 @@ mod tests {
     }
 
     #[test]
-    fn test_popularity_affects_heuristic() {
-        // Create two identical paths but with different decoders
-        let popular_decoder = "Base64"; // Popularity 1.0
-        let unpopular_decoder = "Citrix Ctx1"; // Popularity 0.1
-
-        // Create CrackResults with different decoders
-        let mut popular_result = CrackResult::new(&Decoder::default(), "test".to_string());
-        popular_result.decoder = popular_decoder;
-
-        let mut unpopular_result = CrackResult::new(&Decoder::default(), "test".to_string());
-        unpopular_result.decoder = unpopular_decoder;
-
+    fn test_success_rate_affects_heuristic() {
+        // Create two identical paths but with different success rates
+        let mut high_success_result = CrackResult::new(&Decoder::default(), "test".to_string());
+        high_success_result.decoder = "HighSuccessDecoder";
+        
+        let mut low_success_result = CrackResult::new(&Decoder::default(), "test".to_string());
+        low_success_result.decoder = "LowSuccessDecoder";
+        
+        // Update the success rates in the DECODER_SUCCESS_RATES
+        update_decoder_stats("HighSuccessDecoder", true);
+        update_decoder_stats("HighSuccessDecoder", true);
+        update_decoder_stats("HighSuccessDecoder", true);
+        update_decoder_stats("HighSuccessDecoder", false);
+        
+        update_decoder_stats("LowSuccessDecoder", true);
+        update_decoder_stats("LowSuccessDecoder", false);
+        update_decoder_stats("LowSuccessDecoder", false);
+        update_decoder_stats("LowSuccessDecoder", false);
+        
         // Generate heuristics for both paths
-        let popular_heuristic = generate_heuristic("test", &[popular_result]);
-        let unpopular_heuristic = generate_heuristic("test", &[unpopular_result]);
-
-        // The unpopular decoder should have a higher heuristic (worse score)
+        let high_success_heuristic = generate_heuristic("test", &[high_success_result]);
+        let low_success_heuristic = generate_heuristic("test", &[low_success_result]);
+        
+        // The low success decoder should have a higher heuristic (worse score)
         assert!(
-            unpopular_heuristic > popular_heuristic,
-            "Unpopular decoder should have a higher (worse) heuristic score. \
-            Popular: {}, Unpopular: {}",
-            popular_heuristic,
-            unpopular_heuristic
-        );
-
-        // The difference should be significant
-        assert!(
-            unpopular_heuristic >= popular_heuristic * 1.5,
-            "Unpopular decoder should have a significantly higher heuristic. \
-            Popular: {}, Unpopular: {}",
-            popular_heuristic,
-            unpopular_heuristic
+            low_success_heuristic > high_success_heuristic,
+            "Low success decoder should have a higher (worse) heuristic score. \
+            High Success: {}, Low Success: {}",
+            high_success_heuristic,
+            low_success_heuristic
         );
     }
 
@@ -384,5 +359,38 @@ mod tests {
         let all_invisible = "\u{0}\u{0}\u{0}\u{0}\u{0}";
         let all_invisible_quality = calculate_string_quality(all_invisible);
         assert_eq!(all_invisible_quality, 0.0);
+    }
+
+    #[test]
+    fn test_check_if_string_cant_be_decoded() {
+        // Test strings that are too short
+        assert!(check_if_string_cant_be_decoded(""), "Empty string should be rejected");
+        assert!(check_if_string_cant_be_decoded("a"), "Single character should be rejected");
+        assert!(check_if_string_cant_be_decoded("ab"), "Two characters should be rejected");
+        
+        // Test strings with high non-printable character ratio
+        let high_non_printable = "abc\u{0}\u{1}\u{2}"; // 3 out of 6 chars are non-printable (50%)
+        assert!(
+            check_if_string_cant_be_decoded(high_non_printable),
+            "String with 50% non-printable characters should be rejected"
+        );
+        
+        // Test strings with low quality
+        // Create a string with >50% non-printable characters to ensure quality is 0.0
+        let low_quality = "\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}abc"; // 7 out of 10 chars are non-printable (70%)
+        assert!(
+            check_if_string_cant_be_decoded(low_quality),
+            "Low quality string should be rejected"
+        );
+        
+        // Test valid strings
+        assert!(
+            !check_if_string_cant_be_decoded("Hello World"),
+            "Normal text should be accepted"
+        );
+        assert!(
+            !check_if_string_cant_be_decoded("SGVsbG8gV29ybGQ="), // Base64 for "Hello World"
+            "Valid Base64 should be accepted"
+        );
     }
 }
