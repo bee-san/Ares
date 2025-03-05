@@ -385,4 +385,4 @@ mod tests {
         let all_invisible_quality = calculate_string_quality(all_invisible);
         assert_eq!(all_invisible_quality, 0.0);
     }
-} 
+}

@@ -40,8 +40,8 @@ use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::searchers::helper_functions::{
-    calculate_string_quality, check_if_string_cant_be_decoded,
-    generate_heuristic, update_decoder_stats,
+    calculate_string_quality, check_if_string_cant_be_decoded, generate_heuristic,
+    update_decoder_stats,
 };
 use crate::DecoderResult;
 
