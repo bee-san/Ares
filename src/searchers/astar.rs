@@ -23,6 +23,7 @@
 //! The current implementation uses a simple placeholder heuristic of 1.0,
 //! but has been improved with Cipher Identifier for better prioritization.
 
+use crate::cli_pretty_printing;
 use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::{
     get_decoder_tagged_decoders, get_non_decoder_tagged_decoders, MyResults,
@@ -201,6 +202,25 @@ fn calculate_string_quality(s: &str) -> f32 {
     }
 }
 
+/// Calculate the ratio of non-printable characters in a string
+/// Returns a value between 0.0 (all printable) and 1.0 (all non-printable)
+fn calculate_non_printable_ratio(text: &str) -> f32 {
+    if text.is_empty() {
+        return 1.0;
+    }
+
+    let non_printable_count = text
+        .chars()
+        .filter(|&c| {
+            // Same criteria as before for non-printable chars
+            (c.is_control() && c != '\n' && c != '\r' && c != '\t')
+                || !c.is_ascii_graphic() && !c.is_ascii_whitespace() && !c.is_ascii_punctuation()
+        })
+        .count();
+
+    non_printable_count as f32 / text.len() as f32
+}
+
 /// A* search node with priority based on f = g + h
 ///
 /// Each node represents a state in the search space, with:
@@ -328,6 +348,11 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
             current_node.total_cost
         );
 
+        // Check stop signal again before processing node
+        if stop.load(std::sync::atomic::Ordering::Relaxed) {
+            break;
+        }
+
         // First, execute all "decoder"-tagged decoders immediately
         let mut decoder_tagged_decoders = get_decoder_tagged_decoders(&current_node.state);
 
@@ -347,6 +372,11 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 decoder_tagged_decoders.components.len()
             );
 
+            // Check stop signal before processing decoders
+            if stop.load(std::sync::atomic::Ordering::Relaxed) {
+                break;
+            }
+
             let athena_checker = Checker::<Athena>::new();
             let checker = CheckerTypes::CheckAthena(athena_checker);
             let decoder_results = decoder_tagged_decoders.run(&current_node.state.text[0], checker);
@@ -356,22 +386,34 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with decoder-tagged decoder");
-                    let mut decoders_used = current_node.state.path.clone();
-                    let text = res.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(res.clone());
-                    let result_text = DecoderResult {
-                        text,
-                        path: decoders_used,
-                    };
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: astar.rs - decoder-tagged decoder - res.success: {}",
+                        res.success
+                    ));
 
-                    decoded_how_many_times(curr_depth);
-                    result_sender
-                        .send(Some(result_text))
-                        .expect("Should successfully send the result");
+                    // Only exit if the result is truly successful (not rejected by human checker)
+                    if res.success {
+                        let mut decoders_used = current_node.state.path.clone();
+                        let text = res.unencrypted_text.clone().unwrap_or_default();
+                        decoders_used.push(res.clone());
+                        let result_text = DecoderResult {
+                            text,
+                            path: decoders_used,
+                        };
 
-                    // Stop further iterations
-                    stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                    return;
+                        decoded_how_many_times(curr_depth);
+                        cli_pretty_printing::success(&format!("DEBUG: astar.rs - decoder-tagged decoder - Sending successful result with {} decoders", result_text.path.len()));
+                        result_sender
+                            .send(Some(result_text))
+                            .expect("Should successfully send the result");
+
+                        // Stop further iterations
+                        stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                        return;
+                    } else {
+                        // If human checker rejected, continue the search
+                        trace!("Human checker rejected the result, continuing search");
+                    }
                 }
                 MyResults::Continue(results_vec) => {
                     // Process results and add to open set
@@ -493,6 +535,11 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 non_decoder_decoders.components.len()
             );
 
+            // Check stop signal before processing decoders
+            if stop.load(std::sync::atomic::Ordering::Relaxed) {
+                break;
+            }
+
             let athena_checker = Checker::<Athena>::new();
             let checker = CheckerTypes::CheckAthena(athena_checker);
             let decoder_results = non_decoder_decoders.run(&current_node.state.text[0], checker);
@@ -502,22 +549,34 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with non-decoder-tagged decoder");
-                    let mut decoders_used = current_node.state.path.clone();
-                    let text = res.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(res.clone());
-                    let result_text = DecoderResult {
-                        text,
-                        path: decoders_used,
-                    };
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: astar.rs - non-decoder-tagged decoder - res.success: {}",
+                        res.success
+                    ));
 
-                    decoded_how_many_times(curr_depth);
-                    result_sender
-                        .send(Some(result_text))
-                        .expect("Should successfully send the result");
+                    // Only exit if the result is truly successful (not rejected by human checker)
+                    if res.success {
+                        let mut decoders_used = current_node.state.path.clone();
+                        let text = res.unencrypted_text.clone().unwrap_or_default();
+                        decoders_used.push(res.clone());
+                        let result_text = DecoderResult {
+                            text,
+                            path: decoders_used,
+                        };
 
-                    // Stop further iterations
-                    stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                    return;
+                        decoded_how_many_times(curr_depth);
+                        cli_pretty_printing::success(&format!("DEBUG: astar.rs - non-decoder-tagged decoder - Sending successful result with {} decoders", result_text.path.len()));
+                        result_sender
+                            .send(Some(result_text))
+                            .expect("Should successfully send the result");
+
+                        // Stop further iterations
+                        stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                        return;
+                    } else {
+                        // If human checker rejected, continue the search
+                        trace!("Human checker rejected the result, continuing search");
+                    }
                 }
                 MyResults::Continue(results_vec) => {
                     // Process results and add to open set with heuristic prioritization
@@ -623,8 +682,37 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         curr_depth += 1;
     }
 
-    trace!("A* search completed without finding a solution");
-    result_sender.try_send(None).ok();
+    // Check if we were stopped or if we genuinely couldn't find a solution
+    if stop.load(std::sync::atomic::Ordering::Relaxed) {
+        trace!("A* search stopped by external signal");
+    } else {
+        trace!("A* search completed without finding a solution");
+        result_sender.try_send(None).ok();
+    }
+}
+
+/// Get the popularity rating of a decoder by its name
+/// Popularity is a value between 0.0 and 1.0 where higher values indicate more common decoders
+fn get_decoder_popularity(decoder: &str) -> f32 {
+    // This is a static mapping of decoder names to their popularity
+    // In a more sophisticated implementation, this could be loaded from a configuration file
+    // or stored in a database
+    match decoder {
+        "Base64" => 1.0,
+        "Hexadecimal" => 1.0,
+        "Binary" => 1.0,
+        "rot13" => 1.0,
+        "rot47" => 1.0,
+        "Base32" => 0.8,
+        "Vigenere" => 0.8,
+        "Base58" => 0.7,
+        "Base85" => 0.5,
+        "simplesubstitution" => 0.5,
+        "Base91" => 0.3,
+        "Citrix Ctx1" => 0.1,
+        // Default for unknown decoders
+        _ => 0.5,
+    }
 }
 
 /// Generate a heuristic value for A* search prioritization
@@ -641,25 +729,34 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 /// # Returns
 /// A float value representing the heuristic cost (lower is better)
 fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
-    // Get base score from Cipher Identifier
     let (cipher, base_score) = get_cipher_identifier_score(text);
-
-    // Adjust based on path context
     let mut final_score = base_score;
 
     if let Some(last_result) = path.last() {
-        // Adjust based on common sequences
-        if is_common_sequence(last_result.decoder, &cipher) {
-            final_score *= 0.8; // Bonus for common sequences
+        // Penalize uncommon sequences instead of rewarding common ones
+        if !is_common_sequence(last_result.decoder, &cipher) {
+            final_score *= 1.25; // 25% penalty for uncommon sequences
         }
 
-        // Adjust based on decoder success rate
+        // Penalize low success rates instead of rewarding high ones
         let success_rate = get_decoder_success_rate(last_result.decoder);
-        final_score *= 1.0 - success_rate * 0.2; // Success rate can reduce score by up to 20%
+        final_score *= 1.0 + (1.0 - success_rate); // Penalty scales with failure rate
+
+        // Penalize decoders with low popularity
+        let popularity = get_decoder_popularity(last_result.decoder);
+        // Apply a significant penalty for unpopular decoders
+        // The penalty is inversely proportional to the popularity
+        final_score *= 1.0 + (2.0 * (1.0 - popularity)); // Penalty scales with unpopularity
     }
 
-    // Adjust based on string quality
-    final_score *= calculate_string_quality(text);
+    // Penalize low quality strings
+    final_score *= 1.0 + (1.0 - calculate_string_quality(text));
+
+    // Keep the non-printable penalty as is since it's already using a penalty approach
+    let non_printable_ratio = calculate_non_printable_ratio(text);
+    if non_printable_ratio > 0.0 {
+        final_score *= 1.0 + (non_printable_ratio * 100.0).exp();
+    }
 
     final_score
 }
@@ -680,12 +777,13 @@ fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
 /// Filtering out these strings early saves computational resources and
 /// prevents the search from exploring unproductive paths.
 fn check_if_string_cant_be_decoded(text: &str) -> bool {
-    text.len() <= 2
+    text.len() <= 2 // Only check length now, non-printable chars handled by heuristic
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::Decoder;
     use crossbeam::channel::bounded;
 
     #[test]
@@ -716,9 +814,90 @@ mod tests {
 
     #[test]
     fn test_generate_heuristic() {
-        // Test with a Caesar cipher (should return 0.1)
-        // Just test that the function runs without errors
-        let h = generate_heuristic("KHOOR ZRUOG", &[]);
-        assert!((0.0..=1.0).contains(&h));
+        // Test with normal text (should have relatively low score)
+        let normal_h = generate_heuristic("Hello World", &[]);
+
+        // Test with suspicious text (should have higher score)
+        let suspicious_h = generate_heuristic("H\u{0}ll\u{1} W\u{2}rld", &[]);
+
+        // Test with all non-printable (should have highest score)
+        let nonprint_h = generate_heuristic("\u{0}\u{1}\u{2}", &[]);
+
+        // Verify that penalties create appropriate ordering
+        assert!(normal_h < suspicious_h);
+        assert!(suspicious_h < nonprint_h);
+
+        // Verify base case isn't negative
+        assert!(normal_h >= 0.0);
+    }
+
+    #[test]
+    fn test_calculate_non_printable_ratio() {
+        // Test normal text
+        assert_eq!(calculate_non_printable_ratio("Hello World"), 0.0);
+        assert_eq!(calculate_non_printable_ratio("123!@#\n\t"), 0.0);
+
+        // Test mixed content
+        let mixed = "Hello\u{0}World\u{1}".to_string(); // 2 non-printable in 12 chars
+        assert!((calculate_non_printable_ratio(&mixed) - 0.1666).abs() < 0.001);
+
+        // Test all non-printable
+        assert_eq!(calculate_non_printable_ratio("\u{0}\u{1}\u{2}"), 1.0);
+
+        // Test empty string
+        assert_eq!(calculate_non_printable_ratio(""), 1.0);
+    }
+
+    #[test]
+    fn test_heuristic_with_non_printable() {
+        // Test normal text
+        let normal = generate_heuristic("Hello World", &[]);
+
+        // Test text with some non-printable chars
+        let with_non_printable = generate_heuristic("Hello\u{0}World", &[]);
+
+        // Test text with all non-printable chars
+        let all_non_printable = generate_heuristic("\u{0}\u{1}\u{2}", &[]);
+
+        // Verify that more non-printable chars result in higher (worse) scores
+        assert!(normal < with_non_printable);
+        assert!(with_non_printable < all_non_printable);
+        assert!(all_non_printable > 100.0); // Should be very high for all non-printable
+    }
+
+    #[test]
+    fn test_popularity_affects_heuristic() {
+        // Create two identical paths but with different decoders
+        let popular_decoder = "Base64"; // Popularity 1.0
+        let unpopular_decoder = "Citrix Ctx1"; // Popularity 0.1
+
+        // Create CrackResults with different decoders
+        let mut popular_result = CrackResult::new(&Decoder::default(), "test".to_string());
+        popular_result.decoder = popular_decoder;
+
+        let mut unpopular_result = CrackResult::new(&Decoder::default(), "test".to_string());
+        unpopular_result.decoder = unpopular_decoder;
+
+        // Generate heuristics for both paths
+        let popular_heuristic = generate_heuristic("test", &[popular_result]);
+        let unpopular_heuristic = generate_heuristic("test", &[unpopular_result]);
+
+        // The unpopular decoder should have a higher heuristic (worse score)
+        assert!(
+            unpopular_heuristic > popular_heuristic,
+            "Unpopular decoder should have a higher (worse) heuristic score. \
+            Popular: {}, Unpopular: {}",
+            popular_heuristic,
+            unpopular_heuristic
+        );
+
+        // The difference should be significant
+        assert!(
+            unpopular_heuristic >= popular_heuristic * 1.5,
+            "Unpopular decoder should have a significantly higher heuristic. \
+            Popular: {}, Unpopular: {}",
+            popular_heuristic,
+            unpopular_heuristic
+        );
     }
 }
