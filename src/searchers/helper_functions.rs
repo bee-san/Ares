@@ -148,9 +148,8 @@ pub fn calculate_non_printable_ratio(text: &str) -> f32 {
     let non_printable_count = text
         .chars()
         .filter(|&c| {
-            // Same criteria as before for non-printable chars
-            (c.is_control() && c != '\n' && c != '\r' && c != '\t')
-                || !c.is_ascii_graphic() && !c.is_ascii_whitespace() && !c.is_ascii_punctuation()
+            // Only count control characters (except common whitespace) and non-ASCII as non-printable
+            (c.is_control() && c != '\n' && c != '\r' && c != '\t') || !c.is_ascii()
         })
         .count();
 

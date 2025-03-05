@@ -1,7 +1,7 @@
 //! Vigenère cipher decoder with automated key detection
 //! Uses Index of Coincidence (IoC) for key length detection and frequency analysis for key discovery
 //! Returns Option<String> with the decrypted text if successful
-//! Uses Low sensitivity for gibberish detection as the default.
+//! Uses Medium sensitivity for gibberish detection as the default.
 
 use super::crack_results::CrackResult;
 use super::interface::{Crack, Decoder};
@@ -21,7 +21,7 @@ impl Crack for Decoder<VigenereDecoder> {
     fn new() -> Decoder<VigenereDecoder> {
         Decoder {
             name: "Vigenere",
-            description: "A polyalphabetic substitution cipher using a keyword to shift each letter. This implementation automatically detects the key length and breaks the cipher. Uses Low sensitivity for gibberish detection.",
+            description: "A polyalphabetic substitution cipher using a keyword to shift each letter. This implementation automatically detects the key length and breaks the cipher. Uses Medium sensitivity for gibberish detection.",
             link: "https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher",
             tags: vec!["substitution", "classical"],
             popularity: 0.8,
@@ -72,8 +72,8 @@ impl Crack for Decoder<VigenereDecoder> {
             return results;
         }
 
-        // Use Low sensitivity for Vigenere decoder
-        let checker_with_sensitivity = checker.with_sensitivity(Sensitivity::Low);
+        // Use Medium sensitivity for Vigenere decoder
+        let checker_with_sensitivity = checker.with_sensitivity(Sensitivity::Medium);
         let checker_result = checker_with_sensitivity.check(&final_text);
 
         results.unencrypted_text = Some(vec![final_text]);
