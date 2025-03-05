@@ -911,15 +911,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "directories"
-version = "5.0.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9a49173b84e034382284f27f1af4dcbbd231ffa358c0fe316541a7337f376a35"
-dependencies = [
- "dirs-sys",
-]
-
-[[package]]
 name = "dirs"
 version = "5.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1313,9 +1304,9 @@ dependencies = [
 
 [[package]]
 name = "gibberish-or-not"
-version = "2.0.0"
+version = "3.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7581955bcbc8f2857881e9a4d0f3a00f55972e49de4bcddbb28ea32e2f6cb46c"
+checksum = "8cfd9cad06bc38e80a721f7661b6e0ac34696af1586cd597296fbe66f68bd87b"
 dependencies = [
  "encoding_rs",
  "lazy_static",
@@ -2480,9 +2471,9 @@ dependencies = [
 
 [[package]]
 name = "proc-macro2"
-version = "1.0.93"
+version = "1.0.94"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "60946a68e5f9d28b0dc1c21bb8a97ee7d018a8b322fa57838ba31cc878e22d99"
+checksum = "a31971752e70b8b2686d7e46ec17fb38dad4051d94024c88df49b667caea9c84"
 dependencies = [
  "unicode-ident",
 ]
@@ -2503,7 +2494,6 @@ dependencies = [
  "criterion",
  "crossbeam",
  "data-encoding",
- "directories",
  "dirs",
  "env_logger",
  "gibberish-or-not",

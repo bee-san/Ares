@@ -16,7 +16,20 @@ pub mod checkers;
 pub mod cli;
 /// CLI Input Parser parses the input from the CLI and returns a struct.
 mod cli_input_parser;
-/// The CLI Pretty Printing module contains the functions that print the results
+/// CLI Pretty Printing module for consistent output formatting
+///
+/// # Examples
+/// ```
+/// use ares::cli_pretty_printing::{success, warning};
+///
+/// // Print a success message
+/// let success_msg = success("Operation completed successfully");
+/// assert!(!success_msg.is_empty());
+///
+/// // Print a warning message
+/// let warning_msg = warning("Please check your input");
+/// assert!(!warning_msg.is_empty());
+/// ```
 pub mod cli_pretty_printing;
 /// The Config module enables a configuration module
 /// Like a global API to access config details
@@ -44,6 +57,7 @@ use log::debug;
 use crate::{config::Config, decoders::interface::Decoder};
 
 use self::decoders::crack_results::CrackResult;
+
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ares::perform_cracking;
@@ -103,9 +117,24 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
+    cli_pretty_printing::success(&format!(
+        "DEBUG: lib.rs - Calling search_for_plaintext with text: {}",
+        text
+    ));
     // Perform the search algorithm
     // It will either return a failure or success.
-    searchers::search_for_plaintext(text)
+    let result = searchers::search_for_plaintext(text);
+    cli_pretty_printing::success(&format!(
+        "DEBUG: lib.rs - Result from search_for_plaintext: {:?}",
+        result.is_some()
+    ));
+    if let Some(ref res) = result {
+        cli_pretty_printing::success(&format!(
+            "DEBUG: lib.rs - Result has {} decoders in path",
+            res.path.len()
+        ));
+    }
+    result
 }
 
 /// Checks if the given input is plaintext or not

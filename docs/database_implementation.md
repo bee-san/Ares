@@ -139,22 +139,6 @@ sequenceDiagram
     end
 ```
 
-### 5. Error Handling
-
-```rust
-#[derive(Debug, thiserror::Error)]
-pub enum DatabaseError {
-    #[error("Failed to initialize database: {0}")]
-    InitializationError(#[from] rusqlite::Error),
-    
-    #[error("Failed to serialize path: {0}")]
-    SerializationError(#[from] serde_json::Error),
-    
-    #[error("Database operation failed: {0}")]
-    OperationError(String),
-}
-```
-
 ### 6. Testing Strategy
 
 1. Unit Tests

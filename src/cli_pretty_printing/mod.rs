@@ -17,7 +17,7 @@
 //!
 //! # Usage
 //! ```rust
-//! use crate::cli_pretty_printing::{success, warning};
+//! use ares::cli_pretty_printing::{success, warning};
 //!
 //! // Print a success message
 //! println!("{}", success("Operation completed successfully"));
@@ -48,18 +48,20 @@ use text_io::read;
 /// * `Option<(u8, u8, u8)>` - The parsed RGB values if valid, None if invalid
 ///
 /// # Examples
-/// ```rust
+/// ```
+/// use ares::cli_pretty_printing::parse_rgb;
+///
 /// // Valid formats:
-/// "255,0,0"     // Pure red
-/// "0, 255, 0"   // Pure green with spaces
-/// "0,0,255"     // Pure blue
+/// assert!(parse_rgb("255,0,0").is_some());     // Pure red
+/// assert!(parse_rgb("0, 255, 0").is_some());   // Pure green with spaces
+/// assert!(parse_rgb("0,0,255").is_some());     // Pure blue
 /// ```
 ///
 /// # Errors
 /// Returns None if:
 /// - The string is not in the correct format (must have exactly 2 commas)
 /// - Any value cannot be parsed as a u8 (must be 0-255)
-fn parse_rgb(rgb: &str) -> Option<(u8, u8, u8)> {
+pub fn parse_rgb(rgb: &str) -> Option<(u8, u8, u8)> {
     let parts: Vec<&str> = rgb.split(',').collect();
     if parts.len() != 3 {
         eprintln!("Invalid RGB format: '{}'. Expected format: 'r,g,b' where r,g,b are numbers between 0-255", rgb);
@@ -157,11 +159,15 @@ fn color_string(text: &str, role: &str) -> String {
 /// * `String` - The colored text string
 ///
 /// # Examples
-/// ```rust
+/// ```
+/// use ares::cli_pretty_printing::statement;
+///
 /// let info = statement("Status update", Some("informational"));
 /// let neutral = statement("Regular text", None);
+/// assert!(!info.is_empty());
+/// assert!(!neutral.is_empty());
 /// ```
-fn statement(text: &str, role: Option<&str>) -> String {
+pub fn statement(text: &str, role: Option<&str>) -> String {
     match role {
         Some(r) => color_string(text, r),
         None => color_string(text, "statement"),
@@ -179,7 +185,7 @@ fn statement(text: &str, role: Option<&str>) -> String {
 /// # Returns
 /// * `String` - The text colored in the warning color
 #[allow(dead_code)]
-fn warning(text: &str) -> String {
+pub fn warning(text: &str) -> String {
     color_string(text, "warning")
 }
 
@@ -192,7 +198,7 @@ fn warning(text: &str) -> String {
 ///
 /// # Returns
 /// * `String` - The text colored in the success color
-fn success(text: &str) -> String {
+pub fn success(text: &str) -> String {
     color_string(text, "success")
 }
 
@@ -460,4 +466,18 @@ pub fn warning_unknown_config_key(key: &str) {
             key
         ))
     );
+}
+
+#[test]
+fn test_parse_rgb() {
+    let test_cases = vec![
+        "255,0,0",   // Pure red
+        "0, 255, 0", // Pure green with spaces
+        "0,0,255",   // Pure blue
+    ];
+
+    for case in test_cases {
+        let result = parse_rgb(case);
+        assert!(result.is_some());
+    }
 }
