@@ -3,6 +3,9 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 
+///! Module housing functions for managing SQLite database
+pub mod database;
+
 /// English letter frequency distribution (A-Z)
 /// Used for frequency analysis in various decoders
 pub const ENGLISH_FREQS: [f64; 26] = [
