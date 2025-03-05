@@ -4,7 +4,6 @@
 //! for decoding encrypted or encoded text.
 
 use crate::CrackResult;
-use log::warn;
 use once_cell::sync::Lazy;
 use rand::Rng;
 use std::collections::HashMap;

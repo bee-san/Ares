@@ -32,7 +32,6 @@ use crossbeam::channel::Sender;
 
 use log::{trace, warn};
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
@@ -41,10 +40,9 @@ use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::searchers::helper_functions::{
-    calculate_non_printable_ratio, calculate_string_quality, check_if_string_cant_be_decoded,
+    calculate_string_quality, check_if_string_cant_be_decoded,
     generate_heuristic, update_decoder_stats,
 };
-use crate::CrackResult;
 use crate::DecoderResult;
 
 /// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
@@ -529,10 +527,6 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::searchers::helper_functions::{
-        calculate_non_printable_ratio, calculate_string_quality, generate_heuristic,
-    };
-    use crate::Decoder;
     use crossbeam::channel::bounded;
 
     #[test]
