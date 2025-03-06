@@ -58,3 +58,56 @@ impl Check for Checker<LemmeKnow> {
 fn format_data_result(input: &Data) -> String {
     input.name.to_string()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::checkers::checker_type::{Check, Checker};
+    use gibberish_or_not::Sensitivity;
+
+    #[test]
+    fn test_url_exact_match() {
+        let checker = Checker::<LemmeKnow>::new().with_sensitivity(Sensitivity::Low);
+        assert!(checker.check("https://google.com").is_identified);
+    }
+
+    #[test]
+    fn test_url_with_extra_text_fails() {
+        let checker = Checker::<LemmeKnow>::new().with_sensitivity(Sensitivity::Low);
+        assert!(
+            !checker
+                .check("https://google.com and some text")
+                .is_identified
+        );
+    }
+
+    #[test]
+    fn test_ip_exact_match() {
+        let checker = Checker::<LemmeKnow>::new().with_sensitivity(Sensitivity::Low);
+        assert!(checker.check("192.168.1.1").is_identified);
+    }
+
+    #[test]
+    fn test_ip_with_extra_text_fails() {
+        let checker = Checker::<LemmeKnow>::new().with_sensitivity(Sensitivity::Low);
+        assert!(!checker.check("IP is 192.168.1.1").is_identified);
+    }
+
+    #[test]
+    fn test_s3_path() {
+        let checker = Checker::<LemmeKnow>::new().with_sensitivity(Sensitivity::Low);
+        assert!(checker.check("s3://bucket/path/key").is_identified);
+    }
+
+    // Lemmeknow can only match if its an EXACT match
+    // So this should fail
+    #[test]
+    fn test_bitcoin_with_extra_text_fails() {
+        let checker = Checker::<LemmeKnow>::new().with_sensitivity(Sensitivity::Low);
+        assert!(
+            !checker
+                .check("BTC address: 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2")
+                .is_identified
+        );
+    }
+}

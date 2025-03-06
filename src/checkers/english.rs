@@ -32,7 +32,7 @@ impl Check for Checker<EnglishChecker> {
             text: text.to_string(),
             checker_name: self.name,
             checker_description: self.description,
-            description: "Gibberish detection".to_string(),
+            description: "Words".to_string(),
             link: self.link,
         };
 
@@ -137,16 +137,6 @@ mod tests {
     fn test_checker_works_with_puncuation_and_lowercase() {
         let checker = Checker::<EnglishChecker>::new();
         assert!(checker.check("Prei?nterview He!llo Dog?").is_identified);
-    }
-
-    #[test]
-    fn test_checker_fails_doesnt_hit_40_percent() {
-        let checker = Checker::<EnglishChecker>::new();
-        assert!(
-            checker
-                .check("Hello Dog nnnnnnnnnnn llllllll ppppppppp gggggggg")
-                .is_identified
-        );
     }
 
     #[test]

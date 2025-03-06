@@ -23,6 +23,7 @@
 //! The current implementation uses a simple placeholder heuristic of 1.0,
 //! but has been improved with Cipher Identifier for better prioritization.
 
+use crate::cli_pretty_printing;
 use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::{
     get_decoder_tagged_decoders, get_non_decoder_tagged_decoders, MyResults,
@@ -30,19 +31,18 @@ use crate::filtration_system::{
 use crossbeam::channel::Sender;
 
 use log::{trace, warn};
-use once_cell::sync::Lazy;
-use rand::Rng;
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;
 use std::sync::Arc;
-use std::sync::Mutex;
 
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
-use crate::CrackResult;
+use crate::searchers::helper_functions::{
+    calculate_string_quality, check_if_string_cant_be_decoded, generate_heuristic,
+    update_decoder_stats,
+};
 use crate::DecoderResult;
 
 /// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
@@ -53,153 +53,6 @@ const INITIAL_PRUNE_THRESHOLD: usize = PRUNE_THRESHOLD;
 
 /// Maximum depth for search (used for dynamic threshold adjustment)
 const MAX_DEPTH: u32 = 100;
-
-/// Mapping between Cipher Identifier's cipher names and Ares decoder names
-///
-/// This static mapping allows us to translate between the cipher types identified by
-/// Cipher Identifier and the corresponding decoders available in Ares.
-///
-/// For example:
-/// - "fractionatedMorse" maps to "MorseCodeDecoder"
-/// - "atbash" maps to "AtbashDecoder"
-/// - "caesar" maps to "CaesarDecoder"
-static CIPHER_MAPPING: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
-    let mut map = HashMap::new();
-    map.insert("fractionatedMorse", "morseCode");
-    map.insert("atbash", "atbash");
-    map.insert("caesar", "caesar");
-    map.insert("railfence", "railfence");
-    map.insert("rot47", "rot47");
-    map.insert("a1z26", "a1z26");
-    map.insert("simplesubstitution", "simplesubstitution");
-    // Add more mappings as needed
-    map
-});
-
-/// Track decoder success rates for adaptive learning
-static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
-    Lazy::new(|| Mutex::new(HashMap::new()));
-
-/// Update decoder statistics based on success or failure
-///
-/// # Arguments
-///
-/// * `decoder` - The name of the decoder
-/// * `success` - Whether the decoder was successful
-fn update_decoder_stats(decoder: &str, success: bool) {
-    let mut stats = DECODER_SUCCESS_RATES.lock().unwrap();
-    let (successes, total) = stats.entry(decoder.to_string()).or_insert((0, 0));
-
-    if success {
-        *successes += 1;
-    }
-    *total += 1;
-
-    // TODO: Write this data to a file for persistence
-}
-
-/// Get the success rate of a decoder
-///
-/// # Arguments
-///
-/// * `decoder` - The name of the decoder
-///
-/// # Returns
-///
-/// * The success rate as a float between 0.0 and 1.0
-fn get_decoder_success_rate(decoder: &str) -> f32 {
-    let stats = DECODER_SUCCESS_RATES.lock().unwrap();
-    if let Some((successes, total)) = stats.get(decoder) {
-        if *total > 0 {
-            return *successes as f32 / *total as f32;
-        }
-    }
-
-    // Default for unknown decoders
-    0.5
-}
-
-/// Get the cipher identification score for a text
-///
-/// # Arguments
-///
-/// * `text` - The text to analyze
-///
-/// # Returns
-///
-/// * A tuple containing the identified cipher and its score
-fn get_cipher_identifier_score(text: &str) -> (String, f32) {
-    let results = cipher_identifier::identify_cipher::identify_cipher(text, 5, None);
-
-    for (cipher, score) in results {
-        if let Some(_decoder) = CIPHER_MAPPING.get(cipher.as_str()) {
-            return (cipher, (score / 10.0) as f32);
-        }
-    }
-
-    // Default if no match
-    let mut rng = rand::thread_rng();
-    ("unknown".to_string(), rng.gen_range(0.5..1.0) as f32)
-}
-
-/// Check if a decoder and cipher form a common sequence
-///
-/// # Arguments
-///
-/// * `prev_decoder` - The name of the previous decoder
-/// * `current_cipher` - The name of the current cipher
-///
-/// # Returns
-///
-/// * `true` if the sequence is common, `false` otherwise
-fn is_common_sequence(prev_decoder: &str, current_cipher: &str) -> bool {
-    // Define common sequences focusing on base decoders
-    match (prev_decoder, current_cipher) {
-        // Base64 commonly followed by other encodings
-        ("Base64Decoder", "Base32Decoder") => true,
-        ("Base64Decoder", "Base58Decoder") => true,
-        ("Base64Decoder", "Base85Decoder") => true,
-        ("Base64Decoder", "Base64Decoder") => true,
-
-        // Base32 sequences
-        ("Base32Decoder", "Base64Decoder") => true,
-        ("Base32Decoder", "Base85Decoder") => true,
-        ("Base32Decoder", "Base32Decoder") => true,
-
-        // Base58 sequences
-        ("Base58Decoder", "Base64Decoder") => true,
-        ("Base58Decoder", "Base32Decoder") => true,
-        ("Base58Decoder", "Base58Decoder") => true,
-
-        // Base85 sequences
-        ("Base85Decoder", "Base64Decoder") => true,
-        ("Base85Decoder", "Base32Decoder") => true,
-        ("Base85Decoder", "Base85Decoder") => true,
-        // No match found
-        _ => false,
-    }
-}
-
-/// Calculate the quality of a string for pruning
-///
-/// # Arguments
-///
-/// * `s` - The string to evaluate
-///
-/// # Returns
-///
-/// * A quality score between 0.0 and 1.0
-fn calculate_string_quality(s: &str) -> f32 {
-    // Factors to consider:
-    // 1. Length (not too short, not too long
-    if s.len() < 3 {
-        0.1
-    } else if s.len() > 5000 {
-        0.3
-    } else {
-        1.0 - (s.len() as f32 - 100.0).abs() / 900.0
-    }
-}
 
 /// A* search node with priority based on f = g + h
 ///
@@ -328,6 +181,11 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
             current_node.total_cost
         );
 
+        // Check stop signal again before processing node
+        if stop.load(std::sync::atomic::Ordering::Relaxed) {
+            break;
+        }
+
         // First, execute all "decoder"-tagged decoders immediately
         let mut decoder_tagged_decoders = get_decoder_tagged_decoders(&current_node.state);
 
@@ -347,6 +205,11 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 decoder_tagged_decoders.components.len()
             );
 
+            // Check stop signal before processing decoders
+            if stop.load(std::sync::atomic::Ordering::Relaxed) {
+                break;
+            }
+
             let athena_checker = Checker::<Athena>::new();
             let checker = CheckerTypes::CheckAthena(athena_checker);
             let decoder_results = decoder_tagged_decoders.run(&current_node.state.text[0], checker);
@@ -356,22 +219,34 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with decoder-tagged decoder");
-                    let mut decoders_used = current_node.state.path.clone();
-                    let text = res.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(res.clone());
-                    let result_text = DecoderResult {
-                        text,
-                        path: decoders_used,
-                    };
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: astar.rs - decoder-tagged decoder - res.success: {}",
+                        res.success
+                    ));
 
-                    decoded_how_many_times(curr_depth);
-                    result_sender
-                        .send(Some(result_text))
-                        .expect("Should successfully send the result");
+                    // Only exit if the result is truly successful (not rejected by human checker)
+                    if res.success {
+                        let mut decoders_used = current_node.state.path.clone();
+                        let text = res.unencrypted_text.clone().unwrap_or_default();
+                        decoders_used.push(res.clone());
+                        let result_text = DecoderResult {
+                            text,
+                            path: decoders_used,
+                        };
 
-                    // Stop further iterations
-                    stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                    return;
+                        decoded_how_many_times(curr_depth);
+                        cli_pretty_printing::success(&format!("DEBUG: astar.rs - decoder-tagged decoder - Sending successful result with {} decoders", result_text.path.len()));
+                        result_sender
+                            .send(Some(result_text))
+                            .expect("Should successfully send the result");
+
+                        // Stop further iterations
+                        stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                        return;
+                    } else {
+                        // If human checker rejected, continue the search
+                        trace!("Human checker rejected the result, continuing search");
+                    }
                 }
                 MyResults::Continue(results_vec) => {
                     // Process results and add to open set
@@ -493,6 +368,11 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 non_decoder_decoders.components.len()
             );
 
+            // Check stop signal before processing decoders
+            if stop.load(std::sync::atomic::Ordering::Relaxed) {
+                break;
+            }
+
             let athena_checker = Checker::<Athena>::new();
             let checker = CheckerTypes::CheckAthena(athena_checker);
             let decoder_results = non_decoder_decoders.run(&current_node.state.text[0], checker);
@@ -502,22 +382,34 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 MyResults::Break(res) => {
                     // Handle successful decoding
                     trace!("Found successful decoding with non-decoder-tagged decoder");
-                    let mut decoders_used = current_node.state.path.clone();
-                    let text = res.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(res.clone());
-                    let result_text = DecoderResult {
-                        text,
-                        path: decoders_used,
-                    };
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: astar.rs - non-decoder-tagged decoder - res.success: {}",
+                        res.success
+                    ));
 
-                    decoded_how_many_times(curr_depth);
-                    result_sender
-                        .send(Some(result_text))
-                        .expect("Should successfully send the result");
+                    // Only exit if the result is truly successful (not rejected by human checker)
+                    if res.success {
+                        let mut decoders_used = current_node.state.path.clone();
+                        let text = res.unencrypted_text.clone().unwrap_or_default();
+                        decoders_used.push(res.clone());
+                        let result_text = DecoderResult {
+                            text,
+                            path: decoders_used,
+                        };
 
-                    // Stop further iterations
-                    stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                    return;
+                        decoded_how_many_times(curr_depth);
+                        cli_pretty_printing::success(&format!("DEBUG: astar.rs - non-decoder-tagged decoder - Sending successful result with {} decoders", result_text.path.len()));
+                        result_sender
+                            .send(Some(result_text))
+                            .expect("Should successfully send the result");
+
+                        // Stop further iterations
+                        stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                        return;
+                    } else {
+                        // If human checker rejected, continue the search
+                        trace!("Human checker rejected the result, continuing search");
+                    }
                 }
                 MyResults::Continue(results_vec) => {
                     // Process results and add to open set with heuristic prioritization
@@ -623,64 +515,13 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         curr_depth += 1;
     }
 
-    trace!("A* search completed without finding a solution");
-    result_sender.try_send(None).ok();
-}
-
-/// Generate a heuristic value for A* search prioritization
-///
-/// The heuristic estimates how close a state is to being plaintext.
-/// A lower value indicates a more promising state. This implementation uses
-/// Cipher Identifier to identify the most likely ciphers for the given text.
-///
-/// # Parameters
-///
-/// * `text` - The text to analyze for cipher identification
-/// * `path` - The path of decoders used to reach the current state
-///
-/// # Returns
-/// A float value representing the heuristic cost (lower is better)
-fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
-    // Get base score from Cipher Identifier
-    let (cipher, base_score) = get_cipher_identifier_score(text);
-
-    // Adjust based on path context
-    let mut final_score = base_score;
-
-    if let Some(last_result) = path.last() {
-        // Adjust based on common sequences
-        if is_common_sequence(last_result.decoder, &cipher) {
-            final_score *= 0.8; // Bonus for common sequences
-        }
-
-        // Adjust based on decoder success rate
-        let success_rate = get_decoder_success_rate(last_result.decoder);
-        final_score *= 1.0 - success_rate * 0.2; // Success rate can reduce score by up to 20%
+    // Check if we were stopped or if we genuinely couldn't find a solution
+    if stop.load(std::sync::atomic::Ordering::Relaxed) {
+        trace!("A* search stopped by external signal");
+    } else {
+        trace!("A* search completed without finding a solution");
+        result_sender.try_send(None).ok();
     }
-
-    // Adjust based on string quality
-    final_score *= calculate_string_quality(text);
-
-    final_score
-}
-
-/// Determines if a string is too short to be meaningfully decoded
-///
-/// ## Decision Criteria
-///
-/// A string is considered undecodeble if:
-/// - It has 2 or fewer characters
-///
-/// ## Rationale
-///
-/// 1. The gibberish_or_not library requires at least 3 characters to work effectively
-/// 2. LemmeKnow and other pattern matchers perform poorly on very short strings
-/// 3. Most encoding schemes produce output of at least 3 characters
-///
-/// Filtering out these strings early saves computational resources and
-/// prevents the search from exploring unproductive paths.
-fn check_if_string_cant_be_decoded(text: &str) -> bool {
-    text.len() <= 2
 }
 
 #[cfg(test)]
@@ -712,13 +553,5 @@ mod tests {
         // The algorithm should complete without hanging
         let result = rx.recv().unwrap();
         assert!(result.is_some());
-    }
-
-    #[test]
-    fn test_generate_heuristic() {
-        // Test with a Caesar cipher (should return 0.1)
-        // Just test that the function runs without errors
-        let h = generate_heuristic("KHOOR ZRUOG", &[]);
-        assert!((0.0..=1.0).contains(&h));
     }
 }

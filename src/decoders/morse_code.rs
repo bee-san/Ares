@@ -82,7 +82,6 @@ fn normalise_morse_string(text: &str) -> String {
 
 /// Maps morse code to its alphanumeric character, returns None for invalid morse-code
 fn morse_to_alphanumeric(text: &str) -> Option<&str> {
-    trace!("Starting to map morse code to alphanumeric");
     let result = match text {
         ".-" => "A",
         "-..." => "B",
