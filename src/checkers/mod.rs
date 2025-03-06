@@ -6,6 +6,7 @@ use self::{
     lemmeknow_checker::LemmeKnow,
     password::PasswordChecker,
     regex_checker::RegexChecker,
+    wordlist::WordlistChecker,
 };
 
 use gibberish_or_not::Sensitivity;
@@ -28,6 +29,8 @@ pub mod lemmeknow_checker;
 pub mod password;
 /// The Regex checker checks to see if the intended text matches the plaintext
 pub mod regex_checker;
+/// The Wordlist checker checks if the text exactly matches any word in a user-provided wordlist
+pub mod wordlist;
 
 /// CheckerTypes is a wrapper enum for Checker
 pub enum CheckerTypes {
@@ -41,6 +44,8 @@ pub enum CheckerTypes {
     CheckRegex(Checker<RegexChecker>),
     /// Wrapper for Password Checker
     CheckPassword(Checker<PasswordChecker>),
+    /// Wrapper for Wordlist Checker
+    CheckWordlist(Checker<WordlistChecker>),
 }
 
 impl CheckerTypes {
@@ -52,6 +57,7 @@ impl CheckerTypes {
             CheckerTypes::CheckAthena(athena_checker) => athena_checker.check(text),
             CheckerTypes::CheckRegex(regex_checker) => regex_checker.check(text),
             CheckerTypes::CheckPassword(password_checker) => password_checker.check(text),
+            CheckerTypes::CheckWordlist(wordlist_checker) => wordlist_checker.check(text),
         }
     }
 
@@ -83,6 +89,11 @@ impl CheckerTypes {
                 new_checker.sensitivity = sensitivity;
                 CheckerTypes::CheckPassword(new_checker)
             }
+            CheckerTypes::CheckWordlist(_checker) => {
+                let mut new_checker = Checker::<WordlistChecker>::new();
+                new_checker.sensitivity = sensitivity;
+                CheckerTypes::CheckWordlist(new_checker)
+            }
         }
     }
 
@@ -94,6 +105,7 @@ impl CheckerTypes {
             CheckerTypes::CheckAthena(checker) => checker.get_sensitivity(),
             CheckerTypes::CheckRegex(checker) => checker.get_sensitivity(),
             CheckerTypes::CheckPassword(checker) => checker.get_sensitivity(),
+            CheckerTypes::CheckWordlist(checker) => checker.get_sensitivity(),
         }
     }
 }
