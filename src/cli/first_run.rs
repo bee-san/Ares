@@ -472,7 +472,7 @@ fn get_wordlist_path() -> Option<String> {
     match std::fs::File::open(input) {
         Ok(_) => Some(input.to_string()),
         Err(e) => {
-            println!("{}", print_warning(&format!("Cannot read file: {}", e)));
+            println!("{}", print_warning(format!("Cannot read file: {}", e)));
             get_wordlist_path() // Recursively prompt until valid or cancelled
         }
     }
