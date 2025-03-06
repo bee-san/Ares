@@ -52,26 +52,27 @@ impl Check for Checker<Athena> {
                 ));
                 return check_res;
             }
-        }
-        // If wordlist is specified, only run the wordlist checker
-        else if config.wordlist.is_some() {
-            trace!("running wordlist checker");
-            let wordlist_checker =
-                Checker::<WordlistChecker>::new().with_sensitivity(self.sensitivity);
-            let wordlist_result = wordlist_checker.check(text);
-            if wordlist_result.is_identified {
-                let mut check_res = CheckResult::new(&wordlist_checker);
-                let human_result = human_checker::human_checker(&wordlist_result);
-                check_res.is_identified = human_result;
-                check_res.text = wordlist_result.text;
-                check_res.description = wordlist_result.description;
-                cli_pretty_printing::success(&format!(
-                    "DEBUG: Athena wordlist checker - human_result: {}, check_res.is_identified: {}",
-                    human_result, check_res.is_identified
-                ));
-                return check_res;
-            }
         } else {
+            // Run wordlist checker first if a wordlist is provided
+            if config.wordlist.is_some() {
+                trace!("running wordlist checker");
+                let wordlist_checker =
+                    Checker::<WordlistChecker>::new().with_sensitivity(self.sensitivity);
+                let wordlist_result = wordlist_checker.check(text);
+                if wordlist_result.is_identified {
+                    let mut check_res = CheckResult::new(&wordlist_checker);
+                    let human_result = human_checker::human_checker(&wordlist_result);
+                    check_res.is_identified = human_result;
+                    check_res.text = wordlist_result.text;
+                    check_res.description = wordlist_result.description;
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: Athena wordlist checker - human_result: {}, check_res.is_identified: {}",
+                        human_result, check_res.is_identified
+                    ));
+                    return check_res;
+                }
+            }
+
             // In Ciphey if the user uses the regex checker all the other checkers turn off
             // This is because they are looking for one specific bit of information so will not want the other checkers
             // TODO: wrap all checkers in oncecell so we only create them once!

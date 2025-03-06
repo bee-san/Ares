@@ -150,7 +150,7 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
             }
             Err(e) => {
                 // Critical error - exit if wordlist is specified but can't be loaded
-                eprintln!("Can't load wordlist at '{}'", wordlist_path);
+                eprintln!("Can't load wordlist at '{}': {}", wordlist_path, e);
                 std::process::exit(1);
             }
         }

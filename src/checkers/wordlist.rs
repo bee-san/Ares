@@ -21,7 +21,7 @@ impl Check for Checker<WordlistChecker> {
             expected_runtime: 0.01,
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
-            sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
+            sensitivity: Sensitivity::Medium, // Dummy value - wordlist checker doesn't use sensitivity
             _phantom: std::marker::PhantomData,
         }
     }
@@ -55,11 +55,14 @@ impl Check for Checker<WordlistChecker> {
     }
 
     fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
+        // Wordlist checker doesn't use sensitivity, but we need to implement this method
+        // to satisfy the Check trait. The sensitivity value is stored but not used.
         self.sensitivity = sensitivity;
         self
     }
 
     fn get_sensitivity(&self) -> Sensitivity {
+        // Return the stored sensitivity value, though it's not used for checking
         self.sensitivity
     }
 }

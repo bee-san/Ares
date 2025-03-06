@@ -146,6 +146,12 @@ impl Default for Config {
 }
 
 /// Get the path to the Ares config file
+///
+/// # Panics
+///
+/// This function will panic if:
+/// - The home directory cannot be found
+/// - The Ares directory cannot be created
 pub fn get_config_file_path() -> std::path::PathBuf {
     let mut path = dirs::home_dir().expect("Could not find home directory");
     path.push("Ares");
@@ -155,6 +161,12 @@ pub fn get_config_file_path() -> std::path::PathBuf {
 }
 
 /// Create a default config file at the specified path
+///
+/// # Panics
+///
+/// This function will panic if:
+/// - The config cannot be serialized to TOML
+/// - The config file path cannot be determined (see `get_config_file_path`)
 pub fn create_default_config_file() -> std::io::Result<()> {
     let config = Config::default();
     let toml_string = toml::to_string_pretty(&config).expect("Could not serialize config");

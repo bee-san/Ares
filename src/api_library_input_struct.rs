@@ -49,6 +49,10 @@ impl Default for LibraryInput<DefaultChecker> {
 
 impl<Type> LibraryInput<Type> {
     /// Set a pre-loaded wordlist
+    ///
+    /// This method is part of the public API for library users who want to provide
+    /// a pre-loaded wordlist directly. While it may not be used internally yet,
+    /// it's maintained for API compatibility and future use cases.
     pub fn with_wordlist(mut self, wordlist: HashSet<String>) -> Self {
         self.wordlist = Some(wordlist);
         self
