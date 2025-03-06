@@ -301,9 +301,35 @@ pub fn get_config_file_into_struct() -> Config {
 
     if !path.exists() {
         // First run - get user preferences
-        let colors = crate::cli::run_first_time_setup();
+        let first_run_config = crate::cli::run_first_time_setup();
         let mut config = Config::default();
-        config.colourscheme = colors;
+
+        // Extract color scheme values
+        config.colourscheme = first_run_config
+            .iter()
+            .filter(|(k, _)| !k.starts_with("wordlist"))
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+
+        // Extract wordlist path if present
+        if let Some(wordlist_path) = first_run_config.get("wordlist_path") {
+            config.wordlist_path = Some(wordlist_path.clone());
+
+            // Load the wordlist
+            match load_wordlist(wordlist_path) {
+                Ok(wordlist) => {
+                    config.wordlist = Some(wordlist);
+                }
+                Err(e) => {
+                    eprintln!(
+                        "Warning: Could not load wordlist at '{}': {}",
+                        wordlist_path, e
+                    );
+                    // Don't exit - just continue without the wordlist
+                }
+            }
+        }
+
         // Save the config to file
         save_config_to_file(&config, &path);
         config
