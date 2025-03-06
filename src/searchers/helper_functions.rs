@@ -230,19 +230,19 @@ pub fn check_if_string_cant_be_decoded(text: &str) -> bool {
     if text.len() <= 2 {
         return true;
     }
-    
+
     // Check for strings with high non-printable character ratio
     let non_printable_ratio = calculate_non_printable_ratio(text);
     if non_printable_ratio > 0.3 {
         return true;
     }
-    
+
     // Check for overall string quality
     let quality = calculate_string_quality(text);
     if quality < 0.2 {
         return true;
     }
-    
+
     false
 }
 
@@ -309,25 +309,25 @@ mod tests {
         // Create two identical paths but with different success rates
         let mut high_success_result = CrackResult::new(&Decoder::default(), "test".to_string());
         high_success_result.decoder = "HighSuccessDecoder";
-        
+
         let mut low_success_result = CrackResult::new(&Decoder::default(), "test".to_string());
         low_success_result.decoder = "LowSuccessDecoder";
-        
+
         // Update the success rates in the DECODER_SUCCESS_RATES
         update_decoder_stats("HighSuccessDecoder", true);
         update_decoder_stats("HighSuccessDecoder", true);
         update_decoder_stats("HighSuccessDecoder", true);
         update_decoder_stats("HighSuccessDecoder", false);
-        
+
         update_decoder_stats("LowSuccessDecoder", true);
         update_decoder_stats("LowSuccessDecoder", false);
         update_decoder_stats("LowSuccessDecoder", false);
         update_decoder_stats("LowSuccessDecoder", false);
-        
+
         // Generate heuristics for both paths
         let high_success_heuristic = generate_heuristic("test", &[high_success_result]);
         let low_success_heuristic = generate_heuristic("test", &[low_success_result]);
-        
+
         // The low success decoder should have a higher heuristic (worse score)
         assert!(
             low_success_heuristic > high_success_heuristic,
@@ -363,17 +363,26 @@ mod tests {
     #[test]
     fn test_check_if_string_cant_be_decoded() {
         // Test strings that are too short
-        assert!(check_if_string_cant_be_decoded(""), "Empty string should be rejected");
-        assert!(check_if_string_cant_be_decoded("a"), "Single character should be rejected");
-        assert!(check_if_string_cant_be_decoded("ab"), "Two characters should be rejected");
-        
+        assert!(
+            check_if_string_cant_be_decoded(""),
+            "Empty string should be rejected"
+        );
+        assert!(
+            check_if_string_cant_be_decoded("a"),
+            "Single character should be rejected"
+        );
+        assert!(
+            check_if_string_cant_be_decoded("ab"),
+            "Two characters should be rejected"
+        );
+
         // Test strings with high non-printable character ratio
         let high_non_printable = "abc\u{0}\u{1}\u{2}"; // 3 out of 6 chars are non-printable (50%)
         assert!(
             check_if_string_cant_be_decoded(high_non_printable),
             "String with 50% non-printable characters should be rejected"
         );
-        
+
         // Test strings with low quality
         // Create a string with >50% non-printable characters to ensure quality is 0.0
         let low_quality = "\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}\u{0}abc"; // 7 out of 10 chars are non-printable (70%)
@@ -381,7 +390,7 @@ mod tests {
             check_if_string_cant_be_decoded(low_quality),
             "Low quality string should be rejected"
         );
-        
+
         // Test valid strings
         assert!(
             !check_if_string_cant_be_decoded("Hello World"),

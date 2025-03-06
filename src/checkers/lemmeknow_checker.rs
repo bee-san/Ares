@@ -74,7 +74,11 @@ mod tests {
     #[test]
     fn test_url_with_extra_text_fails() {
         let checker = Checker::<LemmeKnow>::new().with_sensitivity(Sensitivity::Low);
-        assert!(!checker.check("https://google.com and some text").is_identified);
+        assert!(
+            !checker
+                .check("https://google.com and some text")
+                .is_identified
+        );
     }
 
     #[test]
@@ -100,6 +104,10 @@ mod tests {
     #[test]
     fn test_bitcoin_with_extra_text_fails() {
         let checker = Checker::<LemmeKnow>::new().with_sensitivity(Sensitivity::Low);
-        assert!(!checker.check("BTC address: 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2").is_identified);
+        assert!(
+            !checker
+                .check("BTC address: 1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2")
+                .is_identified
+        );
     }
 }

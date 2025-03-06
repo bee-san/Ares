@@ -175,7 +175,10 @@ mod tests {
     #[test]
     fn successful_decoding_longer_text() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-        let result = caesar_decoder.crack("Tqxxa ftue ue mz qjmybxq fqjf tffbe://saasxq.oay !", &get_athena_checker());
+        let result = caesar_decoder.crack(
+            "Tqxxa ftue ue mz qjmybxq fqjf tffbe://saasxq.oay !",
+            &get_athena_checker(),
+        );
         println!("Result: {:?}", result);
         assert_eq!(
             result.unencrypted_text.unwrap()[0],
@@ -186,7 +189,10 @@ mod tests {
     #[test]
     fn successful_decoding_longer_text_with_puncuation() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-        let result = caesar_decoder.crack("Itk, tqxxa ftqdq. Ftue ue mz qjmybxq ar xazs fqjf iuft bgzogmfuaz!", &get_athena_checker());
+        let result = caesar_decoder.crack(
+            "Itk, tqxxa ftqdq. Ftue ue mz qjmybxq ar xazs fqjf iuft bgzogmfuaz!",
+            &get_athena_checker(),
+        );
         assert_eq!(
             result.unencrypted_text.unwrap()[0],
             "Why, hello there. This is an example of long text with puncuation!"
