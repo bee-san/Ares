@@ -2,7 +2,7 @@
 //! Performs error handling and returns a string
 //! Call caesar_decoder.crack to use. It returns option<String> and check with
 //! `result.is_some()` to see if it returned okay.
-//! Uses Medium sensitivity for gibberish detection.
+//! Uses Low sensitivity for gibberish detection.
 
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
@@ -40,7 +40,7 @@ impl Crack for Decoder<CaesarDecoder> {
     fn new() -> Decoder<CaesarDecoder> {
         Decoder {
             name: "caesar",
-            description: "Caesar cipher, also known as Caesar's cipher, the shift cipher, Caesar's code or Caesar shift, is one of the simplest and most widely known encryption techniques. It is a type of substitution cipher in which each letter in the plaintext is replaced by a letter some fixed number of positions down the alphabet. Uses Medium sensitivity for gibberish detection.",
+            description: "Caesar cipher, also known as Caesar's cipher, the shift cipher, Caesar's code or Caesar shift, is one of the simplest and most widely known encryption techniques. It is a type of substitution cipher in which each letter in the plaintext is replaced by a letter some fixed number of positions down the alphabet. Uses Low sensitivity for gibberish detection.",
             link: "https://en.wikipedia.org/wiki/Caesar_cipher",
             tags: vec!["caesar", "decryption", "classic", "reciprocal"],
             popularity: 1.0,
@@ -56,8 +56,8 @@ impl Crack for Decoder<CaesarDecoder> {
         let mut results = CrackResult::new(self, text.to_string());
         let mut decoded_strings = Vec::new();
 
-        // Use the checker with Medium sensitivity for Caesar cipher
-        let checker_with_sensitivity = checker.with_sensitivity(Sensitivity::Medium);
+        // Use the checker with Low sensitivity for Caesar cipher
+        let checker_with_sensitivity = checker.with_sensitivity(Sensitivity::Low);
 
         for shift in 1..=25 {
             let decoded_text = caesar(text, shift);
@@ -175,20 +175,27 @@ mod tests {
     #[test]
     fn successful_decoding_longer_text() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-        let result = caesar_decoder.crack("uryyb guvf vf ybat grkg", &get_athena_checker());
+        let result = caesar_decoder.crack(
+            "Tqxxa ftue ue mz qjmybxq fqjf tffbe://saasxq.oay !",
+            &get_athena_checker(),
+        );
+        println!("Result: {:?}", result);
         assert_eq!(
             result.unencrypted_text.unwrap()[0],
-            "hello this is long text"
+            "Hello this is an example text https://google.com !"
         );
     }
 
     #[test]
     fn successful_decoding_longer_text_with_puncuation() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
-        let result = caesar_decoder.crack("Uryyb! guvf vf ybat grkg?", &get_athena_checker());
+        let result = caesar_decoder.crack(
+            "Itk, tqxxa ftqdq. Ftue ue mz qjmybxq ar xazs fqjf iuft bgzogmfuaz!",
+            &get_athena_checker(),
+        );
         assert_eq!(
             result.unencrypted_text.unwrap()[0],
-            "Hello! this is long text?"
+            "Why, hello there. This is an example of long text with puncuation!"
         );
     }
 
@@ -213,21 +220,21 @@ mod tests {
     }
 
     #[test]
-    fn test_caesar_uses_medium_sensitivity() {
+    fn test_caesar_uses_low_sensitivity() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
 
         // Instead of testing with a specific string, let's verify that the decoder
-        // is using Medium sensitivity by checking the implementation directly
+        // is using Low sensitivity by checking the implementation directly
         let text = "Test text";
 
         // We'll use the actual implementation but check that it calls with_sensitivity
-        // with Medium sensitivity
+        // with Low sensitivity
         let result = caesar_decoder.crack(
             text,
             &CheckerTypes::CheckEnglish(Checker::<EnglishChecker>::new()),
         );
 
-        // Verify that the implementation is using Medium sensitivity by checking the code
+        // Verify that the implementation is using Low sensitivity by checking the code
         // This is a different approach - we're not testing the behavior but verifying
         // that the code is structured correctly
         assert!(

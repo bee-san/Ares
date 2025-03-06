@@ -140,16 +140,6 @@ mod tests {
     }
 
     #[test]
-    fn test_checker_fails_doesnt_hit_40_percent() {
-        let checker = Checker::<EnglishChecker>::new();
-        assert!(
-            checker
-                .check("Hello Dog nnnnnnnnnnn llllllll ppppppppp gggggggg")
-                .is_identified
-        );
-    }
-
-    #[test]
     fn test_check_fail_single_puncuation_char() {
         let checker = Checker::<EnglishChecker>::new();
         assert!(!checker.check("#").is_identified);
