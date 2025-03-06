@@ -4,6 +4,7 @@ use crate::checkers::{
     default_checker::DefaultChecker,
 };
 use lemmeknow::Identifier;
+use std::collections::HashSet;
 
 /// Library input is the default API input
 /// The CLI turns its arguments into a LibraryInput struct
@@ -19,6 +20,8 @@ pub struct LibraryInput<Type> {
     pub checker: Checker<Type>,
     /// The lemmeknow config to use
     pub lemmeknow_config: Identifier,
+    /// Pre-loaded wordlist (allows library users to provide wordlist directly)
+    pub wordlist: Option<HashSet<String>>,
 }
 
 /// Creates a default lemmeknow config
@@ -39,6 +42,15 @@ impl Default for LibraryInput<DefaultChecker> {
             verbose: 0,
             checker: Checker::new(),
             lemmeknow_config: LEMMEKNOW_DEFAULT_CONFIG,
+            wordlist: None,
         }
+    }
+}
+
+impl<Type> LibraryInput<Type> {
+    /// Set a pre-loaded wordlist
+    pub fn with_wordlist(mut self, wordlist: HashSet<String>) -> Self {
+        self.wordlist = Some(wordlist);
+        self
     }
 }

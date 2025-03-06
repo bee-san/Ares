@@ -4,8 +4,8 @@ pub use first_run::run_first_time_setup;
 
 use std::{fs::File, io::Read};
 
-use crate::config::get_config_file_into_struct;
-use crate::{cli_pretty_printing::panic_failure_both_input_and_fail_provided, config::Config};
+use crate::config::{get_config_file_into_struct, load_wordlist, Config};
+use crate::cli_pretty_printing::panic_failure_both_input_and_fail_provided;
 /// This doc string acts as a help message when the uses run '--help' in CLI mode
 /// as do all doc strings on fields
 use clap::Parser;
@@ -46,6 +46,11 @@ pub struct Opts {
     /// This turns off other checkers (English, LemmeKnow)
     #[arg(short, long)]
     regex: Option<String>,
+    /// Path to a wordlist file containing newline-separated words
+    /// The checker will match input against these words exactly
+    /// Takes precedence over config file if both specify a wordlist
+    #[arg(long, help = "Path to a wordlist file with newline-separated words for exact matching")]
+    wordlist: Option<String>,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -129,6 +134,23 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
 
     if let Some(regex) = opts.regex {
         config.regex = Some(regex);
+    }
+    
+    // Handle wordlist if provided via CLI (takes precedence over config file)
+    if let Some(wordlist_path) = opts.wordlist {
+        config.wordlist_path = Some(wordlist_path.clone());
+        
+        // Load the wordlist here in the CLI layer
+        match load_wordlist(&wordlist_path) {
+            Ok(wordlist) => {
+                config.wordlist = Some(wordlist);
+            },
+            Err(e) => {
+                // Critical error - exit if wordlist is specified but can't be loaded
+                eprintln!("Can't load wordlist at '{}'", wordlist_path);
+                std::process::exit(1);
+            }
+        }
     }
 
     (text, config)
