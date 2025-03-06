@@ -99,8 +99,8 @@ fn get_capptucin_scheme() -> ColorScheme {
         informational: "238,212,159".to_string(), // rgb(238, 212, 159)
         warning: "237,135,150".to_string(),       // rgb(237, 135, 150)
         success: "166,218,149".to_string(),       // rgb(166, 218, 149)
-        question: "202,211,245".to_string(),     // rgb(202, 211, 245)
-        statement: "244,219,214".to_string(),      // rgb(244, 219, 214)
+        question: "202,211,245".to_string(),      // rgb(202, 211, 245)
+        statement: "244,219,214".to_string(),     // rgb(244, 219, 214)
     }
 }
 
@@ -161,8 +161,18 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     );
     println!("{}\n", print_statement("Let me help you configure Ares."));
 
+    // ask if user wants a tutorial
+    if ask_yes_no_question("Do you want a tutorial?", true) {
+        println!("ares -t 'encoded text here' to decode.");
+        println!("Have a crib you know is in the plaintext? use --regex 'crib here'");
+        println!("🙂‍↕️ yah that's it. Will write more when we add more :-D");
+    }
+
     // Ask if the user wants a custom color scheme
-    let want_custom = ask_yes_no_question("Do you want a custom colour scheme?", false);
+    let want_custom = ask_yes_no_question(
+        "Do you want a custom colour scheme? Will be applied after we're done configuring",
+        false,
+    );
 
     let mut config = if !want_custom {
         // User doesn't want a custom color scheme, use default
@@ -255,6 +265,9 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     };
 
     // Ask if the user wants to use a wordlist
+    // TODO I think we ask if they have any wordlists and then say
+    // ok use in plaintext detection?
+    // wanna crack hashes? can i use the old wordlist?s
     println!(
         "\n{}",
         print_statement("Would you like Ares to use custom wordlists to detect plaintext?")
@@ -274,6 +287,17 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         if let Some(wordlist_path) = get_wordlist_path() {
             config.insert("wordlist_path".to_string(), wordlist_path);
         }
+    }
+
+    // show cute cat
+    if ask_yes_no_question("Do you want to see a cute cat?", false) {
+        println!(
+            r#"
+        /\_/\
+        ( o.o )
+        o( ( ))
+        "#
+        );
     }
 
     config
@@ -446,10 +470,7 @@ fn get_wordlist_path() -> Option<String> {
 
     // Check if the file is readable
     match std::fs::File::open(input) {
-        Ok(_) => {
-            println!("{}", print_statement("Wordlist file is valid."));
-            Some(input.to_string())
-        }
+        Ok(_) => Some(input.to_string()),
         Err(e) => {
             println!("{}", print_warning(&format!("Cannot read file: {}", e)));
             get_wordlist_path() // Recursively prompt until valid or cancelled
