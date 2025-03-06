@@ -34,7 +34,7 @@ impl Check for Checker<Athena> {
 
     fn check(&self, text: &str) -> CheckResult {
         let config = get_config();
-        
+
         // If regex is specified, only run the regex checker
         if config.regex.is_some() {
             trace!("running regex");
@@ -52,11 +52,12 @@ impl Check for Checker<Athena> {
                 ));
                 return check_res;
             }
-        } 
+        }
         // If wordlist is specified, only run the wordlist checker
         else if config.wordlist.is_some() {
             trace!("running wordlist checker");
-            let wordlist_checker = Checker::<WordlistChecker>::new().with_sensitivity(self.sensitivity);
+            let wordlist_checker =
+                Checker::<WordlistChecker>::new().with_sensitivity(self.sensitivity);
             let wordlist_result = wordlist_checker.check(text);
             if wordlist_result.is_identified {
                 let mut check_res = CheckResult::new(&wordlist_checker);
@@ -70,8 +71,7 @@ impl Check for Checker<Athena> {
                 ));
                 return check_res;
             }
-        }
-        else {
+        } else {
             // In Ciphey if the user uses the regex checker all the other checkers turn off
             // This is because they are looking for one specific bit of information so will not want the other checkers
             // TODO: wrap all checkers in oncecell so we only create them once!

@@ -14,7 +14,8 @@ impl Check for Checker<WordlistChecker> {
     fn new() -> Self {
         Checker {
             name: "Wordlist Checker",
-            description: "Checks if the input text exactly matches any word in a user-provided wordlist",
+            description:
+                "Checks if the input text exactly matches any word in a user-provided wordlist",
             link: "",
             tags: vec!["wordlist", "exact-match"],
             expected_runtime: 0.01,
@@ -27,28 +28,28 @@ impl Check for Checker<WordlistChecker> {
 
     fn check(&self, text: &str) -> CheckResult {
         let config = get_config();
-        
+
         // Only run this checker if a wordlist is provided
         if let Some(wordlist) = &config.wordlist {
             trace!("Running wordlist checker with {} entries", wordlist.len());
-            
+
             // Perform exact matching against the wordlist
             let is_match = wordlist.contains(text);
-            
+
             if is_match {
                 trace!("Found exact match in wordlist for: {}", text);
                 let mut result = CheckResult::new(self);
                 result.is_identified = true;
                 result.text = text.to_string();
-                result.description = format!("Text matches an entry in the provided wordlist");
+                result.description = "Text matches an entry in the provided wordlist".to_string();
                 return result;
             }
-            
+
             trace!("No match found in wordlist for: {}", text);
         } else {
             trace!("Wordlist checker skipped - no wordlist provided");
         }
-        
+
         // No match found or no wordlist provided
         CheckResult::new(self)
     }
@@ -69,21 +70,21 @@ impl Checker<WordlistChecker> {
     /// Check with a directly provided wordlist (for testing)
     fn check_with_wordlist(&self, text: &str, wordlist: &HashSet<String>) -> CheckResult {
         trace!("Running wordlist checker with {} entries", wordlist.len());
-        
+
         // Perform exact matching against the wordlist
         let is_match = wordlist.contains(text);
-        
+
         if is_match {
             trace!("Found exact match in wordlist for: {}", text);
             let mut result = CheckResult::new(self);
             result.is_identified = true;
             result.text = text.to_string();
-            result.description = format!("Text matches an entry in the provided wordlist");
+            result.description = "Text matches an entry in the provided wordlist".to_string();
             return result;
         }
-        
+
         trace!("No match found in wordlist for: {}", text);
-        
+
         // No match found
         CheckResult::new(self)
     }
@@ -93,7 +94,7 @@ impl Checker<WordlistChecker> {
 mod tests {
     use super::*;
     use std::collections::HashSet;
-    
+
     #[test]
     fn test_wordlist_match() {
         // Create a test wordlist
@@ -101,21 +102,24 @@ mod tests {
         wordlist.insert("password123".to_string());
         wordlist.insert("hello".to_string());
         wordlist.insert("test".to_string());
-        
+
         // Create checker and test
         let checker = Checker::<WordlistChecker>::new();
-        
+
         // Print debug info to help diagnose the issue
         println!("Testing with wordlist containing: password123, hello, test");
-        
+
         // Should match
         let result = checker.check_with_wordlist("hello", &wordlist);
         println!("Result for 'hello': is_identified={}", result.is_identified);
         assert!(result.is_identified);
-        
+
         // Should not match
         let result = checker.check_with_wordlist("goodbye", &wordlist);
-        println!("Result for 'goodbye': is_identified={}", result.is_identified);
+        println!(
+            "Result for 'goodbye': is_identified={}",
+            result.is_identified
+        );
         assert!(!result.is_identified);
     }
 
@@ -123,16 +127,19 @@ mod tests {
     fn test_no_wordlist() {
         // Create an empty wordlist
         let wordlist = HashSet::new();
-        
+
         // Create checker and test
         let checker = Checker::<WordlistChecker>::new();
-        
+
         // Print debug info
         println!("Testing with empty wordlist");
-        
+
         // Should not match anything when no wordlist is provided
         let result = checker.check_with_wordlist("hello", &wordlist);
-        println!("Result for 'hello' with empty wordlist: is_identified={}", result.is_identified);
+        println!(
+            "Result for 'hello' with empty wordlist: is_identified={}",
+            result.is_identified
+        );
         assert!(!result.is_identified);
     }
-} 
+}
