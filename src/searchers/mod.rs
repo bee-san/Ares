@@ -22,6 +22,8 @@ mod astar;
 /// This module provides access to the breadth first search
 /// which searches for the plaintext.
 mod bfs;
+/// This module contains helper functions used by the A* search algorithm.
+mod helper_functions;
 
 /*pub struct Tree <'a> {
     // Wrap in a box because
