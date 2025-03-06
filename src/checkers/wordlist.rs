@@ -21,7 +21,7 @@ impl Check for Checker<WordlistChecker> {
             expected_runtime: 0.01,
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
-            sensitivity: Sensitivity::Medium, // Dummy value - wordlist checker doesn't use sensitivity
+            sensitivity: Sensitivity::Medium, // Dummy value - not used by this checker
             _phantom: std::marker::PhantomData,
         }
     }

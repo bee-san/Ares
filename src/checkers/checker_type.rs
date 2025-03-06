@@ -27,6 +27,7 @@ pub struct Checker<Type> {
     /// lemmeknow config object
     pub lemmeknow_config: Identifier,
     /// The sensitivity level for gibberish detection
+    /// This is only used by checkers that implement the SensitivityAware trait
     pub sensitivity: Sensitivity,
     /// https://doc.rust-lang.org/std/marker/struct.PhantomData.html
     /// Let's us save memory by telling the compiler that our type
@@ -46,6 +47,18 @@ pub trait Check {
         Self: Sized;
     /// Checks the given text to see if its plaintext
     fn check(&self, text: &str) -> CheckResult;
+    /// Sets the sensitivity level for gibberish detection
+    fn with_sensitivity(self, sensitivity: Sensitivity) -> Self
+    where
+        Self: Sized;
+    /// Gets the current sensitivity level
+    fn get_sensitivity(&self) -> Sensitivity;
+}
+
+/// Optional trait for checkers that use sensitivity for gibberish detection
+/// Not all checkers need to implement this trait
+/// This is a future improvement - not currently used
+pub trait SensitivityAware {
     /// Sets the sensitivity level for gibberish detection
     fn with_sensitivity(self, sensitivity: Sensitivity) -> Self
     where
