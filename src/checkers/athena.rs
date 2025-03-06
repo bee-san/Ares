@@ -77,7 +77,9 @@ impl Check for Checker<Athena> {
             // TODO: wrap all checkers in oncecell so we only create them once!
             let lemmeknow = Checker::<LemmeKnow>::new().with_sensitivity(self.sensitivity);
             let lemmeknow_result = lemmeknow.check(text);
+            //println!("Text is {}", text);
             if lemmeknow_result.is_identified {
+                println!("lemmeknow_result: {:?}", lemmeknow_result.is_identified);
                 let mut check_res = CheckResult::new(&lemmeknow);
                 let human_result = human_checker::human_checker(&lemmeknow_result);
                 check_res.is_identified = human_result;

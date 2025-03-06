@@ -1,7 +1,7 @@
 [package]
 name = "project_ares"
 repository = "https://github.com/bee-san/Ares"
-version = "0.10.0"
+version = "0.11.0"
 edition = "2021"
 description = "Automated decoding tool, Ciphey but in Rust"
 license = "MIT"
@@ -49,7 +49,7 @@ bs58 = "0.5.0"
 data-encoding = "2.4.0"
 urlencoding = "2.1.3"
 z85 = "3.0.5"
-gibberish-or-not = "4.0.3"
+gibberish-or-not = "4.1.0"
 cipher_identifier = "0.2.0"
 rand = "0.9.0"  # For generating random values
 colored = "3.0.0"
