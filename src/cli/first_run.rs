@@ -99,8 +99,8 @@ fn get_capptucin_scheme() -> ColorScheme {
         informational: "238,212,159".to_string(), // rgb(238, 212, 159)
         warning: "237,135,150".to_string(),       // rgb(237, 135, 150)
         success: "166,218,149".to_string(),       // rgb(166, 218, 149)
-        question: "244,219,214".to_string(),      // rgb(244, 219, 214)
-        statement: "202,211,245".to_string(),     // rgb(202, 211, 245)
+        question: "202,211,245".to_string(),     // rgb(202, 211, 245)
+        statement: "244,219,214".to_string(),      // rgb(244, 219, 214)
     }
 }
 
