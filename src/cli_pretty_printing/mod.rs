@@ -253,6 +253,9 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     if config.api_mode {
         return;
     }
+    if config.use_wait_athena {
+        return;
+    }
     let plaintext = result.text;
     // calculate path
     let decoded_path = result
