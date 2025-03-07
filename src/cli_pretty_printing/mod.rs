@@ -504,22 +504,6 @@ pub fn display_top_results(results: &[PlaintextResult]) {
     println!("{}", success("=== End of Top Results ===\n"));
 }
 
-/// Print a debug dump of the plaintext results
-pub fn debug_dump_results(results: &[PlaintextResult]) {
-    println!("\n=== DEBUG DUMP OF RESULTS ===");
-    println!("Total results: {}", results.len());
-
-    for (i, result) in results.iter().enumerate() {
-        println!("Result #{}", i + 1);
-        println!("  Text: {}", result.text);
-        println!("  Checker: {}", result.checker_name);
-        println!("  Decoder: {}", result.decoder_name);
-        println!("  Description: {}", result.description);
-    }
-
-    println!("=== END DEBUG DUMP ===\n");
-}
-
 #[test]
 fn test_parse_rgb() {
     let test_cases = vec![

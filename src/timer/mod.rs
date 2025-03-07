@@ -6,9 +6,7 @@ use std::{
     time::Duration,
 };
 
-use crate::cli_pretty_printing::{
-    countdown_until_program_ends, debug_dump_results, display_top_results, success,
-};
+use crate::cli_pretty_printing::{countdown_until_program_ends, display_top_results, success};
 use crate::config::get_config;
 use crate::storage::wait_athena_storage;
 use log::{debug, info};
@@ -61,20 +59,6 @@ fn filter_and_display_results() {
         "Retrieved {} results from wait_athena_storage",
         results.len()
     );
-
-    // Debug: Print each result to the log
-    for (i, result) in results.iter().enumerate() {
-        log::debug!(
-            "Result #{}: [{}] {} (Decoder: {})",
-            i + 1,
-            result.checker_name,
-            result.text,
-            result.decoder_name
-        );
-    }
-
-    // Print a debug dump of the results
-    debug_dump_results(&results);
 
     // Use the cli_pretty_printing function to display the results
     display_top_results(&results);

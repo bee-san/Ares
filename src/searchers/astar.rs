@@ -259,22 +259,34 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                         "Unknown".to_string()
                                     };
 
-                                log::trace!(
-                                    "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
-                                    plaintext,
-                                    decoder_name,
-                                    checker_name
-                                );
-                                wait_athena_storage::add_plaintext_result(
-                                    plaintext.clone(),
-                                    format!("Decoded successfully at depth {}", curr_depth),
-                                    checker_name,
-                                    decoder_name,
-                                );
+                                // Only store results that have a valid checker name
+                                if !checker_name.is_empty() && checker_name != "Unknown" {
+                                    log::trace!(
+                                        "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
+                                        plaintext,
+                                        decoder_name,
+                                        checker_name
+                                    );
+                                    wait_athena_storage::add_plaintext_result(
+                                        plaintext.clone(),
+                                        format!("Decoded successfully at depth {}", curr_depth),
+                                        checker_name,
+                                        decoder_name,
+                                    );
 
-                                // Check how many results are stored
-                                let results = wait_athena_storage::get_plaintext_results();
-                                log::trace!("WaitAthena storage now has {} results", results.len());
+                                    // Check how many results are stored
+                                    let results = wait_athena_storage::get_plaintext_results();
+                                    log::trace!(
+                                        "WaitAthena storage now has {} results",
+                                        results.len()
+                                    );
+                                } else {
+                                    log::trace!(
+                                        "Skipping plaintext with empty or unknown checker name: {} (decoder: {})",
+                                        plaintext,
+                                        decoder_name
+                                    );
+                                }
                             } else {
                                 log::trace!(
                                     "No plaintext to store in WaitAthena storage (decoder-tagged)"
@@ -470,22 +482,34 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                         "Unknown".to_string()
                                     };
 
-                                log::trace!(
-                                    "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
-                                    plaintext,
-                                    decoder_name,
-                                    checker_name
-                                );
-                                wait_athena_storage::add_plaintext_result(
-                                    plaintext.clone(),
-                                    format!("Decoded successfully at depth {}", curr_depth),
-                                    checker_name,
-                                    decoder_name,
-                                );
+                                // Only store results that have a valid checker name
+                                if !checker_name.is_empty() && checker_name != "Unknown" {
+                                    log::trace!(
+                                        "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
+                                        plaintext,
+                                        decoder_name,
+                                        checker_name
+                                    );
+                                    wait_athena_storage::add_plaintext_result(
+                                        plaintext.clone(),
+                                        format!("Decoded successfully at depth {}", curr_depth),
+                                        checker_name,
+                                        decoder_name,
+                                    );
 
-                                // Check how many results are stored
-                                let results = wait_athena_storage::get_plaintext_results();
-                                log::trace!("WaitAthena storage now has {} results", results.len());
+                                    // Check how many results are stored
+                                    let results = wait_athena_storage::get_plaintext_results();
+                                    log::trace!(
+                                        "WaitAthena storage now has {} results",
+                                        results.len()
+                                    );
+                                } else {
+                                    log::trace!(
+                                        "Skipping plaintext with empty or unknown checker name: {} (decoder: {})",
+                                        plaintext,
+                                        decoder_name
+                                    );
+                                }
                             } else {
                                 log::trace!("No plaintext to store in WaitAthena storage (non-decoder-tagged)");
                             }
