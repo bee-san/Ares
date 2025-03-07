@@ -56,7 +56,7 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
 
     // In top_results mode, we don't need to return a result immediately
     // as the timer will display all results when it expires
-    let top_results_mode = config.top_results || config.use_wait_athena;
+    let top_results_mode = config.top_results;
 
     // If we're in top_results mode, we'll store the first result to return
     // at the end of the timer

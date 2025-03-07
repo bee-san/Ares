@@ -264,7 +264,7 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         }
     };
 
-    // ask about wait athena
+    // ask about top_results
     println!("\n{}", print_statement("Which sounds better to you?"));
     println!(
         "\n{}",
@@ -280,15 +280,15 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     );
     let wait_athena_choice = get_user_input_range("Enter your choice (1-2): ", 1, 2);
 
-    // Store the wait_athena choice in the config
-    let use_wait_athena = wait_athena_choice == 2;
-    config.insert("use_wait_athena".to_string(), use_wait_athena.to_string());
+    // Store the top_results choice in the config
+    let top_results = wait_athena_choice == 2;
+    config.insert("top_results".to_string(), top_results.to_string());
 
     // Set the default timeout
     let mut timeout = 5; // Default timeout
 
-    if use_wait_athena {
-        // user has chosen to use wait_athena
+    if top_results {
+        // user has chosen to use top_results mode
         println!(
             "\n{}",
             print_statement("Ares by default runs for 5 seconds. For this mode we suggest 3 seconds. Please do not complain if you choose too high of a number and your PC freezes up.\n")

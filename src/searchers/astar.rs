@@ -30,7 +30,7 @@ use crate::filtration_system::{
 };
 use crossbeam::channel::Sender;
 
-use log::{debug, debug, info, trace};
+use log::{debug, info, trace};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;
@@ -240,7 +240,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         cli_pretty_printing::success(&format!("DEBUG: astar.rs - decoder-tagged decoder - Sending successful result with {} decoders", result_text.path.len()));
 
                         // If in top_results mode, store the result in the WaitAthena storage
-                        if get_config().top_results || get_config().use_wait_athena {
+                        if get_config().top_results {
                             // Store the first text in the vector (there should only be one)
                             if let Some(plaintext) = text.first() {
                                 // Get the last decoder used
@@ -299,12 +299,12 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                             .expect("Should successfully send the result");
 
                         // Only stop if not in top_results mode
-                        if !get_config().top_results && !get_config().use_wait_athena {
+                        if !get_config().top_results {
                             // Stop further iterations
                             stop.store(true, std::sync::atomic::Ordering::Relaxed);
                             return;
                         }
-                        // In top_results or use_wait_athena mode, continue searching
+                        // In top_results mode, continue searching
                     } else {
                         // If human checker rejected, continue the search
                         trace!("Human checker rejected the result, continuing search");
@@ -463,7 +463,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         cli_pretty_printing::success(&format!("DEBUG: astar.rs - non-decoder-tagged decoder - Sending successful result with {} decoders", result_text.path.len()));
 
                         // If in top_results mode, store the result in the WaitAthena storage
-                        if get_config().top_results || get_config().use_wait_athena {
+                        if get_config().top_results {
                             // Store the first text in the vector (there should only be one)
                             if let Some(plaintext) = text.first() {
                                 // Get the last decoder used
@@ -520,12 +520,12 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                             .expect("Should successfully send the result");
 
                         // Only stop if not in top_results mode
-                        if !get_config().top_results && !get_config().use_wait_athena {
+                        if !get_config().top_results {
                             // Stop further iterations
                             stop.store(true, std::sync::atomic::Ordering::Relaxed);
                             return;
                         }
-                        // In top_results or use_wait_athena mode, continue searching
+                        // In top_results mode, continue searching
                     } else {
                         // If human checker rejected, continue the search
                         trace!("Human checker rejected the result, continuing search");

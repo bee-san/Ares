@@ -97,9 +97,9 @@ use self::decoders::crack_results::CrackResult;
 /// assert!(result.is_none());
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
-    // If top_results or use_wait_athena is enabled, ensure human_checker_on is disabled
+    // If top_results is enabled, ensure human_checker_on is disabled
     let mut modified_config = config;
-    if modified_config.top_results || modified_config.use_wait_athena {
+    if modified_config.top_results {
         modified_config.human_checker_on = false;
         // Clear any previous results when starting a new cracking session
         storage::wait_athena_storage::clear_plaintext_results();
@@ -155,7 +155,7 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
 fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
     let config = get_config();
 
-    if config.top_results || config.use_wait_athena {
+    if config.top_results {
         let wait_athena_checker = Checker::<WaitAthena>::new();
         wait_athena_checker.check(text)
     } else {

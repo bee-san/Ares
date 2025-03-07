@@ -164,10 +164,8 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
     config.top_results = opts.top_results;
 
     // If top_results is enabled, automatically disable the human checker
-    // and enable use_wait_athena
     if config.top_results {
         config.human_checker_on = false;
-        config.use_wait_athena = true;
     }
 
     (text, config)

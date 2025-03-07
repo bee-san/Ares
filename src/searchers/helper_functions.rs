@@ -69,8 +69,8 @@ pub fn get_cipher_identifier_score(text: &str) -> (String, f32) {
     }
 
     // Default if no match
-    let mut rng = rand::thread_rng();
-    ("unknown".to_string(), rng.gen_range(0.5..1.0) as f32)
+    let mut rng = rand::rng();
+    ("unknown".to_string(), rng.random_range(0.5..1.0) as f32)
 }
 
 /// Check if a decoder and cipher form a common sequence

@@ -6,10 +6,10 @@ use std::{
     time::Duration,
 };
 
-use crate::cli_pretty_printing::{countdown_until_program_ends, display_top_results, success};
+use crate::cli_pretty_printing::{countdown_until_program_ends, display_top_results};
 use crate::config::get_config;
 use crate::storage::wait_athena_storage;
-use log::{debug, info};
+use log::trace;
 
 /// Indicate whether timer is paused
 static PAUSED: AtomicBool = AtomicBool::new(false);
@@ -30,19 +30,15 @@ pub fn start(duration: u32) -> Receiver<()> {
         }
 
         // When the timer expires, display all collected plaintext results
-        // Only if we're in wait_athena mode
+        // Only if we're in top_results mode
         let config = get_config();
-        log::trace!(
-            "Timer expired. top_results mode: {}, use_wait_athena mode: {}",
-            config.top_results,
-            config.use_wait_athena
-        );
+        log::trace!("Timer expired. top_results mode: {}", config.top_results);
 
-        if config.top_results || config.use_wait_athena {
+        if config.top_results {
             log::info!("Displaying all collected plaintext results");
             filter_and_display_results();
         } else {
-            log::info!("Not in top_results or use_wait_athena mode, skipping display_wait_athena_results()");
+            log::info!("Not in top_results mode, skipping display_wait_athena_results()");
         }
 
         sender.send(()).expect("Timer should send succesfully");

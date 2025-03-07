@@ -46,12 +46,12 @@ pub struct Config {
     /// Should the human checker be on?
     /// This asks yes/no for plaintext. Turn off for API
     pub human_checker_on: bool,
-    /// The timeout threshold before Ares quites
+    /// The timeout threshold before Ares quits
     /// This is in seconds
     pub timeout: u32,
-    /// Whether to use WaitAthena instead of regular Athena
-    /// WaitAthena collects all plaintexts until timeout expires
-    pub use_wait_athena: bool,
+    /// Whether to collect all plaintexts until timeout expires
+    /// instead of exiting after finding the first valid plaintext
+    pub top_results: bool,
     /// Is the program being run in API mode?
     /// This is used to determine if we should print to stdout
     /// Or return the values
@@ -65,8 +65,6 @@ pub struct Config {
     pub wordlist: Option<HashSet<String>>,
     /// Colourscheme hashmap
     pub colourscheme: HashMap<String, String>,
-    /// Whether to use top results mode (collect all plaintexts instead of exiting early)
-    pub top_results: bool,
 }
 
 /// Cell for storing global Config
@@ -122,13 +120,12 @@ impl Default for Config {
             lemmeknow_boundaryless: false,
             human_checker_on: false,
             timeout: 5,
-            use_wait_athena: false,
+            top_results: false,
             api_mode: false,
             regex: None,
             wordlist_path: None,
             wordlist: None,
             colourscheme: HashMap::new(),
-            top_results: false,
         };
 
         // Set default colors
@@ -208,13 +205,12 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "lemmeknow_boundaryless",
             "human_checker_on",
             "timeout",
-            "use_wait_athena",
+            "top_results",
             "api_mode",
             "regex",
             "wordlist_path",
             "question",
             "colourscheme",
-            "top_results",
         ];
         for key in table.keys() {
             if !known_keys.contains(&key.as_str()) {
@@ -316,16 +312,9 @@ pub fn get_config_file_into_struct() -> Config {
         // Extract color scheme values
         config.colourscheme = first_run_config
             .iter()
-            .filter(|(k, _)| {
-                !k.starts_with("wordlist") && *k != "use_wait_athena" && *k != "timeout"
-            })
+            .filter(|(k, _)| !k.starts_with("wordlist") && *k != "timeout")
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
-
-        // Set wait_athena preference if present
-        if let Some(use_wait_athena) = first_run_config.get("use_wait_athena") {
-            config.use_wait_athena = use_wait_athena.parse().unwrap_or(false);
-        }
 
         // Set timeout if present
         if let Some(timeout) = first_run_config.get("timeout") {
@@ -367,7 +356,7 @@ pub fn get_config_file_into_struct() -> Config {
                         Ok(wordlist) => {
                             config.wordlist = Some(wordlist);
                         }
-                        Err(e) => {
+                        Err(_e) => {
                             // Critical error - exit if config specifies wordlist but can't load it
                             eprintln!("Can't load wordlist at '{}'. Either fix or remove wordlist from config file at '{}'", 
                                 wordlist_path, path.display());
