@@ -30,7 +30,7 @@ use crate::filtration_system::{
 };
 use crossbeam::channel::Sender;
 
-use log::{debug, info, trace, warn};
+use log::{debug, debug, info, trace};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;
@@ -48,7 +48,7 @@ use crate::storage::wait_athena_storage;
 use crate::DecoderResult;
 
 /// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
-const PRUNE_THRESHOLD: usize = 10000;
+const PRUNE_THRESHOLD: usize = 100000;
 
 /// Initial pruning threshold for dynamic adjustment
 const INITIAL_PRUNE_THRESHOLD: usize = PRUNE_THRESHOLD;
@@ -334,7 +334,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
                                 // Prune the HashSet if it gets too large
                                 if seen_count > prune_threshold {
-                                    warn!(
+                                    debug!(
                                         "Pruning seen_strings HashSet (size: {})",
                                         seen_strings.len()
                                     );
@@ -366,7 +366,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                     prune_threshold = INITIAL_PRUNE_THRESHOLD
                                         - (progress_factor * 5000.0) as usize;
 
-                                    warn!(
+                                    debug!(
                                         "Pruned to {} high-quality entries (new threshold: {})",
                                         seen_count, prune_threshold
                                     );
@@ -555,7 +555,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
                                 // Prune the HashSet if it gets too large
                                 if seen_count > prune_threshold {
-                                    warn!(
+                                    debug!(
                                         "Pruning seen_strings HashSet (size: {})",
                                         seen_strings.len()
                                     );
@@ -587,7 +587,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                     prune_threshold = INITIAL_PRUNE_THRESHOLD
                                         - (progress_factor * 5000.0) as usize;
 
-                                    warn!(
+                                    debug!(
                                         "Pruned to {} high-quality entries (new threshold: {})",
                                         seen_count, prune_threshold
                                     );
