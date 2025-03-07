@@ -1,10 +1,13 @@
 /// import general checker
 use lemmeknow::Identifier;
+use memmap2::Mmap;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::fs::{self, File};
+use std::io::{self, BufRead, BufReader};
 use std::io::{Read, Write};
+use std::path::Path;
 
 /// Library input is the default API input
 /// The CLI turns its arguments into a LibraryInput struct
@@ -52,6 +55,11 @@ pub struct Config {
     pub api_mode: bool,
     /// Regex enables the user to search for a specific regex or crib
     pub regex: Option<String>,
+    /// Path to the wordlist file. Will be overridden by CLI argument if provided.
+    pub wordlist_path: Option<String>,
+    /// Wordlist data structure (loaded from file). CLI takes precedence if both config and CLI specify a wordlist.
+    #[serde(skip)]
+    pub wordlist: Option<HashSet<String>>,
     /// Colourscheme hashmap
     pub colourscheme: HashMap<String, String>,
 }
@@ -111,6 +119,8 @@ impl Default for Config {
             timeout: 5,
             api_mode: false,
             regex: None,
+            wordlist_path: None,
+            wordlist: None,
             colourscheme: HashMap::new(),
         };
 
@@ -136,6 +146,12 @@ impl Default for Config {
 }
 
 /// Get the path to the Ares config file
+///
+/// # Panics
+///
+/// This function will panic if:
+/// - The home directory cannot be found
+/// - The Ares directory cannot be created
 pub fn get_config_file_path() -> std::path::PathBuf {
     let mut path = dirs::home_dir().expect("Could not find home directory");
     path.push("Ares");
@@ -145,6 +161,12 @@ pub fn get_config_file_path() -> std::path::PathBuf {
 }
 
 /// Create a default config file at the specified path
+///
+/// # Panics
+///
+/// This function will panic if:
+/// - The config cannot be serialized to TOML
+/// - The config file path cannot be determined (see `get_config_file_path`)
 pub fn create_default_config_file() -> std::io::Result<()> {
     let config = Config::default();
     let toml_string = toml::to_string_pretty(&config).expect("Could not serialize config");
@@ -181,6 +203,7 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "timeout",
             "api_mode",
             "regex",
+            "wordlist_path",
             "question",
             "colourscheme",
         ];
@@ -197,22 +220,143 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
     config
 }
 
+/// Loads a wordlist from a file into a HashSet for efficient lookups
+/// Uses memory mapping for large files to improve performance and memory usage
+///
+/// # Arguments
+/// * `path` - Path to the wordlist file
+///
+/// # Returns
+/// * `Ok(HashSet<String>)` - The loaded wordlist as a HashSet for O(1) lookups
+/// * `Err(io::Error)` - If the file cannot be opened or read
+///
+/// # Errors
+/// This function will return an error if:
+/// * The file does not exist
+/// * The file cannot be opened due to permissions
+/// * The file cannot be memory-mapped
+/// * The file contains invalid UTF-8 characters
+///
+/// # Safety
+/// This implementation uses unsafe code in two places:
+/// 1. Memory mapping (unsafe { Mmap::map(&file) }):
+///    - This is unsafe because the memory map could become invalid if the underlying file is modified
+///    - We accept this risk since the wordlist is only loaded once at startup and not expected to change
+///
+/// 2. UTF-8 conversion (unsafe { std::str::from_utf8_unchecked(&mmap) }):
+///    - This is unsafe because it assumes the file contains valid UTF-8
+///    - We attempt to convert to UTF-8 first and panic if invalid, making this assumption safe
+///    - The unchecked version is used for performance since we verify UTF-8 validity first
+pub fn load_wordlist<P: AsRef<Path>>(path: P) -> io::Result<HashSet<String>> {
+    let file = File::open(path)?;
+    let file_size = file.metadata()?.len();
+
+    // For small files (under 10MB), use regular file reading
+    // This threshold was chosen because:
+    // 1. Most wordlists under 10MB can be loaded quickly with minimal memory overhead
+    // 2. Memory mapping has overhead that may not be worth it for small files
+    // 3. 10MB allows for roughly 1 million words (assuming average word length of 10 chars)
+    if file_size < 10_000_000 {
+        // 10MB threshold
+        let reader = BufReader::new(file);
+        let mut wordlist = HashSet::new();
+
+        for line in reader.lines() {
+            if let Ok(word) = line {
+                let trimmed = word.trim().to_string();
+                if !trimmed.is_empty() {
+                    wordlist.insert(trimmed);
+                }
+            }
+        }
+
+        Ok(wordlist)
+    } else {
+        // For large files, use memory mapping
+        // First create the memory map
+        let mmap = unsafe { Mmap::map(&file)? };
+
+        // Verify the file contains valid UTF-8 before proceeding
+        if std::str::from_utf8(&mmap).is_err() {
+            panic!("Wordlist file contains invalid UTF-8");
+        }
+
+        // Now we can safely use from_utf8_unchecked since we verified it's valid UTF-8
+        let mut wordlist = HashSet::new();
+        let content = unsafe { std::str::from_utf8_unchecked(&mmap) };
+        for line in content.lines() {
+            let trimmed = line.trim();
+            if !trimmed.is_empty() {
+                wordlist.insert(trimmed.to_string());
+            }
+        }
+
+        Ok(wordlist)
+    }
+}
+
 /// Get configuration from file or create default if it doesn't exist
 pub fn get_config_file_into_struct() -> Config {
     let path = get_config_file_path();
 
     if !path.exists() {
         // First run - get user preferences
-        let colors = crate::cli::run_first_time_setup();
+        let first_run_config = crate::cli::run_first_time_setup();
         let mut config = Config::default();
-        config.colourscheme = colors;
+
+        // Extract color scheme values
+        config.colourscheme = first_run_config
+            .iter()
+            .filter(|(k, _)| !k.starts_with("wordlist"))
+            .map(|(k, v)| (k.clone(), v.clone()))
+            .collect();
+
+        // Extract wordlist path if present
+        if let Some(wordlist_path) = first_run_config.get("wordlist_path") {
+            config.wordlist_path = Some(wordlist_path.clone());
+
+            // Load the wordlist
+            match load_wordlist(wordlist_path) {
+                Ok(wordlist) => {
+                    config.wordlist = Some(wordlist);
+                }
+                Err(e) => {
+                    eprintln!(
+                        "Warning: Could not load wordlist at '{}': {}",
+                        wordlist_path, e
+                    );
+                    // Don't exit - just continue without the wordlist
+                }
+            }
+        }
+
         // Save the config to file
         save_config_to_file(&config, &path);
         config
     } else {
         // Existing config - read and parse it
         match read_config_file() {
-            Ok(contents) => parse_toml_with_unknown_keys(&contents),
+            Ok(contents) => {
+                let mut config = parse_toml_with_unknown_keys(&contents);
+
+                // If wordlist is specified in config file, set it in the config struct
+                if let Some(wordlist_path) = &config.wordlist_path {
+                    // Load the wordlist here in the config layer
+                    match load_wordlist(wordlist_path) {
+                        Ok(wordlist) => {
+                            config.wordlist = Some(wordlist);
+                        }
+                        Err(e) => {
+                            // Critical error - exit if config specifies wordlist but can't load it
+                            eprintln!("Can't load wordlist at '{}'. Either fix or remove wordlist from config file at '{}'", 
+                                wordlist_path, path.display());
+                            std::process::exit(1);
+                        }
+                    }
+                }
+
+                config
+            }
             Err(e) => {
                 eprintln!("Error reading config file: {}. Using defaults.", e);
                 Config::default()
