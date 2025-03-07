@@ -1,3 +1,6 @@
+/// Athena checker runs all other checkers and returns immediately when a plaintext is found.
+/// This is the standard checker that exits early when a plaintext is found.
+/// For a version that continues checking and collects all plaintexts, see WaitAthena.
 use crate::{checkers::checker_result::CheckResult, cli_pretty_printing, config::get_config};
 use gibberish_or_not::Sensitivity;
 use lemmeknow::Identifier;

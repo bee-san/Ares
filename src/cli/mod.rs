@@ -54,6 +54,10 @@ pub struct Opts {
         help = "Path to a wordlist file with newline-separated words for exact matching"
     )]
     wordlist: Option<String>,
+    /// Show all potential plaintexts found instead of exiting after the first one
+    /// Automatically disables the human checker
+    #[arg(long)]
+    top_results: bool,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -154,6 +158,14 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
                 std::process::exit(1);
             }
         }
+    }
+
+    // Set top_results mode if the flag is present
+    config.top_results = opts.top_results;
+
+    // If top_results is enabled, automatically disable the human checker
+    if config.top_results {
+        config.human_checker_on = false;
     }
 
     (text, config)

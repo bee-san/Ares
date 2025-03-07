@@ -41,7 +41,8 @@ impl Check for Checker<WordlistChecker> {
                 let mut result = CheckResult::new(self);
                 result.is_identified = true;
                 result.text = text.to_string();
-                result.description = "Text matches an entry in the provided wordlist".to_string();
+                result.description =
+                    "text which matches an entry in the provided wordlist".to_string();
                 return result;
             }
 

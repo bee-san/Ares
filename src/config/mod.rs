@@ -62,6 +62,8 @@ pub struct Config {
     pub wordlist: Option<HashSet<String>>,
     /// Colourscheme hashmap
     pub colourscheme: HashMap<String, String>,
+    /// Whether to use top results mode (collect all plaintexts instead of exiting early)
+    pub top_results: bool,
 }
 
 /// Cell for storing global Config
@@ -122,6 +124,7 @@ impl Default for Config {
             wordlist_path: None,
             wordlist: None,
             colourscheme: HashMap::new(),
+            top_results: false,
         };
 
         // Set default colors
@@ -206,6 +209,7 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "wordlist_path",
             "question",
             "colourscheme",
+            "top_results",
         ];
         for key in table.keys() {
             if !known_keys.contains(&key.as_str()) {

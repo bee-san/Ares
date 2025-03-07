@@ -30,7 +30,7 @@ use crate::filtration_system::{
 };
 use crossbeam::channel::Sender;
 
-use log::{trace, warn};
+use log::{debug, info, trace, warn};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;
@@ -39,10 +39,12 @@ use std::sync::Arc;
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
+use crate::config::get_config;
 use crate::searchers::helper_functions::{
     calculate_string_quality, check_if_string_cant_be_decoded, generate_heuristic,
     update_decoder_stats,
 };
+use crate::storage::wait_athena_storage;
 use crate::DecoderResult;
 
 /// Threshold for pruning the seen_strings HashSet to prevent excessive memory usage
@@ -230,19 +232,51 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         let text = res.unencrypted_text.clone().unwrap_or_default();
                         decoders_used.push(res.clone());
                         let result_text = DecoderResult {
-                            text,
+                            text: text.clone(),
                             path: decoders_used,
                         };
 
                         decoded_how_many_times(curr_depth);
                         cli_pretty_printing::success(&format!("DEBUG: astar.rs - decoder-tagged decoder - Sending successful result with {} decoders", result_text.path.len()));
+
+                        // If in top_results mode, store the result in the WaitAthena storage
+                        if get_config().top_results {
+                            // Store the first text in the vector (there should only be one)
+                            if let Some(plaintext) = text.first() {
+                                log::trace!(
+                                    "Storing plaintext in WaitAthena storage: {}",
+                                    plaintext
+                                );
+                                wait_athena_storage::add_plaintext_result(
+                                    plaintext.clone(),
+                                    format!(
+                                        "Found by decoder-tagged decoder at depth {}",
+                                        curr_depth
+                                    ),
+                                    "Astar Search".to_string(),
+                                );
+
+                                // Check how many results are stored
+                                let results = wait_athena_storage::get_plaintext_results();
+                                log::trace!("WaitAthena storage now has {} results", results.len());
+                            } else {
+                                log::trace!(
+                                    "No plaintext to store in WaitAthena storage (decoder-tagged)"
+                                );
+                            }
+                        }
+
                         result_sender
                             .send(Some(result_text))
                             .expect("Should successfully send the result");
 
-                        // Stop further iterations
-                        stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                        return;
+                        // Only stop if not in top_results mode
+                        if !get_config().top_results {
+                            // Stop further iterations
+                            stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                            return;
+                        }
+                        // In top_results mode, continue searching
                     } else {
                         // If human checker rejected, continue the search
                         trace!("Human checker rejected the result, continuing search");
@@ -393,19 +427,49 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         let text = res.unencrypted_text.clone().unwrap_or_default();
                         decoders_used.push(res.clone());
                         let result_text = DecoderResult {
-                            text,
+                            text: text.clone(),
                             path: decoders_used,
                         };
 
                         decoded_how_many_times(curr_depth);
                         cli_pretty_printing::success(&format!("DEBUG: astar.rs - non-decoder-tagged decoder - Sending successful result with {} decoders", result_text.path.len()));
+
+                        // If in top_results mode, store the result in the WaitAthena storage
+                        if get_config().top_results {
+                            // Store the first text in the vector (there should only be one)
+                            if let Some(plaintext) = text.first() {
+                                log::trace!(
+                                    "Storing plaintext in WaitAthena storage: {}",
+                                    plaintext
+                                );
+                                wait_athena_storage::add_plaintext_result(
+                                    plaintext.clone(),
+                                    format!(
+                                        "Found by non-decoder-tagged decoder at depth {}",
+                                        curr_depth
+                                    ),
+                                    "Astar Search".to_string(),
+                                );
+
+                                // Check how many results are stored
+                                let results = wait_athena_storage::get_plaintext_results();
+                                log::trace!("WaitAthena storage now has {} results", results.len());
+                            } else {
+                                log::trace!("No plaintext to store in WaitAthena storage (non-decoder-tagged)");
+                            }
+                        }
+
                         result_sender
                             .send(Some(result_text))
                             .expect("Should successfully send the result");
 
-                        // Stop further iterations
-                        stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                        return;
+                        // Only stop if not in top_results mode
+                        if !get_config().top_results {
+                            // Stop further iterations
+                            stop.store(true, std::sync::atomic::Ordering::Relaxed);
+                            return;
+                        }
+                        // In top_results mode, continue searching
                     } else {
                         // If human checker rejected, continue the search
                         trace!("Human checker rejected the result, continuing search");
