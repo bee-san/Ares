@@ -30,7 +30,7 @@ impl Check for Checker<WaitAthena> {
             description: "Runs all available checkers and stores results until timer expires",
             link: "",
             tags: vec!["wait_athena", "all"],
-            expected_runtime: 0.01,
+            expected_runtime: 1.0,
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
             sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
@@ -42,6 +42,7 @@ impl Check for Checker<WaitAthena> {
         let config = get_config();
 
         // If regex is specified, only run the regex checker
+        // operates exactly the same as athena
         if config.regex.is_some() {
             trace!("running regex");
             let regex_checker = Checker::<RegexChecker>::new().with_sensitivity(self.sensitivity);

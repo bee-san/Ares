@@ -32,13 +32,17 @@ pub fn start(duration: u32) -> Receiver<()> {
         // When the timer expires, display all collected plaintext results
         // Only if we're in wait_athena mode
         let config = get_config();
-        log::trace!("Timer expired. top_results mode: {}", config.top_results);
+        log::trace!(
+            "Timer expired. top_results mode: {}, use_wait_athena mode: {}",
+            config.top_results,
+            config.use_wait_athena
+        );
 
-        if config.top_results {
+        if config.top_results || config.use_wait_athena {
             log::info!("Displaying all collected plaintext results");
             display_wait_athena_results();
         } else {
-            log::info!("Not in top_results mode, skipping display_wait_athena_results()");
+            log::info!("Not in top_results or use_wait_athena mode, skipping display_wait_athena_results()");
         }
 
         sender.send(()).expect("Timer should send succesfully");

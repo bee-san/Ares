@@ -165,7 +165,7 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     if ask_yes_no_question("Do you want a tutorial?", true) {
         println!("ares -t 'encoded text here' to decode.");
         println!("Have a crib you know is in the plaintext? use --regex 'crib here'");
-        println!("🙂‍↕️ yah that's it. Will write more when we add more :-D");
+        println!("yah that's it. Will write more when we add more :-D\n");
     }
 
     // Ask if the user wants a custom color scheme
@@ -205,7 +205,7 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         print!("{} | ", print_rgb("Questions", &darcula.question));
         println!("{}\n", print_rgb("Statements", &darcula.statement));
 
-        println!("3. 💖✨💐 Girly Pop");
+        println!("3. 💖✨💐 GirlyPop");
         let girly = get_girly_pop_scheme();
         print!("   ");
         print!("{} | ", print_rgb("Informational", &girly.informational));
@@ -263,6 +263,45 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
             _ => unreachable!(),
         }
     };
+
+    // ask about wait athena
+    println!("\n{}", print_statement("Which sounds better to you?"));
+    println!(
+        "\n{}",
+        print_statement("1. Ares will ask you everytime it detects plaintext if it is plaintext.\n2. Ares stores all possible plaintext in a list, and at the end of the program presents it to you.")
+    );
+    println!(
+        "{}",
+        print_warning("Warning for (2): Ares can decode 100 levels a second. So that's 3500 decodes a second. If you run this mode for too long your computer will run out of memory and crash.")
+    );
+    println!(
+        "{}",
+        print_warning("If you select (2), we will ask how long you want to run the program for.\n")
+    );
+    let wait_athena_choice = get_user_input_range("Enter your choice (1-2): ", 1, 2);
+
+    // Store the wait_athena choice in the config
+    let use_wait_athena = wait_athena_choice == 2;
+    config.insert("use_wait_athena".to_string(), use_wait_athena.to_string());
+
+    // Set the default timeout
+    let mut timeout = 5; // Default timeout
+
+    if use_wait_athena {
+        // user has chosen to use wait_athena
+        println!(
+            "\n{}",
+            print_statement("Ares by default runs for 5 seconds. For this mode we suggest 3 seconds. Please do not complain if you choose too high of a number and your PC freezes up.\n")
+        );
+        timeout = get_user_input_range(
+            "How many seconds do you want Ares to run? (1-500, 3 suggested) seconds ",
+            1,
+            500,
+        );
+    }
+
+    // Store the timeout in the config
+    config.insert("timeout".to_string(), timeout.to_string());
 
     // Ask if the user wants to use a wordlist
     // TODO I think we ask if they have any wordlists and then say

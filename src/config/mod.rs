@@ -49,6 +49,9 @@ pub struct Config {
     /// The timeout threshold before Ares quites
     /// This is in seconds
     pub timeout: u32,
+    /// Whether to use WaitAthena instead of regular Athena
+    /// WaitAthena collects all plaintexts until timeout expires
+    pub use_wait_athena: bool,
     /// Is the program being run in API mode?
     /// This is used to determine if we should print to stdout
     /// Or return the values
@@ -119,6 +122,7 @@ impl Default for Config {
             lemmeknow_boundaryless: false,
             human_checker_on: false,
             timeout: 5,
+            use_wait_athena: false,
             api_mode: false,
             regex: None,
             wordlist_path: None,
@@ -204,6 +208,7 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "lemmeknow_boundaryless",
             "human_checker_on",
             "timeout",
+            "use_wait_athena",
             "api_mode",
             "regex",
             "wordlist_path",
@@ -311,9 +316,21 @@ pub fn get_config_file_into_struct() -> Config {
         // Extract color scheme values
         config.colourscheme = first_run_config
             .iter()
-            .filter(|(k, _)| !k.starts_with("wordlist"))
+            .filter(|(k, _)| {
+                !k.starts_with("wordlist") && *k != "use_wait_athena" && *k != "timeout"
+            })
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
+
+        // Set wait_athena preference if present
+        if let Some(use_wait_athena) = first_run_config.get("use_wait_athena") {
+            config.use_wait_athena = use_wait_athena.parse().unwrap_or(false);
+        }
+
+        // Set timeout if present
+        if let Some(timeout) = first_run_config.get("timeout") {
+            config.timeout = timeout.parse().unwrap_or(5);
+        }
 
         // Extract wordlist path if present
         if let Some(wordlist_path) = first_run_config.get("wordlist_path") {
