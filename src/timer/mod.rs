@@ -9,7 +9,6 @@ use std::{
 use crate::cli_pretty_printing::{countdown_until_program_ends, display_top_results};
 use crate::config::get_config;
 use crate::storage::wait_athena_storage;
-use log::trace;
 
 /// Indicate whether timer is paused
 static PAUSED: AtomicBool = AtomicBool::new(false);

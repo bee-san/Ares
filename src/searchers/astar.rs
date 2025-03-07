@@ -30,7 +30,7 @@ use crate::filtration_system::{
 };
 use crossbeam::channel::Sender;
 
-use log::{debug, info, trace};
+use log::{debug, trace};
 use std::cmp::Ordering;
 use std::collections::{BinaryHeap, HashSet};
 use std::sync::atomic::AtomicBool;

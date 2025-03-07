@@ -8,7 +8,6 @@ use std::sync::Arc;
 use std::thread;
 
 use crossbeam::channel::bounded;
-use log;
 
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
