@@ -6,7 +6,9 @@ use std::{
     time::Duration,
 };
 
-use crate::cli_pretty_printing::{countdown_until_program_ends, success};
+use crate::cli_pretty_printing::{
+    countdown_until_program_ends, debug_dump_results, display_top_results, success,
+};
 use crate::config::get_config;
 use crate::storage::wait_athena_storage;
 use log::{debug, info};
@@ -40,7 +42,7 @@ pub fn start(duration: u32) -> Receiver<()> {
 
         if config.top_results || config.use_wait_athena {
             log::info!("Displaying all collected plaintext results");
-            display_wait_athena_results();
+            filter_and_display_results();
         } else {
             log::info!("Not in top_results or use_wait_athena mode, skipping display_wait_athena_results()");
         }
@@ -51,48 +53,31 @@ pub fn start(duration: u32) -> Receiver<()> {
     recv
 }
 
-/// Display all plaintext results collected by WaitAthena
-fn display_wait_athena_results() {
+/// Filter and display all plaintext results collected by WaitAthena
+fn filter_and_display_results() {
     let results = wait_athena_storage::get_plaintext_results();
+
     log::trace!(
         "Retrieved {} results from wait_athena_storage",
         results.len()
     );
 
-    if results.is_empty() {
-        println!("{}", success("\n=== Top Results ==="));
-        println!("{}", success("No potential plaintexts found."));
-        println!("{}", success("=== End of Top Results ===\n"));
-        return;
-    }
-
-    println!("{}", success("\n=== Top Results ==="));
-    println!(
-        "{}",
-        success(&format!(
-            "Found {} potential plaintext results:",
-            results.len()
-        ))
-    );
-
+    // Debug: Print each result to the log
     for (i, result) in results.iter().enumerate() {
-        println!(
-            "{}",
-            success(&format!(
-                "Result #{}: [{}] {}",
-                i + 1,
-                result.checker_name,
-                result.text
-            ))
+        log::debug!(
+            "Result #{}: [{}] {} (Decoder: {})",
+            i + 1,
+            result.checker_name,
+            result.text,
+            result.decoder_name
         );
-        println!(
-            "{}",
-            success(&format!("Description: {}", result.description))
-        );
-        println!("{}", success("---"));
     }
 
-    println!("{}", success("=== End of Top Results ===\n"));
+    // Print a debug dump of the results
+    debug_dump_results(&results);
+
+    // Use the cli_pretty_printing function to display the results
+    display_top_results(&results);
 }
 
 /// Pause timer

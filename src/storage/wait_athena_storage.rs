@@ -7,20 +7,32 @@ pub struct PlaintextResult {
     pub text: String,
     pub description: String,
     pub checker_name: String,
+    pub decoder_name: String,
 }
 
 lazy_static! {
     static ref PLAINTEXT_RESULTS: Mutex<Vec<PlaintextResult>> = Mutex::new(Vec::new());
 }
 
-pub fn add_plaintext_result(text: String, description: String, checker_name: String) {
+pub fn add_plaintext_result(
+    text: String,
+    description: String,
+    checker_name: String,
+    decoder_name: String,
+) {
     let result = PlaintextResult {
         text: text.clone(),
         description: description.clone(),
         checker_name: checker_name.clone(),
+        decoder_name: decoder_name.clone(),
     };
 
-    trace!("Adding plaintext result: [{}] {}", checker_name, text);
+    trace!(
+        "Adding plaintext result: [{}] {} (decoder: {})",
+        checker_name,
+        text,
+        decoder_name
+    );
 
     let mut results = match PLAINTEXT_RESULTS.lock() {
         Ok(guard) => guard,

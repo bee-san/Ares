@@ -29,6 +29,7 @@
 #[cfg(test)]
 mod tests;
 use crate::storage;
+use crate::storage::wait_athena_storage::PlaintextResult;
 use crate::DecoderResult;
 use colored::Colorize;
 use std::env;
@@ -466,6 +467,57 @@ pub fn warning_unknown_config_key(key: &str) {
             key
         ))
     );
+}
+
+/// Display all plaintext results collected by WaitAthena
+pub fn display_top_results(results: &[PlaintextResult]) {
+    if results.is_empty() {
+        println!("{}", success("\n=== Top Results ==="));
+        println!("{}", success("No potential plaintexts found."));
+        println!("{}", success("=== End of Top Results ===\n"));
+        return;
+    }
+
+    println!("{}", success("\n=== Top Results ==="));
+    println!(
+        "{}",
+        success(&format!(
+            "Found {} potential plaintext results:",
+            results.len()
+        ))
+    );
+
+    for (i, result) in results.iter().enumerate() {
+        println!(
+            "{}",
+            success(&format!("Result #{}: {}", i + 1, result.text))
+        );
+        println!("{}", success(&format!("Decoder: {}", result.decoder_name)));
+        println!("{}", success(&format!("Checker: {}", result.checker_name)));
+        println!(
+            "{}",
+            success(&format!("Description: {}", result.description))
+        );
+        println!("{}", success("---"));
+    }
+
+    println!("{}", success("=== End of Top Results ===\n"));
+}
+
+/// Print a debug dump of the plaintext results
+pub fn debug_dump_results(results: &[PlaintextResult]) {
+    println!("\n=== DEBUG DUMP OF RESULTS ===");
+    println!("Total results: {}", results.len());
+
+    for (i, result) in results.iter().enumerate() {
+        println!("Result #{}", i + 1);
+        println!("  Text: {}", result.text);
+        println!("  Checker: {}", result.checker_name);
+        println!("  Decoder: {}", result.decoder_name);
+        println!("  Description: {}", result.description);
+    }
+
+    println!("=== END DEBUG DUMP ===\n");
 }
 
 #[test]

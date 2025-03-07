@@ -58,6 +58,7 @@ impl Check for Checker<WaitAthena> {
                     check_res.text.clone(),
                     check_res.description.clone(),
                     regex_checker.name.to_string(),
+                    "RegexChecker".to_string(),
                 );
 
                 // Continue checking by returning the result
@@ -81,6 +82,7 @@ impl Check for Checker<WaitAthena> {
                         check_res.text.clone(),
                         check_res.description.clone(),
                         wordlist_checker.name.to_string(),
+                        "WordlistChecker".to_string(),
                     );
 
                     // Continue checking by returning the result
@@ -103,6 +105,7 @@ impl Check for Checker<WaitAthena> {
                     check_res.text.clone(),
                     check_res.description.clone(),
                     lemmeknow.name.to_string(),
+                    "LemmeKnow".to_string(),
                 );
 
                 // Continue checking by returning the result
@@ -122,6 +125,7 @@ impl Check for Checker<WaitAthena> {
                     check_res.text.clone(),
                     check_res.description.clone(),
                     password.name.to_string(),
+                    "PasswordChecker".to_string(),
                 );
 
                 // Continue checking by returning the result
@@ -141,6 +145,7 @@ impl Check for Checker<WaitAthena> {
                     check_res.text.clone(),
                     check_res.description.clone(),
                     english.name.to_string(),
+                    "EnglishChecker".to_string(),
                 );
 
                 // Continue checking by returning the result

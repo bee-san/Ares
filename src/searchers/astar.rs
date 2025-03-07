@@ -243,17 +243,33 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         if get_config().top_results || get_config().use_wait_athena {
                             // Store the first text in the vector (there should only be one)
                             if let Some(plaintext) = text.first() {
+                                // Get the last decoder used
+                                let decoder_name =
+                                    if let Some(last_decoder) = result_text.path.last() {
+                                        last_decoder.decoder.to_string()
+                                    } else {
+                                        "Unknown".to_string()
+                                    };
+
+                                // Get the checker name from the last decoder
+                                let checker_name =
+                                    if let Some(last_decoder) = result_text.path.last() {
+                                        last_decoder.checker_name.to_string()
+                                    } else {
+                                        "Unknown".to_string()
+                                    };
+
                                 log::trace!(
-                                    "Storing plaintext in WaitAthena storage: {}",
-                                    plaintext
+                                    "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
+                                    plaintext,
+                                    decoder_name,
+                                    checker_name
                                 );
                                 wait_athena_storage::add_plaintext_result(
                                     plaintext.clone(),
-                                    format!(
-                                        "Found by decoder-tagged decoder at depth {}",
-                                        curr_depth
-                                    ),
-                                    "Astar Search".to_string(),
+                                    format!("Decoded successfully at depth {}", curr_depth),
+                                    checker_name,
+                                    decoder_name,
                                 );
 
                                 // Check how many results are stored
@@ -438,17 +454,33 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         if get_config().top_results || get_config().use_wait_athena {
                             // Store the first text in the vector (there should only be one)
                             if let Some(plaintext) = text.first() {
+                                // Get the last decoder used
+                                let decoder_name =
+                                    if let Some(last_decoder) = result_text.path.last() {
+                                        last_decoder.decoder.to_string()
+                                    } else {
+                                        "Unknown".to_string()
+                                    };
+
+                                // Get the checker name from the last decoder
+                                let checker_name =
+                                    if let Some(last_decoder) = result_text.path.last() {
+                                        last_decoder.checker_name.to_string()
+                                    } else {
+                                        "Unknown".to_string()
+                                    };
+
                                 log::trace!(
-                                    "Storing plaintext in WaitAthena storage: {}",
-                                    plaintext
+                                    "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
+                                    plaintext,
+                                    decoder_name,
+                                    checker_name
                                 );
                                 wait_athena_storage::add_plaintext_result(
                                     plaintext.clone(),
-                                    format!(
-                                        "Found by non-decoder-tagged decoder at depth {}",
-                                        curr_depth
-                                    ),
-                                    "Astar Search".to_string(),
+                                    format!("Decoded successfully at depth {}", curr_depth),
+                                    checker_name,
+                                    decoder_name,
                                 );
 
                                 // Check how many results are stored
