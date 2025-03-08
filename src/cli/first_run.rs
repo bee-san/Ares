@@ -10,7 +10,7 @@ use std::fmt::Display;
 use std::io::{self, Write};
 use std::path::Path;
 
-use super::super::storage::database::{setup_database};
+use super::super::storage::database::setup_database;
 
 /// Represents a color scheme with RGB values for different message types and roles.
 /// Each color is stored as a comma-separated RGB string in the format "r,g,b"

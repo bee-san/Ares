@@ -4,6 +4,83 @@
 ///! relations and collecting statistics on the performance of Ares
 ///! search algorithms.
 use rusqlite::Connection;
+use serde::{Deserialize, Serialize};
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct RawCrackResult {
+    /// If our checkers return success, we change this bool to True
+    pub success: bool,
+    /// Encrypted text is the text _before_ we decrypt it.
+    pub encrypted_text: String,
+    /// Unencrypted text is what it looks like after.
+    /// if decoder failed, this will be None
+    pub unencrypted_text: Option<Vec<String>>,
+    /// Decoder is the function we used to decode the text
+    pub decoder: String,
+    /// Checker which identified the text
+    pub checker_name: String,
+    /// Description is a short description of the checker
+    pub checker_description: String,
+    /// Key is optional as decoders do not use keys.
+    pub key: Option<String>,
+    /// Description is a short description of the decoder
+    pub description: String,
+    /// Link is a link to more info about the decoder
+    pub link: String,
+}
+
+impl PartialEq for RawCrackResult {
+    fn eq(&self, other: &Self) -> bool {
+        self.success == other.success
+            && self.encrypted_text == other.encrypted_text
+            && self.unencrypted_text == other.unencrypted_text
+            && self.decoder == other.decoder
+            && self.checker_name == other.checker_name
+            && self.checker_description == other.checker_description
+            && self.key == other.key
+            && self.description == other.description
+            && self.link == other.link
+    }
+}
+
+impl Clone for RawCrackResult {
+    fn clone(&self) -> Self {
+        RawCrackResult {
+            success: self.success.clone(),
+            encrypted_text: self.encrypted_text.clone(),
+            unencrypted_text: self.unencrypted_text.clone(),
+            decoder: self.decoder.clone(),
+            checker_name: self.checker_description.clone(),
+            checker_description: self.checker_description.clone(),
+            key: self.key.clone(),
+            description: self.description.clone(),
+            link: self.link.clone(),
+        }
+    }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct CacheRow {
+    pub id: usize,
+    pub encoded_text: String,
+    pub decoded_text: String,
+    pub path: Vec<RawCrackResult>,
+    pub successful: bool,
+    pub execution_time_ms: u64,
+    pub timestamp: String,
+}
+
+impl PartialEq for CacheRow {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.encoded_text == other.encoded_text
+            && self.decoded_text == other.decoded_text
+            && self.path == other.path
+            && self.successful == other.successful
+            && self.execution_time_ms == other.execution_time_ms
+            && self.timestamp == other.timestamp
+    }
+}
 
 /// Returns the path to the database file
 fn get_database_path() -> std::path::PathBuf {
@@ -70,10 +147,38 @@ fn init_database(conn: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
     Ok(())
 }
 
+/// Adds a new cache record to the cache table
+pub fn add_record(
+    conn: &rusqlite::Connection,
+    cache_row: &CacheRow,
+) -> Result<(), rusqlite::Error> {
+    let path_json = serde_json::to_string(&cache_row.path.clone()).unwrap();
+    let conn_result = conn.execute(
+        "INSERT INTO cache (
+            encoded_text,
+            decoded_text,
+            path,
+            successful,
+            execution_time_ms,
+            timestamp)
+            VALUES ($1, $2, $3, $4, $5, $6)",
+        (
+            cache_row.encoded_text.clone(),
+            cache_row.decoded_text.clone(),
+            path_json,
+            cache_row.successful.clone(),
+            cache_row.execution_time_ms.clone(),
+            cache_row.timestamp.clone(),
+        ),
+    );
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
-  
+    use serde_json::Result;
+
     #[test]
     fn database_initialized() {
         let conn_result = Connection::open_in_memory();
@@ -103,9 +208,7 @@ mod tests {
         let conn = Connection::open_in_memory().unwrap();
         let _ = init_database(&conn);
 
-        let stmt_result = conn.prepare(
-            "PRAGMA table_info(cache);"
-        );
+        let stmt_result = conn.prepare("PRAGMA table_info(cache);");
         assert!(stmt_result.is_ok());
         let mut stmt = stmt_result.unwrap();
 
@@ -132,5 +235,86 @@ mod tests {
         assert_eq!(type_list[4], "BOOLEAN");
         assert_eq!(type_list[5], "INTEGER");
         assert_eq!(type_list[6], "DATETIME");
+    }
+
+    #[test]
+    fn cache_record_empty_success() {
+        let conn = Connection::open_in_memory().unwrap();
+        let _ = init_database(&conn);
+
+        let stmt_result = conn.prepare("SELECT * FROM cache;");
+        assert!(stmt_result.is_ok());
+        let mut stmt = stmt_result.unwrap();
+        let query_result = stmt.query_map([], |row| {
+            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+            let crack_result_vec: Vec<RawCrackResult> =
+                serde_json::from_str(&path_str.clone()).unwrap();
+
+            Ok(CacheRow {
+                id: row.get_unwrap(0),
+                encoded_text: row.get_unwrap(1),
+                decoded_text: row.get_unwrap(2),
+                path: crack_result_vec,
+                successful: row.get_unwrap(4),
+                execution_time_ms: row.get_unwrap(5),
+                timestamp: row.get_unwrap(6),
+            })
+        });
+        assert!(query_result.is_ok());
+        let empty_rows = query_result.unwrap();
+        assert_eq!(empty_rows.count(), 0);
+    }
+
+    #[test]
+    fn cache_record_entry_success() {
+        let conn = Connection::open_in_memory().unwrap();
+        let _ = init_database(&conn);
+
+        let mock_crack_result = RawCrackResult {
+            success: true,
+            encrypted_text: String::from("aGVsbG8gd29ybGQK"),
+            unencrypted_text: Some(vec![String::from("hello world")]),
+            decoder: String::from("Base64"),
+            checker_name: String::from("Mock Checker"),
+            checker_description: String::from("A mock checker for testing"),
+            key: None,
+            description: String::from("Mock decoder description"),
+            link: String::from("https://mockdecoderwebsite.com"),
+        };
+
+        let expected_cache_row = CacheRow {
+            id: 1,
+            encoded_text: String::from("aGVsbG8gd29ybGQK"),
+            decoded_text: String::from("hello world"),
+            path: vec![mock_crack_result.clone()],
+            successful: true,
+            execution_time_ms: 100,
+            timestamp: String::from("2025-05-29 14:16:00"),
+        };
+
+        let record_result = add_record(&conn, &expected_cache_row);
+        assert!(record_result.is_ok());
+
+        let stmt_result = conn.prepare("SELECT * FROM cache;");
+        assert!(stmt_result.is_ok());
+        let mut stmt = stmt_result.unwrap();
+        let query_result = stmt.query_map([], |row| {
+            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+            let crack_result_vec: Vec<RawCrackResult> =
+                serde_json::from_str(&path_str.clone()).unwrap();
+
+            Ok(CacheRow {
+                id: row.get_unwrap(0),
+                encoded_text: row.get_unwrap(1),
+                decoded_text: row.get_unwrap(2),
+                path: crack_result_vec,
+                successful: row.get_unwrap(4),
+                execution_time_ms: row.get_unwrap(5),
+                timestamp: row.get_unwrap(6),
+            })
+        });
+        assert!(query_result.is_ok());
+        let cache_row: CacheRow = query_result.unwrap().next().unwrap().unwrap();
+        assert_eq!(cache_row, expected_cache_row);
     }
 }
