@@ -49,12 +49,18 @@ impl Crack for Decoder<BrainfuckInterpreter> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying brainfuck with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
+
+        // Guard against text that realistically won't be a Brainfuck program
         if text.contains(',') {
             return results;
         }
-        if !text.contains('.') {
+        if !text.ends_with('.') || text.matches('.').count() < 5 {
             return results;
         }
+        if text.matches(|c| "+-<>[]".contains(c)).count() < 20 {
+            return results;
+        }
+
         let mut buf = vec![];
         match Brainfuck::new(text).with_output_ref(&mut buf).execute() {
             Ok(_) => {
@@ -161,10 +167,37 @@ mod tests {
     }
 
     #[test]
+    fn brainfuck_fail_no_enough_input() {
+        // This tests if brainfuck_interpreter handles an empty string
+        // It should return None
+        let brainfuck_interpreter = Decoder::<BrainfuckInterpreter>::new();
+        let result = brainfuck_interpreter
+            .crack(">+[+]..", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none());
+        let result = brainfuck_interpreter
+            .crack(
+                ">a+e[i+o]u.a-bunch-of-trash-in-between.",
+                &get_athena_checker(),
+            )
+            .unencrypted_text;
+        assert!(result.is_none());
+    }
+
+    #[test]
     fn brainfuck_fail_no_print() {
         let brainfuck_interpreter = Decoder::<BrainfuckInterpreter>::new();
         let result = brainfuck_interpreter
             .crack("+-<>[]", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn brainfuck_fail_no_print_at_end() {
+        let brainfuck_interpreter = Decoder::<BrainfuckInterpreter>::new();
+        let result = brainfuck_interpreter
+            .crack("+++++++++++++++++.-", &get_athena_checker())
             .unencrypted_text;
         assert!(result.is_none());
     }
@@ -181,7 +214,8 @@ mod tests {
     #[test]
     fn brainfuck_successful_wrapping() {
         let brainfuck_interpreter = Decoder::<BrainfuckInterpreter>::new();
-        let result = brainfuck_interpreter.crack("<-.>-.", &get_athena_checker());
-        assert_eq!(result.unencrypted_text.unwrap()[0], "ÿÿ");
+        let result =
+            brainfuck_interpreter.crack("+++++++++++[---]<-....>-....", &get_athena_checker());
+        assert_eq!(result.unencrypted_text.unwrap()[0], "ÿÿÿÿÿÿÿÿ");
     }
 }
