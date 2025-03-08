@@ -89,6 +89,7 @@ fn binary_to_string(binary: &str, bit: u8) -> String {
 #[cfg(test)]
 mod tests {
     use super::BinaryDecoder;
+    use super::binary_to_string;
     use crate::{
         checkers::{
             athena::Athena,
@@ -108,10 +109,49 @@ mod tests {
     fn binary_bit_7_decodes_successfully() {
         // This tests if Binary can decode Binary bit 7 successfully
         let decoder = Decoder::<BinaryDecoder>::new();
-        let result = decoder.crack("1010011111000011010001101001110111011110000100000110111111001100100000110001011011001100001110001111010110100000111000111101011100001111001011101001111010010110001000001101010111010111001001100111110010101000001101101111100101000001110110110111111101110101110", &get_athena_checker());
+        let input = "1010011111000011010001101001110111011110000100000110111111001100100000110001011011001100001110001111010110100000111000111101011100001111001011101001111010010110001000001101010111010111001001100111110010101000001101101111100101000001110110110111111101110101110";
+        let expected = "Sphinx of black quartz, judge my vow.";
+        
+        println!("Input text length: {}", input.len());
+        println!("Input text: {:?}", input);
+        
+        // Try decoding with specific bit lengths to debug
+        for bit in 5..10 {
+            let decoded = binary_to_string(input, bit);
+            println!("Bit length: {}, Result: {:?}", bit, decoded);
+        }
+        
+        // Specifically check bit 7
+        let manual_decode = binary_to_string(input, 7);
+        println!("Manual decode with bit 7: {:?}", manual_decode);
+        println!("Manual decode length: {}", manual_decode.len());
+        
+        // Check if there are any non-binary characters in the input
+        let non_binary_chars: Vec<char> = input.chars().filter(|c| *c != '0' && *c != '1').collect();
+        println!("Non-binary characters in input: {:?}", non_binary_chars);
+        
+        let result = decoder.crack(
+            input,
+            &get_athena_checker(),
+        );
+        
+        if let Some(decoded_texts) = &result.unencrypted_text {
+            println!("Number of decoded texts: {}", decoded_texts.len());
+            for (i, text) in decoded_texts.iter().enumerate() {
+                println!("Decoded text {}: {:?}", i, text);
+            }
+            
+            if !decoded_texts.is_empty() {
+                println!("First decoded text: {:?}", decoded_texts[0]);
+                println!("Expected text: {:?}", expected);
+            }
+        } else {
+            println!("No decoded texts found");
+        }
+        
         assert_eq!(
             result.unencrypted_text.unwrap()[0],
-            "Sphinx of black quartz, judge my vow."
+            expected
         );
     }
 

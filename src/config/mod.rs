@@ -65,6 +65,10 @@ pub struct Config {
     pub wordlist: Option<HashSet<String>>,
     /// Colourscheme hashmap
     pub colourscheme: HashMap<String, String>,
+    /// Enables enhanced plaintext detection using a BERT model.
+    pub enhanced_detection: bool,
+    /// Path to the enhanced detection model. If None, will use the default path.
+    pub model_path: Option<String>,
 }
 
 /// Cell for storing global Config
@@ -125,6 +129,8 @@ impl Default for Config {
             regex: None,
             wordlist_path: None,
             wordlist: None,
+            enhanced_detection: false,
+            model_path: None,
             colourscheme: HashMap::new(),
         };
 
@@ -199,6 +205,8 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
         let known_keys = [
             "verbose",
             "lemmeknow_min_rarity",
+            "enhanced_detection",
+            "model_path",
             "lemmeknow_max_rarity",
             "lemmeknow_tags",
             "lemmeknow_exclude_tags",
