@@ -19,6 +19,7 @@ impl Check for Checker<LemmeKnow> {
             popularity: 1.0,
             lemmeknow_config: Identifier::default().min_rarity(0.1),
             sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
+            enhanced_detector: None,
             _phantom: std::marker::PhantomData,
         }
     }

@@ -53,6 +53,7 @@ impl<Type> LibraryInput<Type> {
     /// This method is part of the public API for library users who want to provide
     /// a pre-loaded wordlist directly. While it may not be used internally yet,
     /// it's maintained for API compatibility and future use cases.
+    #[allow(dead_code)]
     pub fn with_wordlist(mut self, wordlist: HashSet<String>) -> Self {
         self.wordlist = Some(wordlist);
         self

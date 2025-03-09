@@ -1,3 +1,6 @@
+/// Athena checker runs all other checkers and returns immediately when a plaintext is found.
+/// This is the standard checker that exits early when a plaintext is found.
+/// For a version that continues checking and collects all plaintexts, see WaitAthena.
 use crate::{checkers::checker_result::CheckResult, cli_pretty_printing, config::get_config};
 use gibberish_or_not::Sensitivity;
 use lemmeknow::Identifier;
@@ -28,6 +31,7 @@ impl Check for Checker<Athena> {
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
             sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
+            enhanced_detector: None,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -80,7 +84,6 @@ impl Check for Checker<Athena> {
             let lemmeknow_result = lemmeknow.check(text);
             //println!("Text is {}", text);
             if lemmeknow_result.is_identified {
-                println!("lemmeknow_result: {:?}", lemmeknow_result.is_identified);
                 let mut check_res = CheckResult::new(&lemmeknow);
                 let human_result = human_checker::human_checker(&lemmeknow_result);
                 check_res.is_identified = human_result;

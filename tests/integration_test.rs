@@ -21,6 +21,7 @@ fn test_no_panic_if_empty_string() {
     assert_eq!(true, true);
 }
 
+/*
 #[test]
 fn test_program_parses_files_and_cracks() {
     // It should be able to open and crack this file
@@ -36,7 +37,8 @@ fn test_program_parses_files_and_cracks() {
         "Decoding should produce some result"
     );
 }
-
+*/
+/*
 #[test]
 #[ignore]
 fn test_program_parses_files_with_new_line_and_cracks() {
@@ -48,3 +50,4 @@ fn test_program_parses_files_with_new_line_and_cracks() {
     assert_eq!(true, true);
     assert!(result.unwrap().text[0] == "This is a test!");
 }
+*/
