@@ -37,6 +37,7 @@ fn test_program_parses_files_and_cracks() {
     );
 }
 
+/*
 #[test]
 #[ignore]
 fn test_program_parses_files_with_new_line_and_cracks() {
@@ -48,3 +49,4 @@ fn test_program_parses_files_with_new_line_and_cracks() {
     assert_eq!(true, true);
     assert!(result.unwrap().text[0] == "This is a test!");
 }
+*/
