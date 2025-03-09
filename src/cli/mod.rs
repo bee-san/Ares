@@ -2,7 +2,7 @@
 mod first_run;
 pub use first_run::run_first_time_setup;
 
-use std::{fs::File, io::Read, path::PathBuf};
+use std::{fs::File, io::Read};
 
 use crate::cli_pretty_printing::panic_failure_both_input_and_fail_provided;
 use crate::config::{get_config_file_into_struct, load_wordlist, Config};

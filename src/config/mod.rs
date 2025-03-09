@@ -164,7 +164,7 @@ impl Default for Config {
 /// - The Ares directory cannot be created
 pub fn get_config_file_path() -> std::path::PathBuf {
     let mut path = dirs::home_dir().expect("Could not find home directory");
-    path.push("Ares");
+    path.push(".ares");
     fs::create_dir_all(&path).expect("Could not create Ares directory");
     path.push("config.toml");
     path
