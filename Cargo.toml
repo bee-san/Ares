@@ -1,7 +1,7 @@
 [package]
 name = "ciphey"
 repository = "https://github.com/bee-san/ciphey"
-version = "0.11.0"
+version = "0.12.0"
 edition = "2021"
 description = "Automated decoding tool, Ciphey but in Rust"
 license = "MIT"
