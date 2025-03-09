@@ -2,7 +2,7 @@
 
 ## Overview
 
-Ares uses the `gibberish_or_not` library to detect whether decoded text is meaningful English. This library provides three sensitivity levels to fine-tune gibberish detection:
+ciphey uses the `gibberish_or_not` library to detect whether decoded text is meaningful English. This library provides three sensitivity levels to fine-tune gibberish detection:
 
 ### Low Sensitivity
 - Most strict classification
@@ -14,16 +14,16 @@ Ares uses the `gibberish_or_not` library to detect whether decoded text is meani
 - Balanced approach for general use
 - Combines dictionary and n-gram analysis
 - Default mode suitable for most applications
-- Used by most decoders in Ares
+- Used by most decoders in ciphey
 
 ### High Sensitivity
 - Most lenient classification
 - Favors classifying text as English
 - Best when input is mostly gibberish and any English-like patterns are significant
 
-## Implementation in Ares
+## Implementation in ciphey
 
-In Ares, different decoders use different sensitivity levels based on their characteristics:
+In ciphey, different decoders use different sensitivity levels based on their characteristics:
 
 1. **Caesar Cipher**: Uses Low sensitivity because classical ciphers often produce text that can appear English-like even when the shift is incorrect.
 

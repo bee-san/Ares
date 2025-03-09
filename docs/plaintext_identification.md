@@ -1,12 +1,12 @@
-# Plaintext Identification in Ares
+# Plaintext Identification in ciphey
 
 ## Overview
 
-One of the most critical components of Ares is its ability to identify when encoded text has been successfully decoded into plaintext. This document explains the mechanisms and strategies Ares uses to determine whether a given string is valid plaintext.
+One of the most critical components of ciphey is its ability to identify when encoded text has been successfully decoded into plaintext. This document explains the mechanisms and strategies ciphey uses to determine whether a given string is valid plaintext.
 
 ## The Importance of Plaintext Detection
 
-Accurate plaintext detection serves several crucial purposes in Ares:
+Accurate plaintext detection serves several crucial purposes in ciphey:
 
 1. **Termination Condition**: It tells the search algorithm when to stop decoding
 2. **Result Validation**: It confirms that the decoded output is meaningful
@@ -15,7 +15,7 @@ Accurate plaintext detection serves several crucial purposes in Ares:
 
 ## The Checker System
 
-Ares uses a modular system of "checkers" to identify plaintext. Each checker specializes in recognizing different types of plaintext:
+ciphey uses a modular system of "checkers" to identify plaintext. Each checker specializes in recognizing different types of plaintext:
 
 ### Athena Checker
 
@@ -77,7 +77,7 @@ The English checker supports three sensitivity levels:
 
 - **Low Sensitivity**: Most strict classification, requires very high confidence to classify text as English. Used by classical ciphers like Caesar cipher that produce more English-like results.
 
-- **Medium Sensitivity (Default)**: Balanced approach for general use, suitable for most applications. Used by most decoders in Ares.
+- **Medium Sensitivity (Default)**: Balanced approach for general use, suitable for most applications. Used by most decoders in ciphey.
 
 - **High Sensitivity**: Most lenient classification, favors classifying text as English. Useful when input is mostly gibberish and any English-like patterns are significant.
 
@@ -107,10 +107,10 @@ This checker is optional and can be enabled or disabled through the configuratio
 
 ## Plaintext Detection Process
 
-The overall plaintext detection process in Ares follows these steps:
+The overall plaintext detection process in ciphey follows these steps:
 
-1. **Initial Check**: When `perform_cracking` is called, Ares first checks if the input is already plaintext using the Athena checker
-   - If it is, Ares returns early with the input as the result
+1. **Initial Check**: When `perform_cracking` is called, ciphey first checks if the input is already plaintext using the Athena checker
+   - If it is, ciphey returns early with the input as the result
    - This prevents unnecessary processing of already-decoded text
 
 2. **During Search**: As the search algorithm explores possible decodings, each result is checked:
@@ -118,36 +118,36 @@ The overall plaintext detection process in Ares follows these steps:
    - If it is, the search terminates and returns the result
    - If not, the result is added to the search queue for further decoding
 
-3. **Result Validation**: Before returning the final result, Ares ensures it's valid plaintext
+3. **Result Validation**: Before returning the final result, ciphey ensures it's valid plaintext
    - This helps prevent returning partially decoded or incorrect results
 
 ## Handling Edge Cases
 
-Ares includes several mechanisms to handle edge cases in plaintext detection:
+ciphey includes several mechanisms to handle edge cases in plaintext detection:
 
 ### Very Short Strings
 
-Very short strings (less than 2-3 characters) are difficult to classify reliably. Ares handles these by:
+Very short strings (less than 2-3 characters) are difficult to classify reliably. ciphey handles these by:
 - Having specific logic in the English checker to reject very short strings
 - Using multiple checkers to increase the chance of correct identification
 
 ### Specialized Content
 
-Some valid plaintext might not be natural language (e.g., JSON, XML, code). Ares addresses this through:
+Some valid plaintext might not be natural language (e.g., JSON, XML, code). ciphey addresses this through:
 - The LemmeKnow checker, which can identify many structured data formats
 - The regex checker, which allows users to provide custom patterns
 - The human checker, which can be enabled for manual verification
 
 ### False Positives
 
-To reduce false positives (incorrectly identifying gibberish as plaintext), Ares:
+To reduce false positives (incorrectly identifying gibberish as plaintext), ciphey:
 - Uses multiple checkers with different approaches
 - Configures the LemmeKnow checker with a minimum rarity threshold
 - Allows for human verification in ambiguous cases
 
 ### False Negatives
 
-To reduce false negatives (failing to identify valid plaintext), Ares:
+To reduce false negatives (failing to identify valid plaintext), ciphey:
 - Normalizes text before checking (removing punctuation, converting to lowercase)
 - Uses multiple checkers with different strengths
 - Provides configuration options to adjust the detection sensitivity
@@ -165,7 +165,7 @@ These options allow users to tailor the plaintext detection to their specific ne
 
 ## Future Improvements
 
-The plaintext detection system in Ares is continuously evolving. Planned improvements include:
+The plaintext detection system in ciphey is continuously evolving. Planned improvements include:
 
 1. **Better English Detection**: Enhancing the English checker to better handle technical content and edge cases
 2. **More Specialized Checkers**: Adding checkers for specific formats like JSON, XML, etc.
@@ -175,4 +175,4 @@ The plaintext detection system in Ares is continuously evolving. Planned improve
 
 ## Conclusion
 
-Plaintext identification is a fundamental component of Ares that enables it to automatically decode text without requiring explicit knowledge of the encoding method. The modular checker system provides flexibility and extensibility, allowing Ares to handle a wide range of plaintext formats and continuously improve its detection capabilities.
+Plaintext identification is a fundamental component of ciphey that enables it to automatically decode text without requiring explicit knowledge of the encoding method. The modular checker system provides flexibility and extensibility, allowing ciphey to handle a wide range of plaintext formats and continuously improve its detection capabilities.

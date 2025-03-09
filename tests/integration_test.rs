@@ -1,9 +1,9 @@
-use ares::cli::read_and_parse_file;
-use ares::config::Config;
-use ares::perform_cracking;
+use ciphey::cli::read_and_parse_file;
+use ciphey::config::Config;
+use ciphey::perform_cracking;
 
 // TODO Below fails because Library API is broken.
-// https://github.com/bee-san/Ares/issues/48
+// https://github.com/bee-san/ciphey/issues/48
 #[test]
 fn test_it_works() {
     // It will panic if it doesn't work!

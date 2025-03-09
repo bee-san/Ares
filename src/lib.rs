@@ -1,4 +1,4 @@
-//! Ares is an automatic decoding and cracking tool. https://github.com/bee-san/ares
+//! ciphey is an automatic decoding and cracking tool. https://github.com/bee-san/ciphey
 // Warns in case we forget to include documentation
 #![warn(
     missing_docs,
@@ -7,8 +7,8 @@
     clippy::missing_panics_doc
 )]
 
-/// The main crate for the Ares project.
-/// This provides the library API interface for Ares.
+/// The main crate for the ciphey project.
+/// This provides the library API interface for ciphey.
 mod api_library_input_struct;
 /// Checkers is a module that contains the functions that check if the input is plaintext
 pub mod checkers;
@@ -20,7 +20,7 @@ mod cli_input_parser;
 ///
 /// # Examples
 /// ```
-/// use ares::cli_pretty_printing::{success, warning};
+/// use ciphey::cli_pretty_printing::{success, warning};
 ///
 /// // Print a success message
 /// let success_msg = success("Operation completed successfully");
@@ -64,8 +64,8 @@ use self::decoders::crack_results::CrackResult;
 
 /// The main function to call which performs the cracking.
 /// ```rust
-/// use ares::perform_cracking;
-/// use ares::config::Config;
+/// use ciphey::perform_cracking;
+/// use ciphey::config::Config;
 /// let mut config = Config::default();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
@@ -79,14 +79,14 @@ use self::decoders::crack_results::CrackResult;
 /// // The path is a vector of CrackResults which contains the decoder used and the keys used
 /// // The text is a vector of strings because some decoders return more than 1 text (Caesar)
 /// // Becuase the program has returned True, the first result is the plaintext (and it will only have 1 result).
-/// // This is some tech debt we need to clean up https://github.com/bee-san/Ares/issues/130
+/// // This is some tech debt we need to clean up https://github.com/bee-san/ciphey/issues/130
 /// assert!(result.unwrap().text[0] == "The main function to call which performs the cracking.");
 /// ```
 /// The human checker defaults to off in the config, but it returns the first thing it finds currently.
-/// We have an issue for that here https://github.com/bee-san/Ares/issues/129
+/// We have an issue for that here https://github.com/bee-san/ciphey/issues/129
 /// ```rust
-/// use ares::perform_cracking;
-/// use ares::config::Config;
+/// use ciphey::perform_cracking;
+/// use ciphey::config::Config;
 /// let mut config = Config::default();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:

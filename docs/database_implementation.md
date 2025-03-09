@@ -1,8 +1,8 @@
-# SQLite Database Implementation for Ares
+# SQLite Database Implementation for ciphey
 
 ## Database Location
 
-The SQLite database will be stored at: `$HOME_DIR/ares/database.sqlite`
+The SQLite database will be stored at: `$HOME_DIR/ciphey/database.sqlite`
 
 ```rust
 use std::env;
@@ -10,7 +10,7 @@ use std::path::PathBuf;
 
 fn get_database_path() -> PathBuf {
     let mut path = env::home_dir().expect("Could not find home directory");
-    path.push("ares");
+    path.push("ciphey");
     path.push("database.sqlite");
     path
 }

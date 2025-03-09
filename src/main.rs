@@ -1,6 +1,6 @@
-use ares::cli::parse_cli_args;
-use ares::cli_pretty_printing::{program_exiting_successful_decoding, success};
-use ares::perform_cracking;
+use ciphey::cli::parse_cli_args;
+use ciphey::cli_pretty_printing::{program_exiting_successful_decoding, success};
+use ciphey::perform_cracking;
 
 fn main() {
     // Turn CLI arguments into a library object
@@ -22,7 +22,7 @@ fn main() {
         }
         None => {
             success("DEBUG: main.rs - Got None result, calling failed_to_decode");
-            ares::cli_pretty_printing::failed_to_decode()
+            ciphey::cli_pretty_printing::failed_to_decode()
         }
     }
 }

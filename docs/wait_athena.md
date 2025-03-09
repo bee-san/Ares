@@ -499,7 +499,7 @@ Update the CLI interface to add a flag for enabling WaitAthena mode:
 ```rust
 // In src/cli/mod.rs
 // Add a new flag for WaitAthena mode
-let matches = App::new("Ares")
+let matches = App::new("ciphey")
     // ... existing arguments ...
     .arg(
         Arg::with_name("top-results")
@@ -563,7 +563,7 @@ If implementing this feature again, I would make the following changes to improv
    - Number of decoders used to reach the plaintext
    - Presence of dictionary words or valid syntax
 
-3. **Deduplication Strategy**: While the current implementation assumes duplicates are unlikely, I would add a simple deduplication mechanism that compares normalized versions of the plaintexts (case-insensitive, whitespace-normalized) to ensure truly unique results.
+3. **Deduplication Strategy**: While the current implementation assumes duplicates are unlikely, I would add a simple deduplication mechanism that compciphey normalized versions of the plaintexts (case-insensitive, whitespace-normalized) to ensure truly unique results.
 
 4. **Configurable Result Limit**: Instead of collecting all results until the timer expires, I would add a configurable limit to the number of results collected to prevent memory issues with very large result sets.
 

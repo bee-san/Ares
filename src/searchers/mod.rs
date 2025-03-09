@@ -115,7 +115,7 @@ fn perform_decoding(text: &DecoderResult) -> MyResults {
 mod tests {
     use super::*;
 
-    // https://github.com/bee-san/Ares/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
+    // https://github.com/bee-san/ciphey/pull/14/files#diff-b8829c7e292562666c7fa5934de7b478c4a5de46d92e42c46215ac4d9ff89db2R37
     // Only used for tests!
     fn exit_condition(input: &str) -> bool {
         // use Athena Checker from checkers module

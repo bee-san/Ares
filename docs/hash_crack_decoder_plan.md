@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the implementation plan for a new decoder called `HashCrackDecoder` that will be integrated into the Ares project. The decoder will support:
+This document outlines the implementation plan for a new decoder called `HashCrackDecoder` that will be integrated into the ciphey project. The decoder will support:
 
 - Three hash algorithms: MD5, SHA1, and SHA256
 - Two cracking methods:
@@ -537,6 +537,6 @@ mod tests {
 
 ## Conclusion
 
-This implementation plan provides a detailed roadmap for creating a hash cracking decoder that integrates with the Ares project. The decoder will support both wordlist lookup and rainbow table methods for cracking MD5, SHA1, and SHA256 hashes.
+This implementation plan provides a detailed roadmap for creating a hash cracking decoder that integrates with the ciphey project. The decoder will support both wordlist lookup and rainbow table methods for cracking MD5, SHA1, and SHA256 hashes.
 
 The implementation follows the existing decoder pattern in the project, making it easy to integrate with the filtration system. The modular design allows for future extensions to support additional hash algorithms or cracking methods.

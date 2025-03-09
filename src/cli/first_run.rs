@@ -1,6 +1,6 @@
-//! First-run configuration module for Ares
+//! First-run configuration module for ciphey
 //!
-//! This module handles the initial setup of Ares, including color scheme configuration
+//! This module handles the initial setup of ciphey, including color scheme configuration
 //! and user preferences. It provides functionality for creating and managing color schemes,
 //! handling user input, and converting between different color formats.
 
@@ -159,7 +159,7 @@ fn get_default_scheme() -> ColorScheme {
     }
 }
 
-/// Runs the first-time setup wizard for Ares, allowing users to configure their color scheme.
+/// Runs the first-time setup wizard for ciphey, allowing users to configure their color scheme.
 ///
 /// This function presents users with color scheme options and handles their selection,
 /// including support for custom color schemes. It guides users through the setup process
@@ -170,13 +170,13 @@ fn get_default_scheme() -> ColorScheme {
 pub fn run_first_time_setup() -> HashMap<String, String> {
     println!(
         "\n{}",
-        print_statement("🤠 Howdy! This is your first time running Ares.")
+        print_statement("🤠 Howdy! This is your first time running ciphey.")
     );
-    println!("{}", print_statement("Let me help you configure Ares."));
+    println!("{}", print_statement("Let me help you configure ciphey."));
 
     // ask if user wants a tutorial
     if ask_yes_no_question("Do you want a tutorial?", true) {
-        println!("ares -t 'encoded text here' to decode.");
+        println!("ciphey -t 'encoded text here' to decode.");
         println!("Have a crib you know is in the plaintext? use --regex 'crib here'");
         println!("yah that's it. Will write more when we add more :-D\n");
     }
@@ -281,7 +281,7 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     println!("\n{}", print_question("What sounds better to you?"));
     println!(
         "\n{}",
-        print_statement("1. Ares will ask you everytime it detects plaintext if it is plaintext.\n2. Ares stores all possible plaintext in a list, and at the end of the program presents it to you.")
+        print_statement("1. ciphey will ask you everytime it detects plaintext if it is plaintext.\n2. ciphey stores all possible plaintext in a list, and at the end of the program presents it to you.")
     );
     let wait_athena_choice = get_user_input_range("Enter your choice", 1, 2);
 
@@ -296,10 +296,10 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         // user has chosen to use top_results mode
         println!(
             "\n{}",
-            print_statement("Ares by default runs for 5 seconds. For this mode we suggest 3 seconds. Please do not complain if you choose too high of a number and your PC freezes up.\n")
+            print_statement("ciphey by default runs for 5 seconds. For this mode we suggest 3 seconds. Please do not complain if you choose too high of a number and your PC freezes up.\n")
         );
         timeout = get_user_input_range(
-            "How many seconds do you want Ares to run? (3 suggested) seconds",
+            "How many seconds do you want ciphey to run? (3 suggested) seconds",
             1,
             500,
         );
@@ -311,12 +311,12 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     // Wordlist configuration
     println!(
         "{}",
-        print_question("\nWould you like Ares to use custom wordlists to detect plaintext?")
+        print_question("\nWould you like ciphey to use custom wordlists to detect plaintext?")
     );
     println!(
         "{}",
         print_statement(
-            "Ares can use custom wordlists to detect plaintext by checking for exact matches."
+            "ciphey can use custom wordlists to detect plaintext by checking for exact matches."
         )
     );
     println!(
@@ -355,7 +355,7 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     println!(
         "{}",
         print_warning(
-            "Note: You will be able to do this later by running `ares --enable-enhanced-detection`"
+            "Note: You will be able to do this later by running `ciphey --enable-enhanced-detection`"
         )
     );
     println!("{}", print_statement("We will prompt you for the token if you click Yes. We will not store this token, just use it to download a model."));

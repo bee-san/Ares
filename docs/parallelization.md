@@ -1,16 +1,16 @@
-# Parallelization in Ares
+# Parallelization in ciphey
 
-This document describes how parallelization is implemented in the Ares project, with a focus on the decoder execution system and its relationship to search algorithms.
+This document describes how parallelization is implemented in the ciphey project, with a focus on the decoder execution system and its relationship to search algorithms.
 
 ## Overview
 
-Ares uses the [Rayon](https://github.com/rayon-rs/rayon) library to implement data parallelism for computationally intensive operations. Rayon provides a simple API for converting sequential iterators into parallel ones, making it straightforward to parallelize operations across multiple CPU cores.
+ciphey uses the [Rayon](https://github.com/rayon-rs/rayon) library to implement data parallelism for computationally intensive operations. Rayon provides a simple API for converting sequential iterators into parallel ones, making it straightforward to parallelize operations across multiple CPU cores.
 
 ## Decoder Parallelization
 
 ### Implementation
 
-The primary parallelization in Ares occurs in the filtration system, specifically in the `run` method of the `Decoders` struct in `src/filtration_system/mod.rs`:
+The primary parallelization in ciphey occurs in the filtration system, specifically in the `run` method of the `Decoders` struct in `src/filtration_system/mod.rs`:
 
 ```rust
 pub fn run(&self, text: &str, checker: CheckerTypes) -> MyResults {
@@ -59,7 +59,7 @@ pub fn run(&self, text: &str, checker: CheckerTypes) -> MyResults {
 
 ### Saturation Point
 
-The decoder execution is typically the most computationally intensive part of the Ares workflow. By parallelizing this operation, Ares can effectively utilize multiple CPU cores to speed up the decoding process. However, there is a saturation point beyond which adding more parallelism may not improve performance:
+The decoder execution is typically the most computationally intensive part of the ciphey workflow. By parallelizing this operation, ciphey can effectively utilize multiple CPU cores to speed up the decoding process. However, there is a saturation point beyond which adding more parallelism may not improve performance:
 
 1. **CPU Core Utilization**: If all available CPU cores are already fully utilized by the parallel decoder execution, adding additional layers of parallelism (such as processing multiple nodes in parallel in the search algorithm) may not provide significant performance benefits.
 
@@ -85,7 +85,7 @@ This means that even if we parallelize the decoder execution perfectly, the over
 
 ### A* Search Algorithm
 
-The A* search algorithm in Ares (`src/searchers/astar.rs`) uses the parallelized decoder execution system but maintains a sequential approach to node processing:
+The A* search algorithm in ciphey (`src/searchers/astar.rs`) uses the parallelized decoder execution system but maintains a sequential approach to node processing:
 
 1. **Sequential Node Processing**: Nodes are processed one at a time from the priority queue, in order of their f-score (f = g + h, where g is the cost so far and h is the heuristic value).
 
@@ -107,9 +107,9 @@ While the core node processing in A* is inherently sequential, there are still o
 
 ## Conclusion
 
-The parallelization of decoder execution in Ares provides significant performance benefits by utilizing multiple CPU cores. However, there are limits to the benefits of parallelization, and adding additional layers of parallelism may not always improve performance.
+The parallelization of decoder execution in ciphey provides significant performance benefits by utilizing multiple CPU cores. However, there are limits to the benefits of parallelization, and adding additional layers of parallelism may not always improve performance.
 
-When optimizing the performance of Ares, it's important to consider the entire system and identify the true bottlenecks. In some cases, optimizing memory usage, improving algorithms, or reducing overhead may provide better performance improvements than adding more parallelism.
+When optimizing the performance of ciphey, it's important to consider the entire system and identify the true bottlenecks. In some cases, optimizing memory usage, improving algorithms, or reducing overhead may provide better performance improvements than adding more parallelism.
 
 ## References
 

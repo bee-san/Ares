@@ -19,4 +19,4 @@ test:
   cargo nextest run
 
 publish:
-  docker buildx build --platform linux/arm/v7,linux/amd64,linux/arm64/v8 -t autumnskerritt/ares:latest --push .
+  docker buildx build --platform linux/arm/v7,linux/amd64,linux/arm64/v8 -t autumnskerritt/ciphey:latest --push .

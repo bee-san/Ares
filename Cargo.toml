@@ -1,6 +1,6 @@
 [package]
-name = "project_ares"
-repository = "https://github.com/bee-san/Ares"
+name = "project_ciphey"
+repository = "https://github.com/bee-san/ciphey"
 version = "0.11.0"
 edition = "2021"
 description = "Automated decoding tool, Ciphey but in Rust"
@@ -9,12 +9,12 @@ license = "MIT"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-name = "ares"
+name = "ciphey"
 path = "src/lib.rs"
 bench = false
 
 [[bin]]
-name = "ares"
+name = "ciphey"
 path = "src/main.rs"
 bench = false
 

@@ -1,6 +1,6 @@
-# A* Search Implementation in Ares
+# A* Search Implementation in ciphey
 
-The A* search algorithm in Ares uses a sophisticated heuristic system for prioritizing decoder paths. This document details the mathematical foundations and implementation specifics.
+The A* search algorithm in ciphey uses a sophisticated heuristic system for prioritizing decoder paths. This document details the mathematical foundations and implementation specifics.
 
 ## Core Algorithm
 
