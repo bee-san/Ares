@@ -7,6 +7,11 @@ use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+/// Intermediary struct for serializing/deserializing CrackResults
+/// into JSON format
+///
+/// It is the same as CrackResult, but it holds the Strings by value
+/// instead of references
 pub struct RawCrackResult {
     /// If our checkers return success, we change this bool to True
     pub success: bool,
@@ -60,13 +65,21 @@ impl Clone for RawCrackResult {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+/// Struct representing a row in the cache table
 pub struct CacheRow {
+    /// Index of row in cache table
     pub id: usize,
+    /// Text before it is decoded
     pub encoded_text: String,
+    /// Text after it is decoded
     pub decoded_text: String,
+    /// Ordered list of decoding attempts
     pub path: Vec<RawCrackResult>,
+    /// Whether or not the decoding was successful
     pub successful: bool,
+    /// How long the decoding took in milliseconds
     pub execution_time_ms: u64,
+    /// When the decoding was run
     pub timestamp: String,
 }
 
@@ -148,12 +161,17 @@ fn init_database(conn: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
 }
 
 /// Adds a new cache record to the cache table
-pub fn add_record(
+pub fn add_row(
     conn: &rusqlite::Connection,
-    cache_row: &CacheRow,
+    encoded_text: &String,
+    decoded_text: &String,
+    path: &Vec<RawCrackResult>,
+    successful: &bool,
+    execution_time_ms: &u64,
+    timestamp: &String,
 ) -> Result<(), rusqlite::Error> {
-    let path_json = serde_json::to_string(&cache_row.path.clone()).unwrap();
-    let conn_result = conn.execute(
+    let path_json = serde_json::to_string(&path.clone()).unwrap();
+    let _conn_result = conn.execute(
         "INSERT INTO cache (
             encoded_text,
             decoded_text,
@@ -163,12 +181,12 @@ pub fn add_record(
             timestamp)
             VALUES ($1, $2, $3, $4, $5, $6)",
         (
-            cache_row.encoded_text.clone(),
-            cache_row.decoded_text.clone(),
+            encoded_text.clone(),
+            decoded_text.clone(),
             path_json,
-            cache_row.successful.clone(),
-            cache_row.execution_time_ms.clone(),
-            cache_row.timestamp.clone(),
+            successful.clone(),
+            execution_time_ms.clone(),
+            timestamp.clone(),
         ),
     );
     Ok(())
@@ -177,7 +195,6 @@ pub fn add_record(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use serde_json::Result;
 
     #[test]
     fn database_initialized() {
@@ -292,8 +309,16 @@ mod tests {
             timestamp: String::from("2025-05-29 14:16:00"),
         };
 
-        let record_result = add_record(&conn, &expected_cache_row);
-        assert!(record_result.is_ok());
+        let row_result = add_row(
+            &conn,
+            &expected_cache_row.encoded_text,
+            &expected_cache_row.decoded_text,
+            &expected_cache_row.path,
+            &expected_cache_row.successful,
+            &expected_cache_row.execution_time_ms,
+            &expected_cache_row.timestamp,
+        );
+        assert!(row_result.is_ok());
 
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         assert!(stmt_result.is_ok());
