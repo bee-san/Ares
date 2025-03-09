@@ -272,6 +272,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "brainfuck-exe"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5c6c0107b12f10ca54a4ea2fdfd4a63a2f4552d4461d446524212e384021aa6f"
+
+[[package]]
 name = "bs58"
 version = "0.5.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3033,6 +3039,7 @@ dependencies = [
  "base64 0.22.1",
  "base65536",
  "base91",
+ "brainfuck-exe",
  "bs58",
  "cargo-nextest",
  "cipher_identifier",

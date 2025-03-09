@@ -71,5 +71,8 @@ pub mod braille_decoder;
 /// The substitution_generic_decoder module handles generic substitution ciphers
 pub mod substitution_generic_decoder;
 
+/// A brainfuck interpreter
+pub mod brainfuck_interpreter;
+
 /// The vigenere_decoder module decodes Vigenère cipher text
 pub mod vigenere_decoder;
