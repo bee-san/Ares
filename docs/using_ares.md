@@ -11,7 +11,7 @@ This guide provides detailed instructions on how to use ciphey, the next-generat
 The recommended way to install ciphey is through Cargo, Rust's package manager:
 
 ```bash
-cargo install project_ciphey
+cargo install ciphey
 ```
 
 This will install the `ciphey` command-line tool, which you can use from your terminal.

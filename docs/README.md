@@ -37,7 +37,7 @@ Key features include:
 The quickest way to get started with ciphey is to install it via Cargo:
 
 ```bash
-cargo install project_ciphey
+cargo install ciphey
 ```
 
 Then use it with the `ciphey` command:

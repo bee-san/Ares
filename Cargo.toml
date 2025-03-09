@@ -1,5 +1,5 @@
 [package]
-name = "project_ciphey"
+name = "ciphey"
 repository = "https://github.com/bee-san/ciphey"
 version = "0.11.0"
 edition = "2021"

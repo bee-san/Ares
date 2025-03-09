@@ -120,7 +120,7 @@ The simplest way to use ciphey is through the Discord bot. Join the [Discord Ser
 To install the CLI version:
 
 ```bash
-cargo install project_ciphey
+cargo install ciphey
 ```
 
 Then use it with the `ciphey` command.

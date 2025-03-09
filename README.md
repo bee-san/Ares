@@ -26,7 +26,7 @@ We fully intend to replace [Ciphey](https://github.com/ciphey/ciphey) with ciphe
 
 The simplest way to use ciphey is to join the [Discord Server](http://discord.skerritt.blog), head to the #bots channel and use ciphey with `$ciphey`. Type `$help` for helpful information!
 
-The second best way is to use `cargo install project_ciphey` and call it with `ciphey`.
+The second best way is to use `cargo install ciphey` and call it with `ciphey`.
 
 You can also `git clone` this repo and run `docker build .` it to get an image.
 
