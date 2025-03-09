@@ -6,11 +6,11 @@
 
 use colored::Colorize;
 use std::collections::HashMap;
-use std::path::PathBuf;
 use std::fmt::Display;
 use std::io::{self, Write};
 use std::path::Path;
 use rpassword;
+use gibberish_or_not::{download_model_with_progress_bar};
 
 /// Represents a color scheme with RGB values for different message types and roles.
 /// Each color is stored as a comma-separated RGB string in the format "r,g,b"
@@ -344,6 +344,7 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         });
         
         config_dir_path.push("model.bin");
+
         config.insert("model_path".to_string(), config_dir_path.display().to_string());
         
         // Prompt for HuggingFace token
@@ -353,6 +354,15 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         
         // Use rpassword to hide the token input
         let token = rpassword::read_password().unwrap_or_else(|_| String::new());
+
+        // Download the model using the token
+        if let Err(e) = download_model_with_progress_bar(&config_dir_path, Some(&token)) {
+            println!("{}", print_warning(format!("Failed to download model: {}", e)));
+            println!("{}", print_warning("Enhanced detection may not work properly."));
+        } else {
+            println!("{}", print_success("Model downloaded successfully!"));
+        }
+    }
         
     // show cute cat
     if ask_yes_no_question("Do you want to see a cute cat?", false) {
