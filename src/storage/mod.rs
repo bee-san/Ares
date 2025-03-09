@@ -3,6 +3,9 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 
+/// Module for storing WaitAthena results
+pub mod wait_athena_storage;
+
 /// English letter frequency distribution (A-Z)
 /// Used for frequency analysis in various decoders
 pub const ENGLISH_FREQS: [f64; 26] = [

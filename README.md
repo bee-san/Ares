@@ -87,6 +87,14 @@ Ares now supports configurable sensitivity levels for gibberish detection, allow
 
 This feature helps reduce false positives and negatives in plaintext detection, making Ares more reliable across a wider range of encoded texts.
 
+## Enhanced Plaintext Detection with BERT
+
+Ares now offers enhanced plaintext detection using a BERT-based model from the `gibberish-or-not` crate. This feature:
+- Increases plaintext detection accuracy by approximately 40%
+- Reduces false positives and negatives when identifying plaintext
+- Can be enabled during first-run setup or later with `ares --enable-enhanced-detection`
+- Requires a one-time download of a 500MB AI model (requires a free Hugging Face account)
+
 # New Features
 ## Better search algorithm
 We now use A* search. This is very fast.

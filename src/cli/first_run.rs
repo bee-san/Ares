@@ -5,9 +5,12 @@
 //! handling user input, and converting between different color formats.
 
 use colored::Colorize;
+use gibberish_or_not::download_model_with_progress_bar;
+use rpassword;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::{self, Write};
+use std::path::Path;
 
 /// Represents a color scheme with RGB values for different message types and roles.
 /// Each color is stored as a comma-separated RGB string in the format "r,g,b"
@@ -64,6 +67,17 @@ fn print_question<T: Display>(text: T) -> String {
     text.to_string().yellow().to_string()
 }
 
+/// Prints a success message in green color.
+///
+/// # Arguments
+/// * `text` - Any type that implements Display trait to be printed in green
+///
+/// # Returns
+/// * `String` - The input text formatted in green color
+fn print_success<T: Display>(text: T) -> String {
+    text.to_string().green().to_string()
+}
+
 /// Prints text in a specified RGB color.
 ///
 /// # Arguments
@@ -98,8 +112,8 @@ fn get_capptucin_scheme() -> ColorScheme {
         informational: "238,212,159".to_string(), // rgb(238, 212, 159)
         warning: "237,135,150".to_string(),       // rgb(237, 135, 150)
         success: "166,218,149".to_string(),       // rgb(166, 218, 149)
-        question: "244,219,214".to_string(),      // rgb(244, 219, 214)
-        statement: "202,211,245".to_string(),     // rgb(202, 211, 245)
+        question: "202,211,245".to_string(),      // rgb(202, 211, 245)
+        statement: "244,219,214".to_string(),     // rgb(244, 219, 214)
     }
 }
 
@@ -158,100 +172,261 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         "\n{}",
         print_statement("🤠 Howdy! This is your first time running Ares.")
     );
-    println!("{}\n", print_statement("Let me help you configure Ares."));
+    println!("{}", print_statement("Let me help you configure Ares."));
+
+    // ask if user wants a tutorial
+    if ask_yes_no_question("Do you want a tutorial?", true) {
+        println!("ares -t 'encoded text here' to decode.");
+        println!("Have a crib you know is in the plaintext? use --regex 'crib here'");
+        println!("yah that's it. Will write more when we add more :-D\n");
+    }
 
     // Ask if the user wants a custom color scheme
-    let want_custom = ask_yes_no_question("Do you want a custom colour scheme?", false);
+    let want_custom = ask_yes_no_question(
+        "Do you want a custom colour scheme? Will be applied after we're done configuring",
+        false,
+    );
 
-    if !want_custom {
+    let mut config = if !want_custom {
         // User doesn't want a custom color scheme, use default
-        return color_scheme_to_hashmap(get_default_scheme());
-    }
+        color_scheme_to_hashmap(get_default_scheme())
+    } else {
+        // Show color scheme options
+        println!(
+            "\n{}",
+            print_statement("What colour scheme looks best to you?")
+        );
 
-    // Show color scheme options
+        println!("1. Capptucin");
+        let capptucin = get_capptucin_scheme();
+        print!("   ");
+        print!(
+            "{} | ",
+            print_rgb("Informational", &capptucin.informational)
+        );
+        print!("{} | ", print_rgb("Warning", &capptucin.warning));
+        print!("{} | ", print_rgb("Success", &capptucin.success));
+        print!("{} | ", print_rgb("Questions", &capptucin.question));
+        println!("{}\n", print_rgb("Statements", &capptucin.statement));
+
+        println!("2. Darcula");
+        let darcula = get_darcula_scheme();
+        print!("   ");
+        print!("{} | ", print_rgb("Informational", &darcula.informational));
+        print!("{} | ", print_rgb("Warning", &darcula.warning));
+        print!("{} | ", print_rgb("Success", &darcula.success));
+        print!("{} | ", print_rgb("Questions", &darcula.question));
+        println!("{}\n", print_rgb("Statements", &darcula.statement));
+
+        println!("3. 💖✨💐 GirlyPop");
+        let girly = get_girly_pop_scheme();
+        print!("   ");
+        print!("{} | ", print_rgb("Informational", &girly.informational));
+        print!("{} | ", print_rgb("Warning", &girly.warning));
+        print!("{} | ", print_rgb("Success", &girly.success));
+        print!("{} | ", print_rgb("Questions", &girly.question));
+        println!("{}\n", print_rgb("Statements", &girly.statement));
+
+        println!("4. Default");
+        let default = get_default_scheme();
+        print!("   ");
+        print!("{} | ", print_rgb("Informational", &default.informational));
+        print!("{} | ", print_rgb("Warning", &default.warning));
+        print!("{} | ", print_rgb("Success", &default.success));
+        print!("{} | ", print_rgb("Questions", &default.question));
+        println!("{}\n", print_rgb("Statements", &default.statement));
+
+        // For the Custom option, show format instructions
+        println!("5. Custom");
+        println!("   Format: r,g,b (e.g., 255,0,0 for red)");
+        println!("   Values must be between 0 and 255");
+        println!("   You'll be prompted to enter RGB values for each color.\n");
+
+        // Get user's choice
+        let choice = get_user_input_range("Enter your choice (1-5): ", 1, 5);
+
+        match choice {
+            1 => color_scheme_to_hashmap(get_capptucin_scheme()),
+            2 => color_scheme_to_hashmap(get_darcula_scheme()),
+            3 => color_scheme_to_hashmap(get_girly_pop_scheme()),
+            4 => color_scheme_to_hashmap(get_default_scheme()),
+            5 => {
+                // Custom color scheme
+                println!(
+                    "\n{}",
+                    print_statement("Enter RGB values for each color (format: r,g,b)")
+                );
+
+                let informational = get_user_input_rgb("Informational: ");
+                let warning = get_user_input_rgb("Warning: ");
+                let success = get_user_input_rgb("Success: ");
+                let question = get_user_input_rgb("Questions: ");
+                let statement = get_user_input_rgb("Statements: ");
+
+                let custom_scheme = ColorScheme {
+                    informational,
+                    warning,
+                    success,
+                    question,
+                    statement,
+                };
+
+                color_scheme_to_hashmap(custom_scheme)
+            }
+            _ => unreachable!(),
+        }
+    };
+
+    // ask about top_results
+    println!("\n{}", print_question("What sounds better to you?"));
     println!(
         "\n{}",
-        print_statement("What colour scheme looks best to you?")
+        print_statement("1. Ares will ask you everytime it detects plaintext if it is plaintext.\n2. Ares stores all possible plaintext in a list, and at the end of the program presents it to you.")
     );
+    let wait_athena_choice = get_user_input_range("Enter your choice", 1, 2);
 
-    println!("1. Capptucin");
-    let capptucin = get_capptucin_scheme();
-    print!("   ");
-    print!(
-        "{} | ",
-        print_rgb("Informational", &capptucin.informational)
-    );
-    print!("{} | ", print_rgb("Warning", &capptucin.warning));
-    print!("{} | ", print_rgb("Success", &capptucin.success));
-    print!("{} | ", print_rgb("Questions", &capptucin.question));
-    println!("{}\n", print_rgb("Statements", &capptucin.statement));
+    // Store the top_results choice in the config
+    let top_results = wait_athena_choice == 2;
+    config.insert("top_results".to_string(), top_results.to_string());
 
-    println!("2. Darcula");
-    let darcula = get_darcula_scheme();
-    print!("   ");
-    print!("{} | ", print_rgb("Informational", &darcula.informational));
-    print!("{} | ", print_rgb("Warning", &darcula.warning));
-    print!("{} | ", print_rgb("Success", &darcula.success));
-    print!("{} | ", print_rgb("Questions", &darcula.question));
-    println!("{}\n", print_rgb("Statements", &darcula.statement));
+    // Set the default timeout
+    let mut timeout = 5; // Default timeout
 
-    println!("3. 💖✨💐 Girly Pop");
-    let girly = get_girly_pop_scheme();
-    print!("   ");
-    print!("{} | ", print_rgb("Informational", &girly.informational));
-    print!("{} | ", print_rgb("Warning", &girly.warning));
-    print!("{} | ", print_rgb("Success", &girly.success));
-    print!("{} | ", print_rgb("Questions", &girly.question));
-    println!("{}\n", print_rgb("Statements", &girly.statement));
-
-    println!("4. Default");
-    let default = get_default_scheme();
-    print!("   ");
-    print!("{} | ", print_rgb("Informational", &default.informational));
-    print!("{} | ", print_rgb("Warning", &default.warning));
-    print!("{} | ", print_rgb("Success", &default.success));
-    print!("{} | ", print_rgb("Questions", &default.question));
-    println!("{}\n", print_rgb("Statements", &default.statement));
-
-    // For the Custom option, show format instructions
-    println!("5. Custom");
-    println!("   Format: r,g,b (e.g., 255,0,0 for red)");
-    println!("   Values must be between 0 and 255");
-    println!("   You'll be prompted to enter RGB values for each color.\n");
-
-    // Get user's choice
-    let choice = get_user_input_range("Enter your choice (1-5): ", 1, 5);
-
-    match choice {
-        1 => color_scheme_to_hashmap(get_capptucin_scheme()),
-        2 => color_scheme_to_hashmap(get_darcula_scheme()),
-        3 => color_scheme_to_hashmap(get_girly_pop_scheme()),
-        4 => color_scheme_to_hashmap(get_default_scheme()),
-        5 => {
-            // Custom color scheme
-            println!(
-                "\n{}",
-                print_statement("Enter RGB values for each color (format: r,g,b)")
-            );
-
-            let informational = get_user_input_rgb("Informational: ");
-            let warning = get_user_input_rgb("Warning: ");
-            let success = get_user_input_rgb("Success: ");
-            let question = get_user_input_rgb("Questions: ");
-            let statement = get_user_input_rgb("Statements: ");
-
-            let custom_scheme = ColorScheme {
-                informational,
-                warning,
-                success,
-                question,
-                statement,
-            };
-
-            color_scheme_to_hashmap(custom_scheme)
-        }
-        _ => color_scheme_to_hashmap(get_default_scheme()), // This should never happen due to input validation
+    if top_results {
+        // user has chosen to use top_results mode
+        println!(
+            "\n{}",
+            print_statement("Ares by default runs for 5 seconds. For this mode we suggest 3 seconds. Please do not complain if you choose too high of a number and your PC freezes up.\n")
+        );
+        timeout = get_user_input_range(
+            "How many seconds do you want Ares to run? (3 suggested) seconds",
+            1,
+            500,
+        );
     }
+
+    // Store the timeout in the config
+    config.insert("timeout".to_string(), timeout.to_string());
+
+    // Wordlist configuration
+    println!(
+        "{}",
+        print_question("\nWould you like Ares to use custom wordlists to detect plaintext?")
+    );
+    println!(
+        "{}",
+        print_statement(
+            "Ares can use custom wordlists to detect plaintext by checking for exact matches."
+        )
+    );
+    println!(
+        "{}",
+        print_warning("Note: If your wordlist is very large, this can generate excessive matches.")
+    );
+
+    if ask_yes_no_question("", false) {
+        if let Some(wordlist_path) = get_wordlist_path() {
+            config.insert("wordlist_path".to_string(), wordlist_path);
+        }
+    }
+
+    // Enhanced detection section
+    println!(
+        "{}",
+        print_question("\nWould you like to enable Enhanced Plaintext Detection?")
+    );
+    println!("{}", print_statement("This will increase accuracy by around 40%, and you will be asked less frequently if something is plaintext or not."));
+    println!(
+        "{}",
+        print_statement("This will download a 500mb AI model.")
+    );
+    println!(
+        "{}",
+        print_statement("You will need to follow these steps to download it:")
+    );
+    println!(
+        "{}",
+        print_statement("1. Make a HuggingFace account https://huggingface.co/")
+    );
+    println!(
+        "{}",
+        print_statement("2. Make a READ Token https://huggingface.co/settings/tokens")
+    );
+    println!(
+        "{}",
+        print_warning(
+            "Note: You will be able to do this later by running `ares --enable-enhanced-detection`"
+        )
+    );
+    println!("{}", print_statement("We will prompt you for the token if you click Yes. We will not store this token, just use it to download a model."));
+
+    if ask_yes_no_question("", false) {
+        // Enable enhanced detection
+        config.insert("enhanced_detection".to_string(), "true".to_string());
+
+        // Set a default model path
+        let mut config_dir_path = crate::config::get_config_file_path();
+        config_dir_path.pop();
+        config_dir_path.push("models");
+
+        // Create the models directory if it doesn't exist
+        std::fs::create_dir_all(&config_dir_path).unwrap_or_else(|_| {
+            println!(
+                "{}",
+                print_warning(
+                    "Could not create models directory. Enhanced detection may not work."
+                )
+            );
+        });
+
+        config_dir_path.push("model.bin");
+
+        config.insert(
+            "model_path".to_string(),
+            config_dir_path.display().to_string(),
+        );
+
+        // Prompt for HuggingFace token
+        println!(
+            "{}",
+            print_statement("Please enter your HuggingFace token:")
+        );
+        print!(
+            "{}",
+            print_question("Token [invisible for privacy reasons]: ")
+        );
+        io::stdout().flush().unwrap();
+
+        // Use rpassword to hide the token input
+        let token = rpassword::read_password().unwrap_or_else(|_| String::new());
+
+        // Download the model using the token
+        if let Err(e) = download_model_with_progress_bar(&config_dir_path, Some(&token)) {
+            println!(
+                "{}",
+                print_warning(format!("Failed to download model: {}", e))
+            );
+            println!(
+                "{}",
+                print_warning("Enhanced detection may not work properly.")
+            );
+        } else {
+            println!("{}", print_success("Model downloaded successfully!"));
+        }
+    }
+
+    // show cute cat
+    if ask_yes_no_question("Do you want to see a cute cat?", false) {
+        println!(
+            r#"
+        /\_/\
+        ( o.o )
+        o( ( ))
+        "#
+        );
+    }
+
+    config
 }
 
 /// Prompts the user with a yes/no question and returns their response.
@@ -263,13 +438,15 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
 /// # Returns
 /// * `bool` - true for yes, false for no
 fn ask_yes_no_question(question: &str, default_yes: bool) -> bool {
-    let prompt = if default_yes {
-        format!("{} (Y/n): ", question)
-    } else {
-        format!("{} (y/N): ", question)
-    };
+    // Only print the question if it's not empty (for formatted sequences)
+    if !question.is_empty() {
+        println!("\n{}", print_question(question));
+    }
 
-    print!("{}", print_question(&prompt));
+    // Create the prompt
+    let prompt = if default_yes { "(Y/n): " } else { "(y/N): " };
+
+    print!("{}", print_question(prompt));
     io::stdout().flush().unwrap();
 
     let mut input = String::new();
@@ -304,7 +481,9 @@ fn ask_yes_no_question(question: &str, default_yes: bool) -> bool {
 /// # Returns
 /// * `u32` - The user's input within the specified range
 fn get_user_input_range(prompt: &str, min: u32, max: u32) -> u32 {
-    print!("{}", print_question(prompt));
+    // Create the input prompt with the provided prompt text
+    let input_prompt = format!("{} ({}-{}): ", prompt, min, max);
+    print!("{}", print_question(input_prompt));
     io::stdout().flush().unwrap();
 
     let mut input = String::new();
@@ -391,4 +570,40 @@ fn color_scheme_to_hashmap(scheme: ColorScheme) -> HashMap<String, String> {
     map.insert("question".to_string(), scheme.question);
     map.insert("statement".to_string(), scheme.statement);
     map
+}
+
+/// Prompts the user for a wordlist file path and validates that the file exists
+/// Returns the path if valid, or None if the user cancels
+fn get_wordlist_path() -> Option<String> {
+    println!(
+        "\n{}",
+        print_statement("Enter the path to your wordlist file:")
+    );
+    println!("{}", print_statement("(Leave empty to cancel)"));
+
+    let mut input = String::new();
+    std::io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read input");
+    let input = input.trim();
+
+    if input.is_empty() {
+        println!("{}", print_statement("No wordlist will be used."));
+        return None;
+    }
+
+    // Check if the file exists
+    if !Path::new(input).exists() {
+        println!("{}", print_warning("File does not exist!"));
+        return get_wordlist_path(); // Recursively prompt until valid or cancelled
+    }
+
+    // Check if the file is readable
+    match std::fs::File::open(input) {
+        Ok(_) => Some(input.to_string()),
+        Err(e) => {
+            println!("{}", print_warning(format!("Cannot read file: {}", e)));
+            get_wordlist_path() // Recursively prompt until valid or cancelled
+        }
+    }
 }

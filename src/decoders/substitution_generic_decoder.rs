@@ -164,7 +164,7 @@ mod tests {
     #[test]
     fn test_binary_substitution() {
         let decoder = Decoder::<SubstitutionGenericDecoder>::new();
-        let result = decoder.crack("AABBA", &get_athena_checker());
+        let result = decoder.crack("AABBAABBAABBAABBAABBAA", &get_athena_checker());
 
         // Print debug info if test fails
         if !result.success {

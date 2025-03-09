@@ -51,10 +51,14 @@ use checkers::{
     athena::Athena,
     checker_result::CheckResult,
     checker_type::{Check, Checker},
+    wait_athena::WaitAthena,
 };
 use log::debug;
 
-use crate::{config::Config, decoders::interface::Decoder};
+use crate::{
+    config::{get_config, Config},
+    decoders::interface::Decoder,
+};
 
 use self::decoders::crack_results::CrackResult;
 
@@ -93,8 +97,17 @@ use self::decoders::crack_results::CrackResult;
 /// assert!(result.is_none());
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
-    config::set_global_config(config);
+    // If top_results is enabled, ensure human_checker_on is disabled
+    let mut modified_config = config;
+    if modified_config.top_results {
+        modified_config.human_checker_on = false;
+        // Clear any previous results when starting a new cracking session
+        storage::wait_athena_storage::clear_plaintext_results();
+    }
+
+    config::set_global_config(modified_config);
     let text = text.to_string();
+
     let initial_check_for_plaintext = check_if_input_text_is_plaintext(&text);
     if initial_check_for_plaintext.is_identified {
         debug!(
@@ -140,8 +153,15 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
 /// Checks if the given input is plaintext or not
 /// Used at the start of the program to not waste CPU cycles
 fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
-    let athena_checker = Checker::<Athena>::new();
-    athena_checker.check(text)
+    let config = get_config();
+
+    if config.top_results {
+        let wait_athena_checker = Checker::<WaitAthena>::new();
+        wait_athena_checker.check(text)
+    } else {
+        let athena_checker = Checker::<Athena>::new();
+        athena_checker.check(text)
+    }
 }
 
 /// DecoderResult is the result of decoders

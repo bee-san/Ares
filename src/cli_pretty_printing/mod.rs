@@ -29,6 +29,7 @@
 #[cfg(test)]
 mod tests;
 use crate::storage;
+use crate::storage::wait_athena_storage::PlaintextResult;
 use crate::DecoderResult;
 use colored::Colorize;
 use std::env;
@@ -252,6 +253,9 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     if config.api_mode {
         return;
     }
+    if config.top_results {
+        return;
+    }
     let plaintext = result.text;
     // calculate path
     let decoded_path = result
@@ -466,6 +470,96 @@ pub fn warning_unknown_config_key(key: &str) {
             key
         ))
     );
+}
+
+/// Display all plaintext results collected by WaitAthena
+pub fn display_top_results(results: &[PlaintextResult]) {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return;
+    }
+
+    if results.is_empty() {
+        println!("{}", success("No potential plaintexts found."));
+        return;
+    }
+
+    println!("{}", success("\n🎊 List of Possible Plaintexts 🎊"));
+    println!(
+        "{}",
+        success(&format!(
+            "Found {} potential plaintext results:",
+            results.len()
+        ))
+    );
+
+    if results.len() > 10 {
+        // ask the user if they want to write to a file
+        println!("{}", warning("There are more than 10 possible plaintexts. I think you should write them to a file."));
+        println!("{}", question("Would you like to write to a file? (y/N)"));
+        let mut input = String::new();
+        std::io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read input");
+        let result = input.trim().to_ascii_lowercase().starts_with('y');
+
+        if result {
+            println!(
+                "{}",
+                question(&format!(
+                    "Please enter a filename: (default: {}/ares_text.txt)",
+                    statement(&env::var("HOME").unwrap_or_default(), None)
+                ))
+            );
+
+            let mut file_path = String::new();
+            std::io::stdin()
+                .read_line(&mut file_path)
+                .expect("Failed to read input");
+            file_path = file_path.trim().to_string();
+
+            if file_path.is_empty() {
+                file_path = format!("{}/ares_text.txt", env::var("HOME").unwrap_or_default());
+            }
+
+            let mut file_content = String::new();
+            for (i, result) in results.iter().enumerate() {
+                file_content.push_str(&format!("Result #{}: {}\n", i + 1, result.text));
+                file_content.push_str(&format!("Decoder: {}\n", result.decoder_name));
+                file_content.push_str(&format!("Checker: {}\n", result.checker_name));
+                file_content.push_str(&format!("Description: {}\n", result.description));
+                if results.len() > 1 {
+                    file_content.push_str("---\n");
+                }
+            }
+
+            match write(&file_path, file_content) {
+                Ok(_) => println!("{}", success(&format!("Results written to {}", file_path))),
+                Err(e) => println!("{}", warning(&format!("Failed to write to file: {}", e))),
+            }
+
+            return;
+        }
+    }
+
+    for (i, result) in results.iter().enumerate() {
+        println!(
+            "{}",
+            success(&format!("Result #{}: {}", i + 1, result.text))
+        );
+        println!("{}", success(&format!("Decoder: {}", result.decoder_name)));
+        println!("{}", success(&format!("Checker: {}", result.checker_name)));
+        println!(
+            "{}",
+            success(&format!("Description: {}", result.description))
+        );
+        if results.len() > 1 {
+            // only print seperator if more than 1
+            println!("{}", success("---"));
+        }
+    }
+
+    println!("{}", success("=== End of Top Results ===\n"));
 }
 
 #[test]

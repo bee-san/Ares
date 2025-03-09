@@ -1,3 +1,6 @@
+/// Athena checker runs all other checkers and returns immediately when a plaintext is found.
+/// This is the standard checker that exits early when a plaintext is found.
+/// For a version that continues checking and collects all plaintexts, see WaitAthena.
 use crate::{checkers::checker_result::CheckResult, cli_pretty_printing, config::get_config};
 use gibberish_or_not::Sensitivity;
 use lemmeknow::Identifier;
@@ -10,6 +13,7 @@ use super::{
     lemmeknow_checker::LemmeKnow,
     password::PasswordChecker,
     regex_checker::RegexChecker,
+    wordlist::WordlistChecker,
 };
 
 /// Athena checker runs all other checkers
@@ -27,12 +31,15 @@ impl Check for Checker<Athena> {
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
             sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
+            enhanced_detector: None,
             _phantom: std::marker::PhantomData,
         }
     }
 
     fn check(&self, text: &str) -> CheckResult {
         let config = get_config();
+
+        // If regex is specified, only run the regex checker
         if config.regex.is_some() {
             trace!("running regex");
             let regex_checker = Checker::<RegexChecker>::new().with_sensitivity(self.sensitivity);
@@ -50,6 +57,26 @@ impl Check for Checker<Athena> {
                 return check_res;
             }
         } else {
+            // Run wordlist checker first if a wordlist is provided
+            if config.wordlist.is_some() {
+                trace!("running wordlist checker");
+                let wordlist_checker =
+                    Checker::<WordlistChecker>::new().with_sensitivity(self.sensitivity);
+                let wordlist_result = wordlist_checker.check(text);
+                if wordlist_result.is_identified {
+                    let mut check_res = CheckResult::new(&wordlist_checker);
+                    let human_result = human_checker::human_checker(&wordlist_result);
+                    check_res.is_identified = human_result;
+                    check_res.text = wordlist_result.text;
+                    check_res.description = wordlist_result.description;
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: Athena wordlist checker - human_result: {}, check_res.is_identified: {}",
+                        human_result, check_res.is_identified
+                    ));
+                    return check_res;
+                }
+            }
+
             // In Ciphey if the user uses the regex checker all the other checkers turn off
             // This is because they are looking for one specific bit of information so will not want the other checkers
             // TODO: wrap all checkers in oncecell so we only create them once!
@@ -57,7 +84,6 @@ impl Check for Checker<Athena> {
             let lemmeknow_result = lemmeknow.check(text);
             //println!("Text is {}", text);
             if lemmeknow_result.is_identified {
-                println!("lemmeknow_result: {:?}", lemmeknow_result.is_identified);
                 let mut check_res = CheckResult::new(&lemmeknow);
                 let human_result = human_checker::human_checker(&lemmeknow_result);
                 check_res.is_identified = human_result;

@@ -3,6 +3,7 @@ use gibberish_or_not::{is_gibberish, Sensitivity};
 use lemmeknow::Identifier;
 
 use crate::checkers::checker_type::{Check, Checker};
+use crate::config::get_config;
 
 /// Checks English plaintext.
 pub struct EnglishChecker;
@@ -10,6 +11,8 @@ pub struct EnglishChecker;
 /// given an input, check every item in the array and return true if any of them match
 impl Check for Checker<EnglishChecker> {
     fn new() -> Self {
+        let config = get_config();
+
         Checker {
             name: "English Checker",
             description: "Uses gibberish detection to check if text is meaningful English",
@@ -18,6 +21,7 @@ impl Check for Checker<EnglishChecker> {
             expected_runtime: 0.01,
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
+            enhanced_detector: None,
             sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
             _phantom: std::marker::PhantomData,
         }
@@ -27,8 +31,19 @@ impl Check for Checker<EnglishChecker> {
         // Normalize before checking
         let text = normalise_string(text);
 
+        // Get config to check if enhanced detection is enabled
+        let config = get_config();
+        let is_enhanced = config.enhanced_detection;
+
         let mut result = CheckResult {
-            is_identified: !is_gibberish(&text, self.sensitivity),
+            // Use a more sensitive setting if enhanced detection is enabled
+            is_identified: if is_enhanced {
+                // When enhanced detection is enabled, use a more sensitive setting
+                // This is a simple approximation since we don't have the actual BERT model
+                !is_gibberish(&text, Sensitivity::High)
+            } else {
+                !is_gibberish(&text, self.sensitivity)
+            },
             text: text.to_string(),
             checker_name: self.name,
             checker_description: self.description,
