@@ -12,7 +12,7 @@ pub struct EnglishChecker;
 impl Check for Checker<EnglishChecker> {
     fn new() -> Self {
         let config = get_config();
-        
+
         Checker {
             name: "English Checker",
             description: "Uses gibberish detection to check if text is meaningful English",
@@ -30,7 +30,7 @@ impl Check for Checker<EnglishChecker> {
     fn check(&self, text: &str) -> CheckResult {
         // Normalize before checking
         let text = normalise_string(text);
-        
+
         // Get config to check if enhanced detection is enabled
         let config = get_config();
         let is_enhanced = config.enhanced_detection;

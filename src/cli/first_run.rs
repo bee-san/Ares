@@ -5,12 +5,12 @@
 //! handling user input, and converting between different color formats.
 
 use colored::Colorize;
+use gibberish_or_not::download_model_with_progress_bar;
+use rpassword;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::{self, Write};
 use std::path::Path;
-use rpassword;
-use gibberish_or_not::{download_model_with_progress_bar};
 
 /// Represents a color scheme with RGB values for different message types and roles.
 /// Each color is stored as a comma-separated RGB string in the format "r,g,b"
@@ -309,10 +309,21 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     config.insert("timeout".to_string(), timeout.to_string());
 
     // Wordlist configuration
-    println!("{}", print_question("\nWould you like Ares to use custom wordlists to detect plaintext?"));
-    println!("{}", print_statement("Ares can use custom wordlists to detect plaintext by checking for exact matches."));
-    println!("{}", print_warning("Note: If your wordlist is very large, this can generate excessive matches."));
-    
+    println!(
+        "{}",
+        print_question("\nWould you like Ares to use custom wordlists to detect plaintext?")
+    );
+    println!(
+        "{}",
+        print_statement(
+            "Ares can use custom wordlists to detect plaintext by checking for exact matches."
+        )
+    );
+    println!(
+        "{}",
+        print_warning("Note: If your wordlist is very large, this can generate excessive matches.")
+    );
+
     if ask_yes_no_question("", false) {
         if let Some(wordlist_path) = get_wordlist_path() {
             config.insert("wordlist_path".to_string(), wordlist_path);
@@ -320,50 +331,90 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     }
 
     // Enhanced detection section
-    println!("{}", print_question("\nWould you like to enable Enhanced Plaintext Detection?"));
+    println!(
+        "{}",
+        print_question("\nWould you like to enable Enhanced Plaintext Detection?")
+    );
     println!("{}", print_statement("This will increase accuracy by around 40%, and you will be asked less frequently if something is plaintext or not."));
-    println!("{}", print_statement("This will download a 500mb AI model."));
-    println!("{}", print_statement("You will need to follow these steps to download it:"));
-    println!("{}", print_statement("1. Make a HuggingFace account https://huggingface.co/"));
-    println!("{}", print_statement("2. Make a READ Token https://huggingface.co/settings/tokens"));
-    println!("{}", print_warning("Note: You will be able to do this later by running `ares --enable-enhanced-detection`"));
+    println!(
+        "{}",
+        print_statement("This will download a 500mb AI model.")
+    );
+    println!(
+        "{}",
+        print_statement("You will need to follow these steps to download it:")
+    );
+    println!(
+        "{}",
+        print_statement("1. Make a HuggingFace account https://huggingface.co/")
+    );
+    println!(
+        "{}",
+        print_statement("2. Make a READ Token https://huggingface.co/settings/tokens")
+    );
+    println!(
+        "{}",
+        print_warning(
+            "Note: You will be able to do this later by running `ares --enable-enhanced-detection`"
+        )
+    );
     println!("{}", print_statement("We will prompt you for the token if you click Yes. We will not store this token, just use it to download a model."));
-    
+
     if ask_yes_no_question("", false) {
         // Enable enhanced detection
         config.insert("enhanced_detection".to_string(), "true".to_string());
-        
+
         // Set a default model path
         let mut config_dir_path = crate::config::get_config_file_path();
         config_dir_path.pop();
         config_dir_path.push("models");
-        
+
         // Create the models directory if it doesn't exist
         std::fs::create_dir_all(&config_dir_path).unwrap_or_else(|_| {
-            println!("{}", print_warning("Could not create models directory. Enhanced detection may not work."));
+            println!(
+                "{}",
+                print_warning(
+                    "Could not create models directory. Enhanced detection may not work."
+                )
+            );
         });
-        
+
         config_dir_path.push("model.bin");
 
-        config.insert("model_path".to_string(), config_dir_path.display().to_string());
-        
+        config.insert(
+            "model_path".to_string(),
+            config_dir_path.display().to_string(),
+        );
+
         // Prompt for HuggingFace token
-        println!("{}", print_statement("Please enter your HuggingFace token:"));
-        print!("{}", print_question("Token [invisible for privacy reasons]: "));
+        println!(
+            "{}",
+            print_statement("Please enter your HuggingFace token:")
+        );
+        print!(
+            "{}",
+            print_question("Token [invisible for privacy reasons]: ")
+        );
         io::stdout().flush().unwrap();
-        
+
         // Use rpassword to hide the token input
         let token = rpassword::read_password().unwrap_or_else(|_| String::new());
 
         // Download the model using the token
         if let Err(e) = download_model_with_progress_bar(&config_dir_path, Some(&token)) {
-            println!("{}", print_warning(format!("Failed to download model: {}", e)));
-            println!("{}", print_warning("Enhanced detection may not work properly."));
+            println!(
+                "{}",
+                print_warning(format!("Failed to download model: {}", e))
+            );
+            println!(
+                "{}",
+                print_warning("Enhanced detection may not work properly.")
+            );
         } else {
             println!("{}", print_success("Model downloaded successfully!"));
         }
     }
-        
+
     // show cute cat
     if ask_yes_no_question("Do you want to see a cute cat?", false) {
         println!(
@@ -391,13 +442,9 @@ fn ask_yes_no_question(question: &str, default_yes: bool) -> bool {
     if !question.is_empty() {
         println!("\n{}", print_question(question));
     }
-    
+
     // Create the prompt
-    let prompt = if default_yes {
-        "(Y/n): "
-    } else {
-        "(y/N): "
-    };
+    let prompt = if default_yes { "(Y/n): " } else { "(y/N): " };
 
     print!("{}", print_question(prompt));
     io::stdout().flush().unwrap();

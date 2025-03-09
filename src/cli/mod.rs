@@ -4,12 +4,12 @@ pub use first_run::run_first_time_setup;
 
 use std::{fs::File, io::Read};
 
+use crate::cli_pretty_printing;
 use crate::cli_pretty_printing::panic_failure_both_input_and_fail_provided;
 use crate::config::{get_config_file_into_struct, load_wordlist, Config};
 /// This doc string acts as a help message when the uses run '--help' in CLI mode
 /// as do all doc strings on fields
 use clap::Parser;
-use crate::cli_pretty_printing;
 use log::trace;
 
 /// The struct for Clap CLI arguments
@@ -177,8 +177,11 @@ fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
         // Simply enable enhanced detection without downloading a model
         // since the current version of gibberish-or-not doesn't support model downloading
         config.enhanced_detection = true;
-        eprintln!("{}", cli_pretty_printing::statement("Enhanced detection enabled.", None));
+        eprintln!(
+            "{}",
+            cli_pretty_printing::statement("Enhanced detection enabled.", None)
+        );
     }
-    
+
     (text, config)
 }
