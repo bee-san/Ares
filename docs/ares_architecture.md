@@ -1,12 +1,12 @@
-# Ares Architecture and Technical Details
+# ciphey Architecture and Technical Details
 
 ## Core Architecture
 
-Ares is built with a modular architecture that separates concerns and enables extensibility. The system is composed of several key components:
+ciphey is built with a modular architecture that separates concerns and enables extensibility. The system is composed of several key components:
 
 ### 1. Library API
 
-The core of Ares is a Rust library that provides the main functionality through a clean API. The entry point is the `perform_cracking` function in `src/lib.rs`:
+The core of ciphey is a Rust library that provides the main functionality through a clean API. The entry point is the `perform_cracking` function in `src/lib.rs`:
 
 ```rust
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult>
@@ -46,7 +46,7 @@ The main checkers include:
 
 ### 4. Search Algorithms
 
-Search algorithms determine the order in which decoders are applied and manage the search for plaintext. Ares implements two main search algorithms:
+Search algorithms determine the order in which decoders are applied and manage the search for plaintext. ciphey implements two main search algorithms:
 
 - **A* Search** (`src/searchers/astar.rs`): Uses heuristics to prioritize promising decoders, enhanced with Cipher Identifier for statistical analysis of ciphertext
 - **BFS** (`src/searchers/bfs.rs`): Systematically explores all possible decodings
@@ -74,11 +74,11 @@ Configuration is stored in a global singleton for easy access throughout the cod
 
 ### 7. CLI Interface
 
-The CLI interface (`src/cli/mod.rs` and `src/cli_input_parser/mod.rs`) handles command-line arguments, user interaction, and result presentation. It's built on top of the library API and provides a user-friendly interface to Ares's functionality.
+The CLI interface (`src/cli/mod.rs` and `src/cli_input_parser/mod.rs`) handles command-line arguments, user interaction, and result presentation. It's built on top of the library API and provides a user-friendly interface to ciphey's functionality.
 
 ## Data Flow
 
-The typical data flow through Ares follows these steps:
+The typical data flow through ciphey follows these steps:
 
 1. **Input Processing**: The input text is received through the API or CLI
 2. **Initial Check**: The system checks if the input is already plaintext
@@ -93,17 +93,17 @@ The typical data flow through Ares follows these steps:
 
 ## Concurrency Model
 
-Ares uses a multi-threaded approach to improve performance:
+ciphey uses a multi-threaded approach to improve performance:
 
 1. **Search Thread**: The search algorithm runs in a dedicated thread
 2. **Timeout Thread**: A separate thread monitors for timeout
 3. **Parallel Decoding**: Decoders can run in parallel using Rayon
 
-This concurrency model allows Ares to efficiently utilize multiple CPU cores and handle timeouts gracefully.
+This concurrency model allows ciphey to efficiently utilize multiple CPU cores and handle timeouts gracefully.
 
 ## Plaintext Identification
 
-Plaintext identification is a critical component of Ares. The process works as follows:
+Plaintext identification is a critical component of ciphey. The process works as follows:
 
 1. **Athena Checker**: The main checker that orchestrates other checkers
    - If a regex pattern is provided, it checks if the text matches
@@ -124,7 +124,7 @@ Plaintext identification is a critical component of Ares. The process works as f
 
 ## Error Handling
 
-Ares uses a combination of Rust's Result and Option types for error handling:
+ciphey uses a combination of Rust's Result and Option types for error handling:
 
 - `Option<DecoderResult>` is used for the main API return type, with `None` indicating failure
 - `Result<T, E>` is used for operations that can fail with specific error types
@@ -132,7 +132,7 @@ Ares uses a combination of Rust's Result and Option types for error handling:
 
 ## Testing Strategy
 
-Ares has a comprehensive testing strategy:
+ciphey has a comprehensive testing strategy:
 
 1. **Unit Tests**: Each component has unit tests to verify its behavior in isolation
 2. **Integration Tests**: Tests that verify the interaction between components
@@ -141,7 +141,7 @@ Ares has a comprehensive testing strategy:
 
 ## Performance Considerations
 
-Several optimizations contribute to Ares's performance:
+Several optimizations contribute to ciphey's performance:
 
 1. **Efficient Decoders**: Decoders are implemented with performance in mind
 2. **Parallel Processing**: Multi-threading for CPU-intensive operations
@@ -152,7 +152,7 @@ Several optimizations contribute to Ares's performance:
 
 ## Extensibility
 
-Ares is designed to be extensible:
+ciphey is designed to be extensible:
 
 1. **Adding New Decoders**: Implement the `Decoder` trait and add to the decoders module
 2. **Custom Checkers**: Implement the `Check` trait for specialized plaintext detection

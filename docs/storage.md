@@ -1,6 +1,6 @@
 # Storage Module
 
-The storage module provides reusable data structures and constants that are used across the Ares project.
+The storage module provides reusable data structures and constants that are used across the ciphey project.
 
 ## Contents
 

@@ -7,7 +7,7 @@ use super::{
 };
 
 /// The default checker is used to check if the text is plaintext
-/// Based on what the Ares team has found to be the best checker.
+/// Based on what the ciphey team has found to be the best checker.
 pub struct DefaultChecker;
 
 impl Check for Checker<DefaultChecker> {

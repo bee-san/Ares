@@ -12,10 +12,10 @@ use super::interface::Decoder;
 use log::trace;
 /// The Reverse decoder is a decoder that reverses the input string.
 /// ```rust
-/// use ares::decoders::reverse_decoder::ReverseDecoder;
-/// use ares::decoders::interface::{Crack, Decoder};
-/// use ares::config::{set_global_config, Config};
-/// use ares::checkers::{athena::Athena, CheckerTypes, checker_type::{Check, Checker}};
+/// use ciphey::decoders::reverse_decoder::ReverseDecoder;
+/// use ciphey::decoders::interface::{Crack, Decoder};
+/// use ciphey::config::{set_global_config, Config};
+/// use ciphey::checkers::{athena::Athena, CheckerTypes, checker_type::{Check, Checker}};
 ///
 /// let reversedecoder = Decoder::<ReverseDecoder>::new();
 /// let athena_checker = Checker::<Athena>::new();

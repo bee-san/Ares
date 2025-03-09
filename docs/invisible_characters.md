@@ -2,7 +2,7 @@
 
 ## Overview
 
-Ares now includes a feature to detect invisible characters in decoded plaintext and offer to save the result to a file. This is particularly useful when dealing with steganography or obfuscated text that uses invisible Unicode characters.
+ciphey now includes a feature to detect invisible characters in decoded plaintext and offer to save the result to a file. This is particularly useful when dealing with steganography or obfuscated text that uses invisible Unicode characters.
 
 ## What are Invisible Characters?
 
@@ -18,7 +18,7 @@ These characters are often used in steganography (hiding messages within other m
 
 ## How the Detection Works
 
-When Ares successfully decodes a message, it analyzes the resulting plaintext to determine what percentage of the characters are invisible. The detection process works as follows:
+When ciphey successfully decodes a message, it analyzes the resulting plaintext to determine what percentage of the characters are invisible. The detection process works as follows:
 
 1. The system maintains a list of known invisible characters in `src/storage/invisible_chars/chars.txt`
 2. When plaintext is decoded, each character is checked against this list
@@ -60,13 +60,13 @@ When a decoded message contains a significant number of invisible characters:
 If the user selects 'y':
 
 ```
-Please enter a filename: (default: /home/user/ares_text.txt)
+Please enter a filename: (default: /home/user/ciphey_text.txt)
 ```
 
 The user can then specify a custom filename or accept the default.
 
 ```
-Outputting plaintext to file: /home/user/ares_text.txt
+Outputting plaintext to file: /home/user/ciphey_text.txt
 
 the decoders used are Base64 → Hex
 ```

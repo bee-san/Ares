@@ -57,7 +57,7 @@ impl Decoders {
     /// We are using Trait Objects
     /// https://doc.rust-lang.org/book/ch17-02-trait-objects.html
     /// Which allows us to have multiple different structs in the same vector
-    /// But each struct shares the same `.crack()` method, so it's fine.
+    /// But each struct shciphey the same `.crack()` method, so it's fine.
     pub fn run(&self, text: &str, checker: CheckerTypes) -> MyResults {
         trace!("Running .crack() on all decoders");
         let (sender, receiver) = channel();

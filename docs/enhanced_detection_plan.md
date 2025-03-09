@@ -1,11 +1,11 @@
-Okay, here's a detailed plan for integrating enhanced plaintext detection using BERT into the Ares project, along with a CLI argument for enabling it and a first-run user experience:
+Okay, here's a detailed plan for integrating enhanced plaintext detection using BERT into the ciphey project, along with a CLI argument for enabling it and a first-run user experience:
 
 ```markdown
-# Plan: Integrating Enhanced Plaintext Detection with BERT into Ares
+# Plan: Integrating Enhanced Plaintext Detection with BERT into ciphey
 
 ## Goal
 
-To enhance Ares's plaintext detection capabilities by integrating a BERT-based gibberish detection model from the `gibberish-or-not` crate, provide a user-friendly first-run experience for downloading the model, and offer a CLI argument to enable enhanced detection later.
+To enhance ciphey's plaintext detection capabilities by integrating a BERT-based gibberish detection model from the `gibberish-or-not` crate, provide a user-friendly first-run experience for downloading the model, and offer a CLI argument to enable enhanced detection later.
 
 ## 1. Update Cargo.toml
 
@@ -78,7 +78,7 @@ pub fn run_first_time_setup() -> std::collections::HashMap<String, String> {
     let mut config = /* ... existing config hashmap ... */;
 
     if ask_yes_no_question(
-        "Would you like to enable Enhanced Plaintext Detection?\n\nThis will increase accuracy by around 40%, and you will be asked less frequently if something is plaintext or not.\n\nThis will download a 500mb AI model.\n\nYou will need to follow these steps to download it.\n1. Make a HuggingFace account https://huggingface.co/\n2. Make a READ Token https://huggingface.co/settings/tokens\n\nNote: You will be able to do this later by running `ares --enable-enhanced-detection`\n\nWe will prompt you for the token if you click Yes. We will not store this token, only use it to download the model and then throw away on reboot (y/N)",
+        "Would you like to enable Enhanced Plaintext Detection?\n\nThis will increase accuracy by around 40%, and you will be asked less frequently if something is plaintext or not.\n\nThis will download a 500mb AI model.\n\nYou will need to follow these steps to download it.\n1. Make a HuggingFace account https://huggingface.co/\n2. Make a READ Token https://huggingface.co/settings/tokens\n\nNote: You will be able to do this later by running `ciphey --enable-enhanced-detection`\n\nWe will prompt you for the token if you click Yes. We will not store this token, only use it to download the model and then throw away on reboot (y/N)",
         false,
     ) {
         let token = read_password_from_tty(Some("Hugging Face Token: ")).expect("Failed to read token from TTY");
@@ -249,4 +249,4 @@ impl Check for Checker<EnglishChecker> {
 
 ```
 
-This plan covers the implementation, user experience, and testing aspects of integrating BERT-based enhanced plaintext detection into Ares.
+This plan covers the implementation, user experience, and testing aspects of integrating BERT-based enhanced plaintext detection into ciphey.

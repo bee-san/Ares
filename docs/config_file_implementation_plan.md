@@ -1,8 +1,8 @@
-# Ares Configuration File Implementation Plan
+# ciphey Configuration File Implementation Plan
 
 ## Overview
 
-This document outlines the plan for implementing a configuration file feature in Ares. The configuration file will be located at `HOME/Ares/config.toml` and will be created automatically on the first run of the program if it doesn't exist. The configuration values from the file will be merged with the command-line arguments, with the command-line arguments taking precedence.
+This document outlines the plan for implementing a configuration file feature in ciphey. The configuration file will be located at `HOME/ciphey/config.toml` and will be created automatically on the first run of the program if it doesn't exist. The configuration values from the file will be merged with the command-line arguments, with the command-line arguments taking precedence.
 
 ## Implementation Plan
 
@@ -23,7 +23,7 @@ Modify the `Config` struct in `src/config/mod.rs` to:
 
 Create the following functions in `src/config/mod.rs`:
 
-- `get_config_file_path()`: Returns the path to the config file (`HOME/Ares/config.toml`)
+- `get_config_file_path()`: Returns the path to the config file (`HOME/ciphey/config.toml`)
 - `create_default_config_file()`: Creates a default config file if it doesn't exist
 - `get_config_file_into_struct()`: Reads the config file and returns a Config struct
 - `merge_configs(file_config, cli_config)`: Merges the config from the file with the config from CLI args
@@ -94,8 +94,8 @@ use toml::{from_str, to_string_pretty};
 // Get the path to the config file
 pub fn get_config_file_path() -> PathBuf {
     let mut path = home_dir().expect("Could not find home directory");
-    path.push("Ares");
-    fs::create_dir_all(&path).expect("Could not create Ares directory");
+    path.push("ciphey");
+    fs::create_dir_all(&path).expect("Could not create ciphey directory");
     path.push("config.toml");
     path
 }

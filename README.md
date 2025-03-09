@@ -8,25 +8,25 @@
 </p>
 
 <p align="center">
-<h1>Project Ares</h1>
+<h1>Project ciphey</h1>
 </p>
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/bee-san/Ares/main/images/main_demo.svg" alt="Ares demo">
+  <img src="https://raw.githubusercontent.com/bee-san/ciphey/main/images/main_demo.svg" alt="ciphey demo">
 </p>
 
 
-Ares is the next generation of decoding tools, built by the same people that brought you [Ciphey](https://github.com/ciphey/ciphey).
+ciphey is the next generation of decoding tools, built by the same people that brought you [Ciphey](https://github.com/ciphey/ciphey).
 
-We fully intend to replace [Ciphey](https://github.com/ciphey/ciphey) with Ares.
+We fully intend to replace [Ciphey](https://github.com/ciphey/ciphey) with ciphey.
 
-✨ You can read more about Ares here https://skerritt.blog/introducing-ares/ ✨
+✨ You can read more about ciphey here https://skerritt.blog/introducing-ciphey/ ✨
 
 # How to Use
 
-The simplest way to use Ares is to join the [Discord Server](http://discord.skerritt.blog), head to the #bots channel and use ares with `$ares`. Type `$help` for helpful information!
+The simplest way to use ciphey is to join the [Discord Server](http://discord.skerritt.blog), head to the #bots channel and use ciphey with `$ciphey`. Type `$help` for helpful information!
 
-The second best way is to use `cargo install project_ares` and call it with `ares`.
+The second best way is to use `cargo install ciphey` and call it with `ciphey`.
 
 You can also `git clone` this repo and run `docker build .` it to get an image.
 
@@ -36,36 +36,36 @@ Some features that may interest you, and that we're proud of.
 
 ## Fast
 
-![](https://raw.githubusercontent.com/bee-san/Ares/main/images/better_demo.svg)
+![](https://raw.githubusercontent.com/bee-san/ciphey/main/images/better_demo.svg)
 
-Ares is fast. Very fast. Other decoders such as Ciphey require advance artifical intelligence to determine which path it should take to decode (whether to try Caesar next or Base64 etc).
+ciphey is fast. Very fast. Other decoders such as Ciphey require advance artifical intelligence to determine which path it should take to decode (whether to try Caesar next or Base64 etc).
 
-Ares is so fast we don't need to worry about this currently. For every 1 decode Ciphey can do, Ares can do ~7. That's a 700% increase in speed.
+ciphey is so fast we don't need to worry about this currently. For every 1 decode Ciphey can do, ciphey can do ~7. That's a 700% increase in speed.
 
 ## Library First
 
-There are 2 main parts to Ares, the library and the CLI. The CLI simply uses the library which means you can build on-top of Ares. Some features we've built are:
+There are 2 main parts to ciphey, the library and the CLI. The CLI simply uses the library which means you can build on-top of ciphey. Some features we've built are:
 * [A Discord Bot](https://github.com/bee-san/discord-bot)
 * Better testing of the whole program 💖
 * This CLI
 
 ## Decoders
 
-Ares currently supports 16 decoders and it is growing [fast](https://github.com/bee-san/Ares/issues/61). Ciphey supports around ~50, and we are adding more everyday.
+ciphey currently supports 16 decoders and it is growing [fast](https://github.com/bee-san/ciphey/issues/61). Ciphey supports around ~50, and we are adding more everyday.
 
 ## Timer
 
 One of the big issues with Ciphey is that it could run forever. If it couldn't decode your text, you'd never know!
 
-Ares has a timer (built into the library and the CLI) which means it will eventually expire. The CLI defaults to 5 seconds, the Discord Bot defaults to 10 (to account for network messages being sent across).
+ciphey has a timer (built into the library and the CLI) which means it will eventually expire. The CLI defaults to 5 seconds, the Discord Bot defaults to 10 (to account for network messages being sent across).
 
 ## Better Docs, Better Tests
 
-Ares already has ~120 tests, documentation tests (to ensure our docs are kept up to date) and we enforce documentation on all of our major components. This is beautiful.
+ciphey already has ~120 tests, documentation tests (to ensure our docs are kept up to date) and we enforce documentation on all of our major components. This is beautiful.
 
 ## LemmeKnow
 
-![](https://raw.githubusercontent.com/bee-san/Ares/main/images/lemmeknow.svg)
+![](https://raw.githubusercontent.com/bee-san/ciphey/main/images/lemmeknow.svg)
 
 <img width="861" alt="Screenshot 2022-12-18 at 17 08 36" src="https://user-images.githubusercontent.com/10378052/208310491-86e704ca-963d-4850-a2b2-f14b6e0f4797.png">
 
@@ -73,26 +73,26 @@ Ares already has ~120 tests, documentation tests (to ensure our docs are kept up
 
 ## Multithreading
 
-Ciphey did not support multi-threading, it was quite slow. Ares supports it natively using [Rayon](https://github.com/rayon-rs/rayon), one of the fastest multi-threading libraries out there.
+Ciphey did not support multi-threading, it was quite slow. ciphey supports it natively using [Rayon](https://github.com/rayon-rs/rayon), one of the fastest multi-threading libraries out there.
 
 While we do not entirely see the effects of it with only 16 decoders (and them being quite fast), as we add more decoders (and slower ones) we'll see it won't affect the overall programs speed as much.
 
 ## Multi level decodings
 
-Ciphey did not support multi-level decryptions like a path of Rot13 -> Base64 -> Rot13 because it was so slow. Ares is fast enough to support this, although we plan to turn it off eventually.
+Ciphey did not support multi-level decryptions like a path of Rot13 -> Base64 -> Rot13 because it was so slow. ciphey is fast enough to support this, although we plan to turn it off eventually.
 
 ## Configurable Sensitivity for Plaintext Detection
 
-Ares now supports configurable sensitivity levels for gibberish detection, allowing for more accurate plaintext identification across different types of encodings. Classical ciphers like Caesar use Low sensitivity to better handle English-like results, while most other decoders use Medium sensitivity by default.
+ciphey now supports configurable sensitivity levels for gibberish detection, allowing for more accurate plaintext identification across different types of encodings. Classical ciphers like Caesar use Low sensitivity to better handle English-like results, while most other decoders use Medium sensitivity by default.
 
-This feature helps reduce false positives and negatives in plaintext detection, making Ares more reliable across a wider range of encoded texts.
+This feature helps reduce false positives and negatives in plaintext detection, making ciphey more reliable across a wider range of encoded texts.
 
 ## Enhanced Plaintext Detection with BERT
 
-Ares now offers enhanced plaintext detection using a BERT-based model from the `gibberish-or-not` crate. This feature:
+ciphey now offers enhanced plaintext detection using a BERT-based model from the `gibberish-or-not` crate. This feature:
 - Increases plaintext detection accuracy by approximately 40%
 - Reduces false positives and negatives when identifying plaintext
-- Can be enabled during first-run setup or later with `ares --enable-enhanced-detection`
+- Can be enabled during first-run setup or later with `ciphey --enable-enhanced-detection`
 - Requires a one-time download of a 500MB AI model (requires a free Hugging Face account)
 
 # New Features
@@ -115,7 +115,7 @@ Finally, we keep track of popular pairs. So base64 -> base64 is very popular, so
 
 ## Custom themes
 
-You can now set a custom theme for Ares. This is useful if you want to make Ares look different.
+You can now set a custom theme for ciphey. This is useful if you want to make ciphey look different.
 
 This also helps with accessibility.
 
@@ -142,6 +142,6 @@ We also have a `is_password` function to determine if a string is an exact passw
 
 ## Database
 
-We now store statistics in a database. This is useful for seeing how Ares is doing over time.
+We now store statistics in a database. This is useful for seeing how ciphey is doing over time.
 
 

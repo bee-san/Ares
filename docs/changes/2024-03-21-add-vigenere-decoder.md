@@ -1,7 +1,7 @@
 # Change: Add Vigenère Cipher Decoder
 
 ## Purpose
-Implement a Vigenère cipher decoder to expand Ares' classical cipher decoding capabilities. This decoder will automatically detect and break Vigenère encrypted text without requiring a key, making it valuable for cryptanalysis and historical cipher decoding.
+Implement a Vigenère cipher decoder to expand ciphey' classical cipher decoding capabilities. This decoder will automatically detect and break Vigenère encrypted text without requiring a key, making it valuable for cryptanalysis and historical cipher decoding.
 
 ## Trade-offs
 ### Advantages
@@ -19,7 +19,7 @@ Implement a Vigenère cipher decoder to expand Ares' classical cipher decoding c
 - Added Vigenère decoder module with key length detection using IoC
 - Implemented frequency analysis for automated key discovery
 - Added comprehensive test suite with example ciphertexts
-- Integrated with Ares' existing decoder infrastructure
+- Integrated with ciphey' existing decoder infrastructure
 - Popularity score set to 0.8 reflecting its historical significance
 
 ## Future Improvements

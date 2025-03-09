@@ -1,6 +1,6 @@
 # What is this?
 
-Storage is a module which deals with storing things. In the life time of Ares, we'll want to:
+Storage is a module which deals with storing things. In the life time of ciphey, we'll want to:
 * Store word lists
 * Dictionaries
 * Crack results, keys, what the plaintext is

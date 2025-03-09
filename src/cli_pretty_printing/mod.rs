@@ -1,6 +1,6 @@
 //! CLI Pretty Printing Module
 //!
-//! This module provides a unified interface for all CLI output formatting in Ares.
+//! This module provides a unified interface for all CLI output formatting in ciphey.
 //! By centralising all print statements here, we ensure:
 //! - Consistent visual appearance across the application
 //! - Standardised color schemes and formatting
@@ -17,7 +17,7 @@
 //!
 //! # Usage
 //! ```rust
-//! use ares::cli_pretty_printing::{success, warning};
+//! use ciphey::cli_pretty_printing::{success, warning};
 //!
 //! // Print a success message
 //! println!("{}", success("Operation completed successfully"));
@@ -50,7 +50,7 @@ use text_io::read;
 ///
 /// # Examples
 /// ```
-/// use ares::cli_pretty_printing::parse_rgb;
+/// use ciphey::cli_pretty_printing::parse_rgb;
 ///
 /// // Valid formats:
 /// assert!(parse_rgb("255,0,0").is_some());     // Pure red
@@ -161,7 +161,7 @@ fn color_string(text: &str, role: &str) -> String {
 ///
 /// # Examples
 /// ```
-/// use ares::cli_pretty_printing::statement;
+/// use ciphey::cli_pretty_printing::statement;
 ///
 /// let info = statement("Status update", Some("informational"));
 /// let neutral = statement("Regular text", None);
@@ -304,12 +304,12 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
         let result = reply.to_ascii_lowercase().starts_with('y');
         if result {
             println!(
-                "Please enter a filename: (default: {}/ares_text.txt)",
+                "Please enter a filename: (default: {}/ciphey_text.txt)",
                 env::var("HOME").unwrap_or_default().white().bold()
             );
             let mut file_path: String = read!("{}\n");
             if file_path.is_empty() {
-                file_path = format!("{}/ares_text.txt", env::var("HOME").unwrap_or_default());
+                file_path = format!("{}/ciphey_text.txt", env::var("HOME").unwrap_or_default());
             }
             println!(
                 "Outputting plaintext to file: {}\n\n{}",
@@ -346,7 +346,7 @@ pub fn decoded_how_many_times(depth: u32) {
     let decoders = crate::filtration_system::filter_and_get_decoders(&DecoderResult::default());
     let decoded_times_int = depth * (decoders.components.len() as u32 + 40); //TODO 40 is how many decoders we have. Calculate automatically
     println!(
-        "\n🥳 Ares has decoded {} times.\n",
+        "\n🥳 ciphey has decoded {} times.\n",
         statement(&decoded_times_int.to_string(), None)
     );
 }
@@ -383,7 +383,7 @@ pub fn failed_to_decode() {
 
     println!(
         "{}",
-        warning("⛔️ Ares has failed to decode the text.\nIf you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog")
+        warning("⛔️ ciphey has failed to decode the text.\nIf you want more help, please ask in #coded-messages in our Discord http://discord.skerritt.blog")
     );
 }
 
@@ -507,7 +507,7 @@ pub fn display_top_results(results: &[PlaintextResult]) {
             println!(
                 "{}",
                 question(&format!(
-                    "Please enter a filename: (default: {}/ares_text.txt)",
+                    "Please enter a filename: (default: {}/ciphey_text.txt)",
                     statement(&env::var("HOME").unwrap_or_default(), None)
                 ))
             );
@@ -519,7 +519,7 @@ pub fn display_top_results(results: &[PlaintextResult]) {
             file_path = file_path.trim().to_string();
 
             if file_path.is_empty() {
-                file_path = format!("{}/ares_text.txt", env::var("HOME").unwrap_or_default());
+                file_path = format!("{}/ciphey_text.txt", env::var("HOME").unwrap_or_default());
             }
 
             let mut file_content = String::new();

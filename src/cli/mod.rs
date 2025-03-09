@@ -30,7 +30,7 @@ pub struct Opts {
 
     /// Set timeout, if it is not decrypted after this time, it will return an error.
     /// Default is 5 seconds.
-    // If we want to call it `timeout`, the short argument contends with the one for Text `ares -t`.
+    // If we want to call it `timeout`, the short argument contends with the one for Text `ciphey -t`.
     // I propose we just call it `cracking_timeout`.
     #[arg(short, long)]
     cracking_timeout: Option<u32>,
@@ -90,7 +90,7 @@ pub fn parse_cli_args() -> (String, Config) {
         read_and_parse_file(opts.file.unwrap())
     } else {
         opts.text
-            .expect("Error. No input was provided. Please use ares --help")
+            .expect("Error. No input was provided. Please use ciphey --help")
     };
 
     // Fixes bug where opts.text and opts.file are partially borrowed
