@@ -14,7 +14,7 @@ pub struct A1Z26Decoder;
 impl Crack for Decoder<A1Z26Decoder> {
     fn new() -> Self {
         Decoder {
-            name: "A1Z26",
+            name: "a1z26",
             description: "A1Z26 is an encoding that maps each letter to its numeric position in the alphabet. This encoding cannot represent spaces or punctuation.",
             link: "https://dadstuffsite.com/a1z26-cipher-what-it-is-and-how-to-teach-your-kids/",
             tags: vec!["A1Z26", "substitution", "decoder"],

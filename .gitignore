@@ -21,3 +21,5 @@ doc/
 #Cargo.lock
 
 /.idea
+.aider*
+.cursor

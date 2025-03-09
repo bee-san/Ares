@@ -6,7 +6,9 @@ use std::{
     time::Duration,
 };
 
-use crate::cli_pretty_printing::countdown_until_program_ends;
+use crate::cli_pretty_printing::{countdown_until_program_ends, display_top_results};
+use crate::config::get_config;
+use crate::storage::wait_athena_storage;
 
 /// Indicate whether timer is paused
 static PAUSED: AtomicBool = AtomicBool::new(false);
@@ -25,10 +27,36 @@ pub fn start(duration: u32) -> Receiver<()> {
                 countdown_until_program_ends(time_spent, duration);
             }
         }
+
+        // When the timer expires, display all collected plaintext results
+        // Only if we're in top_results mode
+        let config = get_config();
+        log::trace!("Timer expired. top_results mode: {}", config.top_results);
+
+        if config.top_results {
+            log::info!("Displaying all collected plaintext results");
+            filter_and_display_results();
+        } else {
+            log::info!("Not in top_results mode, skipping display_wait_athena_results()");
+        }
+
         sender.send(()).expect("Timer should send succesfully");
     });
 
     recv
+}
+
+/// Filter and display all plaintext results collected by WaitAthena
+fn filter_and_display_results() {
+    let results = wait_athena_storage::get_plaintext_results();
+
+    log::trace!(
+        "Retrieved {} results from wait_athena_storage",
+        results.len()
+    );
+
+    // Use the cli_pretty_printing function to display the results
+    display_top_results(&results);
 }
 
 /// Pause timer

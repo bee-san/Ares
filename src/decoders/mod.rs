@@ -29,8 +29,6 @@ pub mod base58_flickr_decoder;
 /// The base64_decoder module decodes base64
 /// It is public as we use it in some tests.
 pub mod base64_decoder;
-/// The base64_url_decoder module decodes base64 url
-pub mod base64_url_decoder;
 /// The base65536 module decodes base65536
 pub mod base65536_decoder;
 /// The base91_decoder module decodes base91
@@ -61,3 +59,20 @@ pub mod caesar_decoder;
 
 /// For the railfence cipher decoder
 pub mod railfence_decoder;
+/// For the rot47 decoder
+pub mod rot47_decoder;
+
+/// For the z85 cipher decoder
+pub mod z85_decoder;
+
+/// For the braille decoder
+pub mod braille_decoder;
+
+/// The substitution_generic_decoder module handles generic substitution ciphers
+pub mod substitution_generic_decoder;
+
+/// A brainfuck interpreter
+pub mod brainfuck_interpreter;
+
+/// The vigenere_decoder module decodes Vigenère cipher text
+pub mod vigenere_decoder;

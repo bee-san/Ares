@@ -1,3 +1,4 @@
+use gibberish_or_not::Sensitivity;
 use lemmeknow::Identifier;
 
 use super::{
@@ -6,8 +7,7 @@ use super::{
 };
 
 /// The default checker is used to check if the text is plaintext
-/// Based on what the Ares team has found to be the best checker.
-
+/// Based on what the ciphey team has found to be the best checker.
 pub struct DefaultChecker;
 
 impl Check for Checker<DefaultChecker> {
@@ -20,12 +20,23 @@ impl Check for Checker<DefaultChecker> {
             expected_runtime: 0.0,
             popularity: 0.0,
             lemmeknow_config: Identifier::default(),
+            sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
+            enhanced_detector: None,
             _phantom: std::marker::PhantomData,
         }
     }
 
     fn check(&self, _text: &str) -> CheckResult {
         CheckResult::new(self)
+    }
+
+    fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
+        self.sensitivity = sensitivity;
+        self
+    }
+
+    fn get_sensitivity(&self) -> Sensitivity {
+        self.sensitivity
     }
 }
 

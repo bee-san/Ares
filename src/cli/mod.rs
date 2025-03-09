@@ -1,10 +1,15 @@
+// First-run configuration module
+mod first_run;
+pub use first_run::run_first_time_setup;
+
 use std::{fs::File, io::Read};
 
-use crate::{cli_pretty_printing::panic_failure_both_input_and_fail_provided, config::Config};
+use crate::cli_pretty_printing;
+use crate::cli_pretty_printing::panic_failure_both_input_and_fail_provided;
+use crate::config::{get_config_file_into_struct, load_wordlist, Config};
 /// This doc string acts as a help message when the uses run '--help' in CLI mode
 /// as do all doc strings on fields
 use clap::Parser;
-use lemmeknow::Identifier;
 use log::trace;
 
 /// The struct for Clap CLI arguments
@@ -25,7 +30,7 @@ pub struct Opts {
 
     /// Set timeout, if it is not decrypted after this time, it will return an error.
     /// Default is 5 seconds.
-    // If we want to call it `timeout`, the short argument contends with the one for Text `ares -t`.
+    // If we want to call it `timeout`, the short argument contends with the one for Text `ciphey -t`.
     // I propose we just call it `cracking_timeout`.
     #[arg(short, long)]
     cracking_timeout: Option<u32>,
@@ -42,6 +47,21 @@ pub struct Opts {
     /// This turns off other checkers (English, LemmeKnow)
     #[arg(short, long)]
     regex: Option<String>,
+    /// Path to a wordlist file containing newline-separated words
+    /// The checker will match input against these words exactly
+    /// Takes precedence over config file if both specify a wordlist
+    #[arg(
+        long,
+        help = "Path to a wordlist file with newline-separated words for exact matching"
+    )]
+    wordlist: Option<String>,
+    /// Show all potential plaintexts found instead of exiting after the first one
+    /// Automatically disables the human checker
+    #[arg(long)]
+    top_results: bool,
+    /// Enables enhanced plaintext detection with BERT model.
+    #[arg(long)]
+    enable_enhanced_detection: bool,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
@@ -70,7 +90,7 @@ pub fn parse_cli_args() -> (String, Config) {
         read_and_parse_file(opts.file.unwrap())
     } else {
         opts.text
-            .expect("Error. No input was provided. Please use ares --help")
+            .expect("Error. No input was provided. Please use ciphey --help")
     };
 
     // Fixes bug where opts.text and opts.file are partially borrowed
@@ -108,21 +128,60 @@ pub fn read_and_parse_file(file_path: String) -> String {
 
 /// Turns our CLI arguments into a config stuct
 fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
-    (
-        text,
-        Config {
-            verbose: opts.verbose,
-            lemmeknow_config: Identifier::default(),
-            // default is false, we want default to be true
-            human_checker_on: !opts.disable_human_checker,
-            // These if statements act as defaults
-            timeout: if opts.cracking_timeout.is_none() {
-                30
-            } else {
-                opts.cracking_timeout.unwrap()
-            },
-            api_mode: opts.api_mode.is_some(),
-            regex: opts.regex,
-        },
-    )
+    // Get configuration from file first
+    let mut config = get_config_file_into_struct();
+
+    // Update config with CLI arguments when they're explicitly set
+    config.verbose = opts.verbose;
+    config.human_checker_on = !opts.disable_human_checker;
+
+    if let Some(timeout) = opts.cracking_timeout {
+        config.timeout = timeout;
+    }
+
+    if let Some(api_mode) = opts.api_mode {
+        config.api_mode = api_mode;
+    }
+
+    if let Some(regex) = opts.regex {
+        config.regex = Some(regex);
+    }
+
+    // Handle wordlist if provided via CLI (takes precedence over config file)
+    if let Some(wordlist_path) = opts.wordlist {
+        config.wordlist_path = Some(wordlist_path.clone());
+
+        // Load the wordlist here in the CLI layer
+        match load_wordlist(&wordlist_path) {
+            Ok(wordlist) => {
+                config.wordlist = Some(wordlist);
+            }
+            Err(e) => {
+                // Critical error - exit if wordlist is specified but can't be loaded
+                eprintln!("Can't load wordlist at '{}': {}", wordlist_path, e);
+                std::process::exit(1);
+            }
+        }
+    }
+
+    // Set top_results mode if the flag is present
+    config.top_results = opts.top_results;
+
+    // If top_results is enabled, automatically disable the human checker
+    if config.top_results {
+        config.human_checker_on = false;
+    }
+
+    // Handle enhanced detection if enabled via CLI
+    if opts.enable_enhanced_detection {
+        // Simply enable enhanced detection without downloading a model
+        // since the current version of gibberish-or-not doesn't support model downloading
+        config.enhanced_detection = true;
+        eprintln!(
+            "{}",
+            cli_pretty_printing::statement("Enhanced detection enabled.", None)
+        );
+    }
+
+    (text, config)
 }

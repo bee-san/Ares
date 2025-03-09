@@ -1,9 +1,9 @@
 use crate::checkers::checker_result::CheckResult;
-use crate::storage;
+use gibberish_or_not::{is_gibberish, Sensitivity};
 use lemmeknow::Identifier;
-use log::{debug, trace};
 
 use crate::checkers::checker_type::{Check, Checker};
+use crate::config::get_config;
 
 /// Checks English plaintext.
 pub struct EnglishChecker;
@@ -11,86 +11,62 @@ pub struct EnglishChecker;
 /// given an input, check every item in the array and return true if any of them match
 impl Check for Checker<EnglishChecker> {
     fn new() -> Self {
+        let config = get_config();
+
         Checker {
             name: "English Checker",
-            description: "Checks for english words",
-            link: "https://en.wikipedia.org/wiki/List_of_English_words",
-            tags: vec!["english"],
-            expected_runtime: 0.1,
-            // English is the most popular language
+            description: "Uses gibberish detection to check if text is meaningful English",
+            link: "https://crates.io/crates/gibberish-or-not",
+            tags: vec!["english", "nlp"],
+            expected_runtime: 0.01,
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
+            enhanced_detector: None,
+            sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
             _phantom: std::marker::PhantomData,
         }
     }
 
-    fn check(&self, input: &str) -> CheckResult {
-        let original_input = input;
-        // Normalise the string
-        let input = normalise_string(input);
-        trace!("Checking English for sentence {}", input);
-        /// If 40% of the words are in the english list, then we consider it english.
-        /// This is the threshold at which we consider it english.
-        /// TODO: Do we want to put this into a config somewhere?
-        const PLAINTEXT_DETECTION_PERCENTAGE: f64 = 0.4;
-        let mut words_found: f64 = 0.0;
+    fn check(&self, text: &str) -> CheckResult {
+        // Normalize before checking
+        let text = normalise_string(text);
 
-        // TODO: Change this when the below bugs are fixed.
-        let filename = "English text";
+        // Get config to check if enhanced detection is enabled
+        let config = get_config();
+        let is_enhanced = config.enhanced_detection;
 
         let mut result = CheckResult {
-            is_identified: false,
-            text: original_input.to_string(),
+            // Use a more sensitive setting if enhanced detection is enabled
+            is_identified: if is_enhanced {
+                // When enhanced detection is enabled, use a more sensitive setting
+                // This is a simple approximation since we don't have the actual BERT model
+                !is_gibberish(&text, Sensitivity::High)
+            } else {
+                !is_gibberish(&text, self.sensitivity)
+            },
+            text: text.to_string(),
             checker_name: self.name,
             checker_description: self.description,
-            description: filename.to_string(),
+            description: "Words".to_string(),
             link: self.link,
         };
 
-        // After we've normalised our string, if we find it's a length 0 we don't do anything
-        // This can happen if our string is a single punctuation mark, for example.
-        if input.is_empty() {
-            return result;
-        }
-
-        let split_input = input.split(' ');
-
-        // loop through all the words in the input
-        for word in split_input {
-            // if the word is in the english list, then we consider it english
-            // TODO: I think the below function iterates through each dictionary in turn.
-            // Which means it'll try English.txt, then rockyou.txt etc
-            // This is inefficient and makes it harder to compute what dictionary the word came from.
-            // We should probably just use a single dictionary and assign the filenames to the values in the dictionary.
-            // Like {"hello": "English.txt"} etc.
-            // If we're using multiple dictionaries we may also have duplicated words which is inefficient.
-            if storage::DICTIONARIES
-                .iter()
-                .any(|(_, words)| words.contains(word))
-            {
-                trace!("Found word {} in English", word);
-                words_found += 1.0;
-            }
-
-            trace!(
-                "Checking word {} with words_found {} and input length: {}",
-                word,
-                words_found,
-                input.len()
-            );
-            // TODO: We are also typecasting to f64 instead of usize, which costs CPU cycles.
-            if words_found / (input.split(' ').count()) as f64 > PLAINTEXT_DETECTION_PERCENTAGE {
-                debug!("Found {} words in {}", words_found, original_input);
-                debug!(
-                    "Returning from English checker successfully with {}",
-                    original_input
-                );
-                result.is_identified = true;
-                break;
-            }
+        // Handle edge case of very short strings after normalization
+        if text.len() < 2 {
+            // Reduced from 3 since normalization may remove punctuation
+            result.is_identified = false;
         }
 
         result
+    }
+
+    fn with_sensitivity(mut self, sensitivity: Sensitivity) -> Self {
+        self.sensitivity = sensitivity;
+        self
+    }
+
+    fn get_sensitivity(&self) -> Sensitivity {
+        self.sensitivity
     }
 }
 
@@ -116,6 +92,8 @@ mod tests {
         checker_type::{Check, Checker},
         english::EnglishChecker,
     };
+    // Import Sensitivity directly
+    use gibberish_or_not::Sensitivity;
 
     #[test]
     fn test_check_basic() {
@@ -132,7 +110,11 @@ mod tests {
     #[test]
     fn test_check_multiple_words() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("zzz zu'lkadah zenelophon").is_identified);
+        assert!(
+            checker
+                .check("this is a valid english sentence")
+                .is_identified
+        );
     }
 
     #[test]
@@ -173,18 +155,37 @@ mod tests {
     }
 
     #[test]
-    fn test_checker_fails_doesnt_hit_40_percent() {
-        let checker = Checker::<EnglishChecker>::new();
-        assert!(
-            !checker
-                .check("Hello Dog nnnnnnnnnnn llllllll ppppppppp gggggggg")
-                .is_identified
-        );
-    }
-
-    #[test]
     fn test_check_fail_single_puncuation_char() {
         let checker = Checker::<EnglishChecker>::new();
         assert!(!checker.check("#").is_identified);
+    }
+
+    #[test]
+    fn test_default_sensitivity_is_medium() {
+        let checker = Checker::<EnglishChecker>::new();
+        assert!(matches!(checker.get_sensitivity(), Sensitivity::Medium));
+    }
+
+    #[test]
+    fn test_with_sensitivity_changes_sensitivity() {
+        let checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::Low);
+        assert!(matches!(checker.get_sensitivity(), Sensitivity::Low));
+
+        let checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::High);
+        assert!(matches!(checker.get_sensitivity(), Sensitivity::High));
+    }
+
+    #[test]
+    fn test_sensitivity_affects_gibberish_detection() {
+        // This text has one English word "iron" but is otherwise gibberish
+        let text = "Rcl maocr otmwi lit dnoen oehc 13 iron seah.";
+
+        // With Low sensitivity, it should be classified as gibberish
+        let low_checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::Low);
+        assert!(!low_checker.check(text).is_identified);
+
+        // With High sensitivity, it should be classified as English
+        let high_checker = Checker::<EnglishChecker>::new().with_sensitivity(Sensitivity::High);
+        assert!(high_checker.check(text).is_identified);
     }
 }

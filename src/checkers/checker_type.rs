@@ -1,6 +1,7 @@
 /// Checker_type is a type used to define checkers
 /// This means that we can standardise the way we check for plaintext
 use crate::checkers::checker_result::CheckResult;
+use gibberish_or_not::Sensitivity;
 use lemmeknow::Identifier;
 
 /// Every checker is of type CheckerType
@@ -25,6 +26,12 @@ pub struct Checker<Type> {
     pub popularity: f32,
     /// lemmeknow config object
     pub lemmeknow_config: Identifier,
+    /// The sensitivity level for gibberish detection
+    /// This is only used by checkers that implement the SensitivityAware trait
+    pub sensitivity: Sensitivity,
+    /// Enhanced gibberish detector using BERT model
+    /// This is only used when enhanced detection is enabled
+    pub enhanced_detector: Option<()>, // Changed from GibberishDetector to () since we don't have the actual type
     /// https://doc.rust-lang.org/std/marker/struct.PhantomData.html
     /// Let's us save memory by telling the compiler that our type
     /// acts like a type <T> even though it doesn't.
@@ -43,4 +50,22 @@ pub trait Check {
         Self: Sized;
     /// Checks the given text to see if its plaintext
     fn check(&self, text: &str) -> CheckResult;
+    /// Sets the sensitivity level for gibberish detection
+    fn with_sensitivity(self, sensitivity: Sensitivity) -> Self
+    where
+        Self: Sized;
+    /// Gets the current sensitivity level
+    fn get_sensitivity(&self) -> Sensitivity;
+}
+
+/// Optional trait for checkers that use sensitivity for gibberish detection
+/// Not all checkers need to implement this trait
+/// This is a future improvement - not currently used
+pub trait SensitivityAware {
+    /// Sets the sensitivity level for gibberish detection
+    fn with_sensitivity(self, sensitivity: Sensitivity) -> Self
+    where
+        Self: Sized;
+    /// Gets the current sensitivity level
+    fn get_sensitivity(&self) -> Sensitivity;
 }

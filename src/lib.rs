@@ -1,4 +1,4 @@
-//! Ares is an automatic decoding and cracking tool. https://github.com/bee-san/ares
+//! ciphey is an automatic decoding and cracking tool. https://github.com/bee-san/ciphey
 // Warns in case we forget to include documentation
 #![warn(
     missing_docs,
@@ -7,8 +7,8 @@
     clippy::missing_panics_doc
 )]
 
-/// The main crate for the Ares project.
-/// This provides the library API interface for Ares.
+/// The main crate for the ciphey project.
+/// This provides the library API interface for ciphey.
 mod api_library_input_struct;
 /// Checkers is a module that contains the functions that check if the input is plaintext
 pub mod checkers;
@@ -16,7 +16,20 @@ pub mod checkers;
 pub mod cli;
 /// CLI Input Parser parses the input from the CLI and returns a struct.
 mod cli_input_parser;
-/// The CLI Pretty Printing module contains the functions that print the results
+/// CLI Pretty Printing module for consistent output formatting
+///
+/// # Examples
+/// ```
+/// use ciphey::cli_pretty_printing::{success, warning};
+///
+/// // Print a success message
+/// let success_msg = success("Operation completed successfully");
+/// assert!(!success_msg.is_empty());
+///
+/// // Print a warning message
+/// let warning_msg = warning("Please check your input");
+/// assert!(!warning_msg.is_empty());
+/// ```
 pub mod cli_pretty_printing;
 /// The Config module enables a configuration module
 /// Like a global API to access config details
@@ -29,9 +42,8 @@ mod filtration_system;
 /// The searcher is the thing which searches for the plaintext
 /// It is the core of the program.
 mod searchers;
-/// The storage module contains all the dictionaries and provides
-/// storage of data to our decoderrs and checkers.
-mod storage;
+/// Storage module for dictionaries and invisible characters
+pub mod storage;
 /// Timer for internal use
 mod timer;
 
@@ -39,16 +51,21 @@ use checkers::{
     athena::Athena,
     checker_result::CheckResult,
     checker_type::{Check, Checker},
+    wait_athena::WaitAthena,
 };
 use log::debug;
 
-use crate::{config::Config, decoders::interface::Decoder};
+use crate::{
+    config::{get_config, Config},
+    decoders::interface::Decoder,
+};
 
 use self::decoders::crack_results::CrackResult;
+
 /// The main function to call which performs the cracking.
 /// ```rust
-/// use ares::perform_cracking;
-/// use ares::config::Config;
+/// use ciphey::perform_cracking;
+/// use ciphey::config::Config;
 /// let mut config = Config::default();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
@@ -62,14 +79,14 @@ use self::decoders::crack_results::CrackResult;
 /// // The path is a vector of CrackResults which contains the decoder used and the keys used
 /// // The text is a vector of strings because some decoders return more than 1 text (Caesar)
 /// // Becuase the program has returned True, the first result is the plaintext (and it will only have 1 result).
-/// // This is some tech debt we need to clean up https://github.com/bee-san/Ares/issues/130
+/// // This is some tech debt we need to clean up https://github.com/bee-san/ciphey/issues/130
 /// assert!(result.unwrap().text[0] == "The main function to call which performs the cracking.");
 /// ```
 /// The human checker defaults to off in the config, but it returns the first thing it finds currently.
-/// We have an issue for that here https://github.com/bee-san/Ares/issues/129
+/// We have an issue for that here https://github.com/bee-san/ciphey/issues/129
 /// ```rust
-/// use ares::perform_cracking;
-/// use ares::config::Config;
+/// use ciphey::perform_cracking;
+/// use ciphey::config::Config;
 /// let mut config = Config::default();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
@@ -80,7 +97,15 @@ use self::decoders::crack_results::CrackResult;
 /// assert!(result.is_none());
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
-    config::set_global_config(config);
+    // If top_results is enabled, ensure human_checker_on is disabled
+    let mut modified_config = config;
+    if modified_config.top_results {
+        modified_config.human_checker_on = false;
+        // Clear any previous results when starting a new cracking session
+        storage::wait_athena_storage::clear_plaintext_results();
+    }
+
+    config::set_global_config(modified_config);
     let text = text.to_string();
 
     if text.is_empty() {
@@ -119,16 +144,38 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     // Build a new search tree
     // This starts us with a node with no parents
     // let search_tree = searchers::Tree::new(text.to_string());
+    cli_pretty_printing::success(&format!(
+        "DEBUG: lib.rs - Calling search_for_plaintext with text: {}",
+        text
+    ));
     // Perform the search algorithm
     // It will either return a failure or success.
-    searchers::search_for_plaintext(text)
+    let result = searchers::search_for_plaintext(text);
+    cli_pretty_printing::success(&format!(
+        "DEBUG: lib.rs - Result from search_for_plaintext: {:?}",
+        result.is_some()
+    ));
+    if let Some(ref res) = result {
+        cli_pretty_printing::success(&format!(
+            "DEBUG: lib.rs - Result has {} decoders in path",
+            res.path.len()
+        ));
+    }
+    result
 }
 
 /// Checks if the given input is plaintext or not
 /// Used at the start of the program to not waste CPU cycles
 fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
-    let athena_checker = Checker::<Athena>::new();
-    athena_checker.check(text)
+    let config = get_config();
+
+    if config.top_results {
+        let wait_athena_checker = Checker::<WaitAthena>::new();
+        wait_athena_checker.check(text)
+    } else {
+        let athena_checker = Checker::<Athena>::new();
+        athena_checker.check(text)
+    }
 }
 
 /// DecoderResult is the result of decoders
@@ -185,6 +232,13 @@ mod tests {
         let result = perform_cracking("b2xsZWg=", config);
         assert!(result.is_some());
         assert!(result.unwrap().text[0] == "hello");
+    }
+  
+    #[test]
+    fn test_perform_cracking_returns_failure() {
+        let config = Config::default();
+        let result = perform_cracking("", config);
+        assert!(result.is_none());
     }
 
     #[test]
