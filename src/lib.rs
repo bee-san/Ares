@@ -108,6 +108,20 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     config::set_global_config(modified_config);
     let text = text.to_string();
 
+    if text.is_empty() {
+        cli_pretty_printing::return_early_because_input_is_empty();
+
+        let mut crack_result = CrackResult::new(&Decoder::default(), text.to_string());
+        crack_result.checker_name = "Identify Empty String";
+
+        let output = DecoderResult {
+            text: vec![text],
+            path: vec![crack_result],
+        };
+
+        return Some(output);
+    }
+
     let initial_check_for_plaintext = check_if_input_text_is_plaintext(&text);
     if initial_check_for_plaintext.is_identified {
         debug!(
@@ -208,6 +222,18 @@ mod tests {
         perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh", config);
     }
 
+    #[test]
+    fn test_perform_cracking_returns_successful() {
+        // this will work after english checker can identify "CANARY: hello"
+        // let result = perform_cracking("Q0FOQVJZOiBoZWxsbw==");
+        // assert!(result.is_some());
+        // assert!(result.unwrap() == "CANARY: hello")
+        let config = Config::default();
+        let result = perform_cracking("b2xsZWg=", config);
+        assert!(result.is_some());
+        assert!(result.unwrap().text[0] == "hello");
+    }
+  
     #[test]
     fn test_perform_cracking_returns_failure() {
         let config = Config::default();
