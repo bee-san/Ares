@@ -197,27 +197,34 @@ pub fn add_row(
 ///
 /// On success, returns a result containing the matching CacheRow
 /// On error, returns a ``rusqlite::Error``
-pub fn read_row(encoded_text: &String) -> Result<CacheRow, rusqlite::Error> {
-    let raw_crack_result = RawCrackResult {
-        success: true,
-        encrypted_text: String::from(""),
-        unencrypted_text: Some(vec![String::from("")]),
-        decoder: String::from("Base64"),
-        checker_name: String::from("Mock Checker"),
-        checker_description: String::from("A mock checker for testing"),
-        key: None,
-        description: String::from("Mock decoder description"),
-        link: String::from("https://mockdecoderwebsite.com"),
-    };
-    Ok(CacheRow {
-        id: 0,
-        encoded_text: String::from(""),
-        decoded_text: String::from(""),
-        path: vec![raw_crack_result.clone()],
-        successful: true,
-        execution_time_ms: 100,
-        timestamp: String::from("2025-05-29 14:16:00"),
-    })
+pub fn read_row(conn: &rusqlite::Connection, encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare(
+        "SELECT * FROM cache WHERE encoded_text IS $1"
+    )?;
+    let mut query = stmt.query_map([encoded_text], |row| {
+        let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+        let crack_result_vec: Vec<RawCrackResult> =
+            serde_json::from_str(&path_str.clone()).unwrap();
+
+        Ok(CacheRow {
+            id: row.get_unwrap(0),
+            encoded_text: row.get_unwrap(1),
+            decoded_text: row.get_unwrap(2),
+            path: crack_result_vec,
+            successful: row.get_unwrap(4),
+            execution_time_ms: row.get_unwrap(5),
+            timestamp: row.get_unwrap(6),
+        })
+    })?;
+    let row = query.next();
+    match row {
+        Some(cache_row) => {
+            Ok(Some(cache_row?))
+        }
+        None => {
+            Ok(None)
+        }
+    }
 }
 
 #[cfg(test)]
@@ -501,7 +508,23 @@ mod tests {
             &expected_cache_row.timestamp,
         );
 
-        let cache_row: CacheRow = read_row(&encoded_text).unwrap();
-        assert_eq!(cache_row, expected_cache_row);
+        let cache_result = read_row(&conn, &encoded_text);
+        assert!(cache_result.is_ok());
+        let cache_row: Option<CacheRow> = cache_result.unwrap();
+        assert!(cache_row.is_some());
+        assert_eq!(cache_row.unwrap(), expected_cache_row);
+    }
+
+    #[test]
+    fn cache_empty_read_miss() {
+        let conn = Connection::open_in_memory().unwrap();
+        let _ = init_database(&conn);
+
+        let encoded_text = String::from("aGVsbG8gd29ybGQK");
+
+        let cache_result = read_row(&conn, &encoded_text);
+        assert!(cache_result.is_ok());
+        let cache_row: Option<CacheRow> = cache_result.unwrap();
+        assert!(cache_row.is_none());
     }
 }
