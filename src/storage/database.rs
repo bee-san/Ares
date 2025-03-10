@@ -195,12 +195,14 @@ pub fn add_row(
 /// Searches the database for a cache table row that matches the given encoded
 /// text
 ///
-/// On success, returns a result containing the matching CacheRow
+/// On cache hit, returns a CacheRow
+/// On cache miss, returns None
 /// On error, returns a ``rusqlite::Error``
-pub fn read_row(conn: &rusqlite::Connection, encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Error> {
-    let mut stmt = conn.prepare(
-        "SELECT * FROM cache WHERE encoded_text IS $1"
-    )?;
+pub fn read_row(
+    conn: &rusqlite::Connection,
+    encoded_text: &String,
+) -> Result<Option<CacheRow>, rusqlite::Error> {
+    let mut stmt = conn.prepare("SELECT * FROM cache WHERE encoded_text IS $1")?;
     let mut query = stmt.query_map([encoded_text], |row| {
         let path_str = row.get_unwrap::<usize, String>(3).to_owned();
         let crack_result_vec: Vec<RawCrackResult> =
@@ -218,12 +220,8 @@ pub fn read_row(conn: &rusqlite::Connection, encoded_text: &String) -> Result<Op
     })?;
     let row = query.next();
     match row {
-        Some(cache_row) => {
-            Ok(Some(cache_row?))
-        }
-        None => {
-            Ok(None)
-        }
+        Some(cache_row) => Ok(Some(cache_row?)),
+        None => Ok(None),
     }
 }
 
@@ -470,7 +468,7 @@ mod tests {
     }
 
     #[test]
-    fn cache_record_read_success() {
+    fn cache_record_read_hit() {
         let conn = Connection::open_in_memory().unwrap();
         let _ = init_database(&conn);
 
