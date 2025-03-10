@@ -192,6 +192,34 @@ pub fn add_row(
     Ok(())
 }
 
+/// Searches the database for a cache table row that matches the given encoded
+/// text
+///
+/// On success, returns a result containing the matching CacheRow
+/// On error, returns a ``rusqlite::Error``
+pub fn read_row(encoded_text: &String) -> Result<CacheRow, rusqlite::Error> {
+    let raw_crack_result = RawCrackResult {
+        success: true,
+        encrypted_text: String::from(""),
+        unencrypted_text: Some(vec![String::from("")]),
+        decoder: String::from("Base64"),
+        checker_name: String::from("Mock Checker"),
+        checker_description: String::from("A mock checker for testing"),
+        key: None,
+        description: String::from("Mock decoder description"),
+        link: String::from("https://mockdecoderwebsite.com"),
+    };
+    Ok(CacheRow {
+        id: 0,
+        encoded_text: String::from(""),
+        decoded_text: String::from(""),
+        path: vec![raw_crack_result.clone()],
+        successful: true,
+        execution_time_ms: 100,
+        timestamp: String::from("2025-05-29 14:16:00"),
+    })
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -309,7 +337,7 @@ mod tests {
             timestamp: String::from("2025-05-29 14:16:00"),
         };
 
-        let row_result = add_row(
+        let _row_result = add_row(
             &conn,
             &expected_cache_row.encoded_text,
             &expected_cache_row.decoded_text,
@@ -318,10 +346,8 @@ mod tests {
             &expected_cache_row.execution_time_ms,
             &expected_cache_row.timestamp,
         );
-        assert!(row_result.is_ok());
 
         let stmt_result = conn.prepare("SELECT * FROM cache;");
-        assert!(stmt_result.is_ok());
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
             let path_str = row.get_unwrap::<usize, String>(3).to_owned();
@@ -340,6 +366,142 @@ mod tests {
         });
         assert!(query_result.is_ok());
         let cache_row: CacheRow = query_result.unwrap().next().unwrap().unwrap();
+        assert_eq!(cache_row, expected_cache_row);
+    }
+
+    #[test]
+    fn cache_record_2_entries_success() {
+        let conn = Connection::open_in_memory().unwrap();
+        let _ = init_database(&conn);
+
+        let mock_crack_result_1 = RawCrackResult {
+            success: true,
+            encrypted_text: String::from("aGVsbG8gd29ybGQK"),
+            unencrypted_text: Some(vec![String::from("hello world")]),
+            decoder: String::from("Base64"),
+            checker_name: String::from("Mock Checker"),
+            checker_description: String::from("A mock checker for testing"),
+            key: None,
+            description: String::from("Mock decoder description"),
+            link: String::from("https://mockdecoderwebsite.com"),
+        };
+
+        let expected_cache_row_1 = CacheRow {
+            id: 1,
+            encoded_text: String::from("aGVsbG8gd29ybGQK"),
+            decoded_text: String::from("hello world"),
+            path: vec![mock_crack_result_1.clone()],
+            successful: true,
+            execution_time_ms: 100,
+            timestamp: String::from("2025-05-29 14:16:00"),
+        };
+
+        let mock_crack_result_2 = RawCrackResult {
+            success: true,
+            encrypted_text: String::from("d29ybGQgaGVsbG8K"),
+            unencrypted_text: Some(vec![String::from("world hello")]),
+            decoder: String::from("Base64"),
+            checker_name: String::from("Mock Checker"),
+            checker_description: String::from("A mock checker for testing"),
+            key: None,
+            description: String::from("Mock decoder description"),
+            link: String::from("https://mockdecoderwebsite.com"),
+        };
+
+        let expected_cache_row_2 = CacheRow {
+            id: 2,
+            encoded_text: String::from("d29ybGQgaGVsbG8K"),
+            decoded_text: String::from("world hello"),
+            path: vec![mock_crack_result_2.clone()],
+            successful: true,
+            execution_time_ms: 100,
+            timestamp: String::from("2025-05-29 15:12:00"),
+        };
+
+        let _row_result = add_row(
+            &conn,
+            &expected_cache_row_1.encoded_text,
+            &expected_cache_row_1.decoded_text,
+            &expected_cache_row_1.path,
+            &expected_cache_row_1.successful,
+            &expected_cache_row_1.execution_time_ms,
+            &expected_cache_row_1.timestamp,
+        );
+
+        let _row_result = add_row(
+            &conn,
+            &expected_cache_row_2.encoded_text,
+            &expected_cache_row_2.decoded_text,
+            &expected_cache_row_2.path,
+            &expected_cache_row_2.successful,
+            &expected_cache_row_2.execution_time_ms,
+            &expected_cache_row_2.timestamp,
+        );
+
+        let stmt_result = conn.prepare("SELECT * FROM cache;");
+        let mut stmt = stmt_result.unwrap();
+        let query_result = stmt.query_map([], |row| {
+            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+            let crack_result_vec: Vec<RawCrackResult> =
+                serde_json::from_str(&path_str.clone()).unwrap();
+
+            Ok(CacheRow {
+                id: row.get_unwrap(0),
+                encoded_text: row.get_unwrap(1),
+                decoded_text: row.get_unwrap(2),
+                path: crack_result_vec,
+                successful: row.get_unwrap(4),
+                execution_time_ms: row.get_unwrap(5),
+                timestamp: row.get_unwrap(6),
+            })
+        });
+        let mut query = query_result.unwrap();
+        let cache_row: CacheRow = query.next().unwrap().unwrap();
+        assert_eq!(cache_row, expected_cache_row_1);
+        let cache_row: CacheRow = query.next().unwrap().unwrap();
+        assert_eq!(cache_row, expected_cache_row_2);
+    }
+
+    #[test]
+    fn cache_record_read_success() {
+        let conn = Connection::open_in_memory().unwrap();
+        let _ = init_database(&conn);
+
+        let encoded_text = String::from("aGVsbG8gd29ybGQK");
+
+        let mock_crack_result = RawCrackResult {
+            success: true,
+            encrypted_text: encoded_text.clone(),
+            unencrypted_text: Some(vec![String::from("hello world")]),
+            decoder: String::from("Base64"),
+            checker_name: String::from("Mock Checker"),
+            checker_description: String::from("A mock checker for testing"),
+            key: None,
+            description: String::from("Mock decoder description"),
+            link: String::from("https://mockdecoderwebsite.com"),
+        };
+
+        let expected_cache_row = CacheRow {
+            id: 1,
+            encoded_text: encoded_text.clone(),
+            decoded_text: String::from("hello world"),
+            path: vec![mock_crack_result.clone()],
+            successful: true,
+            execution_time_ms: 100,
+            timestamp: String::from("2025-05-29 14:16:00"),
+        };
+
+        let _row_result = add_row(
+            &conn,
+            &expected_cache_row.encoded_text,
+            &expected_cache_row.decoded_text,
+            &expected_cache_row.path,
+            &expected_cache_row.successful,
+            &expected_cache_row.execution_time_ms,
+            &expected_cache_row.timestamp,
+        );
+
+        let cache_row: CacheRow = read_row(&encoded_text).unwrap();
         assert_eq!(cache_row, expected_cache_row);
     }
 }
