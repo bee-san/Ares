@@ -4,6 +4,7 @@
 //! `result.is_some()` to see if it returned okay.
 
 use crate::checkers::CheckerTypes;
+use crate::impl_get_popularity;
 
 use super::crack_results::CrackResult;
 use super::interface::Crack;
@@ -65,6 +66,8 @@ impl Crack for Decoder<ReverseDecoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 #[cfg(test)]

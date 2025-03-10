@@ -12,6 +12,7 @@ use super::interface::Crack;
 use super::interface::Decoder;
 
 use log::{debug, info, trace};
+use crate::impl_get_popularity;
 
 /// The Base64 decoder, call:
 /// `let base64_decoder = Decoder::<Base64Decoder>::new()` to create a new instance
@@ -70,11 +71,13 @@ impl Crack for Decoder<Base64Decoder> {
         }
 
         let decoded_text = decoded_text.unwrap();
+        trace!("Decoded text from Base64: {:?}", decoded_text);
         if !check_string_success(&decoded_text, text) {
             info!(
                 "Failed to decode base64 because check_string_success returned false on string {}",
                 decoded_text
             );
+            trace!("Decoded text from Base64 successfully: {:?}", decoded_text);
             return results;
         }
 
@@ -93,6 +96,8 @@ impl Crack for Decoder<Base64Decoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 /// helper function for standard base64

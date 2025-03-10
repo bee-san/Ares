@@ -2,6 +2,7 @@ use super::crack_results::CrackResult;
 use super::interface::Crack;
 use super::interface::Decoder;
 use crate::checkers::CheckerTypes;
+use crate::impl_get_popularity;
 
 use log::trace;
 use std::collections::HashMap;
@@ -50,6 +51,8 @@ impl Crack for Decoder<BrailleDecoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 /// Converts Braille Unicode characters to their corresponding Latin alphabet characters

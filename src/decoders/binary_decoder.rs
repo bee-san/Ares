@@ -1,5 +1,6 @@
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
+use crate::impl_get_popularity;
 
 use super::crack_results::CrackResult;
 use super::interface::Crack;
@@ -62,6 +63,8 @@ impl Crack for Decoder<BinaryDecoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 /// Decodes binary to string

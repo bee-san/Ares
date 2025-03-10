@@ -54,6 +54,8 @@ pub trait Crack {
     fn get_tags(&self) -> &Vec<&str>;
     /// Get the nam of the current decoder
     fn get_name(&self) -> &str;
+    /// Get the popularity of the current decoder
+    fn get_popularity(&self) -> f32;
 }
 
 /// Returns a boolean of True if the string is successfully changed
@@ -66,4 +68,15 @@ pub fn check_string_success(decoded_text: &str, original_text: &str) -> bool {
         return true;
     }
     false
+}
+
+/// Macro to implement the get_popularity method for all decoders
+/// This avoids having to manually add the method to each decoder implementation
+#[macro_export]
+macro_rules! impl_get_popularity {
+    () => {
+        fn get_popularity(&self) -> f32 {
+            self.popularity
+        }
+    };
 }

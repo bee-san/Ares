@@ -3,6 +3,7 @@
 //! Call brainfuck_interpreter.crack to use. It returns Option<String> and check with
 //! `result.is_some()` to see if it returned okay.
 use crate::checkers::CheckerTypes;
+use crate::impl_get_popularity;
 
 use super::crack_results::CrackResult;
 use super::interface::Crack;
@@ -85,6 +86,8 @@ impl Crack for Decoder<BrainfuckInterpreter> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 #[cfg(test)]

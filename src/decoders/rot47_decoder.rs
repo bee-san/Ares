@@ -13,6 +13,7 @@ use super::interface::Crack;
 use super::interface::Decoder;
 
 use log::{info, trace};
+use crate::impl_get_popularity;
 
 /// ROT47 Decoder
 pub struct ROT47Decoder;
@@ -71,6 +72,8 @@ impl Crack for Decoder<ROT47Decoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 /// Maps rot47 to the alphabet (up to ROT94 with the ROT47 alphabet)

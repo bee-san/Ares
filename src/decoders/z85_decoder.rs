@@ -11,6 +11,7 @@ use super::interface::Crack;
 use super::interface::Decoder;
 
 use log::{debug, info, trace};
+use crate::impl_get_popularity;
 
 /// The Z85 decoder, call:
 /// `let z85_decoder = Decoder::<Z85Decoder>::new()` to create a new instance
@@ -81,6 +82,8 @@ impl Crack for Decoder<Z85Decoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 /// helper function

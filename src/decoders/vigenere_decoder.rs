@@ -10,6 +10,7 @@ use crate::decoders::interface::check_string_success;
 use crate::storage::ENGLISH_FREQS;
 use gibberish_or_not::Sensitivity;
 use log::{debug, info, trace};
+use crate::impl_get_popularity;
 
 /// Expected Index of Coincidence for English text
 const EXPECTED_IOC: f64 = 0.0667;
@@ -89,6 +90,8 @@ impl Crack for Decoder<VigenereDecoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 /// Calculate Index of Coincidence for text split into key_length columns

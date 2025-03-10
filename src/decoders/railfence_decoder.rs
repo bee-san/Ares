@@ -13,6 +13,7 @@ use super::interface::Crack;
 use super::interface::Decoder;
 
 use log::{info, trace};
+use crate::impl_get_popularity;
 
 /// Railfence Decoder
 pub struct RailfenceDecoder;
@@ -77,6 +78,8 @@ impl Crack for Decoder<RailfenceDecoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 /// Decodes a text encoded with the Rail Fence Cipher with the specified number of rails and offset

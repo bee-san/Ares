@@ -31,6 +31,9 @@ impl Check for Checker<EnglishChecker> {
         // Normalize before checking
         let text = normalise_string(text);
 
+        // Get the config to check if we should use the human checker
+        let _config = get_config();
+
         // Get config to check if enhanced detection is enabled
         let config = get_config();
         let is_enhanced = config.enhanced_detection;

@@ -276,7 +276,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     /// user to save the resulting plaintext into a file
     const INVIS_CHARS_DETECTION_PERCENTAGE: f64 = 0.3;
     let mut invis_chars_found: f64 = 0.0;
-    for char in plaintext[0].chars() {
+    for char in plaintext.chars() {
         if storage::INVISIBLE_CHARS
             .iter()
             .any(|invis_chars| *invis_chars == char)
@@ -288,7 +288,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
     // If the percentage of invisible characters in the plaintext exceeds
     // the detection percentage, prompt the user asking if they want to
     // save the plaintext into a file
-    let invis_char_percentage = invis_chars_found / plaintext[0].len() as f64;
+    let invis_char_percentage = invis_chars_found / plaintext.len() as f64;
     if invis_char_percentage > INVIS_CHARS_DETECTION_PERCENTAGE {
         let invis_char_percentage_string = format!("{:2.0}%", invis_char_percentage * 100.0);
         println!(
@@ -316,13 +316,13 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
                 statement(&file_path, None),
                 decoded_path_string
             );
-            write(file_path, &plaintext[0]).expect("Error writing to file.");
+            write(file_path, &plaintext).expect("Error writing to file.");
             return;
         }
     }
     println!(
         "The plaintext is:\n{}\n{}",
-        success(&plaintext[0]),
+        success(&plaintext),
         decoded_path_string
     );
 }

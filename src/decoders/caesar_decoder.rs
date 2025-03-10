@@ -13,6 +13,7 @@ use super::interface::Crack;
 use super::interface::Decoder;
 
 use log::{info, trace};
+use crate::impl_get_popularity;
 
 /// The caesar decoder, call:
 /// `let caesar_decoder = Decoder::<caesarDecoder>::new()` to create a new instance
@@ -90,6 +91,8 @@ impl Crack for Decoder<CaesarDecoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 /// Caesar cipher to rotate cipher text by shift and return an owned String.

@@ -6,6 +6,7 @@ use crate::decoders::binary_decoder::BinaryDecoder;
 use crate::decoders::morse_code::MorseCodeDecoder;
 use log::trace;
 use std::collections::{HashMap, HashSet};
+use crate::impl_get_popularity;
 
 /// Substitution Generic Decoder
 pub struct SubstitutionGenericDecoder;
@@ -91,6 +92,8 @@ impl Crack for Decoder<SubstitutionGenericDecoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    
+    impl_get_popularity!();
 }
 
 /// Generate all permutations of a symbol set

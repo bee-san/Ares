@@ -18,9 +18,6 @@ use crate::{timer, DecoderResult};
 /// This module provides access to the A* search algorithm
 /// which uses a heuristic to prioritize decoders.
 mod astar;
-/// This module provides access to the breadth first search
-/// which searches for the plaintext.
-mod bfs;
 /// This module contains helper functions used by the A* search algorithm.
 mod helper_functions;
 
@@ -108,7 +105,7 @@ fn perform_decoding(text: &DecoderResult) -> MyResults {
     let decoders = filter_and_get_decoders(text);
     let athena_checker = Checker::<Athena>::new();
     let checker = CheckerTypes::CheckAthena(athena_checker);
-    decoders.run(&text.text[0], checker)
+    decoders.run(&text.text, checker)
 }
 
 #[cfg(test)]
