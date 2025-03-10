@@ -3,8 +3,10 @@
 ///! This database is intended for caching known encoded/decoded string
 ///! relations and collecting statistics on the performance of Ares
 ///! search algorithms.
-use rusqlite::Connection;
 use serde::{Deserialize, Serialize};
+use std::sync::OnceLock;
+
+static DB_PATH: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
 
 #[derive(Debug, Serialize, Deserialize)]
 /// Intermediary struct for serializing/deserializing CrackResults
@@ -103,16 +105,31 @@ fn get_database_path() -> std::path::PathBuf {
     path
 }
 
+/// Opens and returns a Connection to the SQLite database
+///
+/// If a path is specified in DB_PATH, returns a Connection to that path
+/// Otherwise, opens a Connection to an in-memory database
+fn get_db_connection() -> Result<rusqlite::Connection, rusqlite::Error> {
+    match DB_PATH.get() {
+        Some(db_path) => match db_path {
+            Some(path) => rusqlite::Connection::open(path),
+            None => rusqlite::Connection::open_in_memory(),
+        },
+        None => rusqlite::Connection::open_in_memory(),
+    }
+}
+
 /// Public wrapper for setting up database
 pub fn setup_database() -> Result<(), rusqlite::Error> {
     let path = get_database_path();
-    let conn = Connection::open(&path)?;
-    init_database(&conn)?;
+    DB_PATH.set(Some(path)); // TODO: Handle errors from this Result
+    init_database()?;
     Ok(())
 }
 
 /// Initializes database with default schema
-fn init_database(conn: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
+fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
+    let conn = get_db_connection()?;
     // Initializing cache table
     conn.execute(
         "CREATE TABLE IF NOT EXISTS cache (
@@ -157,12 +174,11 @@ fn init_database(conn: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
         (),
     )?;
 
-    Ok(())
+    Ok(conn)
 }
 
 /// Adds a new cache record to the cache table
-pub fn add_row(
-    conn: &rusqlite::Connection,
+pub fn insert_cache(
     encoded_text: &String,
     decoded_text: &String,
     path: &Vec<RawCrackResult>,
@@ -171,6 +187,7 @@ pub fn add_row(
     timestamp: &String,
 ) -> Result<(), rusqlite::Error> {
     let path_json = serde_json::to_string(&path.clone()).unwrap();
+    let conn = get_db_connection()?;
     let _conn_result = conn.execute(
         "INSERT INTO cache (
             encoded_text,
@@ -198,10 +215,8 @@ pub fn add_row(
 /// On cache hit, returns a CacheRow
 /// On cache miss, returns None
 /// On error, returns a ``rusqlite::Error``
-pub fn read_row(
-    conn: &rusqlite::Connection,
-    encoded_text: &String,
-) -> Result<Option<CacheRow>, rusqlite::Error> {
+pub fn read_row(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Error> {
+    let conn = get_db_connection()?;
     let mut stmt = conn.prepare("SELECT * FROM cache WHERE encoded_text IS $1")?;
     let mut query = stmt.query_map([encoded_text], |row| {
         let path_str = row.get_unwrap::<usize, String>(3).to_owned();
@@ -228,20 +243,30 @@ pub fn read_row(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use serial_test::serial;
+    use uuid::Uuid;
+
+    fn set_test_db_path() {
+        let test_id = Uuid::new_v4();
+        let path = std::path::PathBuf::from(
+            String::from("file::") + test_id.to_string().as_str() + "db?mode=memory&cache=shared",
+        );
+        let _ = DB_PATH.set(Some(path));
+    }
 
     #[test]
+    #[serial]
     fn database_initialized() {
-        let conn_result = Connection::open_in_memory();
-        assert!(conn_result.is_ok());
-        let conn = conn_result.unwrap();
-        let db_result = init_database(&conn);
+        set_test_db_path();
+        let db_result = init_database();
         assert!(db_result.is_ok());
     }
 
     #[test]
+    #[serial]
     fn cache_table_created() {
-        let conn = Connection::open_in_memory().unwrap();
-        let _ = init_database(&conn);
+        set_test_db_path();
+        let conn = init_database().unwrap();
 
         let stmt_result =
             conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='cache';");
@@ -254,9 +279,10 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn correct_cache_table_schema() {
-        let conn = Connection::open_in_memory().unwrap();
-        let _ = init_database(&conn);
+        set_test_db_path();
+        let conn = init_database().unwrap();
 
         let stmt_result = conn.prepare("PRAGMA table_info(cache);");
         assert!(stmt_result.is_ok());
@@ -288,9 +314,10 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn cache_record_empty_success() {
-        let conn = Connection::open_in_memory().unwrap();
-        let _ = init_database(&conn);
+        set_test_db_path();
+        let conn = init_database().unwrap();
 
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         assert!(stmt_result.is_ok());
@@ -316,9 +343,10 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn cache_record_entry_success() {
-        let conn = Connection::open_in_memory().unwrap();
-        let _ = init_database(&conn);
+        set_test_db_path();
+        let conn = init_database().unwrap();
 
         let mock_crack_result = RawCrackResult {
             success: true,
@@ -342,8 +370,7 @@ mod tests {
             timestamp: String::from("2025-05-29 14:16:00"),
         };
 
-        let _row_result = add_row(
-            &conn,
+        let _row_result = insert_cache(
             &expected_cache_row.encoded_text,
             &expected_cache_row.decoded_text,
             &expected_cache_row.path,
@@ -375,9 +402,10 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn cache_record_2_entries_success() {
-        let conn = Connection::open_in_memory().unwrap();
-        let _ = init_database(&conn);
+        set_test_db_path();
+        let conn = init_database().unwrap();
 
         let mock_crack_result_1 = RawCrackResult {
             success: true,
@@ -423,8 +451,7 @@ mod tests {
             timestamp: String::from("2025-05-29 15:12:00"),
         };
 
-        let _row_result = add_row(
-            &conn,
+        let _row_result = insert_cache(
             &expected_cache_row_1.encoded_text,
             &expected_cache_row_1.decoded_text,
             &expected_cache_row_1.path,
@@ -433,8 +460,7 @@ mod tests {
             &expected_cache_row_1.timestamp,
         );
 
-        let _row_result = add_row(
-            &conn,
+        let _row_result = insert_cache(
             &expected_cache_row_2.encoded_text,
             &expected_cache_row_2.decoded_text,
             &expected_cache_row_2.path,
@@ -468,9 +494,10 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn cache_record_read_hit() {
-        let conn = Connection::open_in_memory().unwrap();
-        let _ = init_database(&conn);
+        set_test_db_path();
+        let _conn = init_database().unwrap();
 
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
 
@@ -496,8 +523,7 @@ mod tests {
             timestamp: String::from("2025-05-29 14:16:00"),
         };
 
-        let _row_result = add_row(
-            &conn,
+        let _row_result = insert_cache(
             &expected_cache_row.encoded_text,
             &expected_cache_row.decoded_text,
             &expected_cache_row.path,
@@ -506,7 +532,7 @@ mod tests {
             &expected_cache_row.timestamp,
         );
 
-        let cache_result = read_row(&conn, &encoded_text);
+        let cache_result = read_row(&encoded_text);
         assert!(cache_result.is_ok());
         let cache_row: Option<CacheRow> = cache_result.unwrap();
         assert!(cache_row.is_some());
@@ -514,9 +540,10 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn cache_multiple_record_read_hit() {
-        let conn = Connection::open_in_memory().unwrap();
-        let _ = init_database(&conn);
+        set_test_db_path();
+        let _conn = init_database().unwrap();
 
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
 
@@ -564,8 +591,7 @@ mod tests {
             timestamp: String::from("2025-05-29 15:12:00"),
         };
 
-        let _row_result = add_row(
-            &conn,
+        let _row_result = insert_cache(
             &expected_cache_row_1.encoded_text,
             &expected_cache_row_1.decoded_text,
             &expected_cache_row_1.path,
@@ -574,8 +600,7 @@ mod tests {
             &expected_cache_row_1.timestamp,
         );
 
-        let _row_result = add_row(
-            &conn,
+        let _row_result = insert_cache(
             &expected_cache_row_2.encoded_text,
             &expected_cache_row_2.decoded_text,
             &expected_cache_row_2.path,
@@ -584,7 +609,7 @@ mod tests {
             &expected_cache_row_2.timestamp,
         );
 
-        let cache_result = read_row(&conn, &encoded_text);
+        let cache_result = read_row(&encoded_text);
         assert!(cache_result.is_ok());
         let cache_row: Option<CacheRow> = cache_result.unwrap();
         assert!(cache_row.is_some());
@@ -592,22 +617,24 @@ mod tests {
     }
 
     #[test]
+    #[serial]
     fn cache_empty_read_miss() {
-        let conn = Connection::open_in_memory().unwrap();
-        let _ = init_database(&conn);
+        set_test_db_path();
+        let _conn = init_database().unwrap();
 
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
 
-        let cache_result = read_row(&conn, &encoded_text);
+        let cache_result = read_row(&encoded_text);
         assert!(cache_result.is_ok());
         let cache_row: Option<CacheRow> = cache_result.unwrap();
         assert!(cache_row.is_none());
     }
 
     #[test]
+    #[serial]
     fn cache_multiple_record_read_miss() {
-        let conn = Connection::open_in_memory().unwrap();
-        let _ = init_database(&conn);
+        set_test_db_path();
+        let _conn = init_database().unwrap();
 
         let encoded_text = String::from("aGVsbG8gdGhlcmUK");
 
@@ -655,8 +682,7 @@ mod tests {
             timestamp: String::from("2025-05-29 15:12:00"),
         };
 
-        let _row_result = add_row(
-            &conn,
+        let _row_result = insert_cache(
             &expected_cache_row_1.encoded_text,
             &expected_cache_row_1.decoded_text,
             &expected_cache_row_1.path,
@@ -665,8 +691,7 @@ mod tests {
             &expected_cache_row_1.timestamp,
         );
 
-        let _row_result = add_row(
-            &conn,
+        let _row_result = insert_cache(
             &expected_cache_row_2.encoded_text,
             &expected_cache_row_2.decoded_text,
             &expected_cache_row_2.path,
@@ -675,7 +700,7 @@ mod tests {
             &expected_cache_row_2.timestamp,
         );
 
-        let cache_result = read_row(&conn, &encoded_text);
+        let cache_result = read_row(&encoded_text);
         assert!(cache_result.is_ok());
         let cache_row: Option<CacheRow> = cache_result.unwrap();
         assert!(cache_row.is_none());
