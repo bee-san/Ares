@@ -514,11 +514,166 @@ mod tests {
     }
 
     #[test]
+    fn cache_multiple_record_read_hit() {
+        let conn = Connection::open_in_memory().unwrap();
+        let _ = init_database(&conn);
+
+        let encoded_text = String::from("aGVsbG8gd29ybGQK");
+
+        let mock_crack_result_1 = RawCrackResult {
+            success: true,
+            encrypted_text: encoded_text.clone(),
+            unencrypted_text: Some(vec![String::from("hello world")]),
+            decoder: String::from("Base64"),
+            checker_name: String::from("Mock Checker"),
+            checker_description: String::from("A mock checker for testing"),
+            key: None,
+            description: String::from("Mock decoder description"),
+            link: String::from("https://mockdecoderwebsite.com"),
+        };
+
+        let expected_cache_row_1 = CacheRow {
+            id: 1,
+            encoded_text: encoded_text.clone(),
+            decoded_text: String::from("hello world"),
+            path: vec![mock_crack_result_1.clone()],
+            successful: true,
+            execution_time_ms: 100,
+            timestamp: String::from("2025-05-29 14:16:00"),
+        };
+
+        let mock_crack_result_2 = RawCrackResult {
+            success: true,
+            encrypted_text: String::from("d29ybGQgaGVsbG8K"),
+            unencrypted_text: Some(vec![String::from("world hello")]),
+            decoder: String::from("Base64"),
+            checker_name: String::from("Mock Checker"),
+            checker_description: String::from("A mock checker for testing"),
+            key: None,
+            description: String::from("Mock decoder description"),
+            link: String::from("https://mockdecoderwebsite.com"),
+        };
+
+        let expected_cache_row_2 = CacheRow {
+            id: 2,
+            encoded_text: String::from("d29ybGQgaGVsbG8K"),
+            decoded_text: String::from("world hello"),
+            path: vec![mock_crack_result_2.clone()],
+            successful: true,
+            execution_time_ms: 100,
+            timestamp: String::from("2025-05-29 15:12:00"),
+        };
+
+        let _row_result = add_row(
+            &conn,
+            &expected_cache_row_1.encoded_text,
+            &expected_cache_row_1.decoded_text,
+            &expected_cache_row_1.path,
+            &expected_cache_row_1.successful,
+            &expected_cache_row_1.execution_time_ms,
+            &expected_cache_row_1.timestamp,
+        );
+
+        let _row_result = add_row(
+            &conn,
+            &expected_cache_row_2.encoded_text,
+            &expected_cache_row_2.decoded_text,
+            &expected_cache_row_2.path,
+            &expected_cache_row_2.successful,
+            &expected_cache_row_2.execution_time_ms,
+            &expected_cache_row_2.timestamp,
+        );
+
+        let cache_result = read_row(&conn, &encoded_text);
+        assert!(cache_result.is_ok());
+        let cache_row: Option<CacheRow> = cache_result.unwrap();
+        assert!(cache_row.is_some());
+        assert_eq!(cache_row.unwrap(), expected_cache_row_1);
+    }
+
+    #[test]
     fn cache_empty_read_miss() {
         let conn = Connection::open_in_memory().unwrap();
         let _ = init_database(&conn);
 
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
+
+        let cache_result = read_row(&conn, &encoded_text);
+        assert!(cache_result.is_ok());
+        let cache_row: Option<CacheRow> = cache_result.unwrap();
+        assert!(cache_row.is_none());
+    }
+
+    #[test]
+    fn cache_multiple_record_read_miss() {
+        let conn = Connection::open_in_memory().unwrap();
+        let _ = init_database(&conn);
+
+        let encoded_text = String::from("aGVsbG8gdGhlcmUK");
+
+        let mock_crack_result_1 = RawCrackResult {
+            success: true,
+            encrypted_text: String::from("aGVsbG8gd29ybGQK"),
+            unencrypted_text: Some(vec![String::from("hello world")]),
+            decoder: String::from("Base64"),
+            checker_name: String::from("Mock Checker"),
+            checker_description: String::from("A mock checker for testing"),
+            key: None,
+            description: String::from("Mock decoder description"),
+            link: String::from("https://mockdecoderwebsite.com"),
+        };
+
+        let expected_cache_row_1 = CacheRow {
+            id: 1,
+            encoded_text: String::from("aGVsbG8gd29ybGQK"),
+            decoded_text: String::from("hello world"),
+            path: vec![mock_crack_result_1.clone()],
+            successful: true,
+            execution_time_ms: 100,
+            timestamp: String::from("2025-05-29 14:16:00"),
+        };
+
+        let mock_crack_result_2 = RawCrackResult {
+            success: true,
+            encrypted_text: String::from("d29ybGQgaGVsbG8K"),
+            unencrypted_text: Some(vec![String::from("world hello")]),
+            decoder: String::from("Base64"),
+            checker_name: String::from("Mock Checker"),
+            checker_description: String::from("A mock checker for testing"),
+            key: None,
+            description: String::from("Mock decoder description"),
+            link: String::from("https://mockdecoderwebsite.com"),
+        };
+
+        let expected_cache_row_2 = CacheRow {
+            id: 2,
+            encoded_text: String::from("d29ybGQgaGVsbG8K"),
+            decoded_text: String::from("world hello"),
+            path: vec![mock_crack_result_2.clone()],
+            successful: true,
+            execution_time_ms: 100,
+            timestamp: String::from("2025-05-29 15:12:00"),
+        };
+
+        let _row_result = add_row(
+            &conn,
+            &expected_cache_row_1.encoded_text,
+            &expected_cache_row_1.decoded_text,
+            &expected_cache_row_1.path,
+            &expected_cache_row_1.successful,
+            &expected_cache_row_1.execution_time_ms,
+            &expected_cache_row_1.timestamp,
+        );
+
+        let _row_result = add_row(
+            &conn,
+            &expected_cache_row_2.encoded_text,
+            &expected_cache_row_2.decoded_text,
+            &expected_cache_row_2.path,
+            &expected_cache_row_2.successful,
+            &expected_cache_row_2.execution_time_ms,
+            &expected_cache_row_2.timestamp,
+        );
 
         let cache_result = read_row(&conn, &encoded_text);
         assert!(cache_result.is_ok());
