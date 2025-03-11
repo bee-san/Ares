@@ -2497,6 +2497,7 @@ dependencies = [
  "base91",
  "bs58",
  "cargo-nextest",
+ "chrono",
  "cipher_identifier",
  "clap",
  "colored 3.0.0",

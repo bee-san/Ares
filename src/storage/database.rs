@@ -1,8 +1,10 @@
+use super::super::CrackResult;
 ///! Module for managing the SQLite database
 ///!
 ///! This database is intended for caching known encoded/decoded string
 ///! relations and collecting statistics on the performance of Ares
 ///! search algorithms.
+use chrono::DateTime;
 use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 
@@ -14,7 +16,7 @@ static DB_PATH: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
 ///
 /// It is the same as CrackResult, but it holds the Strings by value
 /// instead of references
-pub struct RawCrackResult {
+pub struct LocalCrackResult {
     /// If our checkers return success, we change this bool to True
     pub success: bool,
     /// Encrypted text is the text _before_ we decrypt it.
@@ -36,7 +38,7 @@ pub struct RawCrackResult {
     pub link: String,
 }
 
-impl PartialEq for RawCrackResult {
+impl PartialEq for LocalCrackResult {
     fn eq(&self, other: &Self) -> bool {
         self.success == other.success
             && self.encrypted_text == other.encrypted_text
@@ -50,9 +52,9 @@ impl PartialEq for RawCrackResult {
     }
 }
 
-impl Clone for RawCrackResult {
+impl Clone for LocalCrackResult {
     fn clone(&self) -> Self {
-        RawCrackResult {
+        LocalCrackResult {
             success: self.success.clone(),
             encrypted_text: self.encrypted_text.clone(),
             unencrypted_text: self.unencrypted_text.clone(),
@@ -66,7 +68,7 @@ impl Clone for RawCrackResult {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug)]
 /// Struct representing a row in the cache table
 pub struct CacheRow {
     /// Index of row in cache table
@@ -76,11 +78,11 @@ pub struct CacheRow {
     /// Text after it is decoded
     pub decoded_text: String,
     /// Ordered list of decoding attempts
-    pub path: Vec<RawCrackResult>,
+    pub path: Vec<LocalCrackResult>,
     /// Whether or not the decoding was successful
     pub successful: bool,
     /// How long the decoding took in milliseconds
-    pub execution_time_ms: u64,
+    pub execution_time_ms: i64,
     /// When the decoding was run
     pub timestamp: String,
 }
@@ -94,6 +96,38 @@ impl PartialEq for CacheRow {
             && self.successful == other.successful
             && self.execution_time_ms == other.execution_time_ms
             && self.timestamp == other.timestamp
+    }
+}
+
+#[derive(Debug)]
+/// Represents an entry into the cache table
+pub struct CacheEntry {
+    /// Text before it is decoded
+    pub encoded_text: String,
+    /// Text after it is decoded
+    pub decoded_text: String,
+    /// Ordered list of decoding attempts
+    pub path: Vec<CrackResult>,
+    /// How long the decoding took in milliseconds
+    pub execution_time_ms: i64,
+}
+
+/// Helper function for converting CrackResults into LocalCrackResults
+/// for serialization
+fn convert_to_local(crack_result: &CrackResult) -> LocalCrackResult {
+    LocalCrackResult {
+        success: crack_result.success,
+        encrypted_text: crack_result.encrypted_text.clone(),
+        unencrypted_text: crack_result.unencrypted_text.clone(),
+        decoder: String::from(crack_result.decoder),
+        checker_name: String::from(crack_result.checker_name),
+        checker_description: String::from(crack_result.checker_description),
+        key: match crack_result.key {
+            Some(key) => Some(String::from(key)),
+            None => None,
+        },
+        description: String::from(crack_result.description),
+        link: String::from(crack_result.link),
     }
 }
 
@@ -178,15 +212,26 @@ fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
 }
 
 /// Adds a new cache record to the cache table
-pub fn insert_cache(
-    encoded_text: &String,
-    decoded_text: &String,
-    path: &Vec<RawCrackResult>,
-    successful: &bool,
-    execution_time_ms: &u64,
-    timestamp: &String,
-) -> Result<(), rusqlite::Error> {
-    let path_json = serde_json::to_string(&path.clone()).unwrap();
+pub fn insert_cache(cache_entry: &CacheEntry) -> Result<(), rusqlite::Error> {
+    let mut raw_path: Vec<LocalCrackResult> = Vec::new();
+    for crack_result in cache_entry.path.as_slice() {
+        raw_path.push(convert_to_local(&crack_result));
+    }
+
+    let last_crack_result = cache_entry.path.get(cache_entry.path.len() - 1);
+    let successful;
+    match last_crack_result {
+        Some(crack_result) => {
+            successful = crack_result.success;
+        }
+        None => {
+            successful = false;
+        }
+    }
+
+    let timestamp: DateTime<chrono::Local> = std::time::SystemTime::now().into();
+
+    let path_json = serde_json::to_string(&raw_path).unwrap();
     let conn = get_db_connection()?;
     let _conn_result = conn.execute(
         "INSERT INTO cache (
@@ -198,12 +243,12 @@ pub fn insert_cache(
             timestamp)
             VALUES ($1, $2, $3, $4, $5, $6)",
         (
-            encoded_text.clone(),
-            decoded_text.clone(),
+            cache_entry.encoded_text.clone(),
+            cache_entry.decoded_text.clone(),
             path_json,
             successful.clone(),
-            execution_time_ms.clone(),
-            timestamp.clone(),
+            cache_entry.execution_time_ms.clone(),
+            timestamp.format("%Y-%m-%d %T").to_string(),
         ),
     );
     Ok(())
@@ -220,7 +265,7 @@ pub fn read_row(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Err
     let mut stmt = conn.prepare("SELECT * FROM cache WHERE encoded_text IS $1")?;
     let mut query = stmt.query_map([encoded_text], |row| {
         let path_str = row.get_unwrap::<usize, String>(3).to_owned();
-        let crack_result_vec: Vec<RawCrackResult> =
+        let crack_result_vec: Vec<LocalCrackResult> =
             serde_json::from_str(&path_str.clone()).unwrap();
 
         Ok(CacheRow {
@@ -242,9 +287,42 @@ pub fn read_row(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Err
 
 #[cfg(test)]
 mod tests {
+    use super::super::super::checkers::CheckerTypes;
+    use super::super::super::decoders::interface::{Crack, Decoder};
+    use super::super::super::CrackResult;
     use super::*;
     use serial_test::serial;
     use uuid::Uuid;
+
+    struct MockDecoder;
+    impl Crack for Decoder<MockDecoder> {
+        fn new() -> Decoder<MockDecoder> {
+            Decoder {
+                name: "MockEncoding",
+                description: "A mocked decoder for testing",
+                link: "https://en.wikipedia.org/wiki/Mock_object",
+                tags: vec!["mock", "url", "decoder", "base"],
+                popularity: 1.0,
+                phantom: std::marker::PhantomData,
+            }
+        }
+
+        /// Mocked cracking function
+        fn crack(&self, text: &str, _checker: &CheckerTypes) -> CrackResult {
+            let mut results = CrackResult::new(self, text.to_string());
+            results.unencrypted_text = Some(vec![String::from("mock decoded text")]);
+            results
+        }
+
+        /// Gets all tags for this decoder
+        fn get_tags(&self) -> &Vec<&str> {
+            &self.tags
+        }
+        /// Gets the name for the current decoder
+        fn get_name(&self) -> &str {
+            self.name
+        }
+    }
 
     fn set_test_db_path() {
         let test_id = Uuid::new_v4();
@@ -324,7 +402,7 @@ mod tests {
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
             let path_str = row.get_unwrap::<usize, String>(3).to_owned();
-            let crack_result_vec: Vec<RawCrackResult> =
+            let crack_result_vec: Vec<LocalCrackResult> =
                 serde_json::from_str(&path_str.clone()).unwrap();
 
             Ok(CacheRow {
@@ -348,42 +426,38 @@ mod tests {
         set_test_db_path();
         let conn = init_database().unwrap();
 
-        let mock_crack_result = RawCrackResult {
-            success: true,
-            encrypted_text: String::from("aGVsbG8gd29ybGQK"),
-            unencrypted_text: Some(vec![String::from("hello world")]),
-            decoder: String::from("Base64"),
-            checker_name: String::from("Mock Checker"),
-            checker_description: String::from("A mock checker for testing"),
-            key: None,
-            description: String::from("Mock decoder description"),
-            link: String::from("https://mockdecoderwebsite.com"),
-        };
+        let encoded_text = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text = String::from("hello world");
 
-        let expected_cache_row = CacheRow {
+        let mock_decoder = Decoder::<MockDecoder>::new();
+        let mut mock_crack_result = CrackResult::new(&mock_decoder, encoded_text.clone());
+        mock_crack_result.success = true;
+        mock_crack_result.unencrypted_text = Some(vec![decoded_text.clone()]);
+
+        let mut expected_cache_row = CacheRow {
             id: 1,
-            encoded_text: String::from("aGVsbG8gd29ybGQK"),
-            decoded_text: String::from("hello world"),
-            path: vec![mock_crack_result.clone()],
+            encoded_text: encoded_text.clone(),
+            decoded_text: decoded_text.clone(),
+            path: vec![convert_to_local(&mock_crack_result)],
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 14:16:00"),
         };
 
-        let _row_result = insert_cache(
-            &expected_cache_row.encoded_text,
-            &expected_cache_row.decoded_text,
-            &expected_cache_row.path,
-            &expected_cache_row.successful,
-            &expected_cache_row.execution_time_ms,
-            &expected_cache_row.timestamp,
-        );
+        let cache_entry = CacheEntry {
+            encoded_text: encoded_text.clone(),
+            decoded_text: decoded_text.clone(),
+            path: vec![mock_crack_result.clone()],
+            execution_time_ms: 100,
+        };
+
+        let _row_result = insert_cache(&cache_entry);
 
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
             let path_str = row.get_unwrap::<usize, String>(3).to_owned();
-            let crack_result_vec: Vec<RawCrackResult> =
+            let crack_result_vec: Vec<LocalCrackResult> =
                 serde_json::from_str(&path_str.clone()).unwrap();
 
             Ok(CacheRow {
@@ -398,6 +472,7 @@ mod tests {
         });
         assert!(query_result.is_ok());
         let cache_row: CacheRow = query_result.unwrap().next().unwrap().unwrap();
+        expected_cache_row.timestamp = cache_row.timestamp.clone();
         assert_eq!(cache_row, expected_cache_row);
     }
 
@@ -407,73 +482,60 @@ mod tests {
         set_test_db_path();
         let conn = init_database().unwrap();
 
-        let mock_crack_result_1 = RawCrackResult {
-            success: true,
-            encrypted_text: String::from("aGVsbG8gd29ybGQK"),
-            unencrypted_text: Some(vec![String::from("hello world")]),
-            decoder: String::from("Base64"),
-            checker_name: String::from("Mock Checker"),
-            checker_description: String::from("A mock checker for testing"),
-            key: None,
-            description: String::from("Mock decoder description"),
-            link: String::from("https://mockdecoderwebsite.com"),
-        };
+        let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text_1 = String::from("hello world");
 
-        let expected_cache_row_1 = CacheRow {
+        let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
+        let decoded_text_2 = String::from("world hello");
+
+        let mock_decoder = Decoder::<MockDecoder>::new();
+        let mut mock_crack_result_1 = CrackResult::new(&mock_decoder, encoded_text_1.clone());
+        mock_crack_result_1.success = true;
+        mock_crack_result_1.unencrypted_text = Some(vec![decoded_text_1.clone()]);
+
+        let mut expected_cache_row_1 = CacheRow {
             id: 1,
-            encoded_text: String::from("aGVsbG8gd29ybGQK"),
-            decoded_text: String::from("hello world"),
-            path: vec![mock_crack_result_1.clone()],
+            encoded_text: encoded_text_1.clone(),
+            decoded_text: decoded_text_1.clone(),
+            path: vec![convert_to_local(&mock_crack_result_1)],
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 14:16:00"),
         };
 
-        let mock_crack_result_2 = RawCrackResult {
-            success: true,
-            encrypted_text: String::from("d29ybGQgaGVsbG8K"),
-            unencrypted_text: Some(vec![String::from("world hello")]),
-            decoder: String::from("Base64"),
-            checker_name: String::from("Mock Checker"),
-            checker_description: String::from("A mock checker for testing"),
-            key: None,
-            description: String::from("Mock decoder description"),
-            link: String::from("https://mockdecoderwebsite.com"),
-        };
+        let mut mock_crack_result_2 = CrackResult::new(&mock_decoder, encoded_text_2.clone());
+        mock_crack_result_2.success = true;
+        mock_crack_result_2.unencrypted_text = Some(vec![decoded_text_2.clone()]);
 
-        let expected_cache_row_2 = CacheRow {
+        let mut expected_cache_row_2 = CacheRow {
             id: 2,
-            encoded_text: String::from("d29ybGQgaGVsbG8K"),
-            decoded_text: String::from("world hello"),
-            path: vec![mock_crack_result_2.clone()],
+            encoded_text: encoded_text_2.clone(),
+            decoded_text: decoded_text_2.clone(),
+            path: vec![convert_to_local(&mock_crack_result_2)],
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 15:12:00"),
         };
 
-        let _row_result = insert_cache(
-            &expected_cache_row_1.encoded_text,
-            &expected_cache_row_1.decoded_text,
-            &expected_cache_row_1.path,
-            &expected_cache_row_1.successful,
-            &expected_cache_row_1.execution_time_ms,
-            &expected_cache_row_1.timestamp,
-        );
+        let _row_result = insert_cache(&CacheEntry {
+            encoded_text: encoded_text_1.clone(),
+            decoded_text: decoded_text_1.clone(),
+            path: vec![mock_crack_result_1.clone()],
+            execution_time_ms: 100,
+        });
 
-        let _row_result = insert_cache(
-            &expected_cache_row_2.encoded_text,
-            &expected_cache_row_2.decoded_text,
-            &expected_cache_row_2.path,
-            &expected_cache_row_2.successful,
-            &expected_cache_row_2.execution_time_ms,
-            &expected_cache_row_2.timestamp,
-        );
+        let _row_result = insert_cache(&CacheEntry {
+            encoded_text: encoded_text_2.clone(),
+            decoded_text: decoded_text_2.clone(),
+            path: vec![mock_crack_result_2.clone()],
+            execution_time_ms: 100,
+        });
 
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
             let path_str = row.get_unwrap::<usize, String>(3).to_owned();
-            let crack_result_vec: Vec<RawCrackResult> =
+            let crack_result_vec: Vec<LocalCrackResult> =
                 serde_json::from_str(&path_str.clone()).unwrap();
 
             Ok(CacheRow {
@@ -488,8 +550,10 @@ mod tests {
         });
         let mut query = query_result.unwrap();
         let cache_row: CacheRow = query.next().unwrap().unwrap();
+        expected_cache_row_1.timestamp = cache_row.timestamp.clone();
         assert_eq!(cache_row, expected_cache_row_1);
         let cache_row: CacheRow = query.next().unwrap().unwrap();
+        expected_cache_row_2.timestamp = cache_row.timestamp.clone();
         assert_eq!(cache_row, expected_cache_row_2);
     }
 
@@ -500,43 +564,37 @@ mod tests {
         let _conn = init_database().unwrap();
 
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text = String::from("hello world");
 
-        let mock_crack_result = RawCrackResult {
-            success: true,
-            encrypted_text: encoded_text.clone(),
-            unencrypted_text: Some(vec![String::from("hello world")]),
-            decoder: String::from("Base64"),
-            checker_name: String::from("Mock Checker"),
-            checker_description: String::from("A mock checker for testing"),
-            key: None,
-            description: String::from("Mock decoder description"),
-            link: String::from("https://mockdecoderwebsite.com"),
-        };
+        let mock_decoder = Decoder::<MockDecoder>::new();
+        let mut mock_crack_result = CrackResult::new(&mock_decoder, encoded_text.clone());
+        mock_crack_result.success = true;
+        mock_crack_result.unencrypted_text = Some(vec![decoded_text.clone()]);
 
-        let expected_cache_row = CacheRow {
+        let mut expected_cache_row = CacheRow {
             id: 1,
             encoded_text: encoded_text.clone(),
-            decoded_text: String::from("hello world"),
-            path: vec![mock_crack_result.clone()],
+            decoded_text: decoded_text.clone(),
+            path: vec![convert_to_local(&mock_crack_result.clone())],
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 14:16:00"),
         };
 
-        let _row_result = insert_cache(
-            &expected_cache_row.encoded_text,
-            &expected_cache_row.decoded_text,
-            &expected_cache_row.path,
-            &expected_cache_row.successful,
-            &expected_cache_row.execution_time_ms,
-            &expected_cache_row.timestamp,
-        );
+        let _row_result = insert_cache(&CacheEntry {
+            encoded_text: encoded_text.clone(),
+            decoded_text: decoded_text.clone(),
+            path: vec![mock_crack_result.clone()],
+            execution_time_ms: 100,
+        });
 
         let cache_result = read_row(&encoded_text);
         assert!(cache_result.is_ok());
-        let cache_row: Option<CacheRow> = cache_result.unwrap();
-        assert!(cache_row.is_some());
-        assert_eq!(cache_row.unwrap(), expected_cache_row);
+        let cache_row_result: Option<CacheRow> = cache_result.unwrap();
+        assert!(cache_row_result.is_some());
+        let cache_row = cache_row_result.unwrap();
+        expected_cache_row.timestamp = cache_row.timestamp.clone();
+        assert_eq!(cache_row, expected_cache_row);
     }
 
     #[test]
@@ -545,75 +603,70 @@ mod tests {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
-        let encoded_text = String::from("aGVsbG8gd29ybGQK");
+        let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text_1 = String::from("hello world");
 
-        let mock_crack_result_1 = RawCrackResult {
-            success: true,
-            encrypted_text: encoded_text.clone(),
-            unencrypted_text: Some(vec![String::from("hello world")]),
-            decoder: String::from("Base64"),
-            checker_name: String::from("Mock Checker"),
-            checker_description: String::from("A mock checker for testing"),
-            key: None,
-            description: String::from("Mock decoder description"),
-            link: String::from("https://mockdecoderwebsite.com"),
-        };
+        let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
+        let decoded_text_2 = String::from("world hello");
 
-        let expected_cache_row_1 = CacheRow {
+        let mock_decoder = Decoder::<MockDecoder>::new();
+        let mut mock_crack_result_1 = CrackResult::new(&mock_decoder, encoded_text_1.clone());
+        mock_crack_result_1.success = true;
+        mock_crack_result_1.unencrypted_text = Some(vec![decoded_text_1.clone()]);
+
+        let mut expected_cache_row_1 = CacheRow {
             id: 1,
-            encoded_text: encoded_text.clone(),
-            decoded_text: String::from("hello world"),
-            path: vec![mock_crack_result_1.clone()],
+            encoded_text: encoded_text_1.clone(),
+            decoded_text: decoded_text_1.clone(),
+            path: vec![convert_to_local(&mock_crack_result_1)],
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 14:16:00"),
         };
 
-        let mock_crack_result_2 = RawCrackResult {
-            success: true,
-            encrypted_text: String::from("d29ybGQgaGVsbG8K"),
-            unencrypted_text: Some(vec![String::from("world hello")]),
-            decoder: String::from("Base64"),
-            checker_name: String::from("Mock Checker"),
-            checker_description: String::from("A mock checker for testing"),
-            key: None,
-            description: String::from("Mock decoder description"),
-            link: String::from("https://mockdecoderwebsite.com"),
-        };
+        let mut mock_crack_result_2 = CrackResult::new(&mock_decoder, encoded_text_2.clone());
+        mock_crack_result_2.success = true;
+        mock_crack_result_2.unencrypted_text = Some(vec![decoded_text_2.clone()]);
 
-        let expected_cache_row_2 = CacheRow {
+        let mut expected_cache_row_2 = CacheRow {
             id: 2,
-            encoded_text: String::from("d29ybGQgaGVsbG8K"),
-            decoded_text: String::from("world hello"),
-            path: vec![mock_crack_result_2.clone()],
+            encoded_text: encoded_text_2.clone(),
+            decoded_text: decoded_text_2.clone(),
+            path: vec![convert_to_local(&mock_crack_result_2)],
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 15:12:00"),
         };
 
-        let _row_result = insert_cache(
-            &expected_cache_row_1.encoded_text,
-            &expected_cache_row_1.decoded_text,
-            &expected_cache_row_1.path,
-            &expected_cache_row_1.successful,
-            &expected_cache_row_1.execution_time_ms,
-            &expected_cache_row_1.timestamp,
-        );
+        let _row_result = insert_cache(&CacheEntry {
+            encoded_text: encoded_text_1.clone(),
+            decoded_text: decoded_text_1.clone(),
+            path: vec![mock_crack_result_1.clone()],
+            execution_time_ms: 100,
+        });
 
-        let _row_result = insert_cache(
-            &expected_cache_row_2.encoded_text,
-            &expected_cache_row_2.decoded_text,
-            &expected_cache_row_2.path,
-            &expected_cache_row_2.successful,
-            &expected_cache_row_2.execution_time_ms,
-            &expected_cache_row_2.timestamp,
-        );
+        let _row_result = insert_cache(&CacheEntry {
+            encoded_text: encoded_text_2.clone(),
+            decoded_text: decoded_text_2.clone(),
+            path: vec![mock_crack_result_2.clone()],
+            execution_time_ms: 100,
+        });
 
-        let cache_result = read_row(&encoded_text);
+        let cache_result = read_row(&encoded_text_1);
         assert!(cache_result.is_ok());
-        let cache_row: Option<CacheRow> = cache_result.unwrap();
-        assert!(cache_row.is_some());
-        assert_eq!(cache_row.unwrap(), expected_cache_row_1);
+        let cache_row_result: Option<CacheRow> = cache_result.unwrap();
+        assert!(cache_row_result.is_some());
+        let cache_row = cache_row_result.unwrap();
+        expected_cache_row_1.timestamp = cache_row.timestamp.clone();
+        assert_eq!(cache_row, expected_cache_row_1);
+
+        let cache_result = read_row(&encoded_text_2);
+        assert!(cache_result.is_ok());
+        let cache_row_result: Option<CacheRow> = cache_result.unwrap();
+        assert!(cache_row_result.is_some());
+        let cache_row = cache_row_result.unwrap();
+        expected_cache_row_2.timestamp = cache_row.timestamp.clone();
+        assert_eq!(cache_row, expected_cache_row_2);
     }
 
     #[test]
@@ -636,71 +689,56 @@ mod tests {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
-        let encoded_text = String::from("aGVsbG8gdGhlcmUK");
+        let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text_1 = String::from("hello world");
 
-        let mock_crack_result_1 = RawCrackResult {
-            success: true,
-            encrypted_text: String::from("aGVsbG8gd29ybGQK"),
-            unencrypted_text: Some(vec![String::from("hello world")]),
-            decoder: String::from("Base64"),
-            checker_name: String::from("Mock Checker"),
-            checker_description: String::from("A mock checker for testing"),
-            key: None,
-            description: String::from("Mock decoder description"),
-            link: String::from("https://mockdecoderwebsite.com"),
-        };
+        let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
+        let _decoded_text_2 = String::from("world hello");
 
-        let expected_cache_row_1 = CacheRow {
+        let mock_decoder = Decoder::<MockDecoder>::new();
+        let mut mock_crack_result_1 = CrackResult::new(&mock_decoder, encoded_text_1.clone());
+        mock_crack_result_1.success = true;
+        mock_crack_result_1.unencrypted_text = Some(vec![decoded_text_1.clone()]);
+
+        let _expected_cache_row_1 = CacheRow {
             id: 1,
-            encoded_text: String::from("aGVsbG8gd29ybGQK"),
-            decoded_text: String::from("hello world"),
-            path: vec![mock_crack_result_1.clone()],
+            encoded_text: encoded_text_1.clone(),
+            decoded_text: decoded_text_1.clone(),
+            path: vec![convert_to_local(&mock_crack_result_1)],
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 14:16:00"),
         };
 
-        let mock_crack_result_2 = RawCrackResult {
-            success: true,
-            encrypted_text: String::from("d29ybGQgaGVsbG8K"),
-            unencrypted_text: Some(vec![String::from("world hello")]),
-            decoder: String::from("Base64"),
-            checker_name: String::from("Mock Checker"),
-            checker_description: String::from("A mock checker for testing"),
-            key: None,
-            description: String::from("Mock decoder description"),
-            link: String::from("https://mockdecoderwebsite.com"),
-        };
+        let mock_crack_result_2 = CrackResult::new(&mock_decoder, encoded_text_1.clone());
+        mock_crack_result_1.success = true;
+        mock_crack_result_1.unencrypted_text = Some(vec![decoded_text_1.clone()]);
 
-        let expected_cache_row_2 = CacheRow {
+        let _expected_cache_row_2 = CacheRow {
             id: 2,
-            encoded_text: String::from("d29ybGQgaGVsbG8K"),
-            decoded_text: String::from("world hello"),
-            path: vec![mock_crack_result_2.clone()],
+            encoded_text: encoded_text_1.clone(),
+            decoded_text: decoded_text_1.clone(),
+            path: vec![convert_to_local(&mock_crack_result_2)],
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 15:12:00"),
         };
 
-        let _row_result = insert_cache(
-            &expected_cache_row_1.encoded_text,
-            &expected_cache_row_1.decoded_text,
-            &expected_cache_row_1.path,
-            &expected_cache_row_1.successful,
-            &expected_cache_row_1.execution_time_ms,
-            &expected_cache_row_1.timestamp,
-        );
+        let _row_result = insert_cache(&CacheEntry {
+            encoded_text: encoded_text_1.clone(),
+            decoded_text: decoded_text_1.clone(),
+            path: vec![mock_crack_result_1.clone()],
+            execution_time_ms: 100,
+        });
 
-        let _row_result = insert_cache(
-            &expected_cache_row_2.encoded_text,
-            &expected_cache_row_2.decoded_text,
-            &expected_cache_row_2.path,
-            &expected_cache_row_2.successful,
-            &expected_cache_row_2.execution_time_ms,
-            &expected_cache_row_2.timestamp,
-        );
+        let _row_result = insert_cache(&CacheEntry {
+            encoded_text: encoded_text_1.clone(),
+            decoded_text: decoded_text_1.clone(),
+            path: vec![mock_crack_result_2.clone()],
+            execution_time_ms: 100,
+        });
 
-        let cache_result = read_row(&encoded_text);
+        let cache_result = read_row(&encoded_text_2);
         assert!(cache_result.is_ok());
         let cache_row: Option<CacheRow> = cache_result.unwrap();
         assert!(cache_row.is_none());
