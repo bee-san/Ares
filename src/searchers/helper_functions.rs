@@ -141,8 +141,9 @@ pub fn calculate_non_printable_ratio(text: &str) -> f32 {
 /// The heuristic estimates how close a state is to being plaintext.
 /// A lower value indicates a more promising state. This implementation uses:
 /// 1. Decoder popularity (lower heuristic for more popular decoders)
-/// 2. Depth penalty (higher heuristic for deeper paths)
-/// 3. Uncommon sequence penalty (higher heuristic for uncommon decoder sequences)
+/// 2. Adaptive depth penalty (higher heuristic for deeper paths, with increasing penalty as depth grows)
+/// 3. String quality component (higher heuristic for lower quality strings)
+/// 4. Uncommon sequence penalty (higher heuristic for uncommon decoder sequences)
 ///
 /// # Parameters
 ///
@@ -152,7 +153,7 @@ pub fn calculate_non_printable_ratio(text: &str) -> f32 {
 ///
 /// # Returns
 /// A float value representing the heuristic cost (lower is better)
-pub fn generate_heuristic(_text: &str, path: &[CrackResult], next_decoder: &Option<Box<dyn Crack + Sync>>) -> f32 {
+pub fn generate_heuristic(text: &str, path: &[CrackResult], next_decoder: &Option<Box<dyn Crack + Sync>>) -> f32 {
     let mut base_score = 0.0;
 
     // 1. Popularity component - directly use (1.0 - popularity)
@@ -170,7 +171,12 @@ pub fn generate_heuristic(_text: &str, path: &[CrackResult], next_decoder: &Opti
     let depth_coefficient = 0.05 * (1.0 + (path.len() as f32 / 20.0));
     base_score += (depth_coefficient * path.len() as f32).powi(2);
 
-    // 3. Penalty for uncommon pairings
+    // 3. String quality component - penalize low quality strings
+    // Lower quality = higher penalty
+    let quality = calculate_string_quality(text);
+    base_score += (1.0 - quality) * 0.5;
+
+    // 4. Penalty for uncommon pairings
     if path.len() > 1 {
         if let Some(previous_decoder) = path.last() {
             if let Some(next_decoder) = next_decoder {

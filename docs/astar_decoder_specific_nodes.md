@@ -99,7 +99,7 @@ While the decoder-specific nodes approach improves the efficiency of the A* sear
 
 1. **Trait Limitations**: The current implementation uses the decoder's name to identify it, rather than storing the decoder itself, due to limitations with cloning trait objects. A more elegant solution would be to modify the `Crack` trait to support cloning.
 
-2. **Heuristic Function**: The heuristic function has been improved to use the decoder's popularity and an adaptive depth penalty. It could be further enhanced to incorporate the quality of the decoded text or learn from past successes.
+2. **Heuristic Function**: The heuristic function has been improved to use the decoder's popularity, an adaptive depth penalty, and a string quality component. It could be further enhanced to learn from past successes.
 
 3. **Parallel Expansion**: The algorithm could be modified to expand multiple nodes in parallel, which would take advantage of multi-core processors.
 
