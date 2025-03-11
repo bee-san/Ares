@@ -165,7 +165,7 @@ fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
 }
 
 /// DecoderResult is the result of decoders
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DecoderResult {
     /// The text we have from the decoder, as a vector
     /// because the decoder might return more than 1 text (caesar)

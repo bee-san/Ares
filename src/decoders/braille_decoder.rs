@@ -16,7 +16,7 @@ impl Crack for Decoder<BrailleDecoder> {
             description: "Braille is a tactile writing system used by people who are visually impaired. It consists of raised dots arranged in cells of up to six dots in a 3×2 pattern.",
             link: "https://en.wikipedia.org/wiki/Braille",
             tags: vec!["braille", "substitution", "decoder"],
-            popularity: 0.1,
+            popularity: 0.8,
             phantom: std::marker::PhantomData,
         }
     }
