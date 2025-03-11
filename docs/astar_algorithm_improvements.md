@@ -75,17 +75,7 @@ While the current implementation is a significant improvement over the original,
 
 ### 1. ✅ Expose Decoder Popularity in the Trait (Implemented)
 
-### 2. Adaptive Depth Penalty
-
-Currently, we use a fixed coefficient (0.05) for the depth penalty. We could make this adaptive based on the search progress:
-
-```rust
-// As the search gets deeper, increase the penalty coefficient
-let depth_coefficient = 0.05 * (1.0 + (path.len() as f32 / 20.0));
-base_score += (depth_coefficient * path.len() as f32).powi(2);
-```
-
-This would make the algorithm more aggressive in pruning deep paths as the search progresses.
+### 2. ✅ Adaptive Depth Penalty (Implemented)
 
 ### 3. Incorporate String Quality
 
@@ -179,7 +169,7 @@ let results: Vec<_> = current_nodes.par_iter().map(|node| {
 These improvements would make the A* search algorithm more efficient and effective at finding the correct decoding path:
 
 1. **✅ Exposing Decoder Popularity**: High impact, as it allows the algorithm to properly prioritize more popular decoders.
-2. **Adaptive Depth Penalty**: Medium impact, as it would help prevent the algorithm from going too deep in unproductive paths.
+2. **✅ Adaptive Depth Penalty**: Medium impact, as it helps prevent the algorithm from going too deep in unproductive paths.
 3. **String Quality Component**: High impact, as it would help the algorithm focus on paths that lead to higher quality strings.
 4. **Learning-Based Sequence Penalties**: Medium impact, as it would help the algorithm learn from past successes.
 5. **Beam Search Variant**: Medium impact, as it would help focus computational resources on the most promising paths.
@@ -189,8 +179,8 @@ These improvements would make the A* search algorithm more efficient and effecti
 Based on the impact analysis, the recommended implementation order is:
 
 1. ✅ Expose Decoder Popularity in the Trait (Implemented)
+2. ✅ Adaptive Depth Penalty (Implemented)
 2. Incorporate String Quality
-3. Parallel Node Expansion
 4. Adaptive Depth Penalty
 5. Learning-Based Sequence Penalties
 6. Caching Mechanism
@@ -198,7 +188,7 @@ Based on the impact analysis, the recommended implementation order is:
 
 ## Conclusion
 
-The A* search algorithm has been significantly improved with decoder-specific nodes, a simplified heuristic function, and the use of decoder popularity in the heuristic. These changes make the search more focused and efficient, allowing it to find the correct sequence of decoders more quickly.
+The A* search algorithm has been significantly improved with decoder-specific nodes, a simplified heuristic function, the use of decoder popularity in the heuristic, and an adaptive depth penalty. These changes make the search more focused and efficient, allowing it to find the correct sequence of decoders more quickly.
 
 However, there is still room for further improvement. By implementing the enhancements described above, we can make the algorithm even more efficient and effective at finding the correct decoding path.
 

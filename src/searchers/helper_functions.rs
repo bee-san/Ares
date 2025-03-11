@@ -165,7 +165,10 @@ pub fn generate_heuristic(_text: &str, path: &[CrackResult], next_decoder: &Opti
     }
 
     // 2. Depth penalty - exponential growth but not too aggressive
-    base_score += (0.05 * path.len() as f32).powi(2);
+    // Use an adaptive coefficient that increases as the path gets deeper
+    // This makes the algorithm more aggressive in pruning deep paths as the search progresses
+    let depth_coefficient = 0.05 * (1.0 + (path.len() as f32 / 20.0));
+    base_score += (depth_coefficient * path.len() as f32).powi(2);
 
     // 3. Penalty for uncommon pairings
     if path.len() > 1 {
