@@ -35,10 +35,8 @@
 
 use crate::cli_pretty_printing;
 use crate::cli_pretty_printing::decoded_how_many_times;
-use crate::filtration_system::{
-    get_decoder_tagged_decoders, MyResults,
-};
 use crate::filtration_system::get_all_decoders;
+use crate::filtration_system::{get_decoder_tagged_decoders, MyResults};
 use crossbeam::channel::Sender;
 
 use log::{debug, trace};
@@ -48,17 +46,14 @@ use std::sync::atomic::{AtomicBool, AtomicU32, AtomicUsize, Ordering as AtomicOr
 use std::sync::{Arc, Mutex};
 
 // Add imports for parallel processing
-use rayon::prelude::*;
 use dashmap::DashSet;
+use rayon::prelude::*;
 
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::config::get_config;
-use crate::searchers::helper_functions::{
-    generate_heuristic,
-    update_decoder_stats,
-};
+use crate::searchers::helper_functions::{generate_heuristic, update_decoder_stats};
 use crate::storage::wait_athena_storage;
 use crate::DecoderResult;
 
@@ -78,7 +73,7 @@ const PARALLEL_BATCH_SIZE: usize = 10;
 fn calculate_hash(text: &str) -> String {
     use std::collections::hash_map::DefaultHasher;
     use std::hash::{Hash, Hasher};
-    
+
     let mut hasher = DefaultHasher::new();
     text.hash(&mut hasher);
     hasher.finish().to_string()
@@ -108,7 +103,7 @@ struct AStarNode {
     /// Total cost (f = g + h) used for prioritization in the queue
     /// Nodes with lower total_cost are explored first
     total_cost: f32,
-    
+
     /// The name of the next decoder to try when this node is expanded
     next_decoder_name: Option<String>,
 }
@@ -174,7 +169,7 @@ impl ThreadSafePriorityQueue {
     fn extract_batch(&self, batch_size: usize) -> Vec<AStarNode> {
         let mut queue = self.queue.lock().unwrap();
         let mut batch = Vec::with_capacity(batch_size);
-        
+
         for _ in 0..batch_size {
             if let Some(node) = queue.pop() {
                 batch.push(node);
@@ -182,7 +177,7 @@ impl ThreadSafePriorityQueue {
                 break;
             }
         }
-        
+
         batch
     }
 }
@@ -195,20 +190,22 @@ fn expand_node(
     _prune_threshold: usize,
 ) -> Vec<AStarNode> {
     let mut new_nodes = Vec::new();
-    
+
     // Check stop signal
     if stop.load(AtomicOrdering::Relaxed) {
         return new_nodes;
     }
-    
+
     // Determine which decoders to use based on next_decoder_name
     let mut decoders;
     if let Some(decoder_name) = &current_node.next_decoder_name {
         // If we have a specific decoder name, filter all decoders to only include that one
         trace!("Using specific decoder: {}", decoder_name);
         let mut all_decoders = get_all_decoders();
-        all_decoders.components.retain(|d| d.get_name() == decoder_name);
-        
+        all_decoders
+            .components
+            .retain(|d| d.get_name() == decoder_name);
+
         // Update stats for the decoder
         if !all_decoders.components.is_empty() {
             update_decoder_stats(decoder_name, true);
@@ -253,7 +250,7 @@ fn expand_node(
                     let mut decoders_used = current_node.state.path.clone();
                     let text = res.unencrypted_text.clone().unwrap_or_default();
                     decoders_used.push(res.clone());
-                    
+
                     // Create a special "result" node with a very low total_cost to ensure it's processed first
                     let result_node = AStarNode {
                         state: DecoderResult {
@@ -265,7 +262,7 @@ fn expand_node(
                         total_cost: -1000.0, // Very negative to ensure highest priority
                         next_decoder_name: Some("__RESULT__".to_string()), // Special marker
                     };
-                    
+
                     new_nodes.push(result_node);
                 }
             }
@@ -279,30 +276,30 @@ fn expand_node(
 
                     // Clone path to avoid modifying the original
                     let mut decoders_used = current_node.state.path.clone();
-                    
+
                     // Get decoded text
                     let text = r.unencrypted_text.clone().unwrap_or_default();
-                    
+
                     // Skip if text is empty or already seen
                     if text.is_empty() {
-                        update_decoder_stats(&r.decoder, false);
+                        update_decoder_stats(r.decoder, false);
                         continue;
                     }
-                    
+
                     // Check if we've seen this string before to prevent cycles
                     let text_hash = calculate_hash(&text[0]);
                     if !seen_strings.insert(text_hash) {
-                        update_decoder_stats(&r.decoder, false);
+                        update_decoder_stats(r.decoder, false);
                         continue;
                     }
-                    
+
                     decoders_used.push(r.clone());
-                    
+
                     // Create new node with updated cost and heuristic
                     let cost = current_node.cost + 1;
                     let heuristic = generate_heuristic(&text[0], &decoders_used, &None);
                     let total_cost = cost as f32 + heuristic;
-                    
+
                     let new_node = AStarNode {
                         state: DecoderResult {
                             text,
@@ -313,76 +310,77 @@ fn expand_node(
                         total_cost,
                         next_decoder_name: Some(r.decoder.to_string()),
                     };
-                    
+
                     // Add to new nodes
                     new_nodes.push(new_node);
-                    
+
                     // Update decoder stats - mark as successful since it produced valid output
-                    update_decoder_stats(&r.decoder, true);
+                    update_decoder_stats(r.decoder, true);
                 }
             }
         }
     }
-    
+
     // If no decoder-tagged decoders or they didn't produce results,
     // try all available decoders
     if new_nodes.is_empty() {
         // This part remains similar to the original implementation
         // but adapted to return nodes instead of adding them to open_set
-        
+
         // Get all decoders
         let all_decoders = get_all_decoders();
-        
+
         // Process each decoder
         for decoder in all_decoders.components {
             // Skip if stop signal is set
             if stop.load(AtomicOrdering::Relaxed) {
                 break;
             }
-            
+
             // Skip decoders that were already tried
             if let Some(last_decoder) = current_node.state.path.last() {
                 if last_decoder.decoder == decoder.get_name() {
                     continue;
                 }
-                
+
                 // Skip reciprocal decoders if the last one was reciprocal
-                if last_decoder.checker_description.contains("reciprocal") 
-                   && last_decoder.decoder == decoder.get_name() {
+                if last_decoder.checker_description.contains("reciprocal")
+                    && last_decoder.decoder == decoder.get_name()
+                {
                     continue;
                 }
             }
-            
+
             // Run the decoder
             let athena_checker = Checker::<Athena>::new();
             let checker = CheckerTypes::CheckAthena(athena_checker);
             let result = decoder.crack(&current_node.state.text[0], &checker);
-            
+
             // Process the result
             if let Some(decoded_text) = &result.unencrypted_text {
                 if let Some(first_text) = decoded_text.first() {
                     // Skip if text is empty
                     if first_text.is_empty() {
-                        update_decoder_stats(&decoder.get_name(), false);
+                        update_decoder_stats(decoder.get_name(), false);
                         continue;
                     }
-                    
+
                     // Check if we've seen this string before
                     let text_hash = calculate_hash(first_text);
                     if !seen_strings.insert(text_hash) {
-                        update_decoder_stats(&decoder.get_name(), false);
+                        update_decoder_stats(decoder.get_name(), false);
                         continue;
                     }
-                    
+
                     // Create decoder result
                     let mut decoders_used = current_node.state.path.clone();
                     decoders_used.push(result.clone());
-                    
+
                     // Create new node
                     let cost = current_node.cost + 1;
                     let heuristic = generate_heuristic(first_text, &decoders_used, &None);
                     let total_cost = cost as f32 + heuristic;
-                    
+
                     let new_node = AStarNode {
                         state: DecoderResult {
                             text: decoded_text.clone(),
@@ -393,20 +391,20 @@ fn expand_node(
                         total_cost,
                         next_decoder_name: Some(decoder.get_name().to_string()),
                     };
-                    
+
                     // Add to new nodes
                     new_nodes.push(new_node);
-                    
+
                     // Update decoder stats
-                    update_decoder_stats(&decoder.get_name(), true);
+                    update_decoder_stats(decoder.get_name(), true);
                 }
             } else {
                 // Update decoder stats for failed decoding
-                update_decoder_stats(&decoder.get_name(), false);
+                update_decoder_stats(decoder.get_name(), false);
             }
         }
     }
-    
+
     new_nodes
 }
 
@@ -479,52 +477,51 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         // Extract a batch of nodes to process in parallel
         let batch_size = std::cmp::min(PARALLEL_BATCH_SIZE, open_set.len());
         let batch = open_set.extract_batch(batch_size);
-        
+
         trace!("Processing batch of {} nodes in parallel", batch.len());
-        
+
         // Process nodes in parallel
-        let new_nodes: Vec<AStarNode> = batch.par_iter()
+        let new_nodes: Vec<AStarNode> = batch
+            .par_iter()
             .flat_map(|node| {
                 expand_node(
-                    node, 
-                    &seen_strings, 
-                    &stop, 
-                    prune_threshold.load(AtomicOrdering::Relaxed)
+                    node,
+                    &seen_strings,
+                    &stop,
+                    prune_threshold.load(AtomicOrdering::Relaxed),
                 )
             })
             .collect();
-        
+
         // Check for result nodes
         for node in &new_nodes {
             if let Some(decoder_name) = &node.next_decoder_name {
                 if decoder_name == "__RESULT__" {
                     // Found a result node
                     decoded_how_many_times(curr_depth.load(AtomicOrdering::Relaxed));
-                    
+
                     cli_pretty_printing::success(&format!(
-                        "DEBUG: astar.rs - Sending successful result with {} decoders", 
+                        "DEBUG: astar.rs - Sending successful result with {} decoders",
                         node.state.path.len()
                     ));
-                    
+
                     // If in top_results mode, store the result in the WaitAthena storage
                     if get_config().top_results {
                         // Store the first text in the vector (there should only be one)
                         if let Some(plaintext) = node.state.text.first() {
                             // Get the last decoder used
-                            let decoder_name =
-                                if let Some(last_decoder) = node.state.path.last() {
-                                    last_decoder.decoder.to_string()
-                                } else {
-                                    "Unknown".to_string()
-                                };
+                            let decoder_name = if let Some(last_decoder) = node.state.path.last() {
+                                last_decoder.decoder.to_string()
+                            } else {
+                                "Unknown".to_string()
+                            };
 
                             // Get the checker name from the last decoder
-                            let checker_name =
-                                if let Some(last_decoder) = node.state.path.last() {
-                                    last_decoder.checker_name.to_string()
-                                } else {
-                                    "Unknown".to_string()
-                                };
+                            let checker_name = if let Some(last_decoder) = node.state.path.last() {
+                                last_decoder.checker_name.to_string()
+                            } else {
+                                "Unknown".to_string()
+                            };
 
                             // Only store results that have a valid checker name
                             if !checker_name.is_empty() && checker_name != "Unknown" {
@@ -536,20 +533,22 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                                 );
                                 wait_athena_storage::add_plaintext_result(
                                     plaintext.clone(),
-                                    format!("Decoded successfully at depth {}", 
-                                        curr_depth.load(AtomicOrdering::Relaxed)),
+                                    format!(
+                                        "Decoded successfully at depth {}",
+                                        curr_depth.load(AtomicOrdering::Relaxed)
+                                    ),
                                     checker_name,
                                     decoder_name,
                                 );
                             }
                         }
                     }
-                    
+
                     // Send the result
                     result_sender
                         .send(Some(node.state.clone()))
                         .expect("Should successfully send the result");
-                    
+
                     // Only stop if not in top_results mode
                     if !get_config().top_results {
                         // Stop further iterations
@@ -560,7 +559,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 }
             }
         }
-        
+
         // Filter out result nodes and add remaining nodes to open set
         for node in new_nodes {
             if let Some(decoder_name) = &node.next_decoder_name {
@@ -571,35 +570,32 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 open_set.push(node);
             }
         }
-        
+
         // Update current depth based on the nodes in the open set
         if let Some(top_node) = open_set.pop() {
             let new_depth = top_node.cost;
             curr_depth.store(new_depth, AtomicOrdering::Relaxed);
-            
+
             // Put the node back
             open_set.push(top_node);
-            
+
             // Prune seen strings if we've accumulated too many
             let current_seen_count = seen_strings.len();
             if current_seen_count > prune_threshold.load(AtomicOrdering::Relaxed) {
                 // Prune seen strings (implementation depends on how you want to handle this)
                 // This is a simplified version - you might want a more sophisticated approach
                 seen_strings.clear();
-                
+
                 // Adjust threshold based on search progress
                 let progress_factor = new_depth as f32 / MAX_DEPTH as f32;
                 let new_threshold = INITIAL_PRUNE_THRESHOLD - (progress_factor * 5000.0) as usize;
                 prune_threshold.store(new_threshold, AtomicOrdering::Relaxed);
-                
-                debug!(
-                    "Pruned seen strings (new threshold: {})",
-                    new_threshold
-                );
+
+                debug!("Pruned seen strings (new threshold: {})", new_threshold);
             }
         }
     }
-    
+
     // If we get here, we've exhausted all possibilities without finding a solution
     if !stop.load(AtomicOrdering::Relaxed) {
         result_sender
@@ -617,10 +613,10 @@ mod tests {
     fn astar_handles_empty_input() {
         let (sender, receiver) = bounded::<Option<DecoderResult>>(1);
         let stop = Arc::new(AtomicBool::new(false));
-        
+
         // Run A* with empty input
         astar("".to_string(), sender, stop);
-        
+
         // Should receive None since there's nothing to decode
         let result = receiver.recv().unwrap();
         assert!(result.is_none());
@@ -630,33 +626,33 @@ mod tests {
     fn astar_prevents_cycles() {
         let (sender, receiver) = bounded::<Option<DecoderResult>>(1);
         let stop = Arc::new(AtomicBool::new(false));
-        
+
         // Run A* with input that could cause cycles
         astar("AAAA".to_string(), sender, stop);
-        
+
         // Should eventually complete without hanging
         let _ = receiver.recv().unwrap();
     }
-    
+
     #[test]
     fn test_parallel_astar() {
         // Create channels for result communication
         let (sender, receiver) = bounded::<Option<DecoderResult>>(1);
-        
+
         // Create stop signal
         let stop = Arc::new(AtomicBool::new(false));
-        
+
         // Run A* in a separate thread with Base64 encoded "Hello World"
         let input = "SGVsbG8gV29ybGQ=".to_string();
         let stop_clone = stop.clone();
-        
+
         std::thread::spawn(move || {
             astar(input, sender, stop_clone);
         });
-        
+
         // Wait for result with timeout
         let result = receiver.recv().unwrap();
-        
+
         // Verify we got a result (not necessarily "Hello World" as it depends on decoders)
         assert!(result.is_some());
         if let Some(decoder_result) = result {

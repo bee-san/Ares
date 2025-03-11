@@ -3,9 +3,9 @@
 //! This module contains helper functions used by the A* search algorithm
 //! for decoding encrypted or encoded text.
 
+use crate::decoders::interface::Crack;
 use crate::CrackResult;
 use once_cell::sync::Lazy;
-use crate::decoders::interface::Crack;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
@@ -51,7 +51,6 @@ pub fn get_decoder_success_rate(decoder: &str) -> f32 {
     // Default for unknown decoders
     0.5
 }
-
 
 /// Check if a decoder and cipher form a common sequence
 ///
@@ -153,7 +152,11 @@ pub fn calculate_non_printable_ratio(text: &str) -> f32 {
 ///
 /// # Returns
 /// A float value representing the heuristic cost (lower is better)
-pub fn generate_heuristic(text: &str, path: &[CrackResult], next_decoder: &Option<Box<dyn Crack + Sync>>) -> f32 {
+pub fn generate_heuristic(
+    text: &str,
+    path: &[CrackResult],
+    next_decoder: &Option<Box<dyn Crack + Sync>>,
+) -> f32 {
     let mut base_score = 0.0;
 
     // 1. Popularity component - directly use (1.0 - popularity)
@@ -186,7 +189,7 @@ pub fn generate_heuristic(text: &str, path: &[CrackResult], next_decoder: &Optio
             }
         }
     }
-    
+
     base_score
 }
 
@@ -240,7 +243,7 @@ mod tests {
     fn test_generate_heuristic() {
         // Create some CrackResults for path testing
         let crack_result = CrackResult::new(&Decoder::default(), "test".to_string());
-        
+
         // Test with different path lengths
         let depth_0 = generate_heuristic("test", &[], &None);
         let depth_5 = generate_heuristic("test", &vec![crack_result.clone(); 5], &None);
@@ -252,7 +255,7 @@ mod tests {
 
         // Verify that the depth penalty is approximately (0.05 * depth)^2
         assert!((depth_5 - depth_0 - 0.0625).abs() < 0.1);
-        
+
         // Verify base case isn't negative
         assert!(depth_0 >= 0.0);
     }

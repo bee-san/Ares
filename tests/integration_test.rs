@@ -1,4 +1,3 @@
-use ciphey::cli::read_and_parse_file;
 use ciphey::config::Config;
 use ciphey::perform_cracking;
 
