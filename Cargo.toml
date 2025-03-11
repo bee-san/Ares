@@ -39,7 +39,7 @@ regex = "1.9.1"
 rpassword = "7.3.1"
 serde = { version = "1.0.197", features = ["derive"] }
 serde_derive = "1.0.197"
-text_io = "0.1.12"
+text_io = "0.1.13"
 toml = "0.8.10"
 gibberish-or-not = "5.0.4"
 cipher_identifier = "0.2.0"
