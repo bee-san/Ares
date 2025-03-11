@@ -53,7 +53,9 @@ use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::config::get_config;
-use crate::searchers::helper_functions::{calculate_string_worth, generate_heuristic, update_decoder_stats};
+use crate::searchers::helper_functions::{
+    calculate_string_worth, generate_heuristic, update_decoder_stats,
+};
 use crate::storage::wait_athena_storage;
 use crate::DecoderResult;
 
@@ -235,7 +237,7 @@ fn expand_node(
         let athena_checker = Checker::<Athena>::new();
         let checker = CheckerTypes::CheckAthena(athena_checker);
         // since we only have decoders with the same name
-        // we are cheating and just run that one decoder lol 
+        // we are cheating and just run that one decoder lol
         let decoder_results = decoders.run(&current_node.state.text[0], checker);
 
         // Process decoder results

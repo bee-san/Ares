@@ -288,7 +288,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
 pub fn get_decoder_by_name(decoder_name: &str) -> Decoders {
     trace!("Getting decoder by name: {}", decoder_name);
     let all_decoders = get_all_decoders();
-    
+
     let filtered_components = all_decoders
         .components
         .into_iter()
@@ -312,8 +312,8 @@ mod tests {
     };
 
     use super::{
-        filter_and_get_decoders, filter_decoders_by_tags, get_decoder_tagged_decoders,
-        get_non_decoder_tagged_decoders, DecoderFilter, get_decoder_by_name,
+        filter_and_get_decoders, filter_decoders_by_tags, get_decoder_by_name,
+        get_decoder_tagged_decoders, get_non_decoder_tagged_decoders, DecoderFilter,
     };
 
     #[test]
@@ -452,10 +452,14 @@ mod tests {
 
     #[test]
     fn test_get_decoder_by_name() {
-        let decoder_name = "base64";
+        let decoder_name = "Base64";
         let decoders = get_decoder_by_name(decoder_name);
 
-        assert_eq!(decoders.components.len(), 1, "Should return exactly one decoder");
+        assert_eq!(
+            decoders.components.len(),
+            1,
+            "Should return exactly one decoder"
+        );
         assert_eq!(
             decoders.components[0].get_name(),
             decoder_name,
@@ -466,6 +470,9 @@ mod tests {
     #[test]
     fn test_get_decoder_by_name_nonexistent() {
         let decoders = get_decoder_by_name("nonexistent_decoder");
-        assert!(decoders.components.is_empty(), "Should return empty decoders for nonexistent name");
+        assert!(
+            decoders.components.is_empty(),
+            "Should return empty decoders for nonexistent name"
+        );
     }
 }
