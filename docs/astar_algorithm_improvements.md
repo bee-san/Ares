@@ -1,16 +1,77 @@
 # A* Search Algorithm Improvements
 
-This document outlines potential improvements to the A* search algorithm used in ciphey for finding the correct sequence of decoders to decode encrypted or encoded text.
+This document outlines the improvements made to the A* search algorithm used in ciphey for finding the correct sequence of decoders to decode encrypted or encoded text, as well as potential future enhancements.
 
-## Current Implementation
+## Implemented Improvements
 
-The current implementation uses a simplified heuristic function with three main components:
+### 1. Decoder-Specific Nodes
+
+We've implemented decoder-specific nodes by adding a `next_decoder_name` field to the `AStarNode` struct:
+
+```rust
+struct AStarNode {
+    // Existing fields
+    state: DecoderResult,
+    cost: u32,
+    heuristic: f32,
+    total_cost: f32,
+    
+    // New field
+    next_decoder_name: Option<String>,
+}
+```
+
+The A* search algorithm now creates nodes with a specific decoder to try next. This makes the search more focused and efficient by avoiding the need to try all decoders for each state. Instead, the algorithm creates multiple nodes for each successful decoding, each with a different decoder to try next.
+
+When creating new nodes, we set the `next_decoder_name` field to the name of the decoder that produced the result:
+
+```rust
+let new_node = AStarNode {
+    state: DecoderResult {
+        text,
+        path: decoders_used,
+    },
+    cost,
+    heuristic,
+    total_cost,
+    next_decoder_name: Some(r.decoder.to_string()),
+};
+```
+
+When expanding a node, we check if it has a specific decoder name, and if so, we filter the available decoders to only include that one:
+
+```rust
+if let Some(decoder_name) = &current_node.next_decoder_name {
+    // If we have a specific decoder name, filter all decoders to only include that one
+    trace!("Using specific decoder: {}", decoder_name);
+    let mut all_decoders = get_all_decoders();
+    all_decoders.components.retain(|d| d.get_name() == decoder_name);
+    
+    // Update stats for the decoder
+    if !all_decoders.components.is_empty() {
+        update_decoder_stats(decoder_name, true);
+    }
+    decoders = all_decoders;
+} else {
+    decoders = get_decoder_tagged_decoders(&current_node.state);
+}
+```
+
+This approach avoids the need to clone trait objects, which would be required if we stored the decoder itself in the node.
+
+### 2. Simplified Heuristic Function
+
+We've simplified the heuristic function to have three main components:
 
 1. **Popularity Component**: Uses a fixed value of 0.5 due to trait limitations (ideally would use `1.0 - decoder.popularity`)
 2. **Depth Penalty**: Adds an exponential penalty of `(0.05 * path.len() as f32).powi(2)` to discourage very deep paths
 3. **Uncommon Sequence Penalty**: Adds a fixed penalty of 0.25 for uncommon decoder sequences
 
-## Proposed Improvements
+This simplified heuristic is more intuitive and easier to understand, while still providing good guidance for the search.
+
+## Future Improvements
+
+While the current implementation is a significant improvement over the original, there are still several enhancements that could make the algorithm even more efficient:
 
 ### 1. Expose Decoder Popularity in the Trait
 
@@ -136,7 +197,7 @@ let results: Vec<_> = current_nodes.par_iter().map(|node| {
 }).collect();
 ```
 
-## Impact Analysis
+## Impact Analysis and Implementation Priority
 
 These improvements would make the A* search algorithm more efficient and effective at finding the correct decoding path:
 
@@ -147,8 +208,6 @@ These improvements would make the A* search algorithm more efficient and effecti
 5. **Beam Search Variant**: Medium impact, as it would help focus computational resources on the most promising paths.
 6. **Caching Mechanism**: Medium impact, as it would help avoid redundant computations.
 7. **Parallel Node Expansion**: High impact, as it would allow the algorithm to explore multiple paths simultaneously.
-
-## Implementation Priority
 
 Based on the impact analysis, the recommended implementation order is:
 
@@ -162,4 +221,8 @@ Based on the impact analysis, the recommended implementation order is:
 
 ## Conclusion
 
-The A* search algorithm is a powerful tool for finding the correct sequence of decoders, but there is still room for improvement. By implementing these enhancements, we can make the algorithm more efficient and effective at finding the correct decoding path.
+The A* search algorithm has been significantly improved with decoder-specific nodes and a simplified heuristic function. These changes make the search more focused and efficient, allowing it to find the correct sequence of decoders more quickly.
+
+However, there is still room for further improvement. By implementing the enhancements described above, we can make the algorithm even more efficient and effective at finding the correct decoding path.
+
+For a more detailed description of the decoder-specific nodes implementation, see `docs/astar_decoder_specific_nodes.md`.

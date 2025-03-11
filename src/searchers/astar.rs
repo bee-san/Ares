@@ -28,6 +28,7 @@ use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::{
     get_decoder_tagged_decoders, get_non_decoder_tagged_decoders, MyResults,
 };
+use crate::filtration_system::get_all_decoders;
 use crossbeam::channel::Sender;
 
 use log::{debug, trace};
@@ -80,6 +81,9 @@ struct AStarNode {
     /// Total cost (f = g + h) used for prioritization in the queue
     /// Nodes with lower total_cost are explored first
     total_cost: f32,
+    
+    /// The name of the next decoder to try when this node is expanded
+    next_decoder_name: Option<String>,
 }
 
 // Custom ordering for the priority queue
@@ -159,6 +163,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         cost: 0,
         heuristic: initial_heuristic,
         total_cost: 0.0,
+        next_decoder_name: None,
     });
 
     let mut curr_depth: u32 = 1;
@@ -188,23 +193,37 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
             break;
         }
 
-        // First, execute all "decoder"-tagged decoders immediately
-        let mut decoder_tagged_decoders = get_decoder_tagged_decoders(&current_node.state);
+        // Determine which decoders to use based on next_decoder_name
+        let mut decoders;
+        if let Some(decoder_name) = &current_node.next_decoder_name {
+            // If we have a specific decoder name, filter all decoders to only include that one
+            trace!("Using specific decoder: {}", decoder_name);
+            let mut all_decoders = get_all_decoders();
+            all_decoders.components.retain(|d| d.get_name() == decoder_name);
+            
+            // Update stats for the decoder
+            if !all_decoders.components.is_empty() {
+                update_decoder_stats(decoder_name, true);
+            }
+            decoders = all_decoders;
+        } else {
+            decoders = get_decoder_tagged_decoders(&current_node.state);
+        }
 
         // Prevent reciprocal decoders from being applied consecutively
         if let Some(last_decoder) = current_node.state.path.last() {
             if last_decoder.checker_description.contains("reciprocal") {
                 let excluded_name = last_decoder.decoder;
-                decoder_tagged_decoders
+                decoders
                     .components
                     .retain(|d| d.get_name() != excluded_name);
             }
         }
 
-        if !decoder_tagged_decoders.components.is_empty() {
+        if !decoders.components.is_empty() {
             trace!(
                 "Found {} decoder-tagged decoders to execute immediately",
-                decoder_tagged_decoders.components.len()
+                decoders.components.len()
             );
 
             // Check stop signal before processing decoders
@@ -214,7 +233,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
             let athena_checker = Checker::<Athena>::new();
             let checker = CheckerTypes::CheckAthena(athena_checker);
-            let decoder_results = decoder_tagged_decoders.run(&current_node.state.text[0], checker);
+            let decoder_results = decoders.run(&current_node.state.text[0], checker);
 
             // Process decoder results
             match decoder_results {
@@ -399,6 +418,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                             cost,
                             heuristic,
                             total_cost,
+                            next_decoder_name: Some(r.decoder.to_string()),
                         };
 
                         // Add to open set
@@ -620,6 +640,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                             cost,
                             heuristic,
                             total_cost,
+                            next_decoder_name: Some(r.decoder.to_string()),
                         };
 
                         // Add to open set
