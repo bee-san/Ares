@@ -1679,9 +1679,9 @@ dependencies = [
 
 [[package]]
 name = "gibberish-or-not"
-version = "5.0.4"
+version = "5.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "33e927436987ef2db1827bf522df95d2cd2fcd29746cee136b42f94a851d8c16"
+checksum = "fe021698938a7ac1d131cd0d242c1412c8aa110cab0d4a0323d73a248f711496"
 dependencies = [
  "candle-core",
  "candle-nn",
