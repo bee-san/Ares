@@ -156,11 +156,9 @@ pub fn generate_heuristic(_text: &str, path: &[CrackResult], next_decoder: &Opti
     let mut base_score = 0.0;
 
     // 1. Popularity component - directly use (1.0 - popularity)
-    if let Some(_decoder) = next_decoder {
-        // Since we can't directly access the popularity field from the trait object,
-        // we'll use a default value of 0.5 for now
-        // In a real implementation, we would need to modify the Crack trait to expose the popularity
-        base_score += 0.5; // Using a fixed value instead of (1.0 - decoder.popularity)
+    if let Some(decoder) = next_decoder {
+        // Use the decoder's popularity via the get_popularity method (higher popularity = lower score)
+        base_score += 1.0 - decoder.get_popularity();
     } else {
         // If next decoder is None, add a moderate penalty
         base_score += 0.5;

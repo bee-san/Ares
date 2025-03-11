@@ -55,7 +55,7 @@ pub trait Crack {
     /// Get the nam of the current decoder
     fn get_name(&self) -> &str;
     /// Get the popularity of the decoder (a value between 0.0 and 1.0)
-    /// Default implementation returns 0.5 as a moderate popularity value
+    /// Default implementation returns the decoder's popularity field
     fn get_popularity(&self) -> f32 {
         // This is a default implementation that will be used if the decoder
         // doesn't override this method. In a real implementation, each decoder

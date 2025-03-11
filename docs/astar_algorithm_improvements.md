@@ -73,30 +73,7 @@ This simplified heuristic is more intuitive and easier to understand, while stil
 
 While the current implementation is a significant improvement over the original, there are still several enhancements that could make the algorithm even more efficient:
 
-### 1. Expose Decoder Popularity in the Trait
-
-The most immediate improvement would be to modify the `Crack` trait to expose the decoder's popularity:
-
-```rust
-pub trait Crack {
-    // Existing methods
-    fn new() -> Self where Self: Sized;
-    fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult;
-    fn get_tags(&self) -> &Vec<&str>;
-    fn get_name(&self) -> &str;
-    
-    // New method to expose popularity
-    fn get_popularity(&self) -> f32;
-}
-```
-
-This would allow us to use the actual popularity value in the heuristic function:
-
-```rust
-if let Some(decoder) = next_decoder {
-    base_score += (1.0 - decoder.get_popularity());
-}
-```
+### 1. ✅ Expose Decoder Popularity in the Trait (Implemented)
 
 ### 2. Adaptive Depth Penalty
 
@@ -201,7 +178,7 @@ let results: Vec<_> = current_nodes.par_iter().map(|node| {
 
 These improvements would make the A* search algorithm more efficient and effective at finding the correct decoding path:
 
-1. **Exposing Decoder Popularity**: High impact, as it would allow the algorithm to properly prioritize more popular decoders.
+1. **✅ Exposing Decoder Popularity**: High impact, as it allows the algorithm to properly prioritize more popular decoders.
 2. **Adaptive Depth Penalty**: Medium impact, as it would help prevent the algorithm from going too deep in unproductive paths.
 3. **String Quality Component**: High impact, as it would help the algorithm focus on paths that lead to higher quality strings.
 4. **Learning-Based Sequence Penalties**: Medium impact, as it would help the algorithm learn from past successes.
@@ -211,7 +188,7 @@ These improvements would make the A* search algorithm more efficient and effecti
 
 Based on the impact analysis, the recommended implementation order is:
 
-1. Expose Decoder Popularity in the Trait
+1. ✅ Expose Decoder Popularity in the Trait (Implemented)
 2. Incorporate String Quality
 3. Parallel Node Expansion
 4. Adaptive Depth Penalty
@@ -221,7 +198,7 @@ Based on the impact analysis, the recommended implementation order is:
 
 ## Conclusion
 
-The A* search algorithm has been significantly improved with decoder-specific nodes and a simplified heuristic function. These changes make the search more focused and efficient, allowing it to find the correct sequence of decoders more quickly.
+The A* search algorithm has been significantly improved with decoder-specific nodes, a simplified heuristic function, and the use of decoder popularity in the heuristic. These changes make the search more focused and efficient, allowing it to find the correct sequence of decoders more quickly.
 
 However, there is still room for further improvement. By implementing the enhancements described above, we can make the algorithm even more efficient and effective at finding the correct decoding path.
 
