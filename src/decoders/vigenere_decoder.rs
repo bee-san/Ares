@@ -24,7 +24,7 @@ impl Crack for Decoder<VigenereDecoder> {
             description: "A polyalphabetic substitution cipher using a keyword to shift each letter. This implementation automatically detects the key length and breaks the cipher. Uses Medium sensitivity for gibberish detection.",
             link: "https://en.wikipedia.org/wiki/Vigen%C3%A8re_cipher",
             tags: vec!["substitution", "classical"],
-            popularity: 0.8,
+            popularity: 0.6,
             phantom: std::marker::PhantomData,
         }
     }

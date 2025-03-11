@@ -40,7 +40,7 @@ impl Crack for Decoder<Base32Decoder> {
             description: "Base32 is a group of binary-to-text encoding schemes that represent binary data (more specifically, a sequence of 8-bit bytes) in an ASCII string format by translating the data into a radix-32 representation.",
             link: "https://en.wikipedia.org/wiki/Base32",
             tags: vec!["base32", "decoder", "base"],
-            popularity: 0.8,
+            popularity: 1.0,
             phantom: std::marker::PhantomData,
         }
     }

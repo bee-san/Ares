@@ -117,6 +117,16 @@ pub fn calculate_string_quality(s: &str) -> f32 {
     }
 }
 
+/// Check if string is worth being decoded
+pub fn calculate_string_worth(s: &str) -> bool {
+    // check if string is less than 3 chars
+    if calculate_string_quality(s) < 0.2 {
+        return false;
+    }
+
+    true
+}
+
 /// Calculate the ratio of non-printable characters in a string
 /// Returns a value between 0.0 (all printable) and 1.0 (all non-printable)
 pub fn calculate_non_printable_ratio(text: &str) -> f32 {

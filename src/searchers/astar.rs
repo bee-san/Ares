@@ -36,7 +36,7 @@
 use crate::cli_pretty_printing;
 use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::get_all_decoders;
-use crate::filtration_system::{get_decoder_tagged_decoders, MyResults};
+use crate::filtration_system::{get_decoder_by_name, get_decoder_tagged_decoders, MyResults};
 use crossbeam::channel::Sender;
 
 use log::{debug, trace};
@@ -53,7 +53,7 @@ use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::config::get_config;
-use crate::searchers::helper_functions::{generate_heuristic, update_decoder_stats};
+use crate::searchers::helper_functions::{calculate_string_worth, generate_heuristic, update_decoder_stats};
 use crate::storage::wait_athena_storage;
 use crate::DecoderResult;
 
@@ -201,16 +201,12 @@ fn expand_node(
     if let Some(decoder_name) = &current_node.next_decoder_name {
         // If we have a specific decoder name, filter all decoders to only include that one
         trace!("Using specific decoder: {}", decoder_name);
-        let mut all_decoders = get_all_decoders();
-        all_decoders
-            .components
-            .retain(|d| d.get_name() == decoder_name);
-
+        // use get decoder by name from filtration
+        decoders = get_decoder_by_name(decoder_name);
         // Update stats for the decoder
-        if !all_decoders.components.is_empty() {
+        if !decoders.components.is_empty() {
             update_decoder_stats(decoder_name, true);
         }
-        decoders = all_decoders;
     } else {
         decoders = get_decoder_tagged_decoders(&current_node.state);
     }
@@ -227,7 +223,7 @@ fn expand_node(
 
     if !decoders.components.is_empty() {
         trace!(
-            "Found {} decoder-tagged decoders to execute immediately",
+            "Found {} decoder-tagged decoders to execute",
             decoders.components.len()
         );
 
@@ -238,6 +234,8 @@ fn expand_node(
 
         let athena_checker = Checker::<Athena>::new();
         let checker = CheckerTypes::CheckAthena(athena_checker);
+        // since we only have decoders with the same name
+        // we are cheating and just run that one decoder lol 
         let decoder_results = decoders.run(&current_node.state.text[0], checker);
 
         // Process decoder results
@@ -282,6 +280,13 @@ fn expand_node(
 
                     // Skip if text is empty or already seen
                     if text.is_empty() {
+                        update_decoder_stats(r.decoder, false);
+                        continue;
+                    }
+
+                    // Check if string is worth being decoded
+                    // uses string heuristics. if heuristic is too low, it goes bye bye!
+                    if !calculate_string_worth(&text[0]) {
                         update_decoder_stats(r.decoder, false);
                         continue;
                     }
