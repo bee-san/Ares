@@ -38,7 +38,7 @@ impl Crack for Decoder<BrainfuckInterpreter> {
             description: "Brainfuck is an esoteric programming language created in 1993 by Swiss student Urban Müller. Designed to be extremely minimalistic, the language consists of only eight simple commands, a data pointer, and an instruction pointer.",
             link: "https://en.wikipedia.org/wiki/Brainfuck",
             tags: vec!["decoder", "brainfuck"],
-            popularity: 0.4,
+            popularity: 0.6,
             phantom: std::marker::PhantomData,
         }
     }

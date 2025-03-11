@@ -93,6 +93,10 @@ impl Crack for Decoder<Base64Decoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    /// Gets the popularity for the current decoder
+    fn get_popularity(&self) -> f32 {
+        self.popularity
+    }
 }
 
 /// helper function for standard base64
