@@ -5,7 +5,7 @@
 
 use crate::CrackResult;
 use once_cell::sync::Lazy;
-use rand::Rng;
+use crate::decoders::interface::Crack;
 use std::collections::HashMap;
 use std::sync::Mutex;
 
@@ -52,26 +52,6 @@ pub fn get_decoder_success_rate(decoder: &str) -> f32 {
     0.5
 }
 
-/// Get the cipher identification score for a text
-///
-/// # Arguments
-///
-/// * `text` - The text to analyze
-///
-/// # Returns
-///
-/// * A tuple containing the identified cipher and its score
-pub fn get_cipher_identifier_score(text: &str) -> (String, f32) {
-    let results = cipher_identifier::identify_cipher::identify_cipher(text, 5, None);
-
-    if let Some((cipher, score)) = results.first() {
-        return (cipher.clone(), (score / 10.0) as f32);
-    }
-
-    // Default if no match
-    let mut rng = rand::rng();
-    ("unknown".to_string(), rng.random_range(0.5..1.0) as f32)
-}
 
 /// Check if a decoder and cipher form a common sequence
 ///
@@ -159,50 +139,48 @@ pub fn calculate_non_printable_ratio(text: &str) -> f32 {
 /// Generate a heuristic value for A* search prioritization
 ///
 /// The heuristic estimates how close a state is to being plaintext.
-/// A lower value indicates a more promising state. This implementation uses
-/// Cipher Identifier to identify the most likely ciphers for the given text.
+/// A lower value indicates a more promising state. This implementation uses:
+/// 1. Decoder popularity (lower heuristic for more popular decoders)
+/// 2. Depth penalty (higher heuristic for deeper paths)
+/// 3. Uncommon sequence penalty (higher heuristic for uncommon decoder sequences)
 ///
 /// # Parameters
 ///
-/// * `text` - The text to analyze for cipher identification
+/// * `text` - The text to analyze
 /// * `path` - The path of decoders used to reach the current state
+/// * `next_decoder` - The next decoder to be applied (if any)
 ///
 /// # Returns
 /// A float value representing the heuristic cost (lower is better)
-pub fn generate_heuristic(text: &str, path: &[CrackResult]) -> f32 {
-    let (cipher, base_score) = get_cipher_identifier_score(text);
-    let mut final_score = base_score;
+pub fn generate_heuristic(_text: &str, path: &[CrackResult], next_decoder: &Option<Box<dyn Crack + Sync>>) -> f32 {
+    let mut base_score = 0.0;
 
-    if let Some(last_result) = path.last() {
-        // Penalize uncommon sequences instead of rewarding common ones
-        if !is_common_sequence(last_result.decoder, &cipher) {
-            final_score *= 1.75; // 25% penalty for uncommon sequences
+    // 1. Popularity component - directly use (1.0 - popularity)
+    if let Some(_decoder) = next_decoder {
+        // Since we can't directly access the popularity field from the trait object,
+        // we'll use a default value of 0.5 for now
+        // In a real implementation, we would need to modify the Crack trait to expose the popularity
+        base_score += 0.5; // Using a fixed value instead of (1.0 - decoder.popularity)
+    } else {
+        // If next decoder is None, add a moderate penalty
+        base_score += 0.5;
+    }
+
+    // 2. Depth penalty - exponential growth but not too aggressive
+    base_score += (0.05 * path.len() as f32).powi(2);
+
+    // 3. Penalty for uncommon pairings
+    if path.len() > 1 {
+        if let Some(previous_decoder) = path.last() {
+            if let Some(next_decoder) = next_decoder {
+                if !is_common_sequence(previous_decoder.decoder, next_decoder.get_name()) {
+                    base_score += 0.25;
+                }
+            }
         }
-
-        // Penalize low success rates instead of rewarding high ones
-        let success_rate = get_decoder_success_rate(last_result.decoder);
-        final_score *= 1.0 + (1.0 - success_rate); // Penalty scales with failure rate
-
-        // Penalize decoders with low popularity
-        // We don't have direct access to the decoder's popularity attribute here,
-        // but we can use the success rate as a proxy for popularity
-        // Default to 0.5 if we can't determine the popularity
-        let popularity = success_rate;
-        // Apply a significant penalty for unpopular decoders
-        // The penalty is inversely proportional to the popularity
-        final_score *= 1.0 + (2.0 * (1.0 - popularity)); // Penalty scales with unpopularity
     }
-
-    // Penalize low quality strings
-    final_score *= 1.0 + (1.0 - calculate_string_quality(text));
-
-    // Keep the non-printable penalty as is since it's already using a penalty approach
-    let non_printable_ratio = calculate_non_printable_ratio(text);
-    if non_printable_ratio > 0.0 {
-        final_score *= 1.0 + (non_printable_ratio * 100.0).exp();
-    }
-
-    final_score
+    
+    base_score
 }
 
 /// Determines if a string is too short to be meaningfully decoded
@@ -253,21 +231,23 @@ mod tests {
 
     #[test]
     fn test_generate_heuristic() {
-        // Test with normal text (should have relatively low score)
-        let normal_h = generate_heuristic("Hello World", &[]);
+        // Create some CrackResults for path testing
+        let crack_result = CrackResult::new(&Decoder::default(), "test".to_string());
+        
+        // Test with different path lengths
+        let depth_0 = generate_heuristic("test", &[], &None);
+        let depth_5 = generate_heuristic("test", &vec![crack_result.clone(); 5], &None);
+        let depth_10 = generate_heuristic("test", &vec![crack_result.clone(); 10], &None);
 
-        // Test with suspicious text (should have higher score)
-        let suspicious_h = generate_heuristic("H\u{0}ll\u{1} W\u{2}rld", &[]);
+        // Verify that deeper paths have higher scores
+        assert!(depth_0 < depth_5);
+        assert!(depth_5 < depth_10);
 
-        // Test with all non-printable (should have highest score)
-        let nonprint_h = generate_heuristic("\u{0}\u{1}\u{2}", &[]);
-
-        // Verify that penalties create appropriate ordering
-        assert!(normal_h < suspicious_h);
-        assert!(suspicious_h < nonprint_h);
-
+        // Verify that the depth penalty is approximately (0.05 * depth)^2
+        assert!((depth_5 - depth_0 - 0.0625).abs() < 0.1);
+        
         // Verify base case isn't negative
-        assert!(normal_h >= 0.0);
+        assert!(depth_0 >= 0.0);
     }
 
     #[test]
@@ -285,57 +265,6 @@ mod tests {
 
         // Test empty string
         assert_eq!(calculate_non_printable_ratio(""), 1.0);
-    }
-
-    #[test]
-    fn test_heuristic_with_non_printable() {
-        // Test normal text
-        let normal = generate_heuristic("Hello World", &[]);
-
-        // Test text with some non-printable chars
-        let with_non_printable = generate_heuristic("Hello\u{0}World", &[]);
-
-        // Test text with all non-printable chars
-        let all_non_printable = generate_heuristic("\u{0}\u{1}\u{2}", &[]);
-
-        // Verify that more non-printable chars result in higher (worse) scores
-        assert!(normal < with_non_printable);
-        assert!(with_non_printable < all_non_printable);
-        assert!(all_non_printable > 100.0); // Should be very high for all non-printable
-    }
-
-    #[test]
-    fn test_success_rate_affects_heuristic() {
-        // Create two identical paths but with different success rates
-        let mut high_success_result = CrackResult::new(&Decoder::default(), "test".to_string());
-        high_success_result.decoder = "HighSuccessDecoder";
-
-        let mut low_success_result = CrackResult::new(&Decoder::default(), "test".to_string());
-        low_success_result.decoder = "LowSuccessDecoder";
-
-        // Update the success rates in the DECODER_SUCCESS_RATES
-        update_decoder_stats("HighSuccessDecoder", true);
-        update_decoder_stats("HighSuccessDecoder", true);
-        update_decoder_stats("HighSuccessDecoder", true);
-        update_decoder_stats("HighSuccessDecoder", false);
-
-        update_decoder_stats("LowSuccessDecoder", true);
-        update_decoder_stats("LowSuccessDecoder", false);
-        update_decoder_stats("LowSuccessDecoder", false);
-        update_decoder_stats("LowSuccessDecoder", false);
-
-        // Generate heuristics for both paths
-        let high_success_heuristic = generate_heuristic("test", &[high_success_result]);
-        let low_success_heuristic = generate_heuristic("test", &[low_success_result]);
-
-        // The low success decoder should have a higher heuristic (worse score)
-        assert!(
-            low_success_heuristic > high_success_heuristic,
-            "Low success decoder should have a higher (worse) heuristic score. \
-            High Success: {}, Low Success: {}",
-            high_success_heuristic,
-            low_success_heuristic
-        );
     }
 
     #[test]

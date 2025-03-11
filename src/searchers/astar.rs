@@ -139,7 +139,7 @@ impl Eq for AStarNode {}
 /// - `stop`: Atomic boolean to signal when to stop the search
 pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
     // Calculate heuristic before moving input
-    let initial_heuristic = generate_heuristic(&input, &[]);
+    let initial_heuristic = generate_heuristic(&input, &[], &None);
 
     let initial = DecoderResult {
         text: vec![input],
@@ -388,7 +388,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
                         // Create new node with updated cost and heuristic
                         let cost = current_node.cost + 1;
-                        let heuristic = generate_heuristic(&text[0], &decoders_used);
+                        let heuristic = generate_heuristic(&text[0], &decoders_used, &None);
                         let total_cost = cost as f32 + heuristic;
 
                         let new_node = AStarNode {
@@ -609,7 +609,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
 
                         // Create new node with updated cost and heuristic
                         let cost = current_node.cost + 1;
-                        let heuristic = generate_heuristic(&text[0], &decoders_used);
+                        let heuristic = generate_heuristic(&text[0], &decoders_used, &None);
                         let total_cost = cost as f32 + heuristic;
 
                         let new_node = AStarNode {
