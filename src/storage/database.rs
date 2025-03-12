@@ -5,68 +5,9 @@ use super::super::CrackResult;
 ///! relations and collecting statistics on the performance of Ares
 ///! search algorithms.
 use chrono::DateTime;
-use serde::{Deserialize, Serialize};
 use std::sync::OnceLock;
 
 static DB_PATH: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
-
-#[derive(Debug, Serialize, Deserialize)]
-/// Intermediary struct for serializing/deserializing CrackResults
-/// into JSON format
-///
-/// It is the same as CrackResult, but it holds the Strings by value
-/// instead of references
-pub struct LocalCrackResult {
-    /// If our checkers return success, we change this bool to True
-    pub success: bool,
-    /// Encrypted text is the text _before_ we decrypt it.
-    pub encrypted_text: String,
-    /// Unencrypted text is what it looks like after.
-    /// if decoder failed, this will be None
-    pub unencrypted_text: Option<Vec<String>>,
-    /// Decoder is the function we used to decode the text
-    pub decoder: String,
-    /// Checker which identified the text
-    pub checker_name: String,
-    /// Description is a short description of the checker
-    pub checker_description: String,
-    /// Key is optional as decoders do not use keys.
-    pub key: Option<String>,
-    /// Description is a short description of the decoder
-    pub description: String,
-    /// Link is a link to more info about the decoder
-    pub link: String,
-}
-
-impl PartialEq for LocalCrackResult {
-    fn eq(&self, other: &Self) -> bool {
-        self.success == other.success
-            && self.encrypted_text == other.encrypted_text
-            && self.unencrypted_text == other.unencrypted_text
-            && self.decoder == other.decoder
-            && self.checker_name == other.checker_name
-            && self.checker_description == other.checker_description
-            && self.key == other.key
-            && self.description == other.description
-            && self.link == other.link
-    }
-}
-
-impl Clone for LocalCrackResult {
-    fn clone(&self) -> Self {
-        LocalCrackResult {
-            success: self.success.clone(),
-            encrypted_text: self.encrypted_text.clone(),
-            unencrypted_text: self.unencrypted_text.clone(),
-            decoder: self.decoder.clone(),
-            checker_name: self.checker_description.clone(),
-            checker_description: self.checker_description.clone(),
-            key: self.key.clone(),
-            description: self.description.clone(),
-            link: self.link.clone(),
-        }
-    }
-}
 
 #[derive(Debug)]
 /// Struct representing a row in the cache table
