@@ -530,7 +530,10 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                     if get_config().top_results {
                         // Store the first text in the vector (there should only be one)
                         if let Some(plaintext) = node.state.text.first() {
-                            println!("DEBUG: Processing result in top_results mode with plaintext: {}", plaintext);
+                            println!(
+                                "DEBUG: Processing result in top_results mode with plaintext: {}",
+                                plaintext
+                            );
                             // Get the last decoder used
                             let decoder_name = if let Some(last_decoder) = node.state.path.last() {
                                 last_decoder.decoder.to_string()

@@ -49,7 +49,10 @@ impl Check for Checker<Athena> {
                 let mut check_res = CheckResult::new(&regex_checker);
                 trace!("DEBUG: Athena - About to run human checker for regex result");
                 let human_result = human_checker::human_checker(&regex_result);
-                trace!("Human checker called from regex checker with result: {}", human_result);
+                trace!(
+                    "Human checker called from regex checker with result: {}",
+                    human_result
+                );
                 check_res.is_identified = human_result;
                 check_res.text = regex_result.text;
                 check_res.description = regex_result.description;
@@ -69,7 +72,10 @@ impl Check for Checker<Athena> {
                 if wordlist_result.is_identified {
                     let mut check_res = CheckResult::new(&wordlist_checker);
                     let human_result = human_checker::human_checker(&wordlist_result);
-                    trace!("Human checker called from wordlist checker with result: {}", human_result);
+                    trace!(
+                        "Human checker called from wordlist checker with result: {}",
+                        human_result
+                    );
                     check_res.is_identified = human_result;
                     check_res.text = wordlist_result.text;
                     check_res.description = wordlist_result.description;
@@ -90,7 +96,10 @@ impl Check for Checker<Athena> {
             if lemmeknow_result.is_identified {
                 let mut check_res = CheckResult::new(&lemmeknow);
                 let human_result = human_checker::human_checker(&lemmeknow_result);
-                trace!("Human checker called from lemmeknow checker with result: {}", human_result);
+                trace!(
+                    "Human checker called from lemmeknow checker with result: {}",
+                    human_result
+                );
                 check_res.is_identified = human_result;
                 check_res.text = lemmeknow_result.text;
                 check_res.description = lemmeknow_result.description;
@@ -103,7 +112,10 @@ impl Check for Checker<Athena> {
             if password_result.is_identified {
                 let mut check_res = CheckResult::new(&password);
                 let human_result = human_checker::human_checker(&password_result);
-                trace!("Human checker called from password checker with result: {}", human_result);
+                trace!(
+                    "Human checker called from password checker with result: {}",
+                    human_result
+                );
                 check_res.is_identified = human_result;
                 check_res.text = password_result.text;
                 check_res.description = password_result.description;
@@ -116,7 +128,10 @@ impl Check for Checker<Athena> {
             if english_result.is_identified {
                 let mut check_res = CheckResult::new(&english);
                 let human_result = human_checker::human_checker(&english_result);
-                trace!("Human checker called from english checker with result: {}", human_result);
+                trace!(
+                    "Human checker called from english checker with result: {}",
+                    human_result
+                );
                 check_res.is_identified = human_result;
                 check_res.text = english_result.text;
                 check_res.description = english_result.description;
