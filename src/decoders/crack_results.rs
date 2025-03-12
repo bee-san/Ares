@@ -2,10 +2,11 @@
 use crate::checkers::checker_result::CheckResult;
 
 use super::interface::Decoder;
+use serde::{Deserialize, Serialize};
 
 /// Every cracker returns this object which
 /// Either indicates success or failure among other things.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CrackResult {
     /// If our checkers return success, we change this bool to True
     pub success: bool,
@@ -49,5 +50,55 @@ impl CrackResult {
         self.checker_name = checker_result.checker_name;
         self.checker_description = checker_result.checker_description;
         self.success = checker_result.is_identified;
+    }
+
+    /// Converts CrackResult into JSON
+    pub fn get_json(&self) -> Result<String, serde_json::Error> {
+        serde_json::to_string(self)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::super::checkers::CheckerTypes;
+    use super::super::super::decoders::interface::Crack;
+    use super::*;
+
+    struct MockDecoder;
+    impl Crack for Decoder<MockDecoder> {
+        fn new() -> Decoder<MockDecoder> {
+            Decoder {
+                name: "MockEncoding",
+                description: "A mocked decoder for testing",
+                link: "https://en.wikipedia.org/wiki/Mock_object",
+                tags: vec!["mock", "decoder", "base"],
+                popularity: 1.0,
+                phantom: std::marker::PhantomData,
+            }
+        }
+
+        /// Mocked cracking function
+        fn crack(&self, text: &str, _checker: &CheckerTypes) -> CrackResult {
+            CrackResult::new(self, text.to_string())
+        }
+
+        /// Gets all tags for this decoder
+        fn get_tags(&self) -> &Vec<&str> {
+            &self.tags
+        }
+        /// Gets the name for the current decoder
+        fn get_name(&self) -> &str {
+            self.name
+        }
+    }
+
+    #[test]
+    fn get_json_success() {
+        let mock_decoder = Decoder::<MockDecoder>::new();
+        let crack_result = CrackResult::new(&mock_decoder, String::from("encrypted text"));
+        let expected_str = String::from("{\"success\":false,\"encrypted_text\":\"encrypted text\",\"unencrypted_text\":null,\"decoder\":\"MockEncoding\",\"checker_name\":\"\",\"checker_description\":\"\",\"key\":null,\"description\":\"A mocked decoder for testing\",\"link\":\"https://en.wikipedia.org/wiki/Mock_object\"}");
+        let crack_json_result = crack_result.get_json();
+        assert!(crack_json_result.is_ok());
+        assert_eq!(crack_json_result.unwrap(), expected_str);
     }
 }

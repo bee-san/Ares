@@ -78,7 +78,7 @@ pub struct CacheRow {
     /// Text after it is decoded
     pub decoded_text: String,
     /// Ordered list of decoding attempts
-    pub path: Vec<LocalCrackResult>,
+    pub path: Vec<String>,
     /// Whether or not the decoding was successful
     pub successful: bool,
     /// How long the decoding took in milliseconds
@@ -110,25 +110,6 @@ pub struct CacheEntry {
     pub path: Vec<CrackResult>,
     /// How long the decoding took in milliseconds
     pub execution_time_ms: i64,
-}
-
-/// Helper function for converting CrackResults into LocalCrackResults
-/// for serialization
-fn convert_to_local(crack_result: &CrackResult) -> LocalCrackResult {
-    LocalCrackResult {
-        success: crack_result.success,
-        encrypted_text: crack_result.encrypted_text.clone(),
-        unencrypted_text: crack_result.unencrypted_text.clone(),
-        decoder: String::from(crack_result.decoder),
-        checker_name: String::from(crack_result.checker_name),
-        checker_description: String::from(crack_result.checker_description),
-        key: match crack_result.key {
-            Some(key) => Some(String::from(key)),
-            None => None,
-        },
-        description: String::from(crack_result.description),
-        link: String::from(crack_result.link),
-    }
 }
 
 /// Returns the path to the database file
@@ -213,10 +194,14 @@ fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
 
 /// Adds a new cache record to the cache table
 pub fn insert_cache(cache_entry: &CacheEntry) -> Result<(), rusqlite::Error> {
-    let mut raw_path: Vec<LocalCrackResult> = Vec::new();
-    for crack_result in cache_entry.path.as_slice() {
-        raw_path.push(convert_to_local(&crack_result));
-    }
+    let path: Vec<String> = cache_entry
+        .path
+        .iter()
+        .map(|crack_result| match crack_result.get_json() {
+            Ok(json) => json,
+            Err(_) => String::new(),
+        })
+        .collect();
 
     let last_crack_result = cache_entry.path.get(cache_entry.path.len() - 1);
     let successful;
@@ -231,7 +216,7 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<(), rusqlite::Error> {
 
     let timestamp: DateTime<chrono::Local> = std::time::SystemTime::now().into();
 
-    let path_json = serde_json::to_string(&raw_path).unwrap();
+    let path_json = serde_json::to_string(&path).unwrap();
     let conn = get_db_connection()?;
     let _conn_result = conn.execute(
         "INSERT INTO cache (
@@ -265,14 +250,13 @@ pub fn read_row(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Err
     let mut stmt = conn.prepare("SELECT * FROM cache WHERE encoded_text IS $1")?;
     let mut query = stmt.query_map([encoded_text], |row| {
         let path_str = row.get_unwrap::<usize, String>(3).to_owned();
-        let crack_result_vec: Vec<LocalCrackResult> =
-            serde_json::from_str(&path_str.clone()).unwrap();
+        let crack_json_vec: Vec<String> = serde_json::from_str(&path_str.clone()).unwrap();
 
         Ok(CacheRow {
             id: row.get_unwrap(0),
             encoded_text: row.get_unwrap(1),
             decoded_text: row.get_unwrap(2),
-            path: crack_result_vec,
+            path: crack_json_vec,
             successful: row.get_unwrap(4),
             execution_time_ms: row.get_unwrap(5),
             timestamp: row.get_unwrap(6),
@@ -402,14 +386,15 @@ mod tests {
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
             let path_str = row.get_unwrap::<usize, String>(3).to_owned();
-            let crack_result_vec: Vec<LocalCrackResult> =
-                serde_json::from_str(&path_str.clone()).unwrap();
 
             Ok(CacheRow {
                 id: row.get_unwrap(0),
                 encoded_text: row.get_unwrap(1),
                 decoded_text: row.get_unwrap(2),
-                path: crack_result_vec,
+                path: match serde_json::from_str(&path_str) {
+                    Ok(path) => path,
+                    Err(_) => vec![],
+                },
                 successful: row.get_unwrap(4),
                 execution_time_ms: row.get_unwrap(5),
                 timestamp: row.get_unwrap(6),
@@ -438,7 +423,10 @@ mod tests {
             id: 1,
             encoded_text: encoded_text.clone(),
             decoded_text: decoded_text.clone(),
-            path: vec![convert_to_local(&mock_crack_result)],
+            path: match serde_json::to_string(&mock_crack_result) {
+                Ok(json) => vec![json],
+                Err(_) => vec![],
+            },
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 14:16:00"),
@@ -457,14 +445,15 @@ mod tests {
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
             let path_str = row.get_unwrap::<usize, String>(3).to_owned();
-            let crack_result_vec: Vec<LocalCrackResult> =
-                serde_json::from_str(&path_str.clone()).unwrap();
 
             Ok(CacheRow {
                 id: row.get_unwrap(0),
                 encoded_text: row.get_unwrap(1),
                 decoded_text: row.get_unwrap(2),
-                path: crack_result_vec,
+                path: match serde_json::from_str(&path_str) {
+                    Ok(path) => path,
+                    Err(_) => vec![],
+                },
                 successful: row.get_unwrap(4),
                 execution_time_ms: row.get_unwrap(5),
                 timestamp: row.get_unwrap(6),
@@ -497,7 +486,10 @@ mod tests {
             id: 1,
             encoded_text: encoded_text_1.clone(),
             decoded_text: decoded_text_1.clone(),
-            path: vec![convert_to_local(&mock_crack_result_1)],
+            path: match serde_json::to_string(&mock_crack_result_1) {
+                Ok(json) => vec![json],
+                Err(_) => vec![],
+            },
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 14:16:00"),
@@ -511,7 +503,11 @@ mod tests {
             id: 2,
             encoded_text: encoded_text_2.clone(),
             decoded_text: decoded_text_2.clone(),
-            path: vec![convert_to_local(&mock_crack_result_2)],
+            path: match serde_json::to_string(&mock_crack_result_2) {
+                Ok(json) => vec![json],
+                Err(_) => vec![],
+            },
+
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 15:12:00"),
@@ -535,14 +531,15 @@ mod tests {
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
             let path_str = row.get_unwrap::<usize, String>(3).to_owned();
-            let crack_result_vec: Vec<LocalCrackResult> =
-                serde_json::from_str(&path_str.clone()).unwrap();
 
             Ok(CacheRow {
                 id: row.get_unwrap(0),
                 encoded_text: row.get_unwrap(1),
                 decoded_text: row.get_unwrap(2),
-                path: crack_result_vec,
+                path: match serde_json::from_str(&path_str) {
+                    Ok(path) => path,
+                    Err(_) => vec![],
+                },
                 successful: row.get_unwrap(4),
                 execution_time_ms: row.get_unwrap(5),
                 timestamp: row.get_unwrap(6),
@@ -575,7 +572,10 @@ mod tests {
             id: 1,
             encoded_text: encoded_text.clone(),
             decoded_text: decoded_text.clone(),
-            path: vec![convert_to_local(&mock_crack_result.clone())],
+            path: match serde_json::to_string(&mock_crack_result) {
+                Ok(json) => vec![json],
+                Err(_) => vec![],
+            },
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 14:16:00"),
@@ -618,7 +618,10 @@ mod tests {
             id: 1,
             encoded_text: encoded_text_1.clone(),
             decoded_text: decoded_text_1.clone(),
-            path: vec![convert_to_local(&mock_crack_result_1)],
+            path: match serde_json::to_string(&mock_crack_result_1) {
+                Ok(json) => vec![json],
+                Err(_) => vec![],
+            },
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 14:16:00"),
@@ -632,7 +635,10 @@ mod tests {
             id: 2,
             encoded_text: encoded_text_2.clone(),
             decoded_text: decoded_text_2.clone(),
-            path: vec![convert_to_local(&mock_crack_result_2)],
+            path: match serde_json::to_string(&mock_crack_result_2) {
+                Ok(json) => vec![json],
+                Err(_) => vec![],
+            },
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 15:12:00"),
@@ -704,7 +710,10 @@ mod tests {
             id: 1,
             encoded_text: encoded_text_1.clone(),
             decoded_text: decoded_text_1.clone(),
-            path: vec![convert_to_local(&mock_crack_result_1)],
+            path: match serde_json::to_string(&mock_crack_result_1) {
+                Ok(json) => vec![json],
+                Err(_) => vec![],
+            },
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 14:16:00"),
@@ -718,7 +727,10 @@ mod tests {
             id: 2,
             encoded_text: encoded_text_1.clone(),
             decoded_text: decoded_text_1.clone(),
-            path: vec![convert_to_local(&mock_crack_result_2)],
+            path: match serde_json::to_string(&mock_crack_result_2) {
+                Ok(json) => vec![json],
+                Err(_) => vec![],
+            },
             successful: true,
             execution_time_ms: 100,
             timestamp: String::from("2025-05-29 15:12:00"),
