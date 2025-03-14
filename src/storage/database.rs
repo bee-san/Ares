@@ -145,10 +145,6 @@ fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
         (),
     )?;
     conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_stats_checker ON failed_decodes(checker);",
-        (),
-    )?;
-    conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_stats_plaintext ON failed_decodes(plaintext);",
         (),
     )?;
@@ -247,6 +243,30 @@ pub fn insert_failed_decodes(
     );
     Ok(())
 }
+
+/// Searches the database for a failed_decodes table row that matches the given plaintext
+///
+/// On match, returns a FailedDecodesRow
+/// Otherwise, returns None
+/// On error, returns a ``rusqlite::Error``
+pub fn read_failed_decodes(plaintext: &String) -> Result<Option<FailedDecodesRow>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let mut stmt = conn.prepare("SELECT * FROM failed_decodes WHERE plaintext IS $1")?;
+    let mut query = stmt.query_map([plaintext], |row| {
+        Ok(FailedDecodesRow {
+            id: row.get_unwrap(0),
+            plaintext: row.get_unwrap(1),
+            checker: row.get_unwrap(2),
+            timestamp: row.get_unwrap(3),
+        })
+    })?;
+    let row = query.next();
+    match row {
+        Some(cache_row) => Ok(Some(cache_row?)),
+        None => Ok(None),
+    }
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -884,5 +904,126 @@ mod tests {
         let row: FailedDecodesRow = query.next().unwrap().unwrap();
         expected_row_2.timestamp = row.timestamp.clone();
         assert_eq!(row, expected_row_2);
+    }
+
+    #[test]
+    #[serial]
+    fn failed_decode_read_success() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text = String::from("plaintext");
+        let checker_used = Checker::<Athena>::new();
+        let check_result = CheckResult {
+            is_identified: false,
+            text: "".to_string(),
+            checker_name: checker_used.name,
+            checker_description: checker_used.description,
+            description: "".to_string(),
+            link: checker_used.link,
+        };
+
+        let mut expected_row = FailedDecodesRow {
+            id: 1,
+            plaintext: encoded_text.clone(),
+            checker: String::from(check_result.checker_name),
+            timestamp: String::new(),
+        };
+
+        let _result = insert_failed_decodes(&encoded_text, &check_result);
+
+        let row_result = read_failed_decodes(&encoded_text);
+        assert!(row_result.is_ok());
+        let row_result = row_result.unwrap();
+        assert!(row_result.is_some());
+        let row = row_result.unwrap();
+        expected_row.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row);
+    }
+
+    #[test]
+    #[serial]
+    fn failed_decode_read_2_success() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text_1 = String::from("plaintext");
+        let checker_used_1 = Checker::<Athena>::new();
+        let check_result_1 = CheckResult {
+            is_identified: false,
+            text: "".to_string(),
+            checker_name: checker_used_1.name,
+            checker_description: checker_used_1.description,
+            description: "".to_string(),
+            link: checker_used_1.link,
+        };
+
+        let mut expected_row_1 = FailedDecodesRow {
+            id: 1,
+            plaintext: encoded_text_1.clone(),
+            checker: String::from(check_result_1.checker_name),
+            timestamp: String::new(),
+        };
+
+        let _result = insert_failed_decodes(&encoded_text_1, &check_result_1);
+
+        let encoded_text_2 = String::from("plaintext2");
+        let checker_used_2 = Checker::<EnglishChecker>::new();
+        let check_result_2 = CheckResult {
+            is_identified: false,
+            text: "".to_string(),
+            checker_name: checker_used_2.name,
+            checker_description: checker_used_2.description,
+            description: "".to_string(),
+            link: checker_used_2.link,
+        };
+
+        let mut expected_row_2 = FailedDecodesRow {
+            id: 2,
+            plaintext: encoded_text_2.clone(),
+            checker: String::from(check_result_2.checker_name),
+            timestamp: String::new(),
+        };
+
+        let _result = insert_failed_decodes(&encoded_text_2, &check_result_2);
+
+        let row_result = read_failed_decodes(&encoded_text_1);
+        assert!(row_result.is_ok());
+        let row_result = row_result.unwrap();
+        assert!(row_result.is_some());
+        let row = row_result.unwrap();
+        expected_row_1.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row_1);
+
+        let row_result = read_failed_decodes(&encoded_text_2);
+        assert!(row_result.is_ok());
+        let row_result = row_result.unwrap();
+        assert!(row_result.is_some());
+        let row = row_result.unwrap();
+        expected_row_2.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row_2);
+    }
+
+    #[test]
+    #[serial]
+    fn failed_decodes_read_miss() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text = String::from("plaintext");
+        let checker_used = Checker::<Athena>::new();
+        let check_result = CheckResult {
+            is_identified: false,
+            text: "".to_string(),
+            checker_name: checker_used.name,
+            checker_description: checker_used.description,
+            description: "".to_string(),
+            link: checker_used.link,
+        };
+
+        let _result = insert_failed_decodes(&encoded_text, &check_result);
+        let row_result = read_failed_decodes(&String::from("not plaintext"));
+        assert!(row_result.is_ok());
+        assert!(row_result.unwrap().is_none());
     }
 }
