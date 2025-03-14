@@ -249,7 +249,9 @@ pub fn insert_failed_decodes(
 /// On match, returns a FailedDecodesRow
 /// Otherwise, returns None
 /// On error, returns a ``rusqlite::Error``
-pub fn read_failed_decodes(plaintext: &String) -> Result<Option<FailedDecodesRow>, rusqlite::Error> {
+pub fn read_failed_decodes(
+    plaintext: &String,
+) -> Result<Option<FailedDecodesRow>, rusqlite::Error> {
     let conn = get_db_connection()?;
     let mut stmt = conn.prepare("SELECT * FROM failed_decodes WHERE plaintext IS $1")?;
     let mut query = stmt.query_map([plaintext], |row| {
@@ -266,7 +268,6 @@ pub fn read_failed_decodes(plaintext: &String) -> Result<Option<FailedDecodesRow
         None => Ok(None),
     }
 }
-
 
 #[cfg(test)]
 mod tests {
