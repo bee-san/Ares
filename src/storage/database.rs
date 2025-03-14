@@ -1,3 +1,4 @@
+use super::super::CheckResult;
 use super::super::CrackResult;
 ///! Module for managing the SQLite database
 ///!
@@ -8,6 +9,28 @@ use chrono::DateTime;
 use std::sync::OnceLock;
 
 static DB_PATH: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
+
+#[derive(Debug)]
+/// Struct representing a row in the failed_decodes table
+pub struct FailedDecodesRow {
+    /// Index of row in failed_decodes table
+    pub id: usize,
+    /// Plaintext that has been marked as a failed decode
+    pub plaintext: String,
+    /// Name of the checker that was used to confirm the plaintext
+    pub checker: String,
+    /// When the decoding was run
+    pub timestamp: String,
+}
+
+impl PartialEq for FailedDecodesRow {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.plaintext == other.plaintext
+            && self.checker == other.checker
+            && self.timestamp == other.timestamp
+    }
+}
 
 #[derive(Debug)]
 /// Struct representing a row in the cache table
@@ -51,6 +74,12 @@ pub struct CacheEntry {
     pub path: Vec<CrackResult>,
     /// How long the decoding took in milliseconds
     pub execution_time_ms: i64,
+}
+
+/// Helper function get a DateTime formatted timestamp
+fn get_timestamp() -> String {
+    let timestamp: DateTime<chrono::Local> = std::time::SystemTime::now().into();
+    timestamp.format("%Y-%m-%d %T").to_string()
 }
 
 /// Returns the path to the database file
@@ -105,28 +134,22 @@ fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
         (),
     )?;
 
-    // Initializing statistics table
+    // Initializing human checker table
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS statistics (
+        "CREATE TABLE IF NOT EXISTS failed_decodes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            run_id TEXT NOT NULL,
-            decoder_name TEXT NOT NULL,
-            success_count INTEGER NOT NULL,
-            total_attempts INTEGER NOT NULL,
-            search_depth INTEGER NOT NULL,
-            seen_strings_count INTEGER NOT NULL,
-            prune_threshold INTEGER NOT NULL,
-            max_memory_kb INTEGER NOT NULL,
+            plaintext TEXT NOT NULL,
+            checker TEXT NOT NULL,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );",
         (),
     )?;
     conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_stats_run_id ON statistics(run_id);",
+        "CREATE INDEX IF NOT EXISTS idx_stats_checker ON failed_decodes(checker);",
         (),
     )?;
     conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_stats_decoder ON statistics(decoder_name);",
+        "CREATE INDEX IF NOT EXISTS idx_stats_plaintext ON failed_decodes(plaintext);",
         (),
     )?;
 
@@ -155,8 +178,6 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<(), rusqlite::Error> {
         }
     }
 
-    let timestamp: DateTime<chrono::Local> = std::time::SystemTime::now().into();
-
     let path_json = serde_json::to_string(&path).unwrap();
     let conn = get_db_connection()?;
     let _conn_result = conn.execute(
@@ -174,7 +195,7 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<(), rusqlite::Error> {
             path_json,
             successful.clone(),
             cache_entry.execution_time_ms.clone(),
-            timestamp.format("%Y-%m-%d %T").to_string(),
+            get_timestamp(),
         ),
     );
     Ok(())
@@ -186,7 +207,7 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<(), rusqlite::Error> {
 /// On cache hit, returns a CacheRow
 /// On cache miss, returns None
 /// On error, returns a ``rusqlite::Error``
-pub fn read_row(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Error> {
+pub fn read_cache(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Error> {
     let conn = get_db_connection()?;
     let mut stmt = conn.prepare("SELECT * FROM cache WHERE encoded_text IS $1")?;
     let mut query = stmt.query_map([encoded_text], |row| {
@@ -210,12 +231,35 @@ pub fn read_row(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Err
     }
 }
 
+/// Adds a new decode failure record to the failed_decodes table
+pub fn insert_failed_decodes(
+    text: &String,
+    check_result: &CheckResult,
+) -> Result<(), rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let _conn_result = conn.execute(
+        "INSERT INTO failed_decodes (
+            plaintext,
+            checker,
+            timestamp)
+        VALUES ($1, $2, $3)",
+        (text.clone(), check_result.checker_name, get_timestamp()),
+    );
+    Ok(())
+}
+
 #[cfg(test)]
 mod tests {
-    use super::super::super::checkers::CheckerTypes;
     use super::super::super::decoders::interface::{Crack, Decoder};
-    use super::super::super::CrackResult;
+    use super::CrackResult;
     use super::*;
+    use crate::checkers::{
+        athena::Athena,
+        checker_result::CheckResult,
+        checker_type::{Check, Checker},
+        english::EnglishChecker,
+        CheckerTypes,
+    };
     use serial_test::serial;
     use uuid::Uuid;
 
@@ -318,6 +362,35 @@ mod tests {
 
     #[test]
     #[serial]
+    fn correct_failed_decodes_table_schema() {
+        set_test_db_path();
+        let conn = init_database().unwrap();
+
+        let stmt_result = conn.prepare("PRAGMA table_info(failed_decodes);");
+        assert!(stmt_result.is_ok());
+        let mut stmt = stmt_result.unwrap();
+
+        let name_result = stmt.query_map([], |row| row.get::<usize, String>(1));
+        assert!(name_result.is_ok());
+        let name_query = name_result.unwrap();
+        let name_list: Vec<String> = name_query.map(|row| row.unwrap()).collect();
+        assert_eq!(name_list[0], "id");
+        assert_eq!(name_list[1], "plaintext");
+        assert_eq!(name_list[2], "checker");
+        assert_eq!(name_list[3], "timestamp");
+
+        let type_result = stmt.query_map([], |row| row.get::<usize, String>(2));
+        assert!(type_result.is_ok());
+        let type_query = type_result.unwrap();
+        let type_list: Vec<String> = type_query.map(|row| row.unwrap()).collect();
+        assert_eq!(type_list[0], "INTEGER");
+        assert_eq!(type_list[1], "TEXT");
+        assert_eq!(type_list[2], "TEXT");
+        assert_eq!(type_list[3], "DATETIME");
+    }
+
+    #[test]
+    #[serial]
     fn cache_record_empty_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -370,7 +443,7 @@ mod tests {
             },
             successful: true,
             execution_time_ms: 100,
-            timestamp: String::from("2025-05-29 14:16:00"),
+            timestamp: String::new(),
         };
 
         let cache_entry = CacheEntry {
@@ -433,7 +506,7 @@ mod tests {
             },
             successful: true,
             execution_time_ms: 100,
-            timestamp: String::from("2025-05-29 14:16:00"),
+            timestamp: String::new(),
         };
 
         let mut mock_crack_result_2 = CrackResult::new(&mock_decoder, encoded_text_2.clone());
@@ -451,7 +524,7 @@ mod tests {
 
             successful: true,
             execution_time_ms: 100,
-            timestamp: String::from("2025-05-29 15:12:00"),
+            timestamp: String::new(),
         };
 
         let _row_result = insert_cache(&CacheEntry {
@@ -519,7 +592,7 @@ mod tests {
             },
             successful: true,
             execution_time_ms: 100,
-            timestamp: String::from("2025-05-29 14:16:00"),
+            timestamp: String::new(),
         };
 
         let _row_result = insert_cache(&CacheEntry {
@@ -529,7 +602,7 @@ mod tests {
             execution_time_ms: 100,
         });
 
-        let cache_result = read_row(&encoded_text);
+        let cache_result = read_cache(&encoded_text);
         assert!(cache_result.is_ok());
         let cache_row_result: Option<CacheRow> = cache_result.unwrap();
         assert!(cache_row_result.is_some());
@@ -565,7 +638,7 @@ mod tests {
             },
             successful: true,
             execution_time_ms: 100,
-            timestamp: String::from("2025-05-29 14:16:00"),
+            timestamp: String::new(),
         };
 
         let mut mock_crack_result_2 = CrackResult::new(&mock_decoder, encoded_text_2.clone());
@@ -582,7 +655,7 @@ mod tests {
             },
             successful: true,
             execution_time_ms: 100,
-            timestamp: String::from("2025-05-29 15:12:00"),
+            timestamp: String::new(),
         };
 
         let _row_result = insert_cache(&CacheEntry {
@@ -599,7 +672,7 @@ mod tests {
             execution_time_ms: 100,
         });
 
-        let cache_result = read_row(&encoded_text_1);
+        let cache_result = read_cache(&encoded_text_1);
         assert!(cache_result.is_ok());
         let cache_row_result: Option<CacheRow> = cache_result.unwrap();
         assert!(cache_row_result.is_some());
@@ -607,7 +680,7 @@ mod tests {
         expected_cache_row_1.timestamp = cache_row.timestamp.clone();
         assert_eq!(cache_row, expected_cache_row_1);
 
-        let cache_result = read_row(&encoded_text_2);
+        let cache_result = read_cache(&encoded_text_2);
         assert!(cache_result.is_ok());
         let cache_row_result: Option<CacheRow> = cache_result.unwrap();
         assert!(cache_row_result.is_some());
@@ -624,7 +697,7 @@ mod tests {
 
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
 
-        let cache_result = read_row(&encoded_text);
+        let cache_result = read_cache(&encoded_text);
         assert!(cache_result.is_ok());
         let cache_row: Option<CacheRow> = cache_result.unwrap();
         assert!(cache_row.is_none());
@@ -657,7 +730,7 @@ mod tests {
             },
             successful: true,
             execution_time_ms: 100,
-            timestamp: String::from("2025-05-29 14:16:00"),
+            timestamp: String::new(),
         };
 
         let mock_crack_result_2 = CrackResult::new(&mock_decoder, encoded_text_1.clone());
@@ -674,7 +747,7 @@ mod tests {
             },
             successful: true,
             execution_time_ms: 100,
-            timestamp: String::from("2025-05-29 15:12:00"),
+            timestamp: String::new(),
         };
 
         let _row_result = insert_cache(&CacheEntry {
@@ -691,9 +764,125 @@ mod tests {
             execution_time_ms: 100,
         });
 
-        let cache_result = read_row(&encoded_text_2);
+        let cache_result = read_cache(&encoded_text_2);
         assert!(cache_result.is_ok());
         let cache_row: Option<CacheRow> = cache_result.unwrap();
         assert!(cache_row.is_none());
+    }
+
+    #[test]
+    #[serial]
+    fn insert_failed_decodes_success() {
+        set_test_db_path();
+        let conn = init_database().unwrap();
+
+        let encoded_text = String::from("plaintext");
+
+        let checker_used = Checker::<Athena>::new();
+
+        let check_result = CheckResult {
+            is_identified: false,
+            text: "".to_string(),
+            checker_name: checker_used.name,
+            checker_description: checker_used.description,
+            description: "".to_string(),
+            link: checker_used.link,
+        };
+
+        let mut expected_row = FailedDecodesRow {
+            id: 1,
+            plaintext: encoded_text.clone(),
+            checker: String::from(check_result.checker_name),
+            timestamp: String::new(),
+        };
+
+        let result = insert_failed_decodes(&encoded_text, &check_result);
+        assert!(result.is_ok());
+
+        let stmt_result = conn.prepare("SELECT * FROM failed_decodes;");
+        assert!(stmt_result.is_ok());
+        let mut stmt = stmt_result.unwrap();
+        let query_result = stmt.query_map([], |row| {
+            Ok(FailedDecodesRow {
+                id: row.get_unwrap(0),
+                plaintext: row.get_unwrap(1),
+                checker: row.get_unwrap(2),
+                timestamp: row.get_unwrap(3),
+            })
+        });
+        assert!(query_result.is_ok());
+        let mut query = query_result.unwrap();
+        let row: FailedDecodesRow = query.next().unwrap().unwrap();
+        expected_row.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row);
+    }
+
+    #[test]
+    #[serial]
+    fn insert_two_failed_decodes_success() {
+        set_test_db_path();
+        let conn = init_database().unwrap();
+
+        let encoded_text_1 = String::from("plaintext1");
+        let checker_used_1 = Checker::<Athena>::new();
+        let check_result_1 = CheckResult {
+            is_identified: false,
+            text: "".to_string(),
+            checker_name: checker_used_1.name,
+            checker_description: checker_used_1.description,
+            description: "".to_string(),
+            link: checker_used_1.link,
+        };
+
+        let mut expected_row_1 = FailedDecodesRow {
+            id: 1,
+            plaintext: encoded_text_1.clone(),
+            checker: String::from(check_result_1.checker_name),
+            timestamp: String::new(),
+        };
+
+        let result = insert_failed_decodes(&encoded_text_1, &check_result_1);
+        assert!(result.is_ok());
+
+        let encoded_text_2 = String::from("plaintext2");
+        let checker_used_2 = Checker::<EnglishChecker>::new();
+        let check_result_2 = CheckResult {
+            is_identified: false,
+            text: "".to_string(),
+            checker_name: checker_used_2.name,
+            checker_description: checker_used_2.description,
+            description: "".to_string(),
+            link: checker_used_2.link,
+        };
+
+        let mut expected_row_2 = FailedDecodesRow {
+            id: 2,
+            plaintext: encoded_text_2.clone(),
+            checker: String::from(check_result_2.checker_name),
+            timestamp: String::new(),
+        };
+
+        let result = insert_failed_decodes(&encoded_text_2, &check_result_2);
+        assert!(result.is_ok());
+
+        let stmt_result = conn.prepare("SELECT * FROM failed_decodes;");
+        assert!(stmt_result.is_ok());
+        let mut stmt = stmt_result.unwrap();
+        let query_result = stmt.query_map([], |row| {
+            Ok(FailedDecodesRow {
+                id: row.get_unwrap(0),
+                plaintext: row.get_unwrap(1),
+                checker: row.get_unwrap(2),
+                timestamp: row.get_unwrap(3),
+            })
+        });
+        assert!(query_result.is_ok());
+        let mut query = query_result.unwrap();
+        let row: FailedDecodesRow = query.next().unwrap().unwrap();
+        expected_row_1.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row_1);
+        let row: FailedDecodesRow = query.next().unwrap().unwrap();
+        expected_row_2.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row_2);
     }
 }
