@@ -104,7 +104,7 @@ mod tests {
     #[test]
     fn test_check_basic2() {
         let checker = Checker::<EnglishChecker>::new();
-        assert!(checker.check("and").is_identified);
+        assert!(checker.check("exuberant").is_identified);
     }
 
     #[test]

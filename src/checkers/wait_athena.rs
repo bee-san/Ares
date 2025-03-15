@@ -181,7 +181,7 @@ mod tests {
     #[test]
     fn test_check_dictionary_word() {
         let checker = Checker::<WaitAthena>::new();
-        assert!(checker.check("and").is_identified);
+        assert!(checker.check("exuberant").is_identified);
     }
 
     #[test]
