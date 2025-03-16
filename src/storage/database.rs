@@ -153,7 +153,10 @@ fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
 }
 
 /// Adds a new cache record to the cache table
-pub fn insert_cache(cache_entry: &CacheEntry) -> Result<(), rusqlite::Error> {
+///
+/// Returns the number of successfully inserted rows on success
+/// Returns rusqlite::Error on error
+pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> {
     let path: Vec<String> = cache_entry
         .path
         .iter()
@@ -176,7 +179,7 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<(), rusqlite::Error> {
 
     let path_json = serde_json::to_string(&path).unwrap();
     let conn = get_db_connection()?;
-    let _conn_result = conn.execute(
+    let conn_result = conn.execute(
         "INSERT INTO cache (
             encoded_text,
             decoded_text,
@@ -194,7 +197,7 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<(), rusqlite::Error> {
             get_timestamp(),
         ),
     );
-    Ok(())
+    conn_result
 }
 
 /// Searches the database for a cache table row that matches the given encoded
@@ -229,19 +232,27 @@ pub fn read_cache(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::E
 
 /// Removes the cache row corresponding to the given encoded_text
 ///
-/// Returns Ok(()) on success
+/// Returns number of successfully deleted rows on success
 /// Returns sqlite::Error on error
-pub fn delete_cache(encoded_text: &String) -> Result<(), rusqlite::Error> {
-    Ok(())
+pub fn delete_cache(encoded_text: &String) -> Result<usize, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let conn_result = conn.execute(
+        "DELETE FROM cache WHERE encoded_text = $1",
+        (encoded_text.clone(),),
+    );
+    conn_result
 }
 
 /// Adds a new decode failure record to the failed_decodes table
+///
+/// Returns the number of successfully inserted rows on success
+/// Returns rusqlite::Error on error
 pub fn insert_failed_decodes(
     text: &String,
     check_result: &CheckResult,
-) -> Result<(), rusqlite::Error> {
+) -> Result<usize, rusqlite::Error> {
     let conn = get_db_connection()?;
-    let _conn_result = conn.execute(
+    let conn_result = conn.execute(
         "INSERT INTO failed_decodes (
             plaintext,
             checker,
@@ -249,7 +260,7 @@ pub fn insert_failed_decodes(
         VALUES ($1, $2, $3)",
         (text.clone(), check_result.checker_name, get_timestamp()),
     );
-    Ok(())
+    conn_result
 }
 
 /// Searches the database for a failed_decodes table row that matches the given plaintext
@@ -516,7 +527,9 @@ mod tests {
 
         let (_mock_crack_result, mut expected_cache_row, cache_entry) =
             generate_cache_row(1, &encoded_text, &decoded_text);
-        let _row_result = insert_cache(&cache_entry);
+        let row_result = insert_cache(&cache_entry);
+        assert!(row_result.is_ok());
+        assert_eq!(row_result.unwrap(), 1);
 
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         let mut stmt = stmt_result.unwrap();
@@ -553,14 +566,18 @@ mod tests {
 
         let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
             generate_cache_row(1, &encoded_text_1, &decoded_text_1);
-        let _row_result = insert_cache(&cache_entry_1);
+        let row_result = insert_cache(&cache_entry_1);
+        assert!(row_result.is_ok());
+        assert_eq!(row_result.unwrap(), 1);
 
         let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
         let decoded_text_2 = String::from("world hello");
 
         let (_mock_crack_result_2, mut expected_cache_row_2, cache_entry_2) =
             generate_cache_row(2, &encoded_text_2, &decoded_text_2);
-        let _row_result = insert_cache(&cache_entry_2);
+        let row_result = insert_cache(&cache_entry_2);
+        assert!(row_result.is_ok());
+        assert_eq!(row_result.unwrap(), 1);
 
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         let mut stmt = stmt_result.unwrap();
@@ -691,6 +708,108 @@ mod tests {
 
     #[test]
     #[serial]
+    fn cache_delete_success_one_entry() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text = String::from("hello world");
+
+        let (_mock_crack_result, _expected_cache_row, cache_entry) =
+            generate_cache_row(1, &encoded_text, &decoded_text);
+        let _row_result = insert_cache(&cache_entry);
+        let _read_result = read_cache(&encoded_text);
+        let delete_result = delete_cache(&encoded_text);
+        assert!(delete_result.is_ok());
+        assert_eq!(delete_result.unwrap(), 1);
+        let read_result = read_cache(&encoded_text);
+        assert!(read_result.is_ok());
+        assert!(read_result.unwrap().is_none());
+    }
+
+    #[test]
+    #[serial]
+    fn cache_delete_success_with_two_entries() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text_1 = String::from("hello world");
+
+        let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
+            generate_cache_row(1, &encoded_text_1, &decoded_text_1);
+
+        let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
+        let decoded_text_2 = String::from("world hello");
+
+        let (_mock_crack_result_2, mut expected_cache_row_2, cache_entry_2) =
+            generate_cache_row(2, &encoded_text_2, &decoded_text_2);
+
+        let _row_result = insert_cache(&cache_entry_1);
+        let _row_result = insert_cache(&cache_entry_2);
+
+        let read_result = read_cache(&encoded_text_1).unwrap();
+        assert!(read_result.is_some());
+        let row: CacheRow = read_result.unwrap();
+        expected_cache_row_1.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_cache_row_1);
+
+        let read_result = read_cache(&encoded_text_2).unwrap();
+        assert!(read_result.is_some());
+        let row: CacheRow = read_result.unwrap();
+        expected_cache_row_2.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_cache_row_2);
+
+        let delete_result = delete_cache(&encoded_text_1);
+        assert!(delete_result.is_ok());
+        assert_eq!(delete_result.unwrap(), 1);
+        let read_result = read_cache(&encoded_text_1);
+        assert!(read_result.is_ok());
+        assert!(read_result.unwrap().is_none());
+
+        let read_result = read_cache(&encoded_text_2).unwrap();
+        assert!(read_result.is_some());
+        let row: CacheRow = read_result.unwrap();
+        assert_eq!(row, expected_cache_row_2);
+    }
+
+    #[test]
+    #[serial]
+    fn cache_delete_missing() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text = String::from("aGVsbG8gd29ybGQK");
+        let delete_result = delete_cache(&encoded_text);
+        assert!(delete_result.is_ok());
+        assert_eq!(delete_result.unwrap(), 0);
+    }
+
+    #[test]
+    #[serial]
+    fn cache_delete_missing_with_entries() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text_1 = String::from("hello world");
+
+        let (_mock_crack_result_1, _expected_cache_row_1, cache_entry_1) =
+            generate_cache_row(1, &encoded_text_1, &decoded_text_1);
+        let row_result = insert_cache(&cache_entry_1);
+        assert!(row_result.is_ok());
+        assert_eq!(row_result.unwrap(), 1);
+
+        let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
+
+        let delete_result = delete_cache(&encoded_text_2);
+
+        assert!(delete_result.is_ok());
+        assert_eq!(delete_result.unwrap(), 0);
+    }
+
+    #[test]
+    #[serial]
     fn insert_failed_decodes_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -704,6 +823,7 @@ mod tests {
 
         let result = insert_failed_decodes(&encoded_text, &check_result);
         assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
 
         let stmt_result = conn.prepare("SELECT * FROM failed_decodes;");
         assert!(stmt_result.is_ok());
@@ -737,6 +857,7 @@ mod tests {
 
         let result = insert_failed_decodes(&encoded_text_1, &check_result_1);
         assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
 
         let encoded_text_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
@@ -746,6 +867,7 @@ mod tests {
 
         let result = insert_failed_decodes(&encoded_text_2, &check_result_2);
         assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
 
         let stmt_result = conn.prepare("SELECT * FROM failed_decodes;");
         assert!(stmt_result.is_ok());
@@ -847,23 +969,4 @@ mod tests {
         assert!(row_result.is_ok());
         assert!(row_result.unwrap().is_none());
     }
-
-    // #[test]
-    // #[serial]
-    // fn cache_delete_success() {
-    //     set_test_db_path();
-    //     let _conn = init_database().unwrap();
-    //
-    //     let encoded_text = String::from("aGVsbG8gd29ybGQK");
-    //     let decoded_text = String::from("hello world");
-    //
-    //     let (mut mock_crack_result, mut expected_cache_row, cache_entry) = generate_cache_row(1, &encoded_text, &decoded_text);
-    //
-    //     let _row_result = insert_cache(&cache_entry);
-    // }
-    //
-    // #[test]
-    // #[serial]
-    // fn cache_delete_missing() {
-    // }
 }
