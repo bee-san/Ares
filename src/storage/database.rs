@@ -227,6 +227,14 @@ pub fn read_cache(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::E
     }
 }
 
+/// Removes the cache row corresponding to the given encoded_text
+///
+/// Returns Ok(()) on success
+/// Returns sqlite::Error on error
+pub fn delete_cache(encoded_text: &String) -> Result<(), rusqlite::Error> {
+    Ok(())
+}
+
 /// Adds a new decode failure record to the failed_decodes table
 pub fn insert_failed_decodes(
     text: &String,
@@ -320,6 +328,63 @@ mod tests {
             String::from("file::") + test_id.to_string().as_str() + "db?mode=memory&cache=shared",
         );
         let _ = DB_PATH.set(Some(path));
+    }
+
+    /// Helper function for generating a cache row
+    fn generate_cache_row(
+        id: usize,
+        encoded_text: &String,
+        decoded_text: &String,
+    ) -> (CrackResult, CacheRow, CacheEntry) {
+        let mock_decoder = Decoder::<MockDecoder>::new();
+        let mut mock_crack_result = CrackResult::new(&mock_decoder, encoded_text.clone());
+        mock_crack_result.success = true;
+        mock_crack_result.unencrypted_text = Some(vec![decoded_text.clone()]);
+
+        let expected_cache_row = CacheRow {
+            id,
+            encoded_text: encoded_text.clone(),
+            decoded_text: decoded_text.clone(),
+            path: match serde_json::to_string(&mock_crack_result) {
+                Ok(json) => vec![json],
+                Err(_) => vec![],
+            },
+            successful: true,
+            execution_time_ms: 100,
+            timestamp: String::new(),
+        };
+
+        let cache_entry = CacheEntry {
+            encoded_text: encoded_text.clone(),
+            decoded_text: decoded_text.clone(),
+            path: vec![mock_crack_result.clone()],
+            execution_time_ms: 100,
+        };
+        (mock_crack_result, expected_cache_row, cache_entry)
+    }
+
+    /// Helper function for generating a new failed_decodes row
+    pub fn generate_failed_decodes_row<Type>(
+        id: usize,
+        encoded_text: &String,
+        checker_used: Checker<Type>,
+    ) -> (CheckResult, FailedDecodesRow) {
+        let check_result = CheckResult {
+            is_identified: false,
+            text: "".to_string(),
+            checker_name: checker_used.name,
+            checker_description: checker_used.description,
+            description: "".to_string(),
+            link: checker_used.link,
+        };
+
+        let expected_row = FailedDecodesRow {
+            id,
+            plaintext: encoded_text.clone(),
+            checker: String::from(check_result.checker_name),
+            timestamp: String::new(),
+        };
+        (check_result, expected_row)
     }
 
     #[test]
@@ -449,31 +514,8 @@ mod tests {
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
         let decoded_text = String::from("hello world");
 
-        let mock_decoder = Decoder::<MockDecoder>::new();
-        let mut mock_crack_result = CrackResult::new(&mock_decoder, encoded_text.clone());
-        mock_crack_result.success = true;
-        mock_crack_result.unencrypted_text = Some(vec![decoded_text.clone()]);
-
-        let mut expected_cache_row = CacheRow {
-            id: 1,
-            encoded_text: encoded_text.clone(),
-            decoded_text: decoded_text.clone(),
-            path: match serde_json::to_string(&mock_crack_result) {
-                Ok(json) => vec![json],
-                Err(_) => vec![],
-            },
-            successful: true,
-            execution_time_ms: 100,
-            timestamp: String::new(),
-        };
-
-        let cache_entry = CacheEntry {
-            encoded_text: encoded_text.clone(),
-            decoded_text: decoded_text.clone(),
-            path: vec![mock_crack_result.clone()],
-            execution_time_ms: 100,
-        };
-
+        let (_mock_crack_result, mut expected_cache_row, cache_entry) =
+            generate_cache_row(1, &encoded_text, &decoded_text);
         let _row_result = insert_cache(&cache_entry);
 
         let stmt_result = conn.prepare("SELECT * FROM cache;");
@@ -509,58 +551,16 @@ mod tests {
         let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
         let decoded_text_1 = String::from("hello world");
 
+        let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
+            generate_cache_row(1, &encoded_text_1, &decoded_text_1);
+        let _row_result = insert_cache(&cache_entry_1);
+
         let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
         let decoded_text_2 = String::from("world hello");
 
-        let mock_decoder = Decoder::<MockDecoder>::new();
-        let mut mock_crack_result_1 = CrackResult::new(&mock_decoder, encoded_text_1.clone());
-        mock_crack_result_1.success = true;
-        mock_crack_result_1.unencrypted_text = Some(vec![decoded_text_1.clone()]);
-
-        let mut expected_cache_row_1 = CacheRow {
-            id: 1,
-            encoded_text: encoded_text_1.clone(),
-            decoded_text: decoded_text_1.clone(),
-            path: match serde_json::to_string(&mock_crack_result_1) {
-                Ok(json) => vec![json],
-                Err(_) => vec![],
-            },
-            successful: true,
-            execution_time_ms: 100,
-            timestamp: String::new(),
-        };
-
-        let mut mock_crack_result_2 = CrackResult::new(&mock_decoder, encoded_text_2.clone());
-        mock_crack_result_2.success = true;
-        mock_crack_result_2.unencrypted_text = Some(vec![decoded_text_2.clone()]);
-
-        let mut expected_cache_row_2 = CacheRow {
-            id: 2,
-            encoded_text: encoded_text_2.clone(),
-            decoded_text: decoded_text_2.clone(),
-            path: match serde_json::to_string(&mock_crack_result_2) {
-                Ok(json) => vec![json],
-                Err(_) => vec![],
-            },
-
-            successful: true,
-            execution_time_ms: 100,
-            timestamp: String::new(),
-        };
-
-        let _row_result = insert_cache(&CacheEntry {
-            encoded_text: encoded_text_1.clone(),
-            decoded_text: decoded_text_1.clone(),
-            path: vec![mock_crack_result_1.clone()],
-            execution_time_ms: 100,
-        });
-
-        let _row_result = insert_cache(&CacheEntry {
-            encoded_text: encoded_text_2.clone(),
-            decoded_text: decoded_text_2.clone(),
-            path: vec![mock_crack_result_2.clone()],
-            execution_time_ms: 100,
-        });
+        let (_mock_crack_result_2, mut expected_cache_row_2, cache_entry_2) =
+            generate_cache_row(2, &encoded_text_2, &decoded_text_2);
+        let _row_result = insert_cache(&cache_entry_2);
 
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         let mut stmt = stmt_result.unwrap();
@@ -598,30 +598,9 @@ mod tests {
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
         let decoded_text = String::from("hello world");
 
-        let mock_decoder = Decoder::<MockDecoder>::new();
-        let mut mock_crack_result = CrackResult::new(&mock_decoder, encoded_text.clone());
-        mock_crack_result.success = true;
-        mock_crack_result.unencrypted_text = Some(vec![decoded_text.clone()]);
-
-        let mut expected_cache_row = CacheRow {
-            id: 1,
-            encoded_text: encoded_text.clone(),
-            decoded_text: decoded_text.clone(),
-            path: match serde_json::to_string(&mock_crack_result) {
-                Ok(json) => vec![json],
-                Err(_) => vec![],
-            },
-            successful: true,
-            execution_time_ms: 100,
-            timestamp: String::new(),
-        };
-
-        let _row_result = insert_cache(&CacheEntry {
-            encoded_text: encoded_text.clone(),
-            decoded_text: decoded_text.clone(),
-            path: vec![mock_crack_result.clone()],
-            execution_time_ms: 100,
-        });
+        let (_mock_crack_result, mut expected_cache_row, cache_entry) =
+            generate_cache_row(1, &encoded_text, &decoded_text);
+        let _row_result = insert_cache(&cache_entry);
 
         let cache_result = read_cache(&encoded_text);
         assert!(cache_result.is_ok());
@@ -641,57 +620,16 @@ mod tests {
         let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
         let decoded_text_1 = String::from("hello world");
 
+        let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
+            generate_cache_row(1, &encoded_text_1, &decoded_text_1);
+        let _row_result = insert_cache(&cache_entry_1);
+
         let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
         let decoded_text_2 = String::from("world hello");
 
-        let mock_decoder = Decoder::<MockDecoder>::new();
-        let mut mock_crack_result_1 = CrackResult::new(&mock_decoder, encoded_text_1.clone());
-        mock_crack_result_1.success = true;
-        mock_crack_result_1.unencrypted_text = Some(vec![decoded_text_1.clone()]);
-
-        let mut expected_cache_row_1 = CacheRow {
-            id: 1,
-            encoded_text: encoded_text_1.clone(),
-            decoded_text: decoded_text_1.clone(),
-            path: match serde_json::to_string(&mock_crack_result_1) {
-                Ok(json) => vec![json],
-                Err(_) => vec![],
-            },
-            successful: true,
-            execution_time_ms: 100,
-            timestamp: String::new(),
-        };
-
-        let mut mock_crack_result_2 = CrackResult::new(&mock_decoder, encoded_text_2.clone());
-        mock_crack_result_2.success = true;
-        mock_crack_result_2.unencrypted_text = Some(vec![decoded_text_2.clone()]);
-
-        let mut expected_cache_row_2 = CacheRow {
-            id: 2,
-            encoded_text: encoded_text_2.clone(),
-            decoded_text: decoded_text_2.clone(),
-            path: match serde_json::to_string(&mock_crack_result_2) {
-                Ok(json) => vec![json],
-                Err(_) => vec![],
-            },
-            successful: true,
-            execution_time_ms: 100,
-            timestamp: String::new(),
-        };
-
-        let _row_result = insert_cache(&CacheEntry {
-            encoded_text: encoded_text_1.clone(),
-            decoded_text: decoded_text_1.clone(),
-            path: vec![mock_crack_result_1.clone()],
-            execution_time_ms: 100,
-        });
-
-        let _row_result = insert_cache(&CacheEntry {
-            encoded_text: encoded_text_2.clone(),
-            decoded_text: decoded_text_2.clone(),
-            path: vec![mock_crack_result_2.clone()],
-            execution_time_ms: 100,
-        });
+        let (_mock_crack_result_2, mut expected_cache_row_2, cache_entry_2) =
+            generate_cache_row(2, &encoded_text_2, &decoded_text_2);
+        let _row_result = insert_cache(&cache_entry_2);
 
         let cache_result = read_cache(&encoded_text_1);
         assert!(cache_result.is_ok());
@@ -733,57 +671,17 @@ mod tests {
         let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
         let decoded_text_1 = String::from("hello world");
 
+        let (_mock_crack_result_1, _expected_cache_row_1, cache_entry_1) =
+            generate_cache_row(1, &encoded_text_1, &decoded_text_1);
+
         let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
         let _decoded_text_2 = String::from("world hello");
 
-        let mock_decoder = Decoder::<MockDecoder>::new();
-        let mut mock_crack_result_1 = CrackResult::new(&mock_decoder, encoded_text_1.clone());
-        mock_crack_result_1.success = true;
-        mock_crack_result_1.unencrypted_text = Some(vec![decoded_text_1.clone()]);
+        let (_mock_crack_result_2, _expected_cache_row_2, cache_entry_2) =
+            generate_cache_row(2, &encoded_text_1, &decoded_text_1);
 
-        let _expected_cache_row_1 = CacheRow {
-            id: 1,
-            encoded_text: encoded_text_1.clone(),
-            decoded_text: decoded_text_1.clone(),
-            path: match serde_json::to_string(&mock_crack_result_1) {
-                Ok(json) => vec![json],
-                Err(_) => vec![],
-            },
-            successful: true,
-            execution_time_ms: 100,
-            timestamp: String::new(),
-        };
-
-        let mock_crack_result_2 = CrackResult::new(&mock_decoder, encoded_text_1.clone());
-        mock_crack_result_1.success = true;
-        mock_crack_result_1.unencrypted_text = Some(vec![decoded_text_1.clone()]);
-
-        let _expected_cache_row_2 = CacheRow {
-            id: 2,
-            encoded_text: encoded_text_1.clone(),
-            decoded_text: decoded_text_1.clone(),
-            path: match serde_json::to_string(&mock_crack_result_2) {
-                Ok(json) => vec![json],
-                Err(_) => vec![],
-            },
-            successful: true,
-            execution_time_ms: 100,
-            timestamp: String::new(),
-        };
-
-        let _row_result = insert_cache(&CacheEntry {
-            encoded_text: encoded_text_1.clone(),
-            decoded_text: decoded_text_1.clone(),
-            path: vec![mock_crack_result_1.clone()],
-            execution_time_ms: 100,
-        });
-
-        let _row_result = insert_cache(&CacheEntry {
-            encoded_text: encoded_text_1.clone(),
-            decoded_text: decoded_text_1.clone(),
-            path: vec![mock_crack_result_2.clone()],
-            execution_time_ms: 100,
-        });
+        let _row_result = insert_cache(&cache_entry_1);
+        let _row_result = insert_cache(&cache_entry_2);
 
         let cache_result = read_cache(&encoded_text_2);
         assert!(cache_result.is_ok());
@@ -801,21 +699,8 @@ mod tests {
 
         let checker_used = Checker::<Athena>::new();
 
-        let check_result = CheckResult {
-            is_identified: false,
-            text: "".to_string(),
-            checker_name: checker_used.name,
-            checker_description: checker_used.description,
-            description: "".to_string(),
-            link: checker_used.link,
-        };
-
-        let mut expected_row = FailedDecodesRow {
-            id: 1,
-            plaintext: encoded_text.clone(),
-            checker: String::from(check_result.checker_name),
-            timestamp: String::new(),
-        };
+        let (check_result, mut expected_row) =
+            generate_failed_decodes_row(1, &encoded_text, checker_used);
 
         let result = insert_failed_decodes(&encoded_text, &check_result);
         assert!(result.is_ok());
@@ -846,42 +731,18 @@ mod tests {
 
         let encoded_text_1 = String::from("plaintext1");
         let checker_used_1 = Checker::<Athena>::new();
-        let check_result_1 = CheckResult {
-            is_identified: false,
-            text: "".to_string(),
-            checker_name: checker_used_1.name,
-            checker_description: checker_used_1.description,
-            description: "".to_string(),
-            link: checker_used_1.link,
-        };
 
-        let mut expected_row_1 = FailedDecodesRow {
-            id: 1,
-            plaintext: encoded_text_1.clone(),
-            checker: String::from(check_result_1.checker_name),
-            timestamp: String::new(),
-        };
+        let (check_result_1, mut expected_row_1) =
+            generate_failed_decodes_row(1, &encoded_text_1, checker_used_1);
 
         let result = insert_failed_decodes(&encoded_text_1, &check_result_1);
         assert!(result.is_ok());
 
         let encoded_text_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
-        let check_result_2 = CheckResult {
-            is_identified: false,
-            text: "".to_string(),
-            checker_name: checker_used_2.name,
-            checker_description: checker_used_2.description,
-            description: "".to_string(),
-            link: checker_used_2.link,
-        };
 
-        let mut expected_row_2 = FailedDecodesRow {
-            id: 2,
-            plaintext: encoded_text_2.clone(),
-            checker: String::from(check_result_2.checker_name),
-            timestamp: String::new(),
-        };
+        let (check_result_2, mut expected_row_2) =
+            generate_failed_decodes_row(2, &encoded_text_2, checker_used_2);
 
         let result = insert_failed_decodes(&encoded_text_2, &check_result_2);
         assert!(result.is_ok());
@@ -915,21 +776,9 @@ mod tests {
 
         let encoded_text = String::from("plaintext");
         let checker_used = Checker::<Athena>::new();
-        let check_result = CheckResult {
-            is_identified: false,
-            text: "".to_string(),
-            checker_name: checker_used.name,
-            checker_description: checker_used.description,
-            description: "".to_string(),
-            link: checker_used.link,
-        };
 
-        let mut expected_row = FailedDecodesRow {
-            id: 1,
-            plaintext: encoded_text.clone(),
-            checker: String::from(check_result.checker_name),
-            timestamp: String::new(),
-        };
+        let (check_result, mut expected_row) =
+            generate_failed_decodes_row(1, &encoded_text, checker_used);
 
         let _result = insert_failed_decodes(&encoded_text, &check_result);
 
@@ -950,41 +799,17 @@ mod tests {
 
         let encoded_text_1 = String::from("plaintext");
         let checker_used_1 = Checker::<Athena>::new();
-        let check_result_1 = CheckResult {
-            is_identified: false,
-            text: "".to_string(),
-            checker_name: checker_used_1.name,
-            checker_description: checker_used_1.description,
-            description: "".to_string(),
-            link: checker_used_1.link,
-        };
 
-        let mut expected_row_1 = FailedDecodesRow {
-            id: 1,
-            plaintext: encoded_text_1.clone(),
-            checker: String::from(check_result_1.checker_name),
-            timestamp: String::new(),
-        };
+        let (check_result_1, mut expected_row_1) =
+            generate_failed_decodes_row(1, &encoded_text_1, checker_used_1);
 
         let _result = insert_failed_decodes(&encoded_text_1, &check_result_1);
 
         let encoded_text_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
-        let check_result_2 = CheckResult {
-            is_identified: false,
-            text: "".to_string(),
-            checker_name: checker_used_2.name,
-            checker_description: checker_used_2.description,
-            description: "".to_string(),
-            link: checker_used_2.link,
-        };
 
-        let mut expected_row_2 = FailedDecodesRow {
-            id: 2,
-            plaintext: encoded_text_2.clone(),
-            checker: String::from(check_result_2.checker_name),
-            timestamp: String::new(),
-        };
+        let (check_result_2, mut expected_row_2) =
+            generate_failed_decodes_row(2, &encoded_text_2, checker_used_2);
 
         let _result = insert_failed_decodes(&encoded_text_2, &check_result_2);
 
@@ -1013,18 +838,32 @@ mod tests {
 
         let encoded_text = String::from("plaintext");
         let checker_used = Checker::<Athena>::new();
-        let check_result = CheckResult {
-            is_identified: false,
-            text: "".to_string(),
-            checker_name: checker_used.name,
-            checker_description: checker_used.description,
-            description: "".to_string(),
-            link: checker_used.link,
-        };
+
+        let (check_result, _expected_row) =
+            generate_failed_decodes_row(1, &encoded_text, checker_used);
 
         let _result = insert_failed_decodes(&encoded_text, &check_result);
         let row_result = read_failed_decodes(&String::from("not plaintext"));
         assert!(row_result.is_ok());
         assert!(row_result.unwrap().is_none());
     }
+
+    // #[test]
+    // #[serial]
+    // fn cache_delete_success() {
+    //     set_test_db_path();
+    //     let _conn = init_database().unwrap();
+    //
+    //     let encoded_text = String::from("aGVsbG8gd29ybGQK");
+    //     let decoded_text = String::from("hello world");
+    //
+    //     let (mut mock_crack_result, mut expected_cache_row, cache_entry) = generate_cache_row(1, &encoded_text, &decoded_text);
+    //
+    //     let _row_result = insert_cache(&cache_entry);
+    // }
+    //
+    // #[test]
+    // #[serial]
+    // fn cache_delete_missing() {
+    // }
 }
