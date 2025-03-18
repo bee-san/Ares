@@ -288,6 +288,19 @@ pub fn read_failed_decodes(
     }
 }
 
+/// Removes the failed_decodes row corresponding to the given plaintext
+///
+/// Returns number of successfully deleted rows on success
+/// Returns sqlite::Error on error
+pub fn delete_failed_decodes(plaintext: &String) -> Result<usize, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let conn_result = conn.execute(
+        "DELETE FROM failed_decodes WHERE plaintext = $1",
+        (plaintext.clone(),),
+    );
+    conn_result
+}
+
 #[cfg(test)]
 mod tests {
     use super::super::super::decoders::interface::{Crack, Decoder};
@@ -814,14 +827,14 @@ mod tests {
         set_test_db_path();
         let conn = init_database().unwrap();
 
-        let encoded_text = String::from("plaintext");
+        let plaintext = String::from("plaintext");
 
         let checker_used = Checker::<Athena>::new();
 
         let (check_result, mut expected_row) =
-            generate_failed_decodes_row(1, &encoded_text, checker_used);
+            generate_failed_decodes_row(1, &plaintext, checker_used);
 
-        let result = insert_failed_decodes(&encoded_text, &check_result);
+        let result = insert_failed_decodes(&plaintext, &check_result);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1);
 
@@ -849,23 +862,23 @@ mod tests {
         set_test_db_path();
         let conn = init_database().unwrap();
 
-        let encoded_text_1 = String::from("plaintext1");
+        let plaintext_1 = String::from("plaintext1");
         let checker_used_1 = Checker::<Athena>::new();
 
         let (check_result_1, mut expected_row_1) =
-            generate_failed_decodes_row(1, &encoded_text_1, checker_used_1);
+            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
 
-        let result = insert_failed_decodes(&encoded_text_1, &check_result_1);
+        let result = insert_failed_decodes(&plaintext_1, &check_result_1);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1);
 
-        let encoded_text_2 = String::from("plaintext2");
+        let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
 
         let (check_result_2, mut expected_row_2) =
-            generate_failed_decodes_row(2, &encoded_text_2, checker_used_2);
+            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
 
-        let result = insert_failed_decodes(&encoded_text_2, &check_result_2);
+        let result = insert_failed_decodes(&plaintext_2, &check_result_2);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1);
 
@@ -896,15 +909,15 @@ mod tests {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
-        let encoded_text = String::from("plaintext");
+        let plaintext = String::from("plaintext");
         let checker_used = Checker::<Athena>::new();
 
         let (check_result, mut expected_row) =
-            generate_failed_decodes_row(1, &encoded_text, checker_used);
+            generate_failed_decodes_row(1, &plaintext, checker_used);
 
-        let _result = insert_failed_decodes(&encoded_text, &check_result);
+        let _result = insert_failed_decodes(&plaintext, &check_result);
 
-        let row_result = read_failed_decodes(&encoded_text);
+        let row_result = read_failed_decodes(&plaintext);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -919,23 +932,23 @@ mod tests {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
-        let encoded_text_1 = String::from("plaintext");
+        let plaintext_1 = String::from("plaintext");
         let checker_used_1 = Checker::<Athena>::new();
 
         let (check_result_1, mut expected_row_1) =
-            generate_failed_decodes_row(1, &encoded_text_1, checker_used_1);
+            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
 
-        let _result = insert_failed_decodes(&encoded_text_1, &check_result_1);
+        let _result = insert_failed_decodes(&plaintext_1, &check_result_1);
 
-        let encoded_text_2 = String::from("plaintext2");
+        let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
 
         let (check_result_2, mut expected_row_2) =
-            generate_failed_decodes_row(2, &encoded_text_2, checker_used_2);
+            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
 
-        let _result = insert_failed_decodes(&encoded_text_2, &check_result_2);
+        let _result = insert_failed_decodes(&plaintext_2, &check_result_2);
 
-        let row_result = read_failed_decodes(&encoded_text_1);
+        let row_result = read_failed_decodes(&plaintext_1);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -943,7 +956,7 @@ mod tests {
         expected_row_1.timestamp = row.timestamp.clone();
         assert_eq!(row, expected_row_1);
 
-        let row_result = read_failed_decodes(&encoded_text_2);
+        let row_result = read_failed_decodes(&plaintext_2);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -958,15 +971,113 @@ mod tests {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
-        let encoded_text = String::from("plaintext");
+        let plaintext = String::from("plaintext");
         let checker_used = Checker::<Athena>::new();
 
         let (check_result, _expected_row) =
-            generate_failed_decodes_row(1, &encoded_text, checker_used);
+            generate_failed_decodes_row(1, &plaintext, checker_used);
 
-        let _result = insert_failed_decodes(&encoded_text, &check_result);
+        let _result = insert_failed_decodes(&plaintext, &check_result);
         let row_result = read_failed_decodes(&String::from("not plaintext"));
         assert!(row_result.is_ok());
         assert!(row_result.unwrap().is_none());
+    }
+
+    #[test]
+    #[serial]
+    fn failed_decodes_delete_success_one_entry() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let plaintext = String::from("plaintext");
+        let checker_used = Checker::<Athena>::new();
+
+        let (check_result, _expected_row) =
+            generate_failed_decodes_row(1, &plaintext, checker_used);
+        let _result = insert_failed_decodes(&plaintext, &check_result);
+        let _row_result = read_failed_decodes(&String::from("not plaintext"));
+        let delete_result = delete_failed_decodes(&plaintext);
+        assert!(delete_result.is_ok());
+        assert_eq!(delete_result.unwrap(), 1);
+        let read_result = read_failed_decodes(&plaintext);
+        assert!(read_result.is_ok());
+        assert!(read_result.unwrap().is_none());
+    }
+
+    #[test]
+    #[serial]
+    fn failed_decodes_delete_success_two_entries() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let plaintext_1 = String::from("plaintext");
+        let checker_used_1 = Checker::<Athena>::new();
+        let (check_result_1, mut expected_row_1) =
+            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
+        let _result = insert_failed_decodes(&plaintext_1, &check_result_1);
+
+        let plaintext_2 = String::from("plaintext2");
+        let checker_used_2 = Checker::<EnglishChecker>::new();
+        let (check_result_2, mut expected_row_2) =
+            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
+        let _result = insert_failed_decodes(&plaintext_2, &check_result_2);
+
+        let read_result = read_failed_decodes(&plaintext_1).unwrap();
+        assert!(read_result.is_some());
+        let row: FailedDecodesRow = read_result.unwrap();
+        expected_row_1.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row_1);
+
+        let read_result = read_failed_decodes(&plaintext_2).unwrap();
+        assert!(read_result.is_some());
+        let row: FailedDecodesRow = read_result.unwrap();
+        expected_row_2.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row_2);
+
+        let delete_result = delete_failed_decodes(&plaintext_1);
+        assert!(delete_result.is_ok());
+        assert_eq!(delete_result.unwrap(), 1);
+        let read_result = read_failed_decodes(&plaintext_1);
+        assert!(read_result.is_ok());
+        assert!(read_result.unwrap().is_none());
+
+        let read_result = read_failed_decodes(&plaintext_2).unwrap();
+        assert!(read_result.is_some());
+        let row: FailedDecodesRow = read_result.unwrap();
+        assert_eq!(row, expected_row_2);
+    }
+
+    #[test]
+    #[serial]
+    fn failed_decodes_delete_missing() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let plaintext = String::from("plaintext");
+        let delete_result = delete_failed_decodes(&plaintext);
+        assert!(delete_result.is_ok());
+        assert_eq!(delete_result.unwrap(), 0);
+    }
+
+    #[test]
+    #[serial]
+    fn failed_decodes_delete_missing_with_entries() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let plaintext_1 = String::from("plaintext");
+        let checker_used_1 = Checker::<Athena>::new();
+        let (check_result_1, mut expected_row_1) =
+            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
+        let row_result = insert_failed_decodes(&plaintext_1, &check_result_1);
+        assert!(row_result.is_ok());
+        assert_eq!(row_result.unwrap(), 1);
+
+        let plaintext_2 = String::from("plaintext2");
+
+        let delete_result = delete_failed_decodes(&plaintext_2);
+        
+        assert!(delete_result.is_ok());
+        assert_eq!(delete_result.unwrap(), 0);
     }
 }
