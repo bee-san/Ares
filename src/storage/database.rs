@@ -501,7 +501,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn cache_record_empty_success() {
+    fn cache_insert_empty_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
 
@@ -531,7 +531,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn cache_record_entry_success() {
+    fn cache_insert_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
 
@@ -570,7 +570,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn cache_record_2_entries_success() {
+    fn cache_insert_2_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
 
@@ -621,7 +621,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn cache_record_read_hit() {
+    fn cache_read_hit() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
@@ -643,7 +643,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn cache_multiple_record_read_hit() {
+    fn cache_read_2_hit() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
@@ -680,7 +680,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn cache_empty_read_miss() {
+    fn cache_read_empty_miss() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
@@ -694,7 +694,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn cache_multiple_record_read_miss() {
+    fn cache_read_2_miss() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
@@ -823,7 +823,29 @@ mod tests {
 
     #[test]
     #[serial]
-    fn insert_failed_decodes_success() {
+    fn failed_decodes_insert_empty_success() {
+        set_test_db_path();
+        let conn = init_database().unwrap();
+
+        let stmt_result = conn.prepare("SELECT * FROM failed_decodes;");
+        assert!(stmt_result.is_ok());
+        let mut stmt = stmt_result.unwrap();
+        let query_result = stmt.query_map([], |row| {
+            Ok(FailedDecodesRow {
+                id: row.get_unwrap(0),
+                plaintext: row.get_unwrap(1),
+                checker: row.get_unwrap(2),
+                timestamp: row.get_unwrap(3),
+            })
+        });
+        assert!(query_result.is_ok());
+        let empty_rows = query_result.unwrap();
+        assert_eq!(empty_rows.count(), 0);
+    }
+
+    #[test]
+    #[serial]
+    fn failed_decodes_insert_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
 
@@ -858,7 +880,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn insert_two_failed_decodes_success() {
+    fn failed_decodes_insert_2_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
 
@@ -967,7 +989,7 @@ mod tests {
 
     #[test]
     #[serial]
-    fn failed_decodes_read_miss() {
+    fn failed_decodes_read_empty_miss() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
@@ -978,6 +1000,31 @@ mod tests {
             generate_failed_decodes_row(1, &plaintext, checker_used);
 
         let _result = insert_failed_decodes(&plaintext, &check_result);
+        let row_result = read_failed_decodes(&String::from("not plaintext"));
+        assert!(row_result.is_ok());
+        assert!(row_result.unwrap().is_none());
+    }
+
+    #[test]
+    #[serial]
+    fn failed_decodes_read_2_miss() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let plaintext_1 = String::from("plaintext");
+        let checker_used_1 = Checker::<Athena>::new();
+
+        let (check_result_1, _expected_row_1) =
+            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
+        let _result = insert_failed_decodes(&plaintext_1, &check_result_1);
+
+        let plaintext_2 = String::from("plaintext2");
+        let checker_used_2 = Checker::<EnglishChecker>::new();
+
+        let (check_result_2, _expected_row_2) =
+            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
+        let _result = insert_failed_decodes(&plaintext_2, &check_result_2);
+
         let row_result = read_failed_decodes(&String::from("not plaintext"));
         assert!(row_result.is_ok());
         assert!(row_result.unwrap().is_none());
