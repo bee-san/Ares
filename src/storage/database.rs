@@ -1076,7 +1076,7 @@ mod tests {
         let plaintext_2 = String::from("plaintext2");
 
         let delete_result = delete_failed_decodes(&plaintext_2);
-        
+
         assert!(delete_result.is_ok());
         assert_eq!(delete_result.unwrap(), 0);
     }
