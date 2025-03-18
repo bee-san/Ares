@@ -1067,7 +1067,7 @@ mod tests {
 
         let plaintext_1 = String::from("plaintext");
         let checker_used_1 = Checker::<Athena>::new();
-        let (check_result_1, mut expected_row_1) =
+        let (check_result_1, _expected_row_1) =
             generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
         let row_result = insert_failed_decodes(&plaintext_1, &check_result_1);
         assert!(row_result.is_ok());
