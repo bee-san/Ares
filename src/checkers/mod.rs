@@ -140,6 +140,6 @@ mod tests {
     #[test]
     fn test_check_goes_to_dictionary() {
         let athena = CheckerTypes::CheckAthena(Checker::<Athena>::new());
-        assert!(athena.check("and").is_identified);
+        assert!(athena.check("exuberant").is_identified);
     }
 }
