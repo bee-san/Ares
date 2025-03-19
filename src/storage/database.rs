@@ -296,7 +296,7 @@ pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
 /// Returns the number of successfully inserted rows on success
 /// Returns rusqlite::Error on error
 pub fn insert_failed_decodes(
-    text: &String,
+    plaintext: &String,
     check_result: &CheckResult,
 ) -> Result<usize, rusqlite::Error> {
     let conn = get_db_connection()?;
@@ -306,7 +306,11 @@ pub fn insert_failed_decodes(
             checker,
             timestamp)
         VALUES ($1, $2, $3)",
-        (text.clone(), check_result.checker_name, get_timestamp()),
+        (
+            plaintext.clone(),
+            check_result.checker_name,
+            get_timestamp(),
+        ),
     );
     conn_result
 }
@@ -334,6 +338,29 @@ pub fn read_failed_decodes(
         Some(cache_row) => Ok(Some(cache_row?)),
         None => Ok(None),
     }
+}
+
+/// Updates a failed_decodes row for a given plaintext
+///
+/// Returns the number of update rows on success
+/// Returns rusqlite::Error on error
+pub fn update_failed_decodes(
+    plaintext: &String,
+    check_result: &CheckResult,
+) -> Result<usize, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let conn_result = conn.execute(
+        "UPDATE failed_decodes SET 
+            checker = $1,
+            timestamp = $2
+            WHERE plaintext = $3;",
+        (
+            check_result.checker_name,
+            get_timestamp(),
+            plaintext.clone(),
+        ),
+    );
+    conn_result
 }
 
 /// Removes the failed_decodes row corresponding to the given plaintext
@@ -871,6 +898,141 @@ mod tests {
 
     #[test]
     #[serial]
+    fn cache_update_1_change_1_entry_success() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text = String::from("hello world");
+        let decoded_text_err = String::from("hello world oops");
+
+        let (_mock_crack_result, mut expected_cache_row, cache_entry) =
+            generate_cache_row(1, &encoded_text, &decoded_text_err);
+        let _row_result = insert_cache(&cache_entry);
+
+        let (_mock_crack_result_new, mut expected_cache_row_new, cache_entry_new) =
+            generate_cache_row(1, &encoded_text, &decoded_text);
+        let update_result = update_cache(&cache_entry_new);
+        assert!(update_result.is_ok());
+        assert_eq!(update_result.unwrap(), 1);
+
+        let row_result = read_cache(&encoded_text);
+        assert!(row_result.is_ok());
+        let row_result = row_result.unwrap();
+        assert!(row_result.is_some());
+        let row = row_result.unwrap();
+        expected_cache_row_new.timestamp = row.timestamp.clone();
+        expected_cache_row.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_cache_row_new);
+        assert_ne!(row, expected_cache_row);
+    }
+
+    #[test]
+    #[serial]
+    fn cache_update_1_change_2_entry_success() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text_1 = String::from("hello world");
+        let decoded_text_err = String::from("hello world oops");
+
+        let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
+            generate_cache_row(1, &encoded_text_1, &decoded_text_err);
+        let _row_result = insert_cache(&cache_entry_1);
+
+        let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
+        let decoded_text_2 = String::from("world hello");
+
+        let (_mock_crack_result_2, _expected_cache_row_2, cache_entry_2) =
+            generate_cache_row(2, &encoded_text_2, &decoded_text_2);
+        let _row_result = insert_cache(&cache_entry_2);
+
+        let (_mock_crack_result_new, mut expected_cache_row_new, cache_entry_new) =
+            generate_cache_row(1, &encoded_text_1, &decoded_text_1);
+        let update_result = update_cache(&cache_entry_new);
+        assert!(update_result.is_ok());
+        assert_eq!(update_result.unwrap(), 1);
+
+        let row_result = read_cache(&encoded_text_1);
+        assert!(row_result.is_ok());
+        let row_result = row_result.unwrap();
+        assert!(row_result.is_some());
+        let row = row_result.unwrap();
+        expected_cache_row_new.timestamp = row.timestamp.clone();
+        expected_cache_row_1.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_cache_row_new);
+        assert_ne!(row, expected_cache_row_1);
+    }
+
+    #[test]
+    #[serial]
+    fn cache_update_1_change_2_entry_no_match() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text_1 = String::from("hello world");
+
+        let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
+            generate_cache_row(1, &encoded_text_1, &decoded_text_1);
+        let _row_result = insert_cache(&cache_entry_1);
+
+        let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
+        let decoded_text_2 = String::from("world hello");
+
+        let (_mock_crack_result_2, mut expected_cache_row_2, cache_entry_2) =
+            generate_cache_row(2, &encoded_text_2, &decoded_text_2);
+        let _row_result = insert_cache(&cache_entry_2);
+
+        let encoded_text_new = String::from("c29tZSBuZXcgdGV4dAo=");
+        let decoded_text_new = String::from("some new text");
+
+        let (_mock_crack_result_new, mut expected_cache_row_new, cache_entry_new) =
+            generate_cache_row(1, &encoded_text_new, &decoded_text_new);
+
+        let update_result = update_cache(&cache_entry_new);
+        assert!(update_result.is_ok());
+        assert_eq!(update_result.unwrap(), 0);
+
+        let row_result = read_cache(&encoded_text_1);
+        assert!(row_result.is_ok());
+        let row_result = row_result.unwrap();
+        assert!(row_result.is_some());
+        let row = row_result.unwrap();
+        expected_cache_row_new.timestamp = row.timestamp.clone();
+        expected_cache_row_1.timestamp = row.timestamp.clone();
+        assert_ne!(row, expected_cache_row_new);
+        assert_eq!(row, expected_cache_row_1);
+
+        let row_result = read_cache(&encoded_text_2);
+        assert!(row_result.is_ok());
+        let row_result = row_result.unwrap();
+        assert!(row_result.is_some());
+        let row = row_result.unwrap();
+        expected_cache_row_2.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_cache_row_2);
+    }
+
+    #[test]
+    #[serial]
+    fn cache_update_empty() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let encoded_text = String::from("aGVsbG8gd29ybGQK");
+        let decoded_text = String::from("hello world");
+
+        let (_mock_crack_result, mut _expected_cache_row, cache_entry) =
+            generate_cache_row(1, &encoded_text, &decoded_text);
+
+        let update_result = update_cache(&cache_entry);
+        assert!(update_result.is_ok());
+        assert_eq!(update_result.unwrap(), 0);
+    }
+
+    #[test]
+    #[serial]
     fn failed_decodes_insert_empty_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -1178,135 +1340,141 @@ mod tests {
 
     #[test]
     #[serial]
-    fn cache_update_1_change_1_entry_success() {
+    fn failed_decodes_update_1_change_1_entry_success() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
-        let encoded_text = String::from("aGVsbG8gd29ybGQK");
-        let decoded_text = String::from("hello world");
-        let decoded_text_err = String::from("hello world oops");
+        let plaintext = String::from("plaintext");
+        let checker_used = Checker::<Athena>::new();
+        let (check_result, mut expected_row) =
+            generate_failed_decodes_row(1, &plaintext, checker_used);
+        let _row_result = insert_failed_decodes(&plaintext, &check_result);
 
-        let (_mock_crack_result, mut expected_cache_row, cache_entry) =
-            generate_cache_row(1, &encoded_text, &decoded_text_err);
-        let _row_result = insert_cache(&cache_entry);
-
-        let (_mock_crack_result_new, mut expected_cache_row_new, cache_entry_new) =
-            generate_cache_row(1, &encoded_text, &decoded_text);
-        let update_result = update_cache(&cache_entry_new);
+        let checker_new = Checker::<EnglishChecker>::new();
+        let (check_result_new, mut expected_row_new) =
+            generate_failed_decodes_row(1, &plaintext, checker_new);
+        let update_result = update_failed_decodes(&plaintext, &check_result_new);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 1);
 
-        let row_result = read_cache(&encoded_text);
+        let row_result = read_failed_decodes(&plaintext);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_cache_row_new.timestamp = row.timestamp.clone();
-        expected_cache_row.timestamp = row.timestamp.clone();
-        assert_eq!(row, expected_cache_row_new);
-        assert_ne!(row, expected_cache_row);
+        expected_row.timestamp = row.timestamp.clone();
+        expected_row_new.timestamp = row.timestamp.clone();
+        assert_ne!(row, expected_row);
+        assert_eq!(row, expected_row_new);
     }
 
     #[test]
     #[serial]
-    fn cache_update_1_change_2_entry_success() {
+    fn failed_decodes_update_1_change_2_entry_success() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
-        let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
-        let decoded_text_1 = String::from("hello world");
-        let decoded_text_err = String::from("hello world oops");
+        let plaintext_1 = String::from("plaintext1");
+        let checker_used_1 = Checker::<Athena>::new();
+        let (check_result_1, mut expected_row_1) =
+            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
+        let _row_result = insert_failed_decodes(&plaintext_1, &check_result_1);
 
-        let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
-            generate_cache_row(1, &encoded_text_1, &decoded_text_err);
-        let _row_result = insert_cache(&cache_entry_1);
+        let plaintext_2 = String::from("plaintext2");
+        let checker_used_2 = Checker::<EnglishChecker>::new();
+        let (check_result_2, mut expected_row_2) =
+            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
+        let _row_result = insert_failed_decodes(&plaintext_2, &check_result_2);
 
-        let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
-        let decoded_text_2 = String::from("world hello");
+        let checker_new = Checker::<EnglishChecker>::new();
+        let (check_result_new, mut expected_row_new) =
+            generate_failed_decodes_row(1, &plaintext_1, checker_new);
 
-        let (_mock_crack_result_2, _expected_cache_row_2, cache_entry_2) =
-            generate_cache_row(2, &encoded_text_2, &decoded_text_2);
-        let _row_result = insert_cache(&cache_entry_2);
-
-        let (_mock_crack_result_new, mut expected_cache_row_new, cache_entry_new) =
-            generate_cache_row(1, &encoded_text_1, &decoded_text_1);
-        let update_result = update_cache(&cache_entry_new);
+        let update_result = update_failed_decodes(&plaintext_1, &check_result_new);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 1);
 
-        let row_result = read_cache(&encoded_text_1);
+        let row_result = read_failed_decodes(&plaintext_1);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_cache_row_new.timestamp = row.timestamp.clone();
-        expected_cache_row_1.timestamp = row.timestamp.clone();
-        assert_eq!(row, expected_cache_row_new);
-        assert_ne!(row, expected_cache_row_1);
+        expected_row_1.timestamp = row.timestamp.clone();
+        expected_row_new.timestamp = row.timestamp.clone();
+        assert_ne!(row, expected_row_1);
+        assert_eq!(row, expected_row_new);
+
+        let row_result = read_failed_decodes(&plaintext_2);
+        assert!(row_result.is_ok());
+        let row_result = row_result.unwrap();
+        assert!(row_result.is_some());
+        let row = row_result.unwrap();
+        expected_row_2.timestamp = row.timestamp.clone();
+        expected_row_new.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row_2);
+        assert_ne!(row, expected_row_new);
     }
 
     #[test]
     #[serial]
-    fn cache_update_1_change_2_entry_no_match() {
+    fn failed_decodes_update_1_change_2_entry_no_match() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
-        let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
-        let decoded_text_1 = String::from("hello world");
+        let plaintext_1 = String::from("plaintext1");
+        let checker_used_1 = Checker::<Athena>::new();
+        let (check_result_1, mut expected_row_1) =
+            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
+        let _row_result = insert_failed_decodes(&plaintext_1, &check_result_1);
 
-        let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
-            generate_cache_row(1, &encoded_text_1, &decoded_text_1);
-        let _row_result = insert_cache(&cache_entry_1);
+        let plaintext_2 = String::from("plaintext2");
+        let checker_used_2 = Checker::<EnglishChecker>::new();
+        let (check_result_2, mut expected_row_2) =
+            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
+        let _row_result = insert_failed_decodes(&plaintext_2, &check_result_2);
 
-        let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
-        let decoded_text_2 = String::from("world hello");
+        let plaintext_new = String::from("new plaintext");
 
-        let (_mock_crack_result_2, mut expected_cache_row_2, cache_entry_2) =
-            generate_cache_row(2, &encoded_text_2, &decoded_text_2);
-        let _row_result = insert_cache(&cache_entry_2);
+        let checker_new = Checker::<EnglishChecker>::new();
+        let (check_result_new, mut expected_row_new) =
+            generate_failed_decodes_row(1, &plaintext_new, checker_new);
 
-        let encoded_text_new = String::from("c29tZSBuZXcgdGV4dAo=");
-        let decoded_text_new = String::from("some new text");
-
-        let (_mock_crack_result_new, mut expected_cache_row_new, cache_entry_new) =
-            generate_cache_row(1, &encoded_text_new, &decoded_text_new);
-
-        let update_result = update_cache(&cache_entry_new);
+        let update_result = update_failed_decodes(&plaintext_new, &check_result_new);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 0);
 
-        let row_result = read_cache(&encoded_text_1);
+        let row_result = read_failed_decodes(&plaintext_1);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_cache_row_new.timestamp = row.timestamp.clone();
-        expected_cache_row_1.timestamp = row.timestamp.clone();
-        assert_ne!(row, expected_cache_row_new);
-        assert_eq!(row, expected_cache_row_1);
+        expected_row_1.timestamp = row.timestamp.clone();
+        expected_row_new.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row_1);
+        assert_ne!(row, expected_row_new);
 
-        let row_result = read_cache(&encoded_text_2);
+        let row_result = read_failed_decodes(&plaintext_2);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_cache_row_2.timestamp = row.timestamp.clone();
-        assert_eq!(row, expected_cache_row_2);
+        expected_row_2.timestamp = row.timestamp.clone();
+        expected_row_new.timestamp = row.timestamp.clone();
+        assert_eq!(row, expected_row_2);
+        assert_ne!(row, expected_row_new);
     }
 
     #[test]
     #[serial]
-    fn cache_update_empty() {
+    fn failed_decodes_update_empty() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
-        let encoded_text = String::from("aGVsbG8gd29ybGQK");
-        let decoded_text = String::from("hello world");
-
-        let (_mock_crack_result, mut _expected_cache_row, cache_entry) =
-            generate_cache_row(1, &encoded_text, &decoded_text);
-
-        let update_result = update_cache(&cache_entry);
+        let plaintext = String::from("plaintext");
+        let checker_new = Checker::<EnglishChecker>::new();
+        let (check_result_new, _expected_row_new) =
+            generate_failed_decodes_row(1, &plaintext, checker_new);
+        let update_result = update_failed_decodes(&plaintext, &check_result_new);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 0);
     }
