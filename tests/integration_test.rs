@@ -1,6 +1,14 @@
+use ares::checkers::checker_result::CheckResult;
+use ares::checkers::checker_type::{Check, Checker};
+use ares::checkers::english::EnglishChecker;
 use ares::cli::read_and_parse_file;
 use ares::config::Config;
+use ares::decoders::base64_decoder::Base64Decoder;
+use ares::decoders::crack_results::CrackResult;
+use ares::decoders::interface::{Crack, Decoder};
 use ares::perform_cracking;
+use ares::storage::database;
+use serial_test::serial;
 
 // TODO Below fails because Library API is broken.
 // https://github.com/bee-san/Ares/issues/48
@@ -47,4 +55,78 @@ fn test_program_parses_files_with_new_line_and_cracks() {
     let result = perform_cracking(&to_crack, config);
     assert_eq!(true, true);
     assert!(result.unwrap().text[0] == "This is a test!");
+}
+
+/// Gets the test directory path
+fn get_test_dir_path() -> std::path::PathBuf {
+    let mut path = dirs::home_dir().expect("Could not find home directory");
+    path.push("Ares");
+    path.push("Test");
+    path
+}
+
+/// Sets the global database path
+fn set_test_db_path() {
+    let mut path = get_test_dir_path();
+    std::fs::create_dir_all(&path).expect("Could not create Ares directory");
+    path.push("database.sqlite");
+    let _ = database::DB_PATH.set(Some(path));
+}
+
+struct TestDatabase {
+    pub path: std::path::PathBuf,
+}
+
+impl Default for TestDatabase {
+    fn default() -> Self {
+        TestDatabase {
+            path: get_test_dir_path(),
+        }
+    }
+}
+
+impl Drop for TestDatabase {
+    fn drop(&mut self) {
+        let mut db_file_path = self.path.as_path().to_path_buf();
+        db_file_path.push("database.sqlite");
+        let _ = std::fs::remove_file(&db_file_path);
+        let _ = std::fs::remove_dir(&self.path);
+    }
+}
+
+#[test]
+#[serial]
+fn test_cache_simple_base64() {
+    let _test_db = TestDatabase::default();
+    set_test_db_path();
+
+    let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
+    let decoded_text_1 = String::from("hello world\n");
+
+    let config = Config::default();
+    let result = perform_cracking(encoded_text_1.as_str(), config);
+    assert!(result.is_some());
+    assert_eq!(result.unwrap().path.last().unwrap().success, true);
+
+    let row_result = database::read_cache(&encoded_text_1);
+    assert!(row_result.is_ok());
+    let row_result = row_result.unwrap();
+    assert!(row_result.is_some());
+
+    let row: database::CacheRow = row_result.unwrap();
+
+    let base64_decoder = Decoder::<Base64Decoder>::new();
+    let mut expected_crack_result: CrackResult =
+        CrackResult::new(&base64_decoder, encoded_text_1.clone());
+    expected_crack_result.unencrypted_text = Some(vec![decoded_text_1.clone()]);
+    let expected_checker = Checker::<EnglishChecker>::new();
+    let mut expected_check_result = CheckResult::new(&expected_checker);
+    expected_check_result.is_identified = true;
+    expected_crack_result.update_checker(&expected_check_result);
+    let expected_path = vec![expected_crack_result.get_json().unwrap()];
+
+    assert_eq!(row.encoded_text, encoded_text_1);
+    assert_eq!(row.decoded_text, decoded_text_1);
+    assert_eq!(row.path, expected_path);
+    assert_eq!(row.successful, true);
 }

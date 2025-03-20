@@ -53,6 +53,7 @@ use checkers::{
     checker_type::{Check, Checker},
 };
 use log::debug;
+use std::time::SystemTime;
 
 use crate::{config::Config, decoders::interface::Decoder};
 
@@ -93,7 +94,25 @@ use self::decoders::crack_results::CrackResult;
 /// assert!(result.is_none());
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
+    let start_time = SystemTime::now();
     config::set_global_config(config);
+
+    /* Initializing database */
+    let db_result = storage::database::setup_database();
+    match db_result {
+        Ok(_) => {
+            cli_pretty_printing::success(
+                "DEBUG: lib.rs - SQLite database successfully initialized.",
+            );
+        }
+        Err(e) => {
+            cli_pretty_printing::warning(&format!(
+                "DEBUG: lib.rs - SQLite database failed to initialize. Encountered error: {}",
+                e
+            ));
+        }
+    };
+
     let text = text.to_string();
     let initial_check_for_plaintext = check_if_input_text_is_plaintext(&text);
     if initial_check_for_plaintext.is_identified {
@@ -107,8 +126,19 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
         crack_result.checker_name = initial_check_for_plaintext.checker_name;
 
         let output = DecoderResult {
-            text: vec![text],
+            text: vec![text.clone()],
             path: vec![crack_result],
+        };
+
+        let cache_result = success_result_to_cache(&text, start_time, &output);
+        match cache_result {
+            Ok(_) => (),
+            Err(e) => {
+                cli_pretty_printing::warning(&format!(
+                    "DEBUG: lib.rs - Error inserting decoder result into cache table: {}",
+                    e
+                ));
+            }
         };
 
         return Some(output);
@@ -123,7 +153,7 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     ));
     // Perform the search algorithm
     // It will either return a failure or success.
-    let result = searchers::search_for_plaintext(text);
+    let result = searchers::search_for_plaintext(text.clone());
     cli_pretty_printing::success(&format!(
         "DEBUG: lib.rs - Result from search_for_plaintext: {:?}",
         result.is_some()
@@ -134,6 +164,23 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
             res.path.len()
         ));
     }
+
+    match &result {
+        Some(output) => {
+            let cache_result = success_result_to_cache(&text, start_time, &output);
+            match cache_result {
+                Ok(_) => (),
+                Err(e) => {
+                    cli_pretty_printing::warning(&format!(
+                        "DEBUG: lib.rs - Error inserting decoder result into cache table: {}",
+                        e
+                    ));
+                }
+            };
+        }
+        None => {}
+    }
+
     result
 }
 
@@ -142,6 +189,37 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
 fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
     let athena_checker = Checker::<Athena>::new();
     athena_checker.check(text)
+}
+
+/// Stores a successful DecoderResult into the cache table
+fn success_result_to_cache(
+    text: &String,
+    start_time: SystemTime,
+    result: &DecoderResult,
+) -> Result<usize, rusqlite::Error> {
+    let stop_time = SystemTime::now();
+    let execution_time_ms: i64;
+    match stop_time.duration_since(start_time) {
+        Ok(duration) => {
+            execution_time_ms = duration.as_millis().try_into().unwrap_or_else(|_| -2);
+        }
+        Err(_) => {
+            cli_pretty_printing::warning(
+                "Stop time is less than start time. Clock may have gone backwards.",
+            );
+            execution_time_ms = -1;
+        }
+    }
+    let cache_entry = storage::database::CacheEntry {
+        encoded_text: String::from(text),
+        decoded_text: match result.text.last() {
+            Some(d_text) => String::from(d_text),
+            None => String::new(),
+        },
+        path: result.path.clone(),
+        execution_time_ms,
+    };
+    storage::database::insert_cache(&cache_entry)
 }
 
 /// DecoderResult is the result of decoders

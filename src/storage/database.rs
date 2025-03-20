@@ -6,9 +6,11 @@ use super::super::CrackResult;
 ///! relations and collecting statistics on the performance of Ares
 ///! search algorithms.
 use chrono::DateTime;
+use serial_test::serial;
 use std::sync::OnceLock;
 
-static DB_PATH: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
+/// Holds the global path to the database
+pub static DB_PATH: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
 
 #[derive(Debug)]
 /// Struct representing a row in the failed_decodes table
@@ -106,8 +108,12 @@ fn get_db_connection() -> Result<rusqlite::Connection, rusqlite::Error> {
 
 /// Public wrapper for setting up database
 pub fn setup_database() -> Result<(), rusqlite::Error> {
-    let path = get_database_path();
-    DB_PATH.set(Some(path)); // TODO: Handle errors from this Result
+    match DB_PATH.get() {
+        Some(_path) => (),
+        None => {
+            DB_PATH.set(Some(get_database_path())); // TODO: Handle errors from this Result
+        }
+    };
     init_database()?;
     Ok(())
 }
@@ -377,6 +383,7 @@ pub fn delete_failed_decodes(plaintext: &String) -> Result<usize, rusqlite::Erro
 }
 
 #[cfg(test)]
+#[serial]
 mod tests {
     use super::super::super::decoders::interface::{Crack, Decoder};
     use super::CrackResult;
@@ -388,8 +395,6 @@ mod tests {
         english::EnglishChecker,
         CheckerTypes,
     };
-    use serial_test::serial;
-    use uuid::Uuid;
 
     struct MockDecoder;
     impl Crack for Decoder<MockDecoder> {
@@ -398,7 +403,7 @@ mod tests {
                 name: "MockEncoding",
                 description: "A mocked decoder for testing",
                 link: "https://en.wikipedia.org/wiki/Mock_object",
-                tags: vec!["mock", "url", "decoder", "base"],
+                tags: vec!["mock", "decoder", "base"],
                 popularity: 1.0,
                 phantom: std::marker::PhantomData,
             }
@@ -422,10 +427,7 @@ mod tests {
     }
 
     fn set_test_db_path() {
-        let test_id = Uuid::new_v4();
-        let path = std::path::PathBuf::from(
-            String::from("file::") + test_id.to_string().as_str() + "db?mode=memory&cache=shared",
-        );
+        let path = std::path::PathBuf::from(String::from("file::memory:?cache=shared"));
         let _ = DB_PATH.set(Some(path));
     }
 
@@ -487,7 +489,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn database_initialized() {
         set_test_db_path();
         let db_result = init_database();
@@ -495,7 +496,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_table_created() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -511,7 +511,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn correct_cache_table_schema() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -546,7 +545,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn correct_failed_decodes_table_schema() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -575,7 +573,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_insert_empty_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -605,7 +602,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_insert_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -644,7 +640,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_insert_2_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -695,7 +690,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_read_hit() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -717,7 +711,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_read_2_hit() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -754,7 +747,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_read_empty_miss() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -768,7 +760,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_read_2_miss() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -795,7 +786,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_delete_success_one_entry() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -816,7 +806,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_delete_success_with_two_entries() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -862,7 +851,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_delete_missing() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -874,7 +862,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_delete_missing_with_entries() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -897,7 +884,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_update_1_change_1_entry_success() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -928,7 +914,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_update_1_change_2_entry_success() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -966,7 +951,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_update_1_change_2_entry_no_match() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1015,7 +999,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn cache_update_empty() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1032,7 +1015,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_insert_empty_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -1054,7 +1036,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_insert_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -1089,7 +1070,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_insert_2_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
@@ -1136,7 +1116,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decode_read_success() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1159,7 +1138,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decode_read_2_success() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1198,7 +1176,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_read_empty_miss() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1216,7 +1193,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_read_2_miss() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1241,7 +1217,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_delete_success_one_entry() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1262,7 +1237,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_delete_success_two_entries() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1305,7 +1279,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_delete_missing() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1317,7 +1290,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_delete_missing_with_entries() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1339,7 +1311,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_update_1_change_1_entry_success() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1369,7 +1340,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_update_1_change_2_entry_success() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1416,7 +1386,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_update_1_change_2_entry_no_match() {
         set_test_db_path();
         let _conn = init_database().unwrap();
@@ -1465,7 +1434,6 @@ mod tests {
     }
 
     #[test]
-    #[serial]
     fn failed_decodes_update_empty() {
         set_test_db_path();
         let _conn = init_database().unwrap();

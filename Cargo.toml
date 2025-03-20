@@ -44,7 +44,6 @@ serde_json = "1.0"
 serial_test = "3.2.0"
 text_io = "0.1.12"
 toml = "0.8.10"
-uuid = { version = "1.0", features = ["v4"] }
 
 # Dependencies used for decoding
 base64 = "0.22.1"

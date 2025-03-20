@@ -2527,7 +2527,6 @@ dependencies = [
  "text_io",
  "toml",
  "urlencoding",
- "uuid",
  "z85",
 ]
 
