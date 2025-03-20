@@ -10,8 +10,6 @@ use std::fmt::Display;
 use std::io::{self, Write};
 use std::path::Path;
 
-use super::super::storage::database::setup_database;
-
 /// Represents a color scheme with RGB values for different message types and roles.
 /// Each color is stored as a comma-separated RGB string in the format "r,g,b"
 /// where r, g, and b are values between 0 and 255.
@@ -162,17 +160,6 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         print_statement("🤠 Howdy! This is your first time running Ares.")
     );
     println!("{}\n", print_statement("Let me help you configure Ares."));
-
-    // Set up database
-    let db_result = setup_database();
-    match db_result {
-        Ok(_) => {
-            println!("SQLite database initialized.");
-        }
-        Err(e) => {
-            println!("SQLite database failed to initialized with error: {}", e);
-        }
-    }
 
     // ask if user wants a tutorial
     if ask_yes_no_question("Do you want a tutorial?", true) {

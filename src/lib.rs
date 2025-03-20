@@ -256,6 +256,7 @@ impl DecoderResult {
 }
 
 #[cfg(test)]
+#[serial_test::parallel]
 mod tests {
     use super::perform_cracking;
     use crate::config::Config;

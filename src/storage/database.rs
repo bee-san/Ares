@@ -6,7 +6,6 @@ use super::super::CrackResult;
 ///! relations and collecting statistics on the performance of Ares
 ///! search algorithms.
 use chrono::DateTime;
-use serial_test::serial;
 use std::sync::OnceLock;
 
 /// Holds the global path to the database
@@ -184,8 +183,9 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
     }
 
     let path_json = serde_json::to_string(&path).unwrap();
-    let conn = get_db_connection()?;
-    let conn_result = conn.execute(
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute(
         "INSERT INTO cache (
             encoded_text,
             decoded_text,
@@ -203,6 +203,7 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
             get_timestamp(),
         ),
     );
+    transaction.commit()?;
     conn_result
 }
 
@@ -241,11 +242,13 @@ pub fn read_cache(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::E
 /// Returns number of successfully deleted rows on success
 /// Returns sqlite::Error on error
 pub fn delete_cache(encoded_text: &String) -> Result<usize, rusqlite::Error> {
-    let conn = get_db_connection()?;
-    let conn_result = conn.execute(
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute(
         "DELETE FROM cache WHERE encoded_text = $1",
         (encoded_text.clone(),),
     );
+    transaction.commit()?;
     conn_result
 }
 
@@ -276,8 +279,9 @@ pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
     }
 
     let path_json = serde_json::to_string(&path).unwrap();
-    let conn = get_db_connection()?;
-    let conn_result = conn.execute(
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute(
         "UPDATE cache SET 
             decoded_text = $1,
             path = $2,
@@ -294,6 +298,7 @@ pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
             cache_entry.encoded_text.clone(),
         ),
     );
+    transaction.commit()?;
     conn_result
 }
 
@@ -305,8 +310,9 @@ pub fn insert_failed_decodes(
     plaintext: &String,
     check_result: &CheckResult,
 ) -> Result<usize, rusqlite::Error> {
-    let conn = get_db_connection()?;
-    let conn_result = conn.execute(
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute(
         "INSERT INTO failed_decodes (
             plaintext,
             checker,
@@ -318,6 +324,7 @@ pub fn insert_failed_decodes(
             get_timestamp(),
         ),
     );
+    transaction.commit()?;
     conn_result
 }
 
@@ -354,8 +361,9 @@ pub fn update_failed_decodes(
     plaintext: &String,
     check_result: &CheckResult,
 ) -> Result<usize, rusqlite::Error> {
-    let conn = get_db_connection()?;
-    let conn_result = conn.execute(
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute(
         "UPDATE failed_decodes SET 
             checker = $1,
             timestamp = $2
@@ -366,6 +374,7 @@ pub fn update_failed_decodes(
             plaintext.clone(),
         ),
     );
+    transaction.commit()?;
     conn_result
 }
 
@@ -374,16 +383,18 @@ pub fn update_failed_decodes(
 /// Returns number of successfully deleted rows on success
 /// Returns sqlite::Error on error
 pub fn delete_failed_decodes(plaintext: &String) -> Result<usize, rusqlite::Error> {
-    let conn = get_db_connection()?;
-    let conn_result = conn.execute(
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute(
         "DELETE FROM failed_decodes WHERE plaintext = $1",
         (plaintext.clone(),),
     );
+    transaction.commit()?;
     conn_result
 }
 
 #[cfg(test)]
-#[serial]
+#[serial_test::serial]
 mod tests {
     use super::super::super::decoders::interface::{Crack, Decoder};
     use super::CrackResult;
