@@ -15,7 +15,7 @@ use std::path::Path;
 /// For the entire program
 /// It's access using a variable like configuration
 /// ```rust
-/// use ares::config::get_config;
+/// use ciphey::config::get_config;
 /// let config = get_config();
 /// assert_eq!(config.verbose, 0);
 /// ```
@@ -46,9 +46,12 @@ pub struct Config {
     /// Should the human checker be on?
     /// This asks yes/no for plaintext. Turn off for API
     pub human_checker_on: bool,
-    /// The timeout threshold before Ares quites
+    /// The timeout threshold before ciphey quits
     /// This is in seconds
     pub timeout: u32,
+    /// Whether to collect all plaintexts until timeout expires
+    /// instead of exiting after finding the first valid plaintext
+    pub top_results: bool,
     /// Is the program being run in API mode?
     /// This is used to determine if we should print to stdout
     /// Or return the values
@@ -62,6 +65,10 @@ pub struct Config {
     pub wordlist: Option<HashSet<String>>,
     /// Colourscheme hashmap
     pub colourscheme: HashMap<String, String>,
+    /// Enables enhanced plaintext detection using a BERT model.
+    pub enhanced_detection: bool,
+    /// Path to the enhanced detection model. If None, will use the default path.
+    pub model_path: Option<String>,
 }
 
 /// Cell for storing global Config
@@ -117,10 +124,13 @@ impl Default for Config {
             lemmeknow_boundaryless: false,
             human_checker_on: false,
             timeout: 5,
+            top_results: false,
             api_mode: false,
             regex: None,
             wordlist_path: None,
             wordlist: None,
+            enhanced_detection: false,
+            model_path: None,
             colourscheme: HashMap::new(),
         };
 
@@ -145,17 +155,17 @@ impl Default for Config {
     }
 }
 
-/// Get the path to the Ares config file
+/// Get the path to the ciphey config file
 ///
 /// # Panics
 ///
 /// This function will panic if:
 /// - The home directory cannot be found
-/// - The Ares directory cannot be created
+/// - The ciphey directory cannot be created
 pub fn get_config_file_path() -> std::path::PathBuf {
     let mut path = dirs::home_dir().expect("Could not find home directory");
-    path.push("Ares");
-    fs::create_dir_all(&path).expect("Could not create Ares directory");
+    path.push(".ciphey");
+    fs::create_dir_all(&path).expect("Could not create ciphey directory");
     path.push("config.toml");
     path
 }
@@ -195,12 +205,15 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
         let known_keys = [
             "verbose",
             "lemmeknow_min_rarity",
+            "enhanced_detection",
+            "model_path",
             "lemmeknow_max_rarity",
             "lemmeknow_tags",
             "lemmeknow_exclude_tags",
             "lemmeknow_boundaryless",
             "human_checker_on",
             "timeout",
+            "top_results",
             "api_mode",
             "regex",
             "wordlist_path",
@@ -307,9 +320,14 @@ pub fn get_config_file_into_struct() -> Config {
         // Extract color scheme values
         config.colourscheme = first_run_config
             .iter()
-            .filter(|(k, _)| !k.starts_with("wordlist"))
+            .filter(|(k, _)| !k.starts_with("wordlist") && *k != "timeout")
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
+
+        // Set timeout if present
+        if let Some(timeout) = first_run_config.get("timeout") {
+            config.timeout = timeout.parse().unwrap_or(5);
+        }
 
         // Extract wordlist path if present
         if let Some(wordlist_path) = first_run_config.get("wordlist_path") {
@@ -346,7 +364,7 @@ pub fn get_config_file_into_struct() -> Config {
                         Ok(wordlist) => {
                             config.wordlist = Some(wordlist);
                         }
-                        Err(e) => {
+                        Err(_e) => {
                             // Critical error - exit if config specifies wordlist but can't load it
                             eprintln!("Can't load wordlist at '{}'. Either fix or remove wordlist from config file at '{}'", 
                                 wordlist_path, path.display());

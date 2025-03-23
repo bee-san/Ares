@@ -1,10 +1,12 @@
-//! First-run configuration module for Ares
+//! First-run configuration module for ciphey
 //!
-//! This module handles the initial setup of Ares, including color scheme configuration
+//! This module handles the initial setup of ciphey, including color scheme configuration
 //! and user preferences. It provides functionality for creating and managing color schemes,
 //! handling user input, and converting between different color formats.
 
 use colored::Colorize;
+use gibberish_or_not::download_model_with_progress_bar;
+use rpassword;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::{self, Write};
@@ -63,6 +65,17 @@ fn print_warning<T: Display>(text: T) -> String {
 /// * `String` - The input text formatted in yellow color
 fn print_question<T: Display>(text: T) -> String {
     text.to_string().yellow().to_string()
+}
+
+/// Prints a success message in green color.
+///
+/// # Arguments
+/// * `text` - Any type that implements Display trait to be printed in green
+///
+/// # Returns
+/// * `String` - The input text formatted in green color
+fn print_success<T: Display>(text: T) -> String {
+    text.to_string().green().to_string()
 }
 
 /// Prints text in a specified RGB color.
@@ -146,7 +159,7 @@ fn get_default_scheme() -> ColorScheme {
     }
 }
 
-/// Runs the first-time setup wizard for Ares, allowing users to configure their color scheme.
+/// Runs the first-time setup wizard for ciphey, allowing users to configure their color scheme.
 ///
 /// This function presents users with color scheme options and handles their selection,
 /// including support for custom color schemes. It guides users through the setup process
@@ -157,15 +170,15 @@ fn get_default_scheme() -> ColorScheme {
 pub fn run_first_time_setup() -> HashMap<String, String> {
     println!(
         "\n{}",
-        print_statement("🤠 Howdy! This is your first time running Ares.")
+        print_statement("🤠 Howdy! This is your first time running ciphey.")
     );
-    println!("{}\n", print_statement("Let me help you configure Ares."));
+    println!("{}", print_statement("Let me help you configure ciphey."));
 
     // ask if user wants a tutorial
     if ask_yes_no_question("Do you want a tutorial?", true) {
-        println!("ares -t 'encoded text here' to decode.");
+        println!("ciphey -t 'encoded text here' to decode.");
         println!("Have a crib you know is in the plaintext? use --regex 'crib here'");
-        println!("🙂‍↕️ yah that's it. Will write more when we add more :-D");
+        println!("yah that's it. Will write more when we add more :-D\n");
     }
 
     // Ask if the user wants a custom color scheme
@@ -205,7 +218,7 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         print!("{} | ", print_rgb("Questions", &darcula.question));
         println!("{}\n", print_rgb("Statements", &darcula.statement));
 
-        println!("3. 💖✨💐 Girly Pop");
+        println!("3. 💖✨💐 GirlyPop");
         let girly = get_girly_pop_scheme();
         print!("   ");
         print!("{} | ", print_rgb("Informational", &girly.informational));
@@ -264,28 +277,141 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         }
     };
 
-    // Ask if the user wants to use a wordlist
-    // TODO I think we ask if they have any wordlists and then say
-    // ok use in plaintext detection?
-    // wanna crack hashes? can i use the old wordlist?s
+    // ask about top_results
+    println!("\n{}", print_question("What sounds better to you?"));
     println!(
         "\n{}",
-        print_statement("Would you like Ares to use custom wordlists to detect plaintext?")
+        print_statement("1. ciphey will ask you everytime it detects plaintext if it is plaintext.\n2. ciphey stores all possible plaintext in a list, and at the end of the program presents it to you.")
+    );
+    let wait_athena_choice = get_user_input_range("Enter your choice", 1, 2);
+
+    // Store the top_results choice in the config
+    let top_results = wait_athena_choice == 2;
+    config.insert("top_results".to_string(), top_results.to_string());
+
+    // Set the default timeout
+    let mut timeout = 5; // Default timeout
+
+    if top_results {
+        // user has chosen to use top_results mode
+        println!(
+            "\n{}",
+            print_statement("ciphey by default runs for 5 seconds. For this mode we suggest 3 seconds. Please do not complain if you choose too high of a number and your PC freezes up.\n")
+        );
+        timeout = get_user_input_range(
+            "How many seconds do you want ciphey to run? (3 suggested) seconds",
+            1,
+            500,
+        );
+    }
+
+    // Store the timeout in the config
+    config.insert("timeout".to_string(), timeout.to_string());
+
+    // Wordlist configuration
+    println!(
+        "{}",
+        print_question("\nWould you like ciphey to use custom wordlists to detect plaintext?")
     );
     println!(
         "{}",
         print_statement(
-            "Every time we check for plaintext we will check for an exact match in your wordlist."
+            "ciphey can use custom wordlists to detect plaintext by checking for exact matches."
         )
     );
     println!(
         "{}",
-        print_warning("Note: If your wordlist is very large, this can spam you.")
+        print_warning("Note: If your wordlist is very large, this can generate excessive matches.")
     );
 
     if ask_yes_no_question("", false) {
         if let Some(wordlist_path) = get_wordlist_path() {
             config.insert("wordlist_path".to_string(), wordlist_path);
+        }
+    }
+
+    // Enhanced detection section
+    println!(
+        "{}",
+        print_question("\nWould you like to enable Enhanced Plaintext Detection?")
+    );
+    println!("{}", print_statement("This will increase accuracy by around 40%, and you will be asked less frequently if something is plaintext or not."));
+    println!(
+        "{}",
+        print_statement("This will download a 500mb AI model.")
+    );
+    println!(
+        "{}",
+        print_statement("You will need to follow these steps to download it:")
+    );
+    println!(
+        "{}",
+        print_statement("1. Make a HuggingFace account https://huggingface.co/")
+    );
+    println!(
+        "{}",
+        print_statement("2. Make a READ Token https://huggingface.co/settings/tokens")
+    );
+    println!(
+        "{}",
+        print_warning(
+            "Note: You will be able to do this later by running `ciphey --enable-enhanced-detection`"
+        )
+    );
+    println!("{}", print_statement("We will prompt you for the token if you click Yes. We will not store this token, just use it to download a model."));
+
+    if ask_yes_no_question("", false) {
+        // Enable enhanced detection
+        config.insert("enhanced_detection".to_string(), "true".to_string());
+
+        // Set a default model path
+        let mut config_dir_path = crate::config::get_config_file_path();
+        config_dir_path.pop();
+        config_dir_path.push("models");
+
+        // Create the models directory if it doesn't exist
+        std::fs::create_dir_all(&config_dir_path).unwrap_or_else(|_| {
+            println!(
+                "{}",
+                print_warning(
+                    "Could not create models directory. Enhanced detection may not work."
+                )
+            );
+        });
+
+        config_dir_path.push("model.bin");
+
+        config.insert(
+            "model_path".to_string(),
+            config_dir_path.display().to_string(),
+        );
+
+        // Prompt for HuggingFace token
+        println!(
+            "{}",
+            print_statement("Please enter your HuggingFace token:")
+        );
+        print!(
+            "{}",
+            print_question("Token [invisible for privacy reasons]: ")
+        );
+        io::stdout().flush().unwrap();
+
+        // Use rpassword to hide the token input
+        let token = rpassword::read_password().unwrap_or_else(|_| String::new());
+
+        // Download the model using the token
+        if let Err(e) = download_model_with_progress_bar(&config_dir_path, Some(&token)) {
+            println!(
+                "{}",
+                print_warning(format!("Failed to download model: {}", e))
+            );
+            println!(
+                "{}",
+                print_warning("Enhanced detection may not work properly.")
+            );
+        } else {
+            println!("{}", print_success("Model downloaded successfully!"));
         }
     }
 
@@ -312,13 +438,15 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
 /// # Returns
 /// * `bool` - true for yes, false for no
 fn ask_yes_no_question(question: &str, default_yes: bool) -> bool {
-    let prompt = if default_yes {
-        format!("{} (Y/n): ", question)
-    } else {
-        format!("{} (y/N): ", question)
-    };
+    // Only print the question if it's not empty (for formatted sequences)
+    if !question.is_empty() {
+        println!("\n{}", print_question(question));
+    }
 
-    print!("{}", print_question(&prompt));
+    // Create the prompt
+    let prompt = if default_yes { "(Y/n): " } else { "(y/N): " };
+
+    print!("{}", print_question(prompt));
     io::stdout().flush().unwrap();
 
     let mut input = String::new();
@@ -353,7 +481,9 @@ fn ask_yes_no_question(question: &str, default_yes: bool) -> bool {
 /// # Returns
 /// * `u32` - The user's input within the specified range
 fn get_user_input_range(prompt: &str, min: u32, max: u32) -> u32 {
-    print!("{}", print_question(prompt));
+    // Create the input prompt with the provided prompt text
+    let input_prompt = format!("{} ({}-{}): ", prompt, min, max);
+    print!("{}", print_question(input_prompt));
     io::stdout().flush().unwrap();
 
     let mut input = String::new();

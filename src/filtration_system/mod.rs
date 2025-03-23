@@ -34,6 +34,8 @@ use crate::decoders::url_decoder::URLDecoder;
 use crate::decoders::vigenere_decoder::VigenereDecoder;
 use crate::decoders::z85_decoder::Z85Decoder;
 
+use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
+
 use log::trace;
 use rayon::prelude::*;
 
@@ -55,7 +57,7 @@ impl Decoders {
     /// We are using Trait Objects
     /// https://doc.rust-lang.org/book/ch17-02-trait-objects.html
     /// Which allows us to have multiple different structs in the same vector
-    /// But each struct shares the same `.crack()` method, so it's fine.
+    /// But each struct shciphey the same `.crack()` method, so it's fine.
     pub fn run(&self, text: &str, checker: CheckerTypes) -> MyResults {
         trace!("Running .crack() on all decoders");
         let (sender, receiver) = channel();
@@ -249,6 +251,9 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let a1z26decoder = Decoder::<A1Z26Decoder>::new();
     let brailledecoder = Decoder::<BrailleDecoder>::new();
     let substitution_generic = Decoder::<SubstitutionGenericDecoder>::new();
+
+    let brainfuck = Decoder::<BrainfuckInterpreter>::new();
+
     Decoders {
         components: vec![
             Box::new(vigenere),
@@ -274,7 +279,24 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(a1z26decoder),
             Box::new(brailledecoder),
             Box::new(substitution_generic),
+            Box::new(brainfuck),
         ],
+    }
+}
+
+/// Get a specific decoder by name
+pub fn get_decoder_by_name(decoder_name: &str) -> Decoders {
+    trace!("Getting decoder by name: {}", decoder_name);
+    let all_decoders = get_all_decoders();
+
+    let filtered_components = all_decoders
+        .components
+        .into_iter()
+        .filter(|d| d.get_name() == decoder_name)
+        .collect();
+
+    Decoders {
+        components: filtered_components,
     }
 }
 
@@ -290,8 +312,8 @@ mod tests {
     };
 
     use super::{
-        filter_and_get_decoders, filter_decoders_by_tags, get_decoder_tagged_decoders,
-        get_non_decoder_tagged_decoders, DecoderFilter,
+        filter_and_get_decoders, filter_decoders_by_tags, get_decoder_by_name,
+        get_decoder_tagged_decoders, get_non_decoder_tagged_decoders, DecoderFilter,
     };
 
     #[test]
@@ -425,6 +447,32 @@ mod tests {
         assert!(
             !decoders.components.is_empty(),
             "Should have some decoders without 'decoder' tag"
+        );
+    }
+
+    #[test]
+    fn test_get_decoder_by_name() {
+        let decoder_name = "Base64";
+        let decoders = get_decoder_by_name(decoder_name);
+
+        assert_eq!(
+            decoders.components.len(),
+            1,
+            "Should return exactly one decoder"
+        );
+        assert_eq!(
+            decoders.components[0].get_name(),
+            decoder_name,
+            "Should return the requested decoder"
+        );
+    }
+
+    #[test]
+    fn test_get_decoder_by_name_nonexistent() {
+        let decoders = get_decoder_by_name("nonexistent_decoder");
+        assert!(
+            decoders.components.is_empty(),
+            "Should return empty decoders for nonexistent name"
         );
     }
 }

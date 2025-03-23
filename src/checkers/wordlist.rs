@@ -22,6 +22,7 @@ impl Check for Checker<WordlistChecker> {
             popularity: 1.0,
             lemmeknow_config: Identifier::default(),
             sensitivity: Sensitivity::Medium, // Dummy value - not used by this checker
+            enhanced_detector: None,
             _phantom: std::marker::PhantomData,
         }
     }
@@ -41,7 +42,8 @@ impl Check for Checker<WordlistChecker> {
                 let mut result = CheckResult::new(self);
                 result.is_identified = true;
                 result.text = text.to_string();
-                result.description = "Text matches an entry in the provided wordlist".to_string();
+                result.description =
+                    "text which matches an entry in the provided wordlist".to_string();
                 return result;
             }
 

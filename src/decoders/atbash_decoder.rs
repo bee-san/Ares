@@ -17,7 +17,7 @@ impl Crack for Decoder<AtbashDecoder> {
             description: "Atbash is a monoalphabetic substitution cipher originally used to encrypt the Hebrew alphabet. It can be modified for use with any known writing system with a standard collating order.",
             link: "https://en.wikipedia.org/wiki/Atbash",
             tags: vec!["atbash", "substitution", "decoder", "reciprocal"],
-            popularity: 1.0,
+            popularity: 0.6,
             phantom: std::marker::PhantomData,
         }
     }

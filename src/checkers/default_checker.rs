@@ -7,7 +7,7 @@ use super::{
 };
 
 /// The default checker is used to check if the text is plaintext
-/// Based on what the Ares team has found to be the best checker.
+/// Based on what the ciphey team has found to be the best checker.
 pub struct DefaultChecker;
 
 impl Check for Checker<DefaultChecker> {
@@ -21,6 +21,7 @@ impl Check for Checker<DefaultChecker> {
             popularity: 0.0,
             lemmeknow_config: Identifier::default(),
             sensitivity: Sensitivity::Medium, // Default to Medium sensitivity
+            enhanced_detector: None,
             _phantom: std::marker::PhantomData,
         }
     }

@@ -17,7 +17,7 @@ impl Crack for Decoder<SubstitutionGenericDecoder> {
             description: "Decodes substitution ciphers where symbols are replaced with Morse code or binary elements. Tries all possible mappings for inputs with up to 4 unique symbols.",
             link: "https://en.wikipedia.org/wiki/Substitution_cipher",
             tags: vec!["substitution", "binary", "morse"],
-            popularity: 0.5,
+            popularity: 0.7,
             phantom: std::marker::PhantomData,
         }
     }
@@ -164,7 +164,7 @@ mod tests {
     #[test]
     fn test_binary_substitution() {
         let decoder = Decoder::<SubstitutionGenericDecoder>::new();
-        let result = decoder.crack("AABBA", &get_athena_checker());
+        let result = decoder.crack("AABBAABBAABBAABBAABBAA", &get_athena_checker());
 
         // Print debug info if test fails
         if !result.success {

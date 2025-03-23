@@ -1,66 +1,66 @@
-# Using Ares: A Comprehensive Guide
+# Using ciphey: A Comprehensive Guide
 
 ## Introduction
 
-This guide provides detailed instructions on how to use Ares, the next-generation automatic decoding tool. Whether you're using the CLI, the library API, or the Discord bot, this document will help you get the most out of Ares.
+This guide provides detailed instructions on how to use ciphey, the next-generation automatic decoding tool. Whether you're using the CLI, the library API, or the Discord bot, this document will help you get the most out of ciphey.
 
 ## Installation Options
 
 ### CLI Installation
 
-The recommended way to install Ares is through Cargo, Rust's package manager:
+The recommended way to install ciphey is through Cargo, Rust's package manager:
 
 ```bash
-cargo install project_ares
+cargo install ciphey
 ```
 
-This will install the `ares` command-line tool, which you can use from your terminal.
+This will install the `ciphey` command-line tool, which you can use from your terminal.
 
 ### Building from Source
 
-To build Ares from source:
+To build ciphey from source:
 
 ```bash
-git clone https://github.com/bee-san/Ares
-cd Ares
+git clone https://github.com/bee-san/ciphey
+cd ciphey
 cargo build --release
 ```
 
-The compiled binary will be available at `target/release/ares`.
+The compiled binary will be available at `target/release/ciphey`.
 
 ### Docker
 
-You can also use Docker to run Ares:
+You can also use Docker to run ciphey:
 
 ```bash
-git clone https://github.com/bee-san/Ares
-cd Ares
-docker build -t ares .
-docker run -it ares
+git clone https://github.com/bee-san/ciphey
+cd ciphey
+docker build -t ciphey .
+docker run -it ciphey
 ```
 
 ### Discord Bot
 
-For casual use, you can access Ares through the Discord bot:
+For casual use, you can access ciphey through the Discord bot:
 
 1. Join the [Discord Server](http://discord.skerritt.blog)
 2. Navigate to the #bots channel
-3. Use the `$ares` command followed by your encoded text
+3. Use the `$ciphey` command followed by your encoded text
 
 ## Basic Usage
 
 ### CLI
 
-The basic syntax for using Ares from the command line is:
+The basic syntax for using ciphey from the command line is:
 
 ```bash
-ares "your encoded text here"
+ciphey "your encoded text here"
 ```
 
 For example:
 
 ```bash
-ares "SGVsbG8sIFdvcmxkIQ=="
+ciphey "SGVsbG8sIFdvcmxkIQ=="
 ```
 
 This will attempt to decode the text and output the result:
@@ -72,18 +72,18 @@ Decoders used: Base64
 
 ### Library API
 
-To use Ares as a library in your Rust project, add it to your `Cargo.toml`:
+To use ciphey as a library in your Rust project, add it to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-ares = "0.1.0"  # Replace with the current version
+ciphey = "0.1.0"  # Replace with the current version
 ```
 
 Then, in your code:
 
 ```rust
-use ares::perform_cracking;
-use ares::config::Config;
+use ciphey::perform_cracking;
+use ciphey::config::Config;
 
 fn main() {
     let config = Config::default();
@@ -110,7 +110,7 @@ fn main() {
 To use the Discord bot:
 
 ```
-$ares SGVsbG8sIFdvcmxkIQ==
+$ciphey SGVsbG8sIFdvcmxkIQ==
 ```
 
 The bot will respond with the decoded text and the decoders used.
@@ -119,26 +119,26 @@ The bot will respond with the decoded text and the decoders used.
 
 ### CLI Options
 
-Ares CLI supports several options:
+ciphey CLI supports several options:
 
 ```bash
 # Set a timeout (in seconds)
-ares --timeout 10 "your encoded text"
+ciphey --timeout 10 "your encoded text"
 
 # Specify a regex pattern to match against decoded text
-ares --regex "flag\{.*\}" "your encoded text"
+ciphey --regex "flag\{.*\}" "your encoded text"
 
 # Enable human verification
-ares --human "your encoded text"
+ciphey --human "your encoded text"
 
 # Increase verbosity for debugging
-ares --verbose "your encoded text"
+ciphey --verbose "your encoded text"
 
 # Read input from a file
-ares --file input.txt
+ciphey --file input.txt
 
 # Save output to a file
-ares --output result.txt "your encoded text"
+ciphey --output result.txt "your encoded text"
 ```
 
 ### Configuration
@@ -146,8 +146,8 @@ ares --output result.txt "your encoded text"
 When using the library API, you can customize the configuration:
 
 ```rust
-use ares::perform_cracking;
-use ares::config::Config;
+use ciphey::perform_cracking;
+use ciphey::config::Config;
 
 fn main() {
     let mut config = Config::default();
@@ -173,10 +173,10 @@ fn main() {
 
 ### Decoding Base64
 
-Base64 is one of the most common encodings. To decode Base64 with Ares:
+Base64 is one of the most common encodings. To decode Base64 with ciphey:
 
 ```bash
-ares "SGVsbG8sIFdvcmxkIQ=="
+ciphey "SGVsbG8sIFdvcmxkIQ=="
 # Output: Hello, World!
 ```
 
@@ -185,7 +185,7 @@ ares "SGVsbG8sIFdvcmxkIQ=="
 To decode hexadecimal:
 
 ```bash
-ares "48656c6c6f2c20576f726c6421"
+ciphey "48656c6c6f2c20576f726c6421"
 # Output: Hello, World!
 ```
 
@@ -194,7 +194,7 @@ ares "48656c6c6f2c20576f726c6421"
 To decode URL-encoded text:
 
 ```bash
-ares "Hello%2C%20World%21"
+ciphey "Hello%2C%20World%21"
 # Output: Hello, World!
 ```
 
@@ -203,17 +203,17 @@ ares "Hello%2C%20World%21"
 To decode text encrypted with a Caesar cipher:
 
 ```bash
-ares "Khoor, Zruog!"
+ciphey "Khoor, Zruog!"
 # Output: Hello, World!
 ```
 
 ### Multi-level Decoding
 
-Ares can handle multiple levels of encoding automatically:
+ciphey can handle multiple levels of encoding automatically:
 
 ```bash
 # Base64 → Hex → ROT13
-ares "NTc2ODY1NmM2YzZmMmMyMDU3NmY3MjZjNjQyMQ=="
+ciphey "NTc2ODY1NmM2YzZmMmMyMDU3NmY3MjZjNjQyMQ=="
 # Output: Hello, World!
 ```
 
@@ -222,7 +222,7 @@ ares "NTc2ODY1NmM2YzZmMmMyMDU3NmY3MjZjNjQyMQ=="
 For Capture The Flag challenges, you can use the regex option to look for specific flag formats:
 
 ```bash
-ares --regex "flag\{.*\}" "encoded text containing a flag"
+ciphey --regex "flag\{.*\}" "encoded text containing a flag"
 ```
 
 ### Detecting Invisible Characters
@@ -230,45 +230,45 @@ ares --regex "flag\{.*\}" "encoded text containing a flag"
 When dealing with steganography that uses invisible Unicode characters:
 
 ```bash
-ares "text with invisible characters"
+ciphey "text with invisible characters"
 ```
 
-If Ares detects a significant percentage of invisible characters, it will offer to save the result to a file for better analysis.
+If ciphey detects a significant percentage of invisible characters, it will offer to save the result to a file for better analysis.
 
 ## Troubleshooting
 
 ### Timeout Issues
 
-If Ares times out before finding a solution:
+If ciphey times out before finding a solution:
 
 1. Increase the timeout value:
    ```bash
-   ares --timeout 30 "your encoded text"
+   ciphey --timeout 30 "your encoded text"
    ```
 
 2. Try to narrow down the possible encoding types and use a more specific approach.
 
 ### False Positives
 
-If Ares returns incorrect results:
+If ciphey returns incorrect results:
 
 1. Enable human verification:
    ```bash
-   ares --human "your encoded text"
+   ciphey --human "your encoded text"
    ```
 
 2. Use a regex pattern to match the expected format:
    ```bash
-   ares --regex "expected pattern" "your encoded text"
+   ciphey --regex "expected pattern" "your encoded text"
    ```
 
 ### False Negatives
 
-If Ares fails to decode text that you know is encoded:
+If ciphey fails to decode text that you know is encoded:
 
-1. Check if the encoding is supported by Ares
+1. Check if the encoding is supported by ciphey
 2. Try decoding with a specific tool for that encoding
-3. Consider contributing a new decoder to Ares
+3. Consider contributing a new decoder to ciphey
 
 ## Performance Tips
 
@@ -285,7 +285,7 @@ If Ares fails to decode text that you know is encoded:
 ### Example 1: Basic Decoding
 
 ```bash
-ares "SGVsbG8sIFdvcmxkIQ=="
+ciphey "SGVsbG8sIFdvcmxkIQ=="
 ```
 
 Output:
@@ -297,7 +297,7 @@ Decoders used: Base64
 ### Example 2: Multi-level Decoding
 
 ```bash
-ares "726f743133286261736536342864656328225a6d7868655841674d5449674d7a51674e6a6373494449774d6a4d3d222929"
+ciphey "726f743133286261736536342864656328225a6d7868655841674d5449674d7a51674e6a6373494449774d6a4d3d222929"
 ```
 
 Output:
@@ -309,7 +309,7 @@ Decoders used: Hexadecimal → Base64 → ROT13
 ### Example 3: Using Regex
 
 ```bash
-ares --regex "flag\{.*\}" "SGxhZXtjcnlwdG9fMTIzfQ=="
+ciphey --regex "flag\{.*\}" "SGxhZXtjcnlwdG9fMTIzfQ=="
 ```
 
 Output:
@@ -321,8 +321,8 @@ Decoders used: Base64
 ### Example 4: Using the Library API
 
 ```rust
-use ares::perform_cracking;
-use ares::config::Config;
+use ciphey::perform_cracking;
+use ciphey::config::Config;
 
 fn main() {
     let config = Config::default();
@@ -343,6 +343,6 @@ Decoded: Hello, World!
 
 ## Conclusion
 
-Ares is a powerful tool for automatic decoding, capable of handling a wide range of encoding schemes and even multi-level encodings. Whether you're working on CTF challenges, analyzing suspicious data, or just playing around with encodings, Ares can save you time and effort by automatically detecting and decoding the text.
+ciphey is a powerful tool for automatic decoding, capable of handling a wide range of encoding schemes and even multi-level encodings. Whether you're working on CTF challenges, analyzing suspicious data, or just playing around with encodings, ciphey can save you time and effort by automatically detecting and decoding the text.
 
-For more information, check out the [GitHub repository](https://github.com/bee-san/Ares) and the [documentation](https://broadleaf-angora-7db.notion.site/Ciphey2-32d5eea5d38b40c5b95a9442b4425710).
+For more information, check out the [GitHub repository](https://github.com/bee-san/ciphey) and the [documentation](https://broadleaf-angora-7db.notion.site/Ciphey2-32d5eea5d38b40c5b95a9442b4425710).

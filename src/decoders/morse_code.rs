@@ -20,7 +20,7 @@ impl Crack for Decoder<MorseCodeDecoder> {
             description: "Morse code is a method used in telecommunication to encode text characters as standardized sequences of two different signal durations, called dots and dashes, or dits and dahs.",
             link: "https://en.wikipedia.org/wiki/Morse_code",
             tags: vec!["morseCode", "decoder", "signals"],
-            popularity: 0.5,
+            popularity: 0.8,
             phantom: std::marker::PhantomData,
         }
     }

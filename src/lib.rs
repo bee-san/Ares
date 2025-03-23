@@ -1,4 +1,4 @@
-//! Ares is an automatic decoding and cracking tool. https://github.com/bee-san/ares
+//! ciphey is an automatic decoding and cracking tool. https://github.com/bee-san/ciphey
 // Warns in case we forget to include documentation
 #![warn(
     missing_docs,
@@ -7,8 +7,8 @@
     clippy::missing_panics_doc
 )]
 
-/// The main crate for the Ares project.
-/// This provides the library API interface for Ares.
+/// The main crate for the ciphey project.
+/// This provides the library API interface for ciphey.
 mod api_library_input_struct;
 /// Checkers is a module that contains the functions that check if the input is plaintext
 pub mod checkers;
@@ -20,7 +20,7 @@ mod cli_input_parser;
 ///
 /// # Examples
 /// ```
-/// use ares::cli_pretty_printing::{success, warning};
+/// use ciphey::cli_pretty_printing::{success, warning};
 ///
 /// // Print a success message
 /// let success_msg = success("Operation completed successfully");
@@ -51,18 +51,22 @@ use checkers::{
     athena::Athena,
     checker_result::CheckResult,
     checker_type::{Check, Checker},
+    wait_athena::WaitAthena,
 };
 use log::debug;
 use std::time::SystemTime;
 
-use crate::{config::Config, decoders::interface::Decoder};
+use crate::{
+    config::{get_config, Config},
+    decoders::interface::Decoder,
+};
 
 use self::decoders::crack_results::CrackResult;
 
 /// The main function to call which performs the cracking.
 /// ```rust
-/// use ares::perform_cracking;
-/// use ares::config::Config;
+/// use ciphey::perform_cracking;
+/// use ciphey::config::Config;
 /// let mut config = Config::default();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
@@ -76,14 +80,14 @@ use self::decoders::crack_results::CrackResult;
 /// // The path is a vector of CrackResults which contains the decoder used and the keys used
 /// // The text is a vector of strings because some decoders return more than 1 text (Caesar)
 /// // Becuase the program has returned True, the first result is the plaintext (and it will only have 1 result).
-/// // This is some tech debt we need to clean up https://github.com/bee-san/Ares/issues/130
+/// // This is some tech debt we need to clean up https://github.com/bee-san/ciphey/issues/130
 /// assert!(result.unwrap().text[0] == "The main function to call which performs the cracking.");
 /// ```
 /// The human checker defaults to off in the config, but it returns the first thing it finds currently.
-/// We have an issue for that here https://github.com/bee-san/Ares/issues/129
+/// We have an issue for that here https://github.com/bee-san/ciphey/issues/129
 /// ```rust
-/// use ares::perform_cracking;
-/// use ares::config::Config;
+/// use ciphey::perform_cracking;
+/// use ciphey::config::Config;
 /// let mut config = Config::default();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
@@ -95,16 +99,11 @@ use self::decoders::crack_results::CrackResult;
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     let start_time = SystemTime::now();
-    config::set_global_config(config);
 
     /* Initializing database */
     let db_result = storage::database::setup_database();
     match db_result {
-        Ok(_) => {
-            cli_pretty_printing::success(
-                "DEBUG: lib.rs - SQLite database successfully initialized.",
-            );
-        }
+        Ok(_) => (),
         Err(e) => {
             cli_pretty_printing::warning(&format!(
                 "DEBUG: lib.rs - SQLite database failed to initialize. Encountered error: {}",
@@ -113,7 +112,17 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
         }
     };
 
+    // If top_results is enabled, ensure human_checker_on is disabled
+    let mut modified_config = config;
+    if modified_config.top_results {
+        modified_config.human_checker_on = false;
+        // Clear any previous results when starting a new cracking session
+        storage::wait_athena_storage::clear_plaintext_results();
+    }
+
+    config::set_global_config(modified_config);
     let text = text.to_string();
+
     let initial_check_for_plaintext = check_if_input_text_is_plaintext(&text);
     if initial_check_for_plaintext.is_identified {
         debug!(
@@ -187,8 +196,15 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
 /// Checks if the given input is plaintext or not
 /// Used at the start of the program to not waste CPU cycles
 fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
-    let athena_checker = Checker::<Athena>::new();
-    athena_checker.check(text)
+    let config = get_config();
+
+    if config.top_results {
+        let wait_athena_checker = Checker::<WaitAthena>::new();
+        wait_athena_checker.check(text)
+    } else {
+        let athena_checker = Checker::<Athena>::new();
+        athena_checker.check(text)
+    }
 }
 
 /// Stores a successful DecoderResult into the cache table
@@ -223,7 +239,7 @@ fn success_result_to_cache(
 }
 
 /// DecoderResult is the result of decoders
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct DecoderResult {
     /// The text we have from the decoder, as a vector
     /// because the decoder might return more than 1 text (caesar)

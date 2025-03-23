@@ -1,8 +1,8 @@
-# Ares First-Run Configuration Experience Implementation Plan
+# ciphey First-Run Configuration Experience Implementation Plan
 
 ## Overview
 
-When a user runs Ares for the first time (detected by the absence of a config file), the program will display a TUI (Text User Interface) that:
+When a user runs ciphey for the first time (detected by the absence of a config file), the program will display a TUI (Text User Interface) that:
 1. Welcomes the user
 2. Asks if they want a custom color scheme
 3. Offers predefined color schemes (Capptucin, Darcula, Default) or a custom option
@@ -157,7 +157,7 @@ The TUI will have the following screens:
 
 1. **Welcome Screen**:
    ```
-   🤠 Howdy! This is your first time running Ares.
+   🤠 Howdy! This is your first time running ciphey.
    
    I need to ask you some questions to make it work better for you.
    

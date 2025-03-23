@@ -3,8 +3,10 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 
-///! Module housing functions for managing SQLite database
+/// Module housing functions for managing SQLite database
 pub mod database;
+/// Module for storing WaitAthena results
+pub mod wait_athena_storage;
 
 /// English letter frequency distribution (A-Z)
 /// Used for frequency analysis in various decoders
