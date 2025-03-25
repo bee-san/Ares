@@ -55,32 +55,39 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let mut builder = Builder::new();
     builder.filter_level(LevelFilter::Error);
     builder.init();
-    
+
     // Create a benchmark group with longer measurement times for more accurate results
     let mut group = c.benchmark_group("program_performance");
-    
+
     // Configure the benchmark group for better statistics
     group.measurement_time(Duration::from_secs(10));
     group.sample_size(30);
-    
+
     // Run benchmarks with different configurations
     benchmark_with_config(&mut group, false, 5); // Default config
     benchmark_with_config(&mut group, false, 1); // Fast config
-    
+
     group.finish();
 }
 
 fn benchmark_with_config(
-    group: &mut criterion::BenchmarkGroup<criterion::measurement::WallTime>, 
+    group: &mut criterion::BenchmarkGroup<criterion::measurement::WallTime>,
     top_results: bool,
-    timeout: u32
+    timeout: u32,
 ) {
-    let config_name = if top_results { "top_results" } else { "default" };
+    let config_name = if top_results {
+        "top_results"
+    } else {
+        "default"
+    };
     let timeout_str = format!("timeout_{}", timeout);
-    
+
     for (text, description) in TEST_CASES {
-        let id = BenchmarkId::new(format!("{}_{}_{}",config_name, timeout_str, description), text.len());
-        
+        let id = BenchmarkId::new(
+            format!("{}_{}_{}", config_name, timeout_str, description),
+            text.len(),
+        );
+
         group.bench_with_input(id, text, |b, text| {
             b.iter(|| {
                 // Create config and set necessary parameters
@@ -90,7 +97,7 @@ fn benchmark_with_config(
                 config.verbose = 0;
                 config.human_checker_on = false;
                 config.api_mode = true; // Set to true to suppress output
-                
+
                 // Use perform_cracking with the configuration
                 perform_cracking(black_box(text), config)
             });
@@ -99,4 +106,4 @@ fn benchmark_with_config(
 }
 
 criterion_group!(benches, criterion_benchmark);
-criterion_main!(benches); 
+criterion_main!(benches);

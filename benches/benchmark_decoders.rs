@@ -1,20 +1,20 @@
 use ciphey::checkers::athena::Athena;
 use ciphey::checkers::checker_type::{Check, Checker};
 use ciphey::checkers::CheckerTypes;
+use ciphey::config::{get_config, set_global_config, Config};
 use ciphey::decoders::{
     base32_decoder::Base32Decoder,
     base58_bitcoin_decoder::Base58BitcoinDecoder,
     base58_flickr_decoder::Base58FlickrDecoder,
     base64_decoder::Base64Decoder,
-    hexadecimal_decoder::HexadecimalDecoder,
     binary_decoder::BinaryDecoder,
-    interface::{Crack, Decoder}
+    hexadecimal_decoder::HexadecimalDecoder,
+    interface::{Crack, Decoder},
 };
 use criterion::{black_box, criterion_group, criterion_main, BenchmarkId, Criterion};
-use std::time::Duration;
-use ciphey::config::{get_config, set_global_config, Config};
 use env_logger::Builder;
 use log::LevelFilter;
+use std::time::Duration;
 
 // Test cases for different decoders
 struct DecoderTestCase<'a> {
@@ -37,21 +37,17 @@ const BASE64_TESTS: &[DecoderTestCase] = &[
     },
 ];
 
-const BASE32_TESTS: &[DecoderTestCase] = &[
-    DecoderTestCase {
-        encoded: "NBSWY3DPEB3W64TMMQ======",
-        expected: "hello world",
-        description: "simple",
-    },
-];
+const BASE32_TESTS: &[DecoderTestCase] = &[DecoderTestCase {
+    encoded: "NBSWY3DPEB3W64TMMQ======",
+    expected: "hello world",
+    description: "simple",
+}];
 
-const HEX_TESTS: &[DecoderTestCase] = &[
-    DecoderTestCase {
-        encoded: "68656c6c6f20776f726c64",
-        expected: "hello world",
-        description: "simple",
-    },
-];
+const HEX_TESTS: &[DecoderTestCase] = &[DecoderTestCase {
+    encoded: "68656c6c6f20776f726c64",
+    expected: "hello world",
+    description: "simple",
+}];
 
 const BINARY_TESTS: &[DecoderTestCase] = &[
     DecoderTestCase {
@@ -61,28 +57,24 @@ const BINARY_TESTS: &[DecoderTestCase] = &[
     },
 ];
 
-const BASE58_BITCOIN_TESTS: &[DecoderTestCase] = &[
-    DecoderTestCase {
-        encoded: "StV1DL6CwTryKyV",
-        expected: "hello world",
-        description: "simple",
-    },
-];
+const BASE58_BITCOIN_TESTS: &[DecoderTestCase] = &[DecoderTestCase {
+    encoded: "StV1DL6CwTryKyV",
+    expected: "hello world",
+    description: "simple",
+}];
 
-const BASE58_FLICKR_TESTS: &[DecoderTestCase] = &[
-    DecoderTestCase {
-        encoded: "rTu1dk6cWsRYjYu",
-        expected: "hello world", 
-        description: "simple",
-    },
-];
+const BASE58_FLICKR_TESTS: &[DecoderTestCase] = &[DecoderTestCase {
+    encoded: "rTu1dk6cWsRYjYu",
+    expected: "hello world",
+    description: "simple",
+}];
 
 pub fn benchmark_decoders(c: &mut Criterion) {
     // Initialize logger with only error level to suppress debug messages
     let mut builder = Builder::new();
     builder.filter_level(LevelFilter::Error);
     builder.init();
-    
+
     // Setup global config to suppress output
     let mut config = Config::default();
     config.api_mode = true;
@@ -99,36 +91,16 @@ pub fn benchmark_decoders(c: &mut Criterion) {
     let checker = CheckerTypes::CheckAthena(athena_checker);
 
     // Base64 decoder benchmarks
-    benchmark_decoder::<Base64Decoder>(
-        &mut group,
-        "base64",
-        BASE64_TESTS,
-        &checker,
-    );
+    benchmark_decoder::<Base64Decoder>(&mut group, "base64", BASE64_TESTS, &checker);
 
     // Base32 decoder benchmarks
-    benchmark_decoder::<Base32Decoder>(
-        &mut group,
-        "base32",
-        BASE32_TESTS,
-        &checker,
-    );
+    benchmark_decoder::<Base32Decoder>(&mut group, "base32", BASE32_TESTS, &checker);
 
     // Hex decoder benchmarks
-    benchmark_decoder::<HexadecimalDecoder>(
-        &mut group,
-        "hexadecimal",
-        HEX_TESTS,
-        &checker,
-    );
+    benchmark_decoder::<HexadecimalDecoder>(&mut group, "hexadecimal", HEX_TESTS, &checker);
 
     // Binary decoder benchmarks
-    benchmark_decoder::<BinaryDecoder>(
-        &mut group,
-        "binary",
-        BINARY_TESTS,
-        &checker,
-    );
+    benchmark_decoder::<BinaryDecoder>(&mut group, "binary", BINARY_TESTS, &checker);
 
     // Base58 Bitcoin decoder benchmarks
     benchmark_decoder::<Base58BitcoinDecoder>(
@@ -173,4 +145,4 @@ fn benchmark_decoder<T>(
 }
 
 criterion_group!(benches, benchmark_decoders);
-criterion_main!(benches); 
+criterion_main!(benches);

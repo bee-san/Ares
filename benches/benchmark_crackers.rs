@@ -13,13 +13,13 @@ pub fn criterion_benchmark(c: &mut Criterion) {
     let mut builder = Builder::new();
     builder.filter_level(LevelFilter::Error);
     builder.init();
-    
+
     // Setup global config to suppress output
     let mut config = Config::default();
     config.api_mode = true;
     config.verbose = 0;
     set_global_config(config);
-    
+
     let decode_base64 = Decoder::<Base64Decoder>::new();
     let athena_checker = Checker::<Athena>::new();
     let checker = CheckerTypes::CheckAthena(athena_checker);

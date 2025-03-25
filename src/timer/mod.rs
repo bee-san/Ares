@@ -45,7 +45,10 @@ pub fn start(duration: u32) -> Receiver<()> {
             Ok(_) => log::debug!("Timer signal sent successfully"),
             Err(e) => {
                 // Just log the error instead of panicking
-                log::warn!("Failed to send timer signal: {:?}. This is expected in benchmarks.", e);
+                log::warn!(
+                    "Failed to send timer signal: {:?}. This is expected in benchmarks.",
+                    e
+                );
             }
         }
     });
