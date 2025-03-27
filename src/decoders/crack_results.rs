@@ -1,9 +1,5 @@
 //! This module contains CrackSuccess and CrackFailure
-use crate::checkers::{
-    checker_result::CheckResult,
-    checker_type::{CheckInfo, Checker},
-    CheckerTypes, CHECKER_MAP,
-};
+use crate::checkers::{checker_result::CheckResult, CheckerTypes, CHECKER_MAP};
 use crate::decoders::{DecoderType, DECODER_MAP};
 
 use super::interface::Decoder;
@@ -68,6 +64,7 @@ impl<'de> Deserialize<'de> for CrackResult {
     where
         D: serde::Deserializer<'de>,
     {
+        #[allow(unused)]
         #[derive(Deserialize)]
         struct TempCrackResult {
             pub success: bool,
@@ -95,8 +92,8 @@ impl<'de> Deserialize<'de> for CrackResult {
             encrypted_text: temp_cr.encrypted_text,
             unencrypted_text: temp_cr.unencrypted_text,
             decoder: decoder.get_name(),
-            checker_name: checker.get_name(), // TODO switch to checker
-            checker_description: checker.get_description(), // TODO switch to checker
+            checker_name: checker.get_name(),
+            checker_description: checker.get_description(),
             key: None,
             description: decoder.get_description(),
             link: decoder.get_link(),
@@ -109,8 +106,10 @@ mod tests {
     use super::super::super::checkers::checker_type::{Check, Checker};
     use super::super::super::checkers::english::EnglishChecker;
     use super::super::super::checkers::CheckerTypes;
-    use super::super::super::decoders::base64_decoder::Base64Decoder;
     use super::super::super::decoders::interface::Crack;
+    use super::super::super::decoders::{
+        base64_decoder::Base64Decoder, caesar_decoder::CaesarDecoder,
+    };
     use super::*;
 
     struct MockDecoder;
@@ -179,6 +178,55 @@ mod tests {
         expected_crack_result.update_checker(&check_result);
         expected_crack_result.success = true;
         expected_crack_result.unencrypted_text = Some(vec![String::from("hello world\n")]);
+
+        let result = serde_json::from_str(json.as_str());
+        assert!(result.is_ok());
+        let crack_result: CrackResult = result.unwrap();
+        assert_eq!(crack_result.success, expected_crack_result.success);
+        assert_eq!(
+            crack_result.encrypted_text,
+            expected_crack_result.encrypted_text
+        );
+        assert!(crack_result.unencrypted_text.is_some());
+        assert_eq!(
+            crack_result.unencrypted_text.unwrap(),
+            expected_crack_result.unencrypted_text.unwrap()
+        );
+        assert_eq!(crack_result.decoder, expected_crack_result.decoder);
+        assert_eq!(
+            crack_result.checker_name,
+            expected_crack_result.checker_name
+        );
+        assert_eq!(
+            crack_result.checker_description,
+            expected_crack_result.checker_description
+        );
+        assert!(crack_result.key.is_none());
+        assert_eq!(crack_result.description, expected_crack_result.description);
+        assert_eq!(crack_result.link, expected_crack_result.link);
+    }
+
+    #[test]
+    fn deserialize_crack_result_caesar() {
+        let json = String::from("{\"success\":true,\"encrypted_text\":\"ifmmp uijt jt mpoh ufyu\",\"unencrypted_text\":[\"hello this is long text\"],\"decoder\":\"caesar\",\"checker_name\":\"English Checker\",\"checker_description\":\"Uses gibberish detection to check if text is meaningful English\",\"key\":null,\"description\":\"Caesar cipher, also known as Caesar's cipher, the shift cipher, Caesar's code or Caesar shift, is one of the simplest and most widely known encryption techniques. It is a type of substitution cipher in which each letter in the plaintext is replaced by a letter some fixed number of positions down the alphabet. Uses Low sensitivity for gibberish detection.\",\"link\":\"https://en.wikipedia.org/wiki/Caesar_cipher\"}");
+
+        let checker = Checker::<EnglishChecker>::new();
+        let check_result = CheckResult {
+            is_identified: false,
+            text: "".to_string(),
+            checker_name: checker.name,
+            checker_description: checker.description,
+            description: "".to_string(),
+            link: checker.link,
+        };
+
+        let decoder = Decoder::<CaesarDecoder>::new();
+        let mut expected_crack_result =
+            CrackResult::new(&decoder, String::from("ifmmp uijt jt mpoh ufyu"));
+        expected_crack_result.update_checker(&check_result);
+        expected_crack_result.success = true;
+        expected_crack_result.unencrypted_text =
+            Some(vec![String::from("hello this is long text")]);
 
         let result = serde_json::from_str(json.as_str());
         assert!(result.is_ok());

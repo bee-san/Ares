@@ -181,84 +181,65 @@ impl DecoderBox {
 
 /// Global hashmap for translating strings to Decoders
 pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
-    // TODO: Make sure each key is the correct string
     HashMap::from([
         (
-            "vigenere",
+            "Vigenere",
             DecoderBox::new(Decoder::<VigenereDecoder>::new()),
         ),
         ("binary", DecoderBox::new(Decoder::<BinaryDecoder>::new())),
         (
-            "hexadecimal",
+            "Hexadecimal",
             DecoderBox::new(Decoder::<HexadecimalDecoder>::new()),
         ),
         (
-            "base58_bitcoin",
+            "Base58 Bitcoin",
             DecoderBox::new(Decoder::<Base58BitcoinDecoder>::new()),
         ),
         (
-            "base58_monero",
+            "Base58 Monero",
             DecoderBox::new(Decoder::<Base58MoneroDecoder>::new()),
         ),
         (
-            "base58_ripple",
+            "Base58 Ripple",
             DecoderBox::new(Decoder::<Base58RippleDecoder>::new()),
         ),
         (
-            "base58_flickr",
+            "Base58 Flickr",
             DecoderBox::new(Decoder::<Base58FlickrDecoder>::new()),
         ),
         ("Base64", DecoderBox::new(Decoder::<Base64Decoder>::new())),
-        ("base91", DecoderBox::new(Decoder::<Base91Decoder>::new())),
+        ("Base91", DecoderBox::new(Decoder::<Base91Decoder>::new())),
         (
-            "base65536",
+            "Base65536",
             DecoderBox::new(Decoder::<Base65536Decoder>::new()),
         ),
         (
-            "citrix_ctx1",
+            "Citrix Ctx1",
             DecoderBox::new(Decoder::<CitrixCTX1Decoder>::new()),
         ),
-        ("url", DecoderBox::new(Decoder::<URLDecoder>::new())),
-        ("base32", DecoderBox::new(Decoder::<Base32Decoder>::new())),
+        ("URL", DecoderBox::new(Decoder::<URLDecoder>::new())),
+        ("Base32", DecoderBox::new(Decoder::<Base32Decoder>::new())),
+        ("Reverse", DecoderBox::new(Decoder::<ReverseDecoder>::new())),
         (
-            "reversedecoder",
-            DecoderBox::new(Decoder::<ReverseDecoder>::new()),
-        ),
-        (
-            "morsecodedecoder",
+            "Morse Code",
             DecoderBox::new(Decoder::<MorseCodeDecoder>::new()),
         ),
+        ("atbash", DecoderBox::new(Decoder::<AtbashDecoder>::new())),
+        ("caesar", DecoderBox::new(Decoder::<CaesarDecoder>::new())),
         (
-            "atbashdecoder",
-            DecoderBox::new(Decoder::<AtbashDecoder>::new()),
-        ),
-        (
-            "caesardecoder",
-            DecoderBox::new(Decoder::<CaesarDecoder>::new()),
-        ),
-        (
-            "railfencedecoder",
+            "railfence",
             DecoderBox::new(Decoder::<RailfenceDecoder>::new()),
         ),
-        (
-            "rot47decoder",
-            DecoderBox::new(Decoder::<ROT47Decoder>::new()),
-        ),
+        ("rot47", DecoderBox::new(Decoder::<ROT47Decoder>::new())),
         ("z85", DecoderBox::new(Decoder::<Z85Decoder>::new())),
+        ("a1z26", DecoderBox::new(Decoder::<A1Z26Decoder>::new())),
+        ("Braille", DecoderBox::new(Decoder::<BrailleDecoder>::new())),
         (
-            "a1z26decoder",
-            DecoderBox::new(Decoder::<A1Z26Decoder>::new()),
-        ),
-        (
-            "brailledecoder",
-            DecoderBox::new(Decoder::<BrailleDecoder>::new()),
-        ),
-        (
-            "substitution_generic",
+            "simplesubstitution",
             DecoderBox::new(Decoder::<SubstitutionGenericDecoder>::new()),
         ),
         (
-            "brainfuck",
+            "Brainfuck",
             DecoderBox::new(Decoder::<BrainfuckInterpreter>::new()),
         ),
     ])

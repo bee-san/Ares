@@ -40,6 +40,7 @@ pub struct Checker<Type> {
     pub _phantom: std::marker::PhantomData<Type>,
 }
 
+/// Helper trait for returning info from a Checker
 pub trait CheckInfo {
     /// Returns the checker name
     fn get_name(&self) -> &str;
