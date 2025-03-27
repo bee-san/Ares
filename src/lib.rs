@@ -68,6 +68,8 @@ use self::decoders::crack_results::CrackResult;
 /// use ciphey::perform_cracking;
 /// use ciphey::config::Config;
 /// let mut config = Config::default();
+/// # let _test_db = ciphey::TestDatabase::default();
+/// # ciphey::set_test_db_path();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
 /// config.timeout = 5;
@@ -89,6 +91,8 @@ use self::decoders::crack_results::CrackResult;
 /// use ciphey::perform_cracking;
 /// use ciphey::config::Config;
 /// let mut config = Config::default();
+/// # let _test_db = ciphey::TestDatabase::default();
+/// # ciphey::set_test_db_path();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
 /// config.timeout = 0;
@@ -122,6 +126,46 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
 
     config::set_global_config(modified_config);
     let text = text.to_string();
+
+    /*  Checks to see if the encoded text already exists in the cache
+     *  returns cached result if so
+     */
+    let cache_result = storage::database::read_cache(&text);
+    match cache_result {
+        Ok(cache_row) => match cache_row {
+            Some(row) => {
+                let path = row
+                    .path
+                    .iter()
+                    .map(|crack_json| {
+                        let json_result = serde_json::from_str(crack_json);
+                        match json_result {
+                            Ok(crack_result) => crack_result,
+                            Err(e) => {
+                                panic!("Error deserializing cache result: {}", e);
+                            }
+                        }
+                    })
+                    .collect::<Vec<CrackResult>>();
+                return Some(DecoderResult {
+                    text: vec![row.decoded_text],
+                    path,
+                });
+            }
+            None => {
+                cli_pretty_printing::success(&format!(
+                    "DEBUG: lib.rs - Did not find text \"{}\" in cache",
+                    text.clone()
+                ));
+            }
+        },
+        Err(e) => {
+            cli_pretty_printing::warning(&format!(
+                "DEBUG: lib.rs - Error trying to read from cache: {}",
+                e
+            ));
+        }
+    }
 
     let initial_check_for_plaintext = check_if_input_text_is_plaintext(&text);
     if initial_check_for_plaintext.is_identified {
@@ -268,6 +312,50 @@ impl DecoderResult {
             text: vec![text.to_string()],
             path: vec![CrackResult::new(&Decoder::default(), "Default".to_string())],
         }
+    }
+}
+
+/// Gets the test directory path
+#[doc(hidden)]
+pub fn get_test_dir_path() -> std::path::PathBuf {
+    let mut path = dirs::home_dir().expect("Could not find home directory");
+    path.push("Ares");
+    path.push("Test");
+    path
+}
+
+/// Sets the global database path
+#[doc(hidden)]
+pub fn set_test_db_path() {
+    let mut path = get_test_dir_path();
+    std::fs::create_dir_all(&path).expect("Could not create Ares directory");
+    path.push("database.sqlite");
+    let _ = crate::storage::database::DB_PATH.set(Some(path));
+}
+
+/// Helper struct for testing database
+#[doc(hidden)]
+pub struct TestDatabase {
+    /// PathBuf to database file
+    pub path: std::path::PathBuf,
+}
+
+#[doc(hidden)]
+impl Default for TestDatabase {
+    fn default() -> Self {
+        TestDatabase {
+            path: get_test_dir_path(),
+        }
+    }
+}
+
+#[doc(hidden)]
+impl Drop for TestDatabase {
+    fn drop(&mut self) {
+        let mut db_file_path = self.path.as_path().to_path_buf();
+        db_file_path.push("database.sqlite");
+        let _ = std::fs::remove_file(&db_file_path);
+        let _ = std::fs::remove_dir(&self.path);
     }
 }
 
