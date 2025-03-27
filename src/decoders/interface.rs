@@ -52,8 +52,12 @@ pub trait Crack {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult;
     /// Get all tags for the current decoder
     fn get_tags(&self) -> &Vec<&str>;
-    /// Get the nam of the current decoder
+    /// Get the name of the current decoder
     fn get_name(&self) -> &str;
+    /// Gets the description of the current deocder
+    fn get_description(&self) -> &str;
+    /// Gets the link for the current decoder
+    fn get_link(&self) -> &str;
     /// Get the popularity of the decoder (a value between 0.0 and 1.0)
     /// Default implementation returns the decoder's popularity field
     fn get_popularity(&self) -> f32 {
