@@ -81,11 +81,24 @@ impl<'de> Deserialize<'de> for CrackResult {
             TempCrackResult::deserialize(deserializer).expect("Error deserializing CrackResult");
         let decoder = DECODER_MAP
             .get(temp_cr.decoder.as_str())
-            .expect("Error during deserialization of CrackResult: could not find matching decoder")
+            .expect(&format!("Error during deserialization of CrackResult: could not find matching decoder for {}", temp_cr.decoder.as_str()))
             .get::<DecoderType>();
+        if temp_cr.checker_name.as_str().is_empty() {
+            return Ok(CrackResult {
+                success: temp_cr.success,
+                encrypted_text: temp_cr.encrypted_text,
+                unencrypted_text: temp_cr.unencrypted_text,
+                decoder: decoder.get_name(),
+                checker_name: "",
+                checker_description: "",
+                key: None,
+                description: decoder.get_description(),
+                link: decoder.get_link(),
+            });
+        }
         let checker = CHECKER_MAP
             .get(temp_cr.checker_name.as_str())
-            .expect("Error during deserialization of CrackResult: could not find matching checker")
+            .expect(&format!("Error during deserialization of CrackResult: could not find matching checker for {}", temp_cr.checker_name.as_str()))
             .get::<CheckerTypes>();
         Ok(CrackResult {
             success: temp_cr.success,
