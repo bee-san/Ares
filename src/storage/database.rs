@@ -110,7 +110,14 @@ pub fn setup_database() -> Result<(), rusqlite::Error> {
     match DB_PATH.get() {
         Some(_path) => (),
         None => {
-            DB_PATH.set(Some(get_database_path())); // TODO: Handle errors from this Result
+            let db_result: Result<(), Option<std::path::PathBuf>> =
+                DB_PATH.set(Some(get_database_path()));
+            match db_result {
+                Ok(_) => (),
+                Err(_e) => {
+                    crate::cli_pretty_printing::warning("Error setting database path");
+                }
+            }
         }
     };
     init_database()?;
