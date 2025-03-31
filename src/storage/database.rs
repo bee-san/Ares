@@ -12,9 +12,9 @@ use std::sync::OnceLock;
 pub static DB_PATH: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
 
 #[derive(Debug)]
-/// Struct representing a row in the failed_decodes table
-pub struct FailedDecodesRow {
-    /// Index of row in failed_decodes table
+/// Struct representing a row in the human_rejection table
+pub struct HumanRejectionRow {
+    /// Index of row in human_rejection table
     pub id: usize,
     /// Plaintext that has been marked as a failed decode
     pub plaintext: String,
@@ -24,7 +24,7 @@ pub struct FailedDecodesRow {
     pub timestamp: String,
 }
 
-impl PartialEq for FailedDecodesRow {
+impl PartialEq for HumanRejectionRow {
     fn eq(&self, other: &Self) -> bool {
         self.id == other.id
             && self.plaintext == other.plaintext
@@ -141,7 +141,7 @@ fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
 
     // Initializing human checker table
     conn.execute(
-        "CREATE TABLE IF NOT EXISTS failed_decodes (
+        "CREATE TABLE IF NOT EXISTS human_rejection (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             plaintext TEXT NOT NULL,
             checker TEXT NOT NULL,
@@ -150,7 +150,7 @@ fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
         (),
     )?;
     conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_stats_plaintext ON failed_decodes(plaintext);",
+        "CREATE INDEX IF NOT EXISTS idx_stats_plaintext ON human_rejection(plaintext);",
         (),
     )?;
 
@@ -302,18 +302,18 @@ pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
     conn_result
 }
 
-/// Adds a new decode failure record to the failed_decodes table
+/// Adds a new decode failure record to the human_rejection table
 ///
 /// Returns the number of successfully inserted rows on success
 /// Returns rusqlite::Error on error
-pub fn insert_failed_decodes(
+pub fn insert_human_rejection(
     plaintext: &String,
     check_result: &CheckResult,
 ) -> Result<usize, rusqlite::Error> {
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
     let conn_result = transaction.execute(
-        "INSERT INTO failed_decodes (
+        "INSERT INTO human_rejection (
             plaintext,
             checker,
             timestamp)
@@ -328,18 +328,18 @@ pub fn insert_failed_decodes(
     conn_result
 }
 
-/// Searches the database for a failed_decodes table row that matches the given plaintext
+/// Searches the database for a human_rejection table row that matches the given plaintext
 ///
-/// On match, returns a FailedDecodesRow
+/// On match, returns a HumanRejectionRow
 /// Otherwise, returns None
 /// On error, returns a ``rusqlite::Error``
-pub fn read_failed_decodes(
+pub fn read_human_rejection(
     plaintext: &String,
-) -> Result<Option<FailedDecodesRow>, rusqlite::Error> {
+) -> Result<Option<HumanRejectionRow>, rusqlite::Error> {
     let conn = get_db_connection()?;
-    let mut stmt = conn.prepare("SELECT * FROM failed_decodes WHERE plaintext IS $1")?;
+    let mut stmt = conn.prepare("SELECT * FROM human_rejection WHERE plaintext IS $1")?;
     let mut query = stmt.query_map([plaintext], |row| {
-        Ok(FailedDecodesRow {
+        Ok(HumanRejectionRow {
             id: row.get_unwrap(0),
             plaintext: row.get_unwrap(1),
             checker: row.get_unwrap(2),
@@ -353,18 +353,18 @@ pub fn read_failed_decodes(
     }
 }
 
-/// Updates a failed_decodes row for a given plaintext
+/// Updates a human_rejection row for a given plaintext
 ///
 /// Returns the number of update rows on success
 /// Returns rusqlite::Error on error
-pub fn update_failed_decodes(
+pub fn update_human_rejection(
     plaintext: &String,
     check_result: &CheckResult,
 ) -> Result<usize, rusqlite::Error> {
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
     let conn_result = transaction.execute(
-        "UPDATE failed_decodes SET 
+        "UPDATE human_rejection SET 
             checker = $1,
             timestamp = $2
             WHERE plaintext = $3;",
@@ -378,15 +378,15 @@ pub fn update_failed_decodes(
     conn_result
 }
 
-/// Removes the failed_decodes row corresponding to the given plaintext
+/// Removes the human_rejection row corresponding to the given plaintext
 ///
 /// Returns number of successfully deleted rows on success
 /// Returns sqlite::Error on error
-pub fn delete_failed_decodes(plaintext: &String) -> Result<usize, rusqlite::Error> {
+pub fn delete_human_rejection(plaintext: &String) -> Result<usize, rusqlite::Error> {
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
     let conn_result = transaction.execute(
-        "DELETE FROM failed_decodes WHERE plaintext = $1",
+        "DELETE FROM human_rejection WHERE plaintext = $1",
         (plaintext.clone(),),
     );
     transaction.commit()?;
@@ -483,12 +483,12 @@ mod tests {
         (mock_crack_result, expected_cache_row, cache_entry)
     }
 
-    /// Helper function for generating a new failed_decodes row
-    pub fn generate_failed_decodes_row<Type>(
+    /// Helper function for generating a new human_rejection row
+    pub fn generate_human_rejection_row<Type>(
         id: usize,
         encoded_text: &String,
         checker_used: Checker<Type>,
-    ) -> (CheckResult, FailedDecodesRow) {
+    ) -> (CheckResult, HumanRejectionRow) {
         let check_result = CheckResult {
             is_identified: false,
             text: "".to_string(),
@@ -498,7 +498,7 @@ mod tests {
             link: checker_used.link,
         };
 
-        let expected_row = FailedDecodesRow {
+        let expected_row = HumanRejectionRow {
             id,
             plaintext: encoded_text.clone(),
             checker: String::from(check_result.checker_name),
@@ -564,11 +564,11 @@ mod tests {
     }
 
     #[test]
-    fn correct_failed_decodes_table_schema() {
+    fn correct_human_rejection_table_schema() {
         set_test_db_path();
         let conn = init_database().unwrap();
 
-        let stmt_result = conn.prepare("PRAGMA table_info(failed_decodes);");
+        let stmt_result = conn.prepare("PRAGMA table_info(human_rejection);");
         assert!(stmt_result.is_ok());
         let mut stmt = stmt_result.unwrap();
 
@@ -1034,15 +1034,15 @@ mod tests {
     }
 
     #[test]
-    fn failed_decodes_insert_empty_success() {
+    fn human_rejection_insert_empty_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
 
-        let stmt_result = conn.prepare("SELECT * FROM failed_decodes;");
+        let stmt_result = conn.prepare("SELECT * FROM human_rejection;");
         assert!(stmt_result.is_ok());
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
-            Ok(FailedDecodesRow {
+            Ok(HumanRejectionRow {
                 id: row.get_unwrap(0),
                 plaintext: row.get_unwrap(1),
                 checker: row.get_unwrap(2),
@@ -1055,7 +1055,7 @@ mod tests {
     }
 
     #[test]
-    fn failed_decodes_insert_success() {
+    fn human_rejection_insert_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
 
@@ -1064,17 +1064,17 @@ mod tests {
         let checker_used = Checker::<Athena>::new();
 
         let (check_result, mut expected_row) =
-            generate_failed_decodes_row(1, &plaintext, checker_used);
+            generate_human_rejection_row(1, &plaintext, checker_used);
 
-        let result = insert_failed_decodes(&plaintext, &check_result);
+        let result = insert_human_rejection(&plaintext, &check_result);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1);
 
-        let stmt_result = conn.prepare("SELECT * FROM failed_decodes;");
+        let stmt_result = conn.prepare("SELECT * FROM human_rejection;");
         assert!(stmt_result.is_ok());
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
-            Ok(FailedDecodesRow {
+            Ok(HumanRejectionRow {
                 id: row.get_unwrap(0),
                 plaintext: row.get_unwrap(1),
                 checker: row.get_unwrap(2),
@@ -1083,13 +1083,13 @@ mod tests {
         });
         assert!(query_result.is_ok());
         let mut query = query_result.unwrap();
-        let row: FailedDecodesRow = query.next().unwrap().unwrap();
+        let row: HumanRejectionRow = query.next().unwrap().unwrap();
         expected_row.timestamp = row.timestamp.clone();
         assert_eq!(row, expected_row);
     }
 
     #[test]
-    fn failed_decodes_insert_2_success() {
+    fn human_rejection_insert_2_success() {
         set_test_db_path();
         let conn = init_database().unwrap();
 
@@ -1097,9 +1097,9 @@ mod tests {
         let checker_used_1 = Checker::<Athena>::new();
 
         let (check_result_1, mut expected_row_1) =
-            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
+            generate_human_rejection_row(1, &plaintext_1, checker_used_1);
 
-        let result = insert_failed_decodes(&plaintext_1, &check_result_1);
+        let result = insert_human_rejection(&plaintext_1, &check_result_1);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1);
 
@@ -1107,17 +1107,17 @@ mod tests {
         let checker_used_2 = Checker::<EnglishChecker>::new();
 
         let (check_result_2, mut expected_row_2) =
-            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
+            generate_human_rejection_row(2, &plaintext_2, checker_used_2);
 
-        let result = insert_failed_decodes(&plaintext_2, &check_result_2);
+        let result = insert_human_rejection(&plaintext_2, &check_result_2);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1);
 
-        let stmt_result = conn.prepare("SELECT * FROM failed_decodes;");
+        let stmt_result = conn.prepare("SELECT * FROM human_rejection;");
         assert!(stmt_result.is_ok());
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
-            Ok(FailedDecodesRow {
+            Ok(HumanRejectionRow {
                 id: row.get_unwrap(0),
                 plaintext: row.get_unwrap(1),
                 checker: row.get_unwrap(2),
@@ -1126,10 +1126,10 @@ mod tests {
         });
         assert!(query_result.is_ok());
         let mut query = query_result.unwrap();
-        let row: FailedDecodesRow = query.next().unwrap().unwrap();
+        let row: HumanRejectionRow = query.next().unwrap().unwrap();
         expected_row_1.timestamp = row.timestamp.clone();
         assert_eq!(row, expected_row_1);
-        let row: FailedDecodesRow = query.next().unwrap().unwrap();
+        let row: HumanRejectionRow = query.next().unwrap().unwrap();
         expected_row_2.timestamp = row.timestamp.clone();
         assert_eq!(row, expected_row_2);
     }
@@ -1143,11 +1143,11 @@ mod tests {
         let checker_used = Checker::<Athena>::new();
 
         let (check_result, mut expected_row) =
-            generate_failed_decodes_row(1, &plaintext, checker_used);
+            generate_human_rejection_row(1, &plaintext, checker_used);
 
-        let _result = insert_failed_decodes(&plaintext, &check_result);
+        let _result = insert_human_rejection(&plaintext, &check_result);
 
-        let row_result = read_failed_decodes(&plaintext);
+        let row_result = read_human_rejection(&plaintext);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -1165,19 +1165,19 @@ mod tests {
         let checker_used_1 = Checker::<Athena>::new();
 
         let (check_result_1, mut expected_row_1) =
-            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
+            generate_human_rejection_row(1, &plaintext_1, checker_used_1);
 
-        let _result = insert_failed_decodes(&plaintext_1, &check_result_1);
+        let _result = insert_human_rejection(&plaintext_1, &check_result_1);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
 
         let (check_result_2, mut expected_row_2) =
-            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
+            generate_human_rejection_row(2, &plaintext_2, checker_used_2);
 
-        let _result = insert_failed_decodes(&plaintext_2, &check_result_2);
+        let _result = insert_human_rejection(&plaintext_2, &check_result_2);
 
-        let row_result = read_failed_decodes(&plaintext_1);
+        let row_result = read_human_rejection(&plaintext_1);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -1185,7 +1185,7 @@ mod tests {
         expected_row_1.timestamp = row.timestamp.clone();
         assert_eq!(row, expected_row_1);
 
-        let row_result = read_failed_decodes(&plaintext_2);
+        let row_result = read_human_rejection(&plaintext_2);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -1195,7 +1195,7 @@ mod tests {
     }
 
     #[test]
-    fn failed_decodes_read_empty_miss() {
+    fn human_rejection_read_empty_miss() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
@@ -1203,16 +1203,16 @@ mod tests {
         let checker_used = Checker::<Athena>::new();
 
         let (check_result, _expected_row) =
-            generate_failed_decodes_row(1, &plaintext, checker_used);
+            generate_human_rejection_row(1, &plaintext, checker_used);
 
-        let _result = insert_failed_decodes(&plaintext, &check_result);
-        let row_result = read_failed_decodes(&String::from("not plaintext"));
+        let _result = insert_human_rejection(&plaintext, &check_result);
+        let row_result = read_human_rejection(&String::from("not plaintext"));
         assert!(row_result.is_ok());
         assert!(row_result.unwrap().is_none());
     }
 
     #[test]
-    fn failed_decodes_read_2_miss() {
+    fn human_rejection_read_2_miss() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
@@ -1220,23 +1220,23 @@ mod tests {
         let checker_used_1 = Checker::<Athena>::new();
 
         let (check_result_1, _expected_row_1) =
-            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
-        let _result = insert_failed_decodes(&plaintext_1, &check_result_1);
+            generate_human_rejection_row(1, &plaintext_1, checker_used_1);
+        let _result = insert_human_rejection(&plaintext_1, &check_result_1);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
 
         let (check_result_2, _expected_row_2) =
-            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
-        let _result = insert_failed_decodes(&plaintext_2, &check_result_2);
+            generate_human_rejection_row(2, &plaintext_2, checker_used_2);
+        let _result = insert_human_rejection(&plaintext_2, &check_result_2);
 
-        let row_result = read_failed_decodes(&String::from("not plaintext"));
+        let row_result = read_human_rejection(&String::from("not plaintext"));
         assert!(row_result.is_ok());
         assert!(row_result.unwrap().is_none());
     }
 
     #[test]
-    fn failed_decodes_delete_success_one_entry() {
+    fn human_rejection_delete_success_one_entry() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
@@ -1244,110 +1244,110 @@ mod tests {
         let checker_used = Checker::<Athena>::new();
 
         let (check_result, _expected_row) =
-            generate_failed_decodes_row(1, &plaintext, checker_used);
-        let _result = insert_failed_decodes(&plaintext, &check_result);
-        let _row_result = read_failed_decodes(&String::from("not plaintext"));
-        let delete_result = delete_failed_decodes(&plaintext);
+            generate_human_rejection_row(1, &plaintext, checker_used);
+        let _result = insert_human_rejection(&plaintext, &check_result);
+        let _row_result = read_human_rejection(&String::from("not plaintext"));
+        let delete_result = delete_human_rejection(&plaintext);
         assert!(delete_result.is_ok());
         assert_eq!(delete_result.unwrap(), 1);
-        let read_result = read_failed_decodes(&plaintext);
+        let read_result = read_human_rejection(&plaintext);
         assert!(read_result.is_ok());
         assert!(read_result.unwrap().is_none());
     }
 
     #[test]
-    fn failed_decodes_delete_success_two_entries() {
+    fn human_rejection_delete_success_two_entries() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
         let plaintext_1 = String::from("plaintext");
         let checker_used_1 = Checker::<Athena>::new();
         let (check_result_1, mut expected_row_1) =
-            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
-        let _result = insert_failed_decodes(&plaintext_1, &check_result_1);
+            generate_human_rejection_row(1, &plaintext_1, checker_used_1);
+        let _result = insert_human_rejection(&plaintext_1, &check_result_1);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
         let (check_result_2, mut expected_row_2) =
-            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
-        let _result = insert_failed_decodes(&plaintext_2, &check_result_2);
+            generate_human_rejection_row(2, &plaintext_2, checker_used_2);
+        let _result = insert_human_rejection(&plaintext_2, &check_result_2);
 
-        let read_result = read_failed_decodes(&plaintext_1).unwrap();
+        let read_result = read_human_rejection(&plaintext_1).unwrap();
         assert!(read_result.is_some());
-        let row: FailedDecodesRow = read_result.unwrap();
+        let row: HumanRejectionRow = read_result.unwrap();
         expected_row_1.timestamp = row.timestamp.clone();
         assert_eq!(row, expected_row_1);
 
-        let read_result = read_failed_decodes(&plaintext_2).unwrap();
+        let read_result = read_human_rejection(&plaintext_2).unwrap();
         assert!(read_result.is_some());
-        let row: FailedDecodesRow = read_result.unwrap();
+        let row: HumanRejectionRow = read_result.unwrap();
         expected_row_2.timestamp = row.timestamp.clone();
         assert_eq!(row, expected_row_2);
 
-        let delete_result = delete_failed_decodes(&plaintext_1);
+        let delete_result = delete_human_rejection(&plaintext_1);
         assert!(delete_result.is_ok());
         assert_eq!(delete_result.unwrap(), 1);
-        let read_result = read_failed_decodes(&plaintext_1);
+        let read_result = read_human_rejection(&plaintext_1);
         assert!(read_result.is_ok());
         assert!(read_result.unwrap().is_none());
 
-        let read_result = read_failed_decodes(&plaintext_2).unwrap();
+        let read_result = read_human_rejection(&plaintext_2).unwrap();
         assert!(read_result.is_some());
-        let row: FailedDecodesRow = read_result.unwrap();
+        let row: HumanRejectionRow = read_result.unwrap();
         assert_eq!(row, expected_row_2);
     }
 
     #[test]
-    fn failed_decodes_delete_missing() {
+    fn human_rejection_delete_missing() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
         let plaintext = String::from("plaintext");
-        let delete_result = delete_failed_decodes(&plaintext);
+        let delete_result = delete_human_rejection(&plaintext);
         assert!(delete_result.is_ok());
         assert_eq!(delete_result.unwrap(), 0);
     }
 
     #[test]
-    fn failed_decodes_delete_missing_with_entries() {
+    fn human_rejection_delete_missing_with_entries() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
         let plaintext_1 = String::from("plaintext");
         let checker_used_1 = Checker::<Athena>::new();
         let (check_result_1, _expected_row_1) =
-            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
-        let row_result = insert_failed_decodes(&plaintext_1, &check_result_1);
+            generate_human_rejection_row(1, &plaintext_1, checker_used_1);
+        let row_result = insert_human_rejection(&plaintext_1, &check_result_1);
         assert!(row_result.is_ok());
         assert_eq!(row_result.unwrap(), 1);
 
         let plaintext_2 = String::from("plaintext2");
 
-        let delete_result = delete_failed_decodes(&plaintext_2);
+        let delete_result = delete_human_rejection(&plaintext_2);
 
         assert!(delete_result.is_ok());
         assert_eq!(delete_result.unwrap(), 0);
     }
 
     #[test]
-    fn failed_decodes_update_1_change_1_entry_success() {
+    fn human_rejection_update_1_change_1_entry_success() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
         let plaintext = String::from("plaintext");
         let checker_used = Checker::<Athena>::new();
         let (check_result, mut expected_row) =
-            generate_failed_decodes_row(1, &plaintext, checker_used);
-        let _row_result = insert_failed_decodes(&plaintext, &check_result);
+            generate_human_rejection_row(1, &plaintext, checker_used);
+        let _row_result = insert_human_rejection(&plaintext, &check_result);
 
         let checker_new = Checker::<EnglishChecker>::new();
         let (check_result_new, mut expected_row_new) =
-            generate_failed_decodes_row(1, &plaintext, checker_new);
-        let update_result = update_failed_decodes(&plaintext, &check_result_new);
+            generate_human_rejection_row(1, &plaintext, checker_new);
+        let update_result = update_human_rejection(&plaintext, &check_result_new);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 1);
 
-        let row_result = read_failed_decodes(&plaintext);
+        let row_result = read_human_rejection(&plaintext);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -1359,31 +1359,31 @@ mod tests {
     }
 
     #[test]
-    fn failed_decodes_update_1_change_2_entry_success() {
+    fn human_rejection_update_1_change_2_entry_success() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
         let plaintext_1 = String::from("plaintext1");
         let checker_used_1 = Checker::<Athena>::new();
         let (check_result_1, mut expected_row_1) =
-            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
-        let _row_result = insert_failed_decodes(&plaintext_1, &check_result_1);
+            generate_human_rejection_row(1, &plaintext_1, checker_used_1);
+        let _row_result = insert_human_rejection(&plaintext_1, &check_result_1);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
         let (check_result_2, mut expected_row_2) =
-            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
-        let _row_result = insert_failed_decodes(&plaintext_2, &check_result_2);
+            generate_human_rejection_row(2, &plaintext_2, checker_used_2);
+        let _row_result = insert_human_rejection(&plaintext_2, &check_result_2);
 
         let checker_new = Checker::<EnglishChecker>::new();
         let (check_result_new, mut expected_row_new) =
-            generate_failed_decodes_row(1, &plaintext_1, checker_new);
+            generate_human_rejection_row(1, &plaintext_1, checker_new);
 
-        let update_result = update_failed_decodes(&plaintext_1, &check_result_new);
+        let update_result = update_human_rejection(&plaintext_1, &check_result_new);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 1);
 
-        let row_result = read_failed_decodes(&plaintext_1);
+        let row_result = read_human_rejection(&plaintext_1);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -1393,7 +1393,7 @@ mod tests {
         assert_ne!(row, expected_row_1);
         assert_eq!(row, expected_row_new);
 
-        let row_result = read_failed_decodes(&plaintext_2);
+        let row_result = read_human_rejection(&plaintext_2);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -1405,33 +1405,33 @@ mod tests {
     }
 
     #[test]
-    fn failed_decodes_update_1_change_2_entry_no_match() {
+    fn human_rejection_update_1_change_2_entry_no_match() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
         let plaintext_1 = String::from("plaintext1");
         let checker_used_1 = Checker::<Athena>::new();
         let (check_result_1, mut expected_row_1) =
-            generate_failed_decodes_row(1, &plaintext_1, checker_used_1);
-        let _row_result = insert_failed_decodes(&plaintext_1, &check_result_1);
+            generate_human_rejection_row(1, &plaintext_1, checker_used_1);
+        let _row_result = insert_human_rejection(&plaintext_1, &check_result_1);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
         let (check_result_2, mut expected_row_2) =
-            generate_failed_decodes_row(2, &plaintext_2, checker_used_2);
-        let _row_result = insert_failed_decodes(&plaintext_2, &check_result_2);
+            generate_human_rejection_row(2, &plaintext_2, checker_used_2);
+        let _row_result = insert_human_rejection(&plaintext_2, &check_result_2);
 
         let plaintext_new = String::from("new plaintext");
 
         let checker_new = Checker::<EnglishChecker>::new();
         let (check_result_new, mut expected_row_new) =
-            generate_failed_decodes_row(1, &plaintext_new, checker_new);
+            generate_human_rejection_row(1, &plaintext_new, checker_new);
 
-        let update_result = update_failed_decodes(&plaintext_new, &check_result_new);
+        let update_result = update_human_rejection(&plaintext_new, &check_result_new);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 0);
 
-        let row_result = read_failed_decodes(&plaintext_1);
+        let row_result = read_human_rejection(&plaintext_1);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -1441,7 +1441,7 @@ mod tests {
         assert_eq!(row, expected_row_1);
         assert_ne!(row, expected_row_new);
 
-        let row_result = read_failed_decodes(&plaintext_2);
+        let row_result = read_human_rejection(&plaintext_2);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
@@ -1453,15 +1453,15 @@ mod tests {
     }
 
     #[test]
-    fn failed_decodes_update_empty() {
+    fn human_rejection_update_empty() {
         set_test_db_path();
         let _conn = init_database().unwrap();
 
         let plaintext = String::from("plaintext");
         let checker_new = Checker::<EnglishChecker>::new();
         let (check_result_new, _expected_row_new) =
-            generate_failed_decodes_row(1, &plaintext, checker_new);
-        let update_result = update_failed_decodes(&plaintext, &check_result_new);
+            generate_human_rejection_row(1, &plaintext, checker_new);
+        let update_result = update_human_rejection(&plaintext, &check_result_new);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 0);
     }
