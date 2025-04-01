@@ -361,7 +361,7 @@ impl Drop for TestDatabase {
 mod tests {
     use super::perform_cracking;
     use crate::config::Config;
-    use crate::{TestDatabase, set_test_db_path};
+    use crate::{set_test_db_path, TestDatabase};
 
     #[test]
     fn test_perform_cracking_returns() {
