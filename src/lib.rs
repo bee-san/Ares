@@ -134,23 +134,29 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     match cache_result {
         Ok(cache_row) => match cache_row {
             Some(row) => {
-                let path = row
+                let path_result: Result<Vec<CrackResult>, serde_json::Error> = row
                     .path
                     .iter()
                     .map(|crack_json| {
                         let json_result = serde_json::from_str(crack_json);
                         match json_result {
-                            Ok(crack_result) => crack_result,
+                            Ok(crack_result) => Ok(crack_result),
                             Err(e) => {
-                                panic!("Error deserializing cache result: {}", e);
+                                cli_pretty_printing::warning(&format!("Error deserializing cache result: {}", e));
+                                Err(e)
                             }
                         }
                     })
-                    .collect::<Vec<CrackResult>>();
-                return Some(DecoderResult {
-                    text: vec![row.decoded_text],
-                    path,
-                });
+                    .collect();
+                match path_result {
+                    Ok(path) => {
+                        return Some(DecoderResult {
+                            text: vec![row.decoded_text],
+                            path,
+                        });
+                    },
+                    _ => (),
+                }
             }
             None => {
                 cli_pretty_printing::success(&format!(
@@ -255,18 +261,17 @@ fn success_result_to_cache(
     result: &DecoderResult,
 ) -> Result<usize, rusqlite::Error> {
     let stop_time = SystemTime::now();
-    let execution_time_ms: i64;
-    match stop_time.duration_since(start_time) {
+    let execution_time_ms: i64 = match stop_time.duration_since(start_time) {
         Ok(duration) => {
-            execution_time_ms = duration.as_millis().try_into().unwrap_or(-2);
+            duration.as_millis().try_into().unwrap_or(-2)
         }
         Err(_) => {
             cli_pretty_printing::warning(
                 "Stop time is less than start time. Clock may have gone backwards.",
             );
-            execution_time_ms = -1;
+            -1
         }
-    }
+    };
     let cache_entry = storage::database::CacheEntry {
         encoded_text: String::from(text),
         decoded_text: match result.text.last() {

@@ -54,6 +54,11 @@ impl CrackResult {
     }
 
     /// Converts CrackResult into JSON
+    ///
+    /// # Errors
+    ///
+    /// If there's an error during serialization of CrackResult,
+    /// it will be returned as a serde_json::Error
     pub fn get_json(&self) -> Result<String, serde_json::Error> {
         serde_json::to_string(self)
     }
@@ -67,14 +72,23 @@ impl<'de> Deserialize<'de> for CrackResult {
         #[allow(unused)]
         #[derive(Deserialize)]
         struct TempCrackResult {
+            /// Success status of the CrackResult
             pub success: bool,
+            /// The encrypted/encoded text that was passed in this decode attempt
             pub encrypted_text: String,
+            /// The resulting unencrypted/decoded text(s) generated in this decode attempt
             pub unencrypted_text: Option<Vec<String>>,
+            /// The decoder used to decode the encoded text
             pub decoder: String,
+            /// The checker used to validate the success of the decoding attempt
             pub checker_name: String,
+            /// Description of the checker
             pub checker_description: String,
+            /// Key intended for use in decryption attempts (currently unused)
             pub key: Option<String>,
+            /// Description of the decoder
             pub description: String,
+            /// Link information about the decode method
             pub link: String,
         }
         let temp_cr: TempCrackResult =

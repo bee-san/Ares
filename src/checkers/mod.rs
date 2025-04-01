@@ -124,12 +124,15 @@ impl CheckerTypes {
     }
 }
 
-/// Wrapper struct to hold Checkers
+/// Wrapper struct to hold Checkers for CHECKER_MAP
 pub struct CheckerBox {
+    /// Wrapper box to hold Checkers for CHECKER_MAP
     value: Box<dyn CheckInfo + Sync + Send>,
 }
 
 impl CheckerBox {
+    /// Constructor for CheckerBox. Takes in a Checker and stores it as the
+    /// internal value
     fn new<T: 'static + CheckInfo + Sync + Send>(value: T) -> Self {
         Self {
             value: Box::new(value),

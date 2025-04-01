@@ -163,10 +163,13 @@ pub enum DecoderType {
 
 /// Wrapper struct to hold Decoders for DECODER_MAP
 pub struct DecoderBox {
+    /// Wrapper box to hold Decoders for DECODER_MAP
     value: Box<dyn Crack + Sync + Send>,
 }
 
 impl DecoderBox {
+    /// Constructor for DecoderBox. Takes in a Decoder and stores it as the
+    /// internal value
     fn new<T: 'static + Crack + Sync + Send>(value: T) -> Self {
         Self {
             value: Box::new(value),

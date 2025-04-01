@@ -97,15 +97,18 @@ fn get_database_path() -> std::path::PathBuf {
 /// Otherwise, opens a Connection to an in-memory database
 fn get_db_connection() -> Result<rusqlite::Connection, rusqlite::Error> {
     match DB_PATH.get() {
-        Some(db_path) => match db_path {
-            Some(path) => rusqlite::Connection::open(path),
-            None => rusqlite::Connection::open_in_memory(),
-        },
-        None => rusqlite::Connection::open_in_memory(),
+        Some(Some(path)) => rusqlite::Connection::open(path),
+        _ => rusqlite::Connection::open_in_memory(),
     }
 }
 
 /// Public wrapper for setting up database
+///
+/// # Errors
+///
+/// On error setting up the database, returns a rusqlite::Error
+/// If there's an error while setting the database path, prints warning
+/// to console and continues with the default DB_PATH
 pub fn setup_database() -> Result<(), rusqlite::Error> {
     match DB_PATH.get() {
         Some(_path) => (),
@@ -167,7 +170,14 @@ fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
 /// Adds a new cache record to the cache table
 ///
 /// Returns the number of successfully inserted rows on success
+///
+/// # Errors
+///
 /// Returns rusqlite::Error on error
+///
+/// # Panics
+///
+/// Panics if the decoding path could not be serialized
 pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> {
     let path: Vec<String> = cache_entry
         .path
@@ -176,15 +186,14 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
         .collect();
 
     let last_crack_result = cache_entry.path.last();
-    let successful;
-    match last_crack_result {
+    let successful: bool = match last_crack_result {
         Some(crack_result) => {
-            successful = crack_result.success;
-        }
+            crack_result.success
+        },
         None => {
-            successful = false;
+            false
         }
-    }
+    };
 
     let path_json = serde_json::to_string(&path).unwrap();
     let mut conn = get_db_connection()?;
@@ -306,9 +315,12 @@ pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
 /// Adds a new decode failure record to the human_rejection table
 ///
 /// Returns the number of successfully inserted rows on success
+///
+/// # Errors
+///
 /// Returns rusqlite::Error on error
 pub fn insert_human_rejection(
-    plaintext: &String,
+    plaintext: &str,
     check_result: &CheckResult,
 ) -> Result<usize, rusqlite::Error> {
     let mut conn = get_db_connection()?;
@@ -320,7 +332,7 @@ pub fn insert_human_rejection(
             timestamp)
         VALUES ($1, $2, $3)",
         (
-            plaintext.clone(),
+            plaintext.to_owned(),
             check_result.checker_name,
             get_timestamp(),
         ),
@@ -333,7 +345,10 @@ pub fn insert_human_rejection(
 ///
 /// On match, returns a HumanRejectionRow
 /// Otherwise, returns None
-/// On error, returns a ``rusqlite::Error``
+///
+/// # Errors
+///
+/// Returns a ``rusqlite::Error``
 pub fn read_human_rejection(
     plaintext: &String,
 ) -> Result<Option<HumanRejectionRow>, rusqlite::Error> {
@@ -357,9 +372,12 @@ pub fn read_human_rejection(
 /// Updates a human_rejection row for a given plaintext
 ///
 /// Returns the number of update rows on success
+///
+/// # Errors
+///
 /// Returns rusqlite::Error on error
 pub fn update_human_rejection(
-    plaintext: &String,
+    plaintext: &str,
     check_result: &CheckResult,
 ) -> Result<usize, rusqlite::Error> {
     let mut conn = get_db_connection()?;
@@ -372,7 +390,7 @@ pub fn update_human_rejection(
         (
             check_result.checker_name,
             get_timestamp(),
-            plaintext.clone(),
+            plaintext.to_owned(),
         ),
     );
     transaction.commit()?;
@@ -382,13 +400,16 @@ pub fn update_human_rejection(
 /// Removes the human_rejection row corresponding to the given plaintext
 ///
 /// Returns number of successfully deleted rows on success
+///
+/// # Errors
+///
 /// Returns sqlite::Error on error
-pub fn delete_human_rejection(plaintext: &String) -> Result<usize, rusqlite::Error> {
+pub fn delete_human_rejection(plaintext: &str) -> Result<usize, rusqlite::Error> {
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
     let conn_result = transaction.execute(
         "DELETE FROM human_rejection WHERE plaintext = $1",
-        (plaintext.clone(),),
+        (plaintext.to_owned(),),
     );
     transaction.commit()?;
     conn_result
@@ -454,17 +475,17 @@ mod tests {
     /// Helper function for generating a cache row
     fn generate_cache_row(
         id: usize,
-        encoded_text: &String,
+        encoded_text: &str,
         decoded_text: &String,
     ) -> (CrackResult, CacheRow, CacheEntry) {
         let mock_decoder = Decoder::<MockDecoder>::new();
-        let mut mock_crack_result = CrackResult::new(&mock_decoder, encoded_text.clone());
+        let mut mock_crack_result = CrackResult::new(&mock_decoder, encoded_text.to_owned());
         mock_crack_result.success = true;
         mock_crack_result.unencrypted_text = Some(vec![decoded_text.clone()]);
 
         let expected_cache_row = CacheRow {
             id,
-            encoded_text: encoded_text.clone(),
+            encoded_text: encoded_text.to_owned(),
             decoded_text: decoded_text.clone(),
             path: match serde_json::to_string(&mock_crack_result) {
                 Ok(json) => vec![json],
@@ -476,7 +497,7 @@ mod tests {
         };
 
         let cache_entry = CacheEntry {
-            encoded_text: encoded_text.clone(),
+            encoded_text: encoded_text.to_owned(),
             decoded_text: decoded_text.clone(),
             path: vec![mock_crack_result.clone()],
             execution_time_ms: 100,
