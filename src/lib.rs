@@ -319,8 +319,8 @@ impl DecoderResult {
 #[doc(hidden)]
 pub fn get_test_dir_path() -> std::path::PathBuf {
     let mut path = dirs::home_dir().expect("Could not find home directory");
-    path.push("Ares");
-    path.push("Test");
+    path.push(".ciphey");
+    path.push("test");
     path
 }
 
@@ -328,7 +328,7 @@ pub fn get_test_dir_path() -> std::path::PathBuf {
 #[doc(hidden)]
 pub fn set_test_db_path() {
     let mut path = get_test_dir_path();
-    std::fs::create_dir_all(&path).expect("Could not create Ares directory");
+    std::fs::create_dir_all(&path).expect("Could not create .ciphey directory");
     path.push("database.sqlite");
     let _ = crate::storage::database::DB_PATH.set(Some(path));
 }

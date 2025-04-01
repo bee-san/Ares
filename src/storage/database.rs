@@ -1,10 +1,11 @@
+// Module for managing the SQLite database
+//
+// This database is intended for caching known encoded/decoded string
+// relations and collecting statistics on the performance of Ciphey
+// search algorithms.
+
 use super::super::CheckResult;
 use super::super::CrackResult;
-///! Module for managing the SQLite database
-///!
-///! This database is intended for caching known encoded/decoded string
-///! relations and collecting statistics on the performance of Ares
-///! search algorithms.
 use chrono::DateTime;
 use std::sync::OnceLock;
 
@@ -86,7 +87,7 @@ fn get_timestamp() -> String {
 /// Returns the path to the database file
 fn get_database_path() -> std::path::PathBuf {
     let mut path = dirs::home_dir().expect("Could not find home directory");
-    path.push("Ares");
+    path.push(".ciphey");
     path.push("database.sqlite");
     path
 }
@@ -253,13 +254,16 @@ pub fn read_cache(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::E
 /// Removes the cache row corresponding to the given encoded_text
 ///
 /// Returns number of successfully deleted rows on success
+///
+/// # Errors
+///
 /// Returns sqlite::Error on error
-pub fn delete_cache(encoded_text: &String) -> Result<usize, rusqlite::Error> {
+pub fn delete_cache(encoded_text: &str) -> Result<usize, rusqlite::Error> {
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
     let conn_result = transaction.execute(
         "DELETE FROM cache WHERE encoded_text = $1",
-        (encoded_text.clone(),),
+        (encoded_text.to_owned(),),
     );
     transaction.commit()?;
     conn_result
@@ -269,6 +273,9 @@ pub fn delete_cache(encoded_text: &String) -> Result<usize, rusqlite::Error> {
 /// the given cache entry
 ///
 /// Returns number of rows updated on success
+///
+/// # Errors
+///
 /// Returns sqlite::Error on error
 pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> {
     let path: Vec<String> = cache_entry
