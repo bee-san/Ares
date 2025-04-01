@@ -187,12 +187,8 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
 
     let last_crack_result = cache_entry.path.last();
     let successful: bool = match last_crack_result {
-        Some(crack_result) => {
-            crack_result.success
-        },
-        None => {
-            false
-        }
+        Some(crack_result) => crack_result.success,
+        None => false,
     };
 
     let path_json = serde_json::to_string(&path).unwrap();
@@ -225,13 +221,17 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
 ///
 /// On cache hit, returns a CacheRow
 /// On cache miss, returns None
-/// On error, returns a ``rusqlite::Error``
+///
+/// # Errors
+///
+/// Returns a ``rusqlite::Error``
 pub fn read_cache(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Error> {
     let conn = get_db_connection()?;
     let mut stmt = conn.prepare("SELECT * FROM cache WHERE encoded_text IS $1")?;
     let mut query = stmt.query_map([encoded_text], |row| {
         let path_str = row.get_unwrap::<usize, String>(3).to_owned();
-        let crack_json_vec: Vec<String> = serde_json::from_str(&path_str.clone()).unwrap();
+        let crack_json_vec: Vec<String> =
+            serde_json::from_str(&path_str.clone()).unwrap_or_default();
 
         Ok(CacheRow {
             id: row.get_unwrap(0),
@@ -278,17 +278,12 @@ pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
         .collect();
 
     let last_crack_result = cache_entry.path.last();
-    let successful;
-    match last_crack_result {
-        Some(crack_result) => {
-            successful = crack_result.success;
-        }
-        None => {
-            successful = false;
-        }
-    }
+    let successful = match last_crack_result {
+        Some(crack_result) => crack_result.success,
+        None => false,
+    };
 
-    let path_json = serde_json::to_string(&path).unwrap();
+    let path_json = serde_json::to_string(&path).unwrap_or_default();
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
     let conn_result = transaction.execute(
@@ -476,17 +471,17 @@ mod tests {
     fn generate_cache_row(
         id: usize,
         encoded_text: &str,
-        decoded_text: &String,
+        decoded_text: &str,
     ) -> (CrackResult, CacheRow, CacheEntry) {
         let mock_decoder = Decoder::<MockDecoder>::new();
         let mut mock_crack_result = CrackResult::new(&mock_decoder, encoded_text.to_owned());
         mock_crack_result.success = true;
-        mock_crack_result.unencrypted_text = Some(vec![decoded_text.clone()]);
+        mock_crack_result.unencrypted_text = Some(vec![decoded_text.to_owned()]);
 
         let expected_cache_row = CacheRow {
             id,
             encoded_text: encoded_text.to_owned(),
-            decoded_text: decoded_text.clone(),
+            decoded_text: decoded_text.to_owned(),
             path: match serde_json::to_string(&mock_crack_result) {
                 Ok(json) => vec![json],
                 Err(_) => vec![],
@@ -498,7 +493,7 @@ mod tests {
 
         let cache_entry = CacheEntry {
             encoded_text: encoded_text.to_owned(),
-            decoded_text: decoded_text.clone(),
+            decoded_text: decoded_text.to_owned(),
             path: vec![mock_crack_result.clone()],
             execution_time_ms: 100,
         };
@@ -508,7 +503,7 @@ mod tests {
     /// Helper function for generating a new human_rejection row
     fn generate_human_rejection_row<Type>(
         id: usize,
-        encoded_text: &String,
+        encoded_text: &str,
         checker_used: Checker<Type>,
     ) -> (CheckResult, HumanRejectionRow) {
         let check_result = CheckResult {
@@ -522,7 +517,7 @@ mod tests {
 
         let expected_row = HumanRejectionRow {
             id,
-            plaintext: encoded_text.clone(),
+            plaintext: encoded_text.to_owned(),
             checker: String::from(check_result.checker_name),
             timestamp: String::new(),
         };

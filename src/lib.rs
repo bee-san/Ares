@@ -142,20 +142,20 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
                         match json_result {
                             Ok(crack_result) => Ok(crack_result),
                             Err(e) => {
-                                cli_pretty_printing::warning(&format!("Error deserializing cache result: {}", e));
+                                cli_pretty_printing::warning(&format!(
+                                    "Error deserializing cache result: {}",
+                                    e
+                                ));
                                 Err(e)
                             }
                         }
                     })
                     .collect();
-                match path_result {
-                    Ok(path) => {
-                        return Some(DecoderResult {
-                            text: vec![row.decoded_text],
-                            path,
-                        });
-                    },
-                    _ => (),
+                if let Ok(path) = path_result {
+                    return Some(DecoderResult {
+                        text: vec![row.decoded_text],
+                        path,
+                    });
                 }
             }
             None => {
@@ -262,9 +262,7 @@ fn success_result_to_cache(
 ) -> Result<usize, rusqlite::Error> {
     let stop_time = SystemTime::now();
     let execution_time_ms: i64 = match stop_time.duration_since(start_time) {
-        Ok(duration) => {
-            duration.as_millis().try_into().unwrap_or(-2)
-        }
+        Ok(duration) => duration.as_millis().try_into().unwrap_or(-2),
         Err(_) => {
             cli_pretty_printing::warning(
                 "Stop time is less than start time. Clock may have gone backwards.",
