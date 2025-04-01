@@ -218,20 +218,17 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
         ));
     }
 
-    match &result {
-        Some(output) => {
-            let cache_result = success_result_to_cache(&text, start_time, &output);
-            match cache_result {
-                Ok(_) => (),
-                Err(e) => {
-                    cli_pretty_printing::warning(&format!(
-                        "DEBUG: lib.rs - Error inserting decoder result into cache table: {}",
-                        e
-                    ));
-                }
-            };
-        }
-        None => {}
+    if let Some(output) = &result {
+        let cache_result = success_result_to_cache(&text, start_time, output);
+        match cache_result {
+            Ok(_) => (),
+            Err(e) => {
+                cli_pretty_printing::warning(&format!(
+                    "DEBUG: lib.rs - Error inserting decoder result into cache table: {}",
+                    e
+                ));
+            }
+        };
     }
 
     result
@@ -261,7 +258,7 @@ fn success_result_to_cache(
     let execution_time_ms: i64;
     match stop_time.duration_since(start_time) {
         Ok(duration) => {
-            execution_time_ms = duration.as_millis().try_into().unwrap_or_else(|_| -2);
+            execution_time_ms = duration.as_millis().try_into().unwrap_or(-2);
         }
         Err(_) => {
             cli_pretty_printing::warning(
@@ -364,15 +361,22 @@ impl Drop for TestDatabase {
 mod tests {
     use super::perform_cracking;
     use crate::config::Config;
+    use crate::{TestDatabase, set_test_db_path};
 
     #[test]
     fn test_perform_cracking_returns() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh", config);
     }
 
     #[test]
     fn test_perform_cracking_returns_failure() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         let result = perform_cracking("", config);
         assert!(result.is_none());
@@ -380,6 +384,9 @@ mod tests {
 
     #[test]
     fn test_perform_cracking_returns_successful_base64_reverse() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", config);
         assert!(result.is_some());
@@ -387,7 +394,10 @@ mod tests {
     }
 
     #[test]
-    fn test_early_exit_if_input_is_plaintext() {
+    fn test_perform_cracking_early_exit_if_input_is_plaintext() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         let result = perform_cracking("192.168.0.1", config);
         // Since we are exiting early the path should be of length 1, which is 1 check (the Athena check)
@@ -399,7 +409,10 @@ mod tests {
     // Previously this would decode to `Fchohs as 13 dzoqsg!` because the English checker wasn't that good
     // This test makes sure we can decode it okay
     // TODO: Skipping this test because the English checker still isn't good.
-    fn test_successfully_decode_caesar() {
+    fn test_perform_cracking_successfully_decode_caesar() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         let result = perform_cracking("Ebgngr zr 13 cynprf!", config);
         // We return None since the input is the plaintext
@@ -407,7 +420,10 @@ mod tests {
     }
 
     #[test]
-    fn test_successfully_inputted_plaintext() {
+    fn test_perform_cracking_successfully_inputted_plaintext() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         let result = perform_cracking("Hello, World!", config);
         // We return None since the input is the plaintext

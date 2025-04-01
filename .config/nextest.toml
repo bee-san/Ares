@@ -1,0 +1,14 @@
+[test-groups]
+database = { max-threads = 1 }
+
+[[profile.default.overrides]]
+filter = 'test(perform_cracking)'
+test-group = 'database'
+
+[[profile.default.overrides]]
+filter = 'test(database::)'
+test-group = 'database'
+
+[[profile.default.overrides]]
+filter = 'package(ciphey) & test(cache)'
+test-group = 'database'

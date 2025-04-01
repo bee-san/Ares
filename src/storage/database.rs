@@ -172,13 +172,10 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
     let path: Vec<String> = cache_entry
         .path
         .iter()
-        .map(|crack_result| match crack_result.get_json() {
-            Ok(json) => json,
-            Err(_) => String::new(),
-        })
+        .map(|crack_result| crack_result.get_json().unwrap_or_default())
         .collect();
 
-    let last_crack_result = cache_entry.path.get(cache_entry.path.len() - 1);
+    let last_crack_result = cache_entry.path.last();
     let successful;
     match last_crack_result {
         Some(crack_result) => {
@@ -205,8 +202,8 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
             cache_entry.encoded_text.clone(),
             cache_entry.decoded_text.clone(),
             path_json,
-            successful.clone(),
-            cache_entry.execution_time_ms.clone(),
+            successful,
+            cache_entry.execution_time_ms,
             get_timestamp(),
         ),
     );
@@ -268,13 +265,10 @@ pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
     let path: Vec<String> = cache_entry
         .path
         .iter()
-        .map(|crack_result| match crack_result.get_json() {
-            Ok(json) => json,
-            Err(_) => String::new(),
-        })
+        .map(|crack_result| crack_result.get_json().unwrap_or_default())
         .collect();
 
-    let last_crack_result = cache_entry.path.get(cache_entry.path.len() - 1);
+    let last_crack_result = cache_entry.path.last();
     let successful;
     match last_crack_result {
         Some(crack_result) => {
@@ -299,8 +293,8 @@ pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
         (
             cache_entry.decoded_text.clone(),
             path_json,
-            successful.clone(),
-            cache_entry.execution_time_ms.clone(),
+            successful,
+            cache_entry.execution_time_ms,
             get_timestamp(),
             cache_entry.encoded_text.clone(),
         ),
@@ -491,7 +485,7 @@ mod tests {
     }
 
     /// Helper function for generating a new human_rejection row
-    pub fn generate_human_rejection_row<Type>(
+    fn generate_human_rejection_row<Type>(
         id: usize,
         encoded_text: &String,
         checker_used: Checker<Type>,
@@ -613,10 +607,7 @@ mod tests {
                 id: row.get_unwrap(0),
                 encoded_text: row.get_unwrap(1),
                 decoded_text: row.get_unwrap(2),
-                path: match serde_json::from_str(&path_str) {
-                    Ok(path) => path,
-                    Err(_) => vec![],
-                },
+                path: serde_json::from_str(&path_str).unwrap_or_default(),
                 successful: row.get_unwrap(4),
                 execution_time_ms: row.get_unwrap(5),
                 timestamp: row.get_unwrap(6),
@@ -650,10 +641,7 @@ mod tests {
                 id: row.get_unwrap(0),
                 encoded_text: row.get_unwrap(1),
                 decoded_text: row.get_unwrap(2),
-                path: match serde_json::from_str(&path_str) {
-                    Ok(path) => path,
-                    Err(_) => vec![],
-                },
+                path: serde_json::from_str(&path_str).unwrap_or_default(),
                 successful: row.get_unwrap(4),
                 execution_time_ms: row.get_unwrap(5),
                 timestamp: row.get_unwrap(6),
@@ -697,10 +685,7 @@ mod tests {
                 id: row.get_unwrap(0),
                 encoded_text: row.get_unwrap(1),
                 decoded_text: row.get_unwrap(2),
-                path: match serde_json::from_str(&path_str) {
-                    Ok(path) => path,
-                    Err(_) => vec![],
-                },
+                path: serde_json::from_str(&path_str).unwrap_or_default(),
                 successful: row.get_unwrap(4),
                 execution_time_ms: row.get_unwrap(5),
                 timestamp: row.get_unwrap(6),

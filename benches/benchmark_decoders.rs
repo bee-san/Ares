@@ -1,7 +1,7 @@
 use ciphey::checkers::athena::Athena;
 use ciphey::checkers::checker_type::{Check, Checker};
 use ciphey::checkers::CheckerTypes;
-use ciphey::config::{get_config, set_global_config, Config};
+use ciphey::config::{set_global_config, Config};
 use ciphey::decoders::{
     base32_decoder::Base32Decoder,
     base58_bitcoin_decoder::Base58BitcoinDecoder,
