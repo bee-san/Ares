@@ -19,10 +19,6 @@ fn get_seen_prompts() -> &'static DashSet<String> {
 // compile this if we are not running tests
 pub fn human_checker(input: &CheckResult) -> bool {
     timer::pause();
-    println!(
-        "DEBUG: Human checker called from:\n{:?}",
-        std::backtrace::Backtrace::capture()
-    );
     // wait instead of get so it waits for config being set
     let config = get_config();
     // We still call human checker, just if config is false we return True
