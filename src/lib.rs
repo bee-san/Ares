@@ -104,6 +104,17 @@ use self::decoders::crack_results::CrackResult;
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     let start_time = SystemTime::now();
 
+    // If top_results is enabled, ensure human_checker_on is disabled
+    let mut modified_config = config;
+    if modified_config.top_results {
+        modified_config.human_checker_on = false;
+        // Clear any previous results when starting a new cracking session
+        storage::wait_athena_storage::clear_plaintext_results();
+    }
+
+    config::set_global_config(modified_config);
+    let text = text.to_string();
+
     /* Initializing database */
     let db_result = storage::database::setup_database();
     match db_result {
@@ -115,17 +126,6 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
             ));
         }
     };
-
-    // If top_results is enabled, ensure human_checker_on is disabled
-    let mut modified_config = config;
-    if modified_config.top_results {
-        modified_config.human_checker_on = false;
-        // Clear any previous results when starting a new cracking session
-        storage::wait_athena_storage::clear_plaintext_results();
-    }
-
-    config::set_global_config(modified_config);
-    let text = text.to_string();
 
     /*  Checks to see if the encoded text already exists in the cache
      *  returns cached result if so
