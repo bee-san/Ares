@@ -23,11 +23,11 @@ bench = false
 ansi_term = "0.12.1"
 chrono = "0.4.40"
 cipher_identifier = "0.2.0"
-clap = {version = "4.5.34", features = ["derive"]}
+clap = {version = "4.5.35", features = ["derive"]}
 colored = "3.0.0"
 crossbeam = "0.8"
 dirs = "6.0.0"
-env_logger = "0.11.7"
+env_logger = "0.11.8"
 gibberish-or-not = "5.0.7"
 human-panic = "2.0.2"
 include_dir = "0.7.3"
