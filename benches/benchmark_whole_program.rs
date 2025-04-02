@@ -87,20 +87,26 @@ fn benchmark_with_config(
             format!("{}_{}_{}", config_name, timeout_str, description),
             text.len(),
         );
-
         group.bench_with_input(id, text, |b, text| {
-            b.iter(|| {
-                // Create config and set necessary parameters
-                let mut config = Config::default();
-                config.timeout = timeout;
-                config.top_results = top_results;
-                config.verbose = 0;
-                config.human_checker_on = false;
-                config.api_mode = true; // Set to true to suppress output
+            b.iter_batched_ref(
+                || {
+                    let _test_db = ciphey::TestDatabase::default();
+                    ciphey::set_test_db_path();
+                },
+                |_| {
+                    // Create config and set necessary parameters
+                    let mut config = Config::default();
+                    config.timeout = timeout;
+                    config.top_results = top_results;
+                    config.verbose = 0;
+                    config.human_checker_on = false;
+                    config.api_mode = true; // Set to true to suppress output
 
-                // Use perform_cracking with the configuration
-                perform_cracking(black_box(text), config)
-            });
+                    // Use perform_cracking with the configuration
+                    perform_cracking(black_box(text), config)
+                },
+                criterion::BatchSize::SmallInput,
+            );
         });
     }
 }

@@ -111,6 +111,8 @@ use std::collections::HashMap;
 /// Enum for annotating Decoder types, specifically for retrieving decoders from
 /// DECODER_MAP
 pub enum DecoderType {
+    /// default decoder
+    DefaultDecoder(interface::DefaultDecoder),
     /// a1z26 decoder
     A1z26Decoder(a1z26_decoder::A1Z26Decoder),
     /// atbash decoder
@@ -186,10 +188,14 @@ impl DecoderBox {
 pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
     HashMap::from([
         (
+            "Default decoder",
+            DecoderBox::new(Decoder::<interface::DefaultDecoder>::new()),
+        ),
+        (
             "Vigenere",
             DecoderBox::new(Decoder::<VigenereDecoder>::new()),
         ),
-        ("binary", DecoderBox::new(Decoder::<BinaryDecoder>::new())),
+        ("Binary", DecoderBox::new(Decoder::<BinaryDecoder>::new())),
         (
             "Hexadecimal",
             DecoderBox::new(Decoder::<HexadecimalDecoder>::new()),
@@ -234,7 +240,7 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             DecoderBox::new(Decoder::<RailfenceDecoder>::new()),
         ),
         ("rot47", DecoderBox::new(Decoder::<ROT47Decoder>::new())),
-        ("z85", DecoderBox::new(Decoder::<Z85Decoder>::new())),
+        ("Z85", DecoderBox::new(Decoder::<Z85Decoder>::new())),
         ("a1z26", DecoderBox::new(Decoder::<A1Z26Decoder>::new())),
         ("Braille", DecoderBox::new(Decoder::<BrailleDecoder>::new())),
         (

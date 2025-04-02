@@ -139,7 +139,14 @@ fn benchmark_decoder<T>(
         );
 
         group.bench_with_input(id, test.encoded, |b, encoded| {
-            b.iter(|| decoder.crack(black_box(encoded), checker))
+            b.iter_batched_ref(
+                || {
+                    let _test_db = ciphey::TestDatabase::default();
+                    ciphey::set_test_db_path();
+                },
+                |_| decoder.crack(black_box(encoded), checker),
+                criterion::BatchSize::SmallInput,
+            )
         });
     }
 }
