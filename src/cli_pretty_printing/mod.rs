@@ -368,6 +368,16 @@ pub fn human_checker_check(description: &str, text: &str) {
     );
 }
 
+/// When the given input is empty, print this message
+pub fn return_early_because_input_is_empty() {
+    let config = crate::config::get_config();
+    if config.api_mode {
+        return;
+    }
+
+    println!("🤔 The provided input is empty.");
+}
+
 /// Prints a failure message when decoding was unsuccessful.
 ///
 /// This function provides user guidance by suggesting Discord support
