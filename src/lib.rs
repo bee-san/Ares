@@ -276,6 +276,7 @@ fn success_result_to_cache(
         }
     };
     let cache_entry = storage::database::CacheEntry {
+        uuid: uuid::Uuid::new_v4(),
         encoded_text: String::from(text),
         decoded_text: match result.text.last() {
             Some(d_text) => String::from(d_text),

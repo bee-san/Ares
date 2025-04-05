@@ -9,6 +9,7 @@ use ciphey::perform_cracking;
 use ciphey::storage::database;
 use ciphey::{set_test_db_path, TestDatabase};
 use serial_test::{parallel, serial};
+use uuid::Uuid;
 
 // TODO Below fails because Library API is broken.
 // https://github.com/bee-san/ciphey/issues/48
@@ -119,6 +120,7 @@ fn test_cache_hit_simple_base64() {
     let expected_path = vec![expected_crack_result.get_json().unwrap()];
 
     let _result = database::insert_cache(&database::CacheEntry {
+        uuid: Uuid::new_v4(),
         encoded_text: encoded_text_1.clone(),
         decoded_text: decoded_text_1.clone(),
         path: vec![expected_crack_result],
