@@ -76,3 +76,180 @@ pub mod brainfuck_interpreter;
 
 /// The vigenere_decoder module decodes Vigenère cipher text
 pub mod vigenere_decoder;
+
+use atbash_decoder::AtbashDecoder;
+use base32_decoder::Base32Decoder;
+use base58_bitcoin_decoder::Base58BitcoinDecoder;
+use base58_flickr_decoder::Base58FlickrDecoder;
+use base58_monero_decoder::Base58MoneroDecoder;
+use base58_ripple_decoder::Base58RippleDecoder;
+use binary_decoder::BinaryDecoder;
+use hexadecimal_decoder::HexadecimalDecoder;
+use interface::{Crack, Decoder};
+
+use a1z26_decoder::A1Z26Decoder;
+use base64_decoder::Base64Decoder;
+use base65536_decoder::Base65536Decoder;
+use base91_decoder::Base91Decoder;
+use braille_decoder::BrailleDecoder;
+use caesar_decoder::CaesarDecoder;
+use citrix_ctx1_decoder::CitrixCTX1Decoder;
+use morse_code::MorseCodeDecoder;
+use railfence_decoder::RailfenceDecoder;
+use reverse_decoder::ReverseDecoder;
+use rot47_decoder::ROT47Decoder;
+use substitution_generic_decoder::SubstitutionGenericDecoder;
+use url_decoder::URLDecoder;
+use vigenere_decoder::VigenereDecoder;
+use z85_decoder::Z85Decoder;
+
+use brainfuck_interpreter::BrainfuckInterpreter;
+
+use once_cell::sync::Lazy;
+use std::collections::HashMap;
+
+/// Enum for annotating Decoder types, specifically for retrieving decoders from
+/// DECODER_MAP
+pub enum DecoderType {
+    /// default decoder
+    DefaultDecoder(interface::DefaultDecoder),
+    /// a1z26 decoder
+    A1z26Decoder(a1z26_decoder::A1Z26Decoder),
+    /// atbash decoder
+    AtbashDecoder(atbash_decoder::AtbashDecoder),
+    /// base32 decoder
+    Base32Decoder(base32_decoder::Base32Decoder),
+    /// base58 bitcoin decoder
+    Base58BitcoinDecoder(base58_bitcoin_decoder::Base58BitcoinDecoder),
+    /// base58 monero decoder
+    Base58MoneroDecoder(base58_monero_decoder::Base58MoneroDecoder),
+    /// binary decoder
+    BinaryDecoder(binary_decoder::BinaryDecoder),
+    /// hexadecimal decoder
+    HexadecimalDecoder(hexadecimal_decoder::HexadecimalDecoder),
+    /// base58 ripple decoder
+    Base58RippleDecoder(base58_ripple_decoder::Base58RippleDecoder),
+    /// base58 flickr decoder
+    Base58FlickrDecoder(base58_flickr_decoder::Base58FlickrDecoder),
+    /// base64 decoder
+    Base64Decoder(base64_decoder::Base64Decoder),
+    /// base65536 decoder
+    Base65536Decoder(base65536_decoder::Base65536Decoder),
+    /// base91 decoder
+    Base91Decoder(base91_decoder::Base91Decoder),
+    /// citrix ctx1 decoder
+    CitrixCtx1Decoder(citrix_ctx1_decoder::CitrixCTX1Decoder),
+    /// url decoder
+    UrlDecoder(url_decoder::URLDecoder),
+    /// reverse decoder
+    ReverseDecoder(reverse_decoder::ReverseDecoder),
+    /// morse decoder
+    MorseCode(morse_code::MorseCodeDecoder),
+    /// caesar decoder
+    CaesarDecoder(caesar_decoder::CaesarDecoder),
+    /// railfence decoder
+    RailfenceDecoder(railfence_decoder::RailfenceDecoder),
+    /// rot47 decoder
+    Rot47Decoder(rot47_decoder::ROT47Decoder),
+    /// z85 decoder
+    Z85Decoder(z85_decoder::Z85Decoder),
+    /// braille decoder
+    BrailleDecoder(braille_decoder::BrailleDecoder),
+    /// substitution decoder
+    SubstitutionGenericDecoder(substitution_generic_decoder::SubstitutionGenericDecoder),
+    /// brainfuck interpreter
+    BrainfuckInterpreter(brainfuck_interpreter::BrainfuckInterpreter),
+    /// vigenere decoder
+    VigenereDecoder(vigenere_decoder::VigenereDecoder),
+}
+
+/// Wrapper struct to hold Decoders for DECODER_MAP
+pub struct DecoderBox {
+    /// Wrapper box to hold Decoders for DECODER_MAP
+    value: Box<dyn Crack + Sync + Send>,
+}
+
+impl DecoderBox {
+    /// Constructor for DecoderBox. Takes in a Decoder and stores it as the
+    /// internal value
+    fn new<T: 'static + Crack + Sync + Send>(value: T) -> Self {
+        Self {
+            value: Box::new(value),
+        }
+    }
+
+    /// Getter method for DecoderBox to return the internal Box
+    pub fn get<T: 'static>(&self) -> &(dyn Crack + Sync + Send) {
+        self.value.as_ref()
+    }
+}
+
+/// Global hashmap for translating strings to Decoders
+pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
+    HashMap::from([
+        (
+            "Default decoder",
+            DecoderBox::new(Decoder::<interface::DefaultDecoder>::new()),
+        ),
+        (
+            "Vigenere",
+            DecoderBox::new(Decoder::<VigenereDecoder>::new()),
+        ),
+        ("Binary", DecoderBox::new(Decoder::<BinaryDecoder>::new())),
+        (
+            "Hexadecimal",
+            DecoderBox::new(Decoder::<HexadecimalDecoder>::new()),
+        ),
+        (
+            "Base58 Bitcoin",
+            DecoderBox::new(Decoder::<Base58BitcoinDecoder>::new()),
+        ),
+        (
+            "Base58 Monero",
+            DecoderBox::new(Decoder::<Base58MoneroDecoder>::new()),
+        ),
+        (
+            "Base58 Ripple",
+            DecoderBox::new(Decoder::<Base58RippleDecoder>::new()),
+        ),
+        (
+            "Base58 Flickr",
+            DecoderBox::new(Decoder::<Base58FlickrDecoder>::new()),
+        ),
+        ("Base64", DecoderBox::new(Decoder::<Base64Decoder>::new())),
+        ("Base91", DecoderBox::new(Decoder::<Base91Decoder>::new())),
+        (
+            "Base65536",
+            DecoderBox::new(Decoder::<Base65536Decoder>::new()),
+        ),
+        (
+            "Citrix Ctx1",
+            DecoderBox::new(Decoder::<CitrixCTX1Decoder>::new()),
+        ),
+        ("URL", DecoderBox::new(Decoder::<URLDecoder>::new())),
+        ("Base32", DecoderBox::new(Decoder::<Base32Decoder>::new())),
+        ("Reverse", DecoderBox::new(Decoder::<ReverseDecoder>::new())),
+        (
+            "Morse Code",
+            DecoderBox::new(Decoder::<MorseCodeDecoder>::new()),
+        ),
+        ("atbash", DecoderBox::new(Decoder::<AtbashDecoder>::new())),
+        ("caesar", DecoderBox::new(Decoder::<CaesarDecoder>::new())),
+        (
+            "railfence",
+            DecoderBox::new(Decoder::<RailfenceDecoder>::new()),
+        ),
+        ("rot47", DecoderBox::new(Decoder::<ROT47Decoder>::new())),
+        ("Z85", DecoderBox::new(Decoder::<Z85Decoder>::new())),
+        ("a1z26", DecoderBox::new(Decoder::<A1Z26Decoder>::new())),
+        ("Braille", DecoderBox::new(Decoder::<BrailleDecoder>::new())),
+        (
+            "simplesubstitution",
+            DecoderBox::new(Decoder::<SubstitutionGenericDecoder>::new()),
+        ),
+        (
+            "Brainfuck",
+            DecoderBox::new(Decoder::<BrainfuckInterpreter>::new()),
+        ),
+    ])
+});

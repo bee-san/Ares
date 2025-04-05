@@ -1,7 +1,7 @@
 use self::{
     athena::Athena,
     checker_result::CheckResult,
-    checker_type::{Check, Checker},
+    checker_type::{Check, CheckInfo, Checker},
     english::EnglishChecker,
     lemmeknow_checker::LemmeKnow,
     password::PasswordChecker,
@@ -11,6 +11,8 @@ use self::{
 };
 
 use gibberish_or_not::Sensitivity;
+use once_cell::sync::Lazy;
+use std::collections::HashMap;
 
 /// The default checker we use which simply calls all other checkers in order.
 pub mod athena;
@@ -121,6 +123,62 @@ impl CheckerTypes {
         }
     }
 }
+
+/// Wrapper struct to hold Checkers for CHECKER_MAP
+pub struct CheckerBox {
+    /// Wrapper box to hold Checkers for CHECKER_MAP
+    value: Box<dyn CheckInfo + Sync + Send>,
+}
+
+impl CheckerBox {
+    /// Constructor for CheckerBox. Takes in a Checker and stores it as the
+    /// internal value
+    fn new<T: 'static + CheckInfo + Sync + Send>(value: T) -> Self {
+        Self {
+            value: Box::new(value),
+        }
+    }
+
+    /// Getter method for CheckerBox to return the internal Box
+    pub fn get<T: 'static>(&self) -> &(dyn CheckInfo + Sync + Send) {
+        self.value.as_ref()
+    }
+}
+
+/// Global hashmap for translating strings to Checkers
+pub static CHECKER_MAP: Lazy<HashMap<&str, CheckerBox>> = Lazy::new(|| {
+    HashMap::from([
+        ("Athena Checker", CheckerBox::new(Checker::<Athena>::new())),
+        (
+            "English Checker",
+            CheckerBox::new(Checker::<EnglishChecker>::new()),
+        ),
+        (
+            "Template checker",
+            CheckerBox::new(Checker::<default_checker::DefaultChecker>::new()),
+        ),
+        (
+            "LemmeKnow Checker",
+            CheckerBox::new(Checker::<LemmeKnow>::new()),
+        ),
+        (
+            "Password Checker",
+            CheckerBox::new(Checker::<PasswordChecker>::new()),
+        ),
+        (
+            "Regex Checker",
+            CheckerBox::new(Checker::<RegexChecker>::new()),
+        ),
+        (
+            "WaitAthena Checker",
+            CheckerBox::new(Checker::<WaitAthena>::new()),
+        ),
+        (
+            "Wordlist Checker",
+            CheckerBox::new(Checker::<WordlistChecker>::new()),
+        ),
+    ])
+});
 
 // test
 #[cfg(test)]

@@ -40,7 +40,17 @@ pub fn start(duration: u32) -> Receiver<()> {
             log::info!("Not in top_results mode, skipping display_wait_athena_results()");
         }
 
-        sender.send(()).expect("Timer should send succesfully");
+        // Replace the existing expect with a match that logs errors in case of send failure
+        match sender.send(()) {
+            Ok(_) => log::debug!("Timer signal sent successfully"),
+            Err(e) => {
+                // Just log the error instead of panicking
+                log::warn!(
+                    "Failed to send timer signal: {:?}. This is expected in benchmarks.",
+                    e
+                );
+            }
+        }
     });
 
     recv

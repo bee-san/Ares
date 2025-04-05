@@ -75,6 +75,14 @@ impl Crack for Decoder<CitrixCTX1Decoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+    /// Gets the description for the current decoder
+    fn get_description(&self) -> &str {
+        self.description
+    }
+    /// Gets the link for the current decoder
+    fn get_link(&self) -> &str {
+        self.link
+    }
 }
 
 /// Decodes Citrix CTX1

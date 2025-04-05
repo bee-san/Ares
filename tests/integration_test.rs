@@ -1,9 +1,20 @@
+use ciphey::checkers::checker_result::CheckResult;
+use ciphey::checkers::checker_type::{Check, Checker};
+use ciphey::checkers::english::EnglishChecker;
 use ciphey::config::Config;
+use ciphey::decoders::base64_decoder::Base64Decoder;
+use ciphey::decoders::crack_results::CrackResult;
+use ciphey::decoders::interface::{Crack, Decoder};
 use ciphey::perform_cracking;
+use ciphey::storage::database;
+use ciphey::{set_test_db_path, TestDatabase};
+use serial_test::{parallel, serial};
+use uuid::Uuid;
 
 // TODO Below fails because Library API is broken.
 // https://github.com/bee-san/ciphey/issues/48
 #[test]
+#[parallel]
 fn test_it_works() {
     // It will panic if it doesn't work!
     // Plaintext is `Mutley, you snickering, floppy eared hound. When courage is needed, you’re never around. Those m...	`
@@ -13,6 +24,7 @@ fn test_it_works() {
 }
 
 #[test]
+#[parallel]
 fn test_no_panic_if_empty_string() {
     // It will panic if it doesn't work!
     let config = Config::default();
@@ -50,3 +62,84 @@ fn test_program_parses_files_with_new_line_and_cracks() {
     assert!(result.unwrap().text[0] == "This is a test!");
 }
 */
+
+#[test]
+#[serial]
+fn test_cache_miss_simple_base64() {
+    let _test_db = TestDatabase::default();
+    set_test_db_path();
+
+    let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
+    let decoded_text_1 = String::from("hello world\n");
+
+    let config = Config::default();
+    let result = perform_cracking(encoded_text_1.as_str(), config);
+    assert!(result.is_some());
+    assert!(result.unwrap().path.last().unwrap().success);
+
+    let row_result = database::read_cache(&encoded_text_1);
+    assert!(row_result.is_ok());
+    let row_result = row_result.unwrap();
+    assert!(row_result.is_some());
+
+    let row: database::CacheRow = row_result.unwrap();
+
+    let base64_decoder = Decoder::<Base64Decoder>::new();
+    let mut expected_crack_result: CrackResult =
+        CrackResult::new(&base64_decoder, encoded_text_1.clone());
+    expected_crack_result.unencrypted_text = Some(vec![decoded_text_1.clone()]);
+    let expected_checker = Checker::<EnglishChecker>::new();
+    let mut expected_check_result = CheckResult::new(&expected_checker);
+    expected_check_result.is_identified = true;
+    expected_crack_result.update_checker(&expected_check_result);
+    let expected_path = vec![expected_crack_result.get_json().unwrap()];
+
+    assert_eq!(row.encoded_text, encoded_text_1);
+    assert_eq!(row.decoded_text, decoded_text_1);
+    assert_eq!(row.path, expected_path);
+    assert!(row.successful);
+}
+
+#[test]
+#[serial]
+fn test_cache_hit_simple_base64() {
+    let _test_db = TestDatabase::default();
+    set_test_db_path();
+
+    let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
+    let decoded_text_1 = String::from("hello world\n");
+
+    let base64_decoder = Decoder::<Base64Decoder>::new();
+    let mut expected_crack_result: CrackResult =
+        CrackResult::new(&base64_decoder, encoded_text_1.clone());
+    expected_crack_result.unencrypted_text = Some(vec![decoded_text_1.clone()]);
+    let expected_checker = Checker::<EnglishChecker>::new();
+    let mut expected_check_result = CheckResult::new(&expected_checker);
+    expected_check_result.is_identified = true;
+    expected_crack_result.update_checker(&expected_check_result);
+    let expected_path = vec![expected_crack_result.get_json().unwrap()];
+
+    let _result = database::insert_cache(&database::CacheEntry {
+        uuid: Uuid::new_v4(),
+        encoded_text: encoded_text_1.clone(),
+        decoded_text: decoded_text_1.clone(),
+        path: vec![expected_crack_result],
+        execution_time_ms: 100,
+    });
+
+    let config = Config::default();
+    let result = perform_cracking(encoded_text_1.as_str(), config);
+    assert!(result.is_some());
+    assert!(result.unwrap().path.last().unwrap().success);
+
+    let row_result = database::read_cache(&encoded_text_1);
+    assert!(row_result.is_ok());
+    let row_result = row_result.unwrap();
+    assert!(row_result.is_some());
+
+    let row: database::CacheRow = row_result.unwrap();
+    assert_eq!(row.encoded_text, encoded_text_1);
+    assert_eq!(row.decoded_text, decoded_text_1);
+    assert_eq!(row.path, expected_path);
+    assert!(row.successful);
+}
