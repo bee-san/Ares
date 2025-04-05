@@ -48,7 +48,7 @@ pub fn human_checker(input: &CheckResult) -> bool {
             Ok(_) => (),
             Err(e) => {
                 cli_pretty_printing::warning(&format!(
-                    "DEBUG: Failed to log human checker rejection due to error: {}",
+                    "DEBUG: Failed to write human checker rejection due to error: {}",
                     e
                 ));
             }
