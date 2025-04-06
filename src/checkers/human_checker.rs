@@ -1,6 +1,7 @@
 use crate::checkers::checker_result::CheckResult;
 use crate::cli_pretty_printing::human_checker_check;
 use crate::config::get_config;
+use crate::storage::database;
 use crate::{cli_pretty_printing, timer};
 use dashmap::DashSet;
 use std::sync::OnceLock;
@@ -19,10 +20,6 @@ fn get_seen_prompts() -> &'static DashSet<String> {
 // compile this if we are not running tests
 pub fn human_checker(input: &CheckResult) -> bool {
     timer::pause();
-    println!(
-        "DEBUG: Human checker called from:\n{:?}",
-        std::backtrace::Backtrace::capture()
-    );
     // wait instead of get so it waits for config being set
     let config = get_config();
     // We still call human checker, just if config is false we return True
@@ -46,6 +43,16 @@ pub fn human_checker(input: &CheckResult) -> bool {
     cli_pretty_printing::success(&format!("DEBUG: Human checker returning: {}", result));
 
     if !result {
+        let fd_result = database::insert_human_rejection(uuid::Uuid::new_v4(), &input.text, input);
+        match fd_result {
+            Ok(_) => (),
+            Err(e) => {
+                cli_pretty_printing::warning(&format!(
+                    "DEBUG: Failed to write human checker rejection due to error: {}",
+                    e
+                ));
+            }
+        }
         return false;
     }
     true

@@ -54,6 +54,7 @@ use checkers::{
     wait_athena::WaitAthena,
 };
 use log::debug;
+use std::time::SystemTime;
 
 use crate::{
     config::{get_config, Config},
@@ -67,6 +68,8 @@ use self::decoders::crack_results::CrackResult;
 /// use ciphey::perform_cracking;
 /// use ciphey::config::Config;
 /// let mut config = Config::default();
+/// # let _test_db = ciphey::TestDatabase::default();
+/// # ciphey::set_test_db_path();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
 /// config.timeout = 5;
@@ -88,6 +91,8 @@ use self::decoders::crack_results::CrackResult;
 /// use ciphey::perform_cracking;
 /// use ciphey::config::Config;
 /// let mut config = Config::default();
+/// # let _test_db = ciphey::TestDatabase::default();
+/// # ciphey::set_test_db_path();
 /// // You can set the config to your liking using the Config struct
 /// // Just edit the data like below if you want:
 /// config.timeout = 0;
@@ -97,6 +102,8 @@ use self::decoders::crack_results::CrackResult;
 /// assert!(result.is_none());
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
+    let start_time = SystemTime::now();
+
     // If top_results is enabled, ensure human_checker_on is disabled
     let mut modified_config = config;
     if modified_config.top_results {
@@ -107,6 +114,69 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
 
     config::set_global_config(modified_config);
     let text = text.to_string();
+
+    /* Initializing database */
+    let db_result = storage::database::setup_database();
+    match db_result {
+        Ok(_) => (),
+        Err(e) => {
+            cli_pretty_printing::warning(&format!(
+                "DEBUG: lib.rs - SQLite database failed to initialize. Encountered error: {}",
+                e
+            ));
+        }
+    };
+
+    /*  Checks to see if the encoded text already exists in the cache
+     *  returns cached result if so
+     */
+    let cache_result = storage::database::read_cache(&text);
+    match cache_result {
+        Ok(cache_row) => match cache_row {
+            Some(row) => {
+                log::debug!("Cache hit for text: {}", text);
+                cli_pretty_printing::success(&format!(
+                    "DEBUG: lib.rs - Cache hit for text: {}",
+                    text
+                ));
+                let path_result: Result<Vec<CrackResult>, serde_json::Error> = row
+                    .path
+                    .iter()
+                    .map(|crack_json| {
+                        let json_result = serde_json::from_str(crack_json);
+                        match json_result {
+                            Ok(crack_result) => Ok(crack_result),
+                            Err(e) => {
+                                cli_pretty_printing::warning(&format!(
+                                    "Error deserializing cache result: {}",
+                                    e
+                                ));
+                                Err(e)
+                            }
+                        }
+                    })
+                    .collect();
+                if let Ok(path) = path_result {
+                    return Some(DecoderResult {
+                        text: vec![row.decoded_text],
+                        path,
+                    });
+                }
+            }
+            None => {
+                cli_pretty_printing::success(&format!(
+                    "DEBUG: lib.rs - Did not find text \"{}\" in cache",
+                    text.clone()
+                ));
+            }
+        },
+        Err(e) => {
+            cli_pretty_printing::warning(&format!(
+                "DEBUG: lib.rs - Error trying to read from cache: {}",
+                e
+            ));
+        }
+    }
 
     let initial_check_for_plaintext = check_if_input_text_is_plaintext(&text);
     if initial_check_for_plaintext.is_identified {
@@ -120,8 +190,19 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
         crack_result.checker_name = initial_check_for_plaintext.checker_name;
 
         let output = DecoderResult {
-            text: vec![text],
+            text: vec![text.clone()],
             path: vec![crack_result],
+        };
+
+        let cache_result = success_result_to_cache(&text, start_time, &output);
+        match cache_result {
+            Ok(_) => (),
+            Err(e) => {
+                cli_pretty_printing::warning(&format!(
+                    "DEBUG: lib.rs - Error inserting decoder result into cache table: {}",
+                    e
+                ));
+            }
         };
 
         return Some(output);
@@ -136,7 +217,7 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     ));
     // Perform the search algorithm
     // It will either return a failure or success.
-    let result = searchers::search_for_plaintext(text);
+    let result = searchers::search_for_plaintext(text.clone());
     cli_pretty_printing::success(&format!(
         "DEBUG: lib.rs - Result from search_for_plaintext: {:?}",
         result.is_some()
@@ -147,6 +228,20 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
             res.path.len()
         ));
     }
+
+    if let Some(output) = &result {
+        let cache_result = success_result_to_cache(&text, start_time, output);
+        match cache_result {
+            Ok(_) => (),
+            Err(e) => {
+                cli_pretty_printing::warning(&format!(
+                    "DEBUG: lib.rs - Error inserting decoder result into cache table: {}",
+                    e
+                ));
+            }
+        };
+    }
+
     result
 }
 
@@ -162,6 +257,35 @@ fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
         let athena_checker = Checker::<Athena>::new();
         athena_checker.check(text)
     }
+}
+
+/// Stores a successful DecoderResult into the cache table
+fn success_result_to_cache(
+    text: &String,
+    start_time: SystemTime,
+    result: &DecoderResult,
+) -> Result<usize, rusqlite::Error> {
+    let stop_time = SystemTime::now();
+    let execution_time_ms: i64 = match stop_time.duration_since(start_time) {
+        Ok(duration) => duration.as_millis().try_into().unwrap_or(-2),
+        Err(_) => {
+            cli_pretty_printing::warning(
+                "Stop time is less than start time. Clock may have gone backwards.",
+            );
+            -1
+        }
+    };
+    let cache_entry = storage::database::CacheEntry {
+        uuid: uuid::Uuid::new_v4(),
+        encoded_text: String::from(text),
+        decoded_text: match result.text.last() {
+            Some(d_text) => String::from(d_text),
+            None => String::new(),
+        },
+        path: result.path.clone(),
+        execution_time_ms,
+    };
+    storage::database::insert_cache(&cache_entry)
 }
 
 /// DecoderResult is the result of decoders
@@ -197,19 +321,71 @@ impl DecoderResult {
     }
 }
 
+/// Gets the test directory path
+#[doc(hidden)]
+pub fn get_test_dir_path() -> std::path::PathBuf {
+    let mut path = dirs::home_dir().expect("Could not find home directory");
+    path.push(".ciphey");
+    path.push("test");
+    path
+}
+
+/// Sets the global database path
+#[doc(hidden)]
+pub fn set_test_db_path() {
+    let mut path = get_test_dir_path();
+    std::fs::create_dir_all(&path).expect("Could not create .ciphey directory");
+    path.push("database.sqlite");
+    let _ = crate::storage::database::DB_PATH.set(Some(path));
+}
+
+/// Helper struct for testing database
+#[doc(hidden)]
+pub struct TestDatabase {
+    /// PathBuf to database file
+    pub path: std::path::PathBuf,
+}
+
+#[doc(hidden)]
+impl Default for TestDatabase {
+    fn default() -> Self {
+        TestDatabase {
+            path: get_test_dir_path(),
+        }
+    }
+}
+
+#[doc(hidden)]
+impl Drop for TestDatabase {
+    fn drop(&mut self) {
+        let mut db_file_path = self.path.as_path().to_path_buf();
+        db_file_path.push("database.sqlite");
+        let _ = std::fs::remove_file(&db_file_path);
+        let _ = std::fs::remove_dir(&self.path);
+    }
+}
+
 #[cfg(test)]
+#[serial_test::parallel]
 mod tests {
     use super::perform_cracking;
     use crate::config::Config;
+    use crate::{set_test_db_path, TestDatabase};
 
     #[test]
     fn test_perform_cracking_returns() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         perform_cracking("SGVscCBJIG5lZWQgc29tZWJvZHkh", config);
     }
 
     #[test]
     fn test_perform_cracking_returns_failure() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         let result = perform_cracking("", config);
         assert!(result.is_none());
@@ -217,6 +393,9 @@ mod tests {
 
     #[test]
     fn test_perform_cracking_returns_successful_base64_reverse() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         let result = perform_cracking("aGVsbG8gdGhlcmUgZ2VuZXJhbA==", config);
         assert!(result.is_some());
@@ -224,7 +403,10 @@ mod tests {
     }
 
     #[test]
-    fn test_early_exit_if_input_is_plaintext() {
+    fn test_perform_cracking_early_exit_if_input_is_plaintext() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         let result = perform_cracking("192.168.0.1", config);
         // Since we are exiting early the path should be of length 1, which is 1 check (the Athena check)
@@ -236,7 +418,10 @@ mod tests {
     // Previously this would decode to `Fchohs as 13 dzoqsg!` because the English checker wasn't that good
     // This test makes sure we can decode it okay
     // TODO: Skipping this test because the English checker still isn't good.
-    fn test_successfully_decode_caesar() {
+    fn test_perform_cracking_successfully_decode_caesar() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         let result = perform_cracking("Ebgngr zr 13 cynprf!", config);
         // We return None since the input is the plaintext
@@ -244,7 +429,10 @@ mod tests {
     }
 
     #[test]
-    fn test_successfully_inputted_plaintext() {
+    fn test_perform_cracking_successfully_inputted_plaintext() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+
         let config = Config::default();
         let result = perform_cracking("Hello, World!", config);
         // We return None since the input is the plaintext

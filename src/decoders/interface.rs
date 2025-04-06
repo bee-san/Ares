@@ -39,6 +39,32 @@ impl Default for Decoder<DefaultDecoder> {
     }
 }
 
+impl Crack for Decoder<DefaultDecoder> {
+    fn new() -> Decoder<DefaultDecoder> {
+        Decoder::default()
+    }
+    /// Returns a dummy CrackResult
+    fn crack(&self, text: &str, _checker: &CheckerTypes) -> CrackResult {
+        CrackResult::new(self, text.to_string())
+    }
+    /// Gets all tags for this decoder
+    fn get_tags(&self) -> &Vec<&str> {
+        &self.tags
+    }
+    /// Gets the name for the current decoder
+    fn get_name(&self) -> &str {
+        self.name
+    }
+    /// Gets the description for the current decoder
+    fn get_description(&self) -> &str {
+        self.description
+    }
+    /// Gets the link for the current decoder
+    fn get_link(&self) -> &str {
+        self.link
+    }
+}
+
 /// All decoders will share the same Crack trait
 /// Which let's us put them into a vector and iterate over them,
 /// Running `.crack()` on each of them.
@@ -52,8 +78,12 @@ pub trait Crack {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult;
     /// Get all tags for the current decoder
     fn get_tags(&self) -> &Vec<&str>;
-    /// Get the nam of the current decoder
+    /// Get the name of the current decoder
     fn get_name(&self) -> &str;
+    /// Gets the description of the current deocder
+    fn get_description(&self) -> &str;
+    /// Gets the link for the current decoder
+    fn get_link(&self) -> &str;
     /// Get the popularity of the decoder (a value between 0.0 and 1.0)
     /// Default implementation returns the decoder's popularity field
     fn get_popularity(&self) -> f32 {

@@ -21,10 +21,15 @@ bench = false
 # Please keep this list in alphabetical order
 [dependencies]
 ansi_term = "0.12.1"
+chrono = "0.4.40"
+cipher_identifier = "0.2.0"
 clap = {version = "4.5.35", features = ["derive"]}
+colored = "3.0.0"
 crossbeam = "0.8"
 dirs = "6.0.0"
 env_logger = "0.11.8"
+gibberish-or-not = "5.0.7"
+human-panic = "2.0.2"
 include_dir = "0.7.3"
 lazy-regex = "3.0.1"
 lazy_static = "1.4.0"
@@ -37,15 +42,15 @@ proc-macro2 = "1.0.94" # Required due to https://github.com/rust-lang/rust/issue
 rayon = "1.7.0"
 regex = "1.9.1"
 rpassword = "7.3.1"
+rusqlite = { version = "0.29", features = ["bundled"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_derive = "1.0.197"
+serde_json = "1.0"
+serial_test = "3.2.0"
 text_io = "0.1.13"
 toml = "0.8.10"
-gibberish-or-not = "5.0.7"
-cipher_identifier = "0.2.0"
+uuid = "1.15.1"
 rand = "0.9.0"  # For generating random values
-colored = "3.0.0"
-human-panic = "2.0.2"
 
 # Dependencies used for decoding
 base64 = "0.22.1"
@@ -75,6 +80,14 @@ inherits = "release"
 
 [[bench]]
 name = "benchmark_crackers"
+harness = false
+
+[[bench]]
+name = "benchmark_decoders"
+harness = false
+
+[[bench]]
+name = "benchmark_whole_program"
 harness = false
 
 # Config for 'cargo dist'

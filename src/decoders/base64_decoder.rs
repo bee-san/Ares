@@ -97,6 +97,14 @@ impl Crack for Decoder<Base64Decoder> {
     fn get_popularity(&self) -> f32 {
         self.popularity
     }
+    /// Gets the description for the current decoder
+    fn get_description(&self) -> &str {
+        self.description
+    }
+    /// Gets the link for the current decoder
+    fn get_link(&self) -> &str {
+        self.link
+    }
 }
 
 /// helper function for standard base64
