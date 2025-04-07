@@ -72,6 +72,16 @@ const MAX_DEPTH: u32 = 100;
 /// Number of nodes to process in parallel
 const PARALLEL_BATCH_SIZE: usize = 10;
 
+/// Check if a decoder is reciprocal based on its name
+fn is_reciprocal_decoder(decoder_name: &str) -> bool {
+    let decoder = get_decoder_by_name(decoder_name);
+    
+    // Check if any of the decoder's components have the "reciprocal" tag
+    decoder.components.iter().any(|d| {
+        d.get_tags().contains(&"reciprocal")
+    })
+}
+
 /// Calculate a hash for a string to use in the seen_strings set
 fn calculate_hash(text: &str) -> String {
     use std::collections::hash_map::DefaultHasher;
@@ -225,7 +235,7 @@ fn expand_node(
 
     // Prevent reciprocal decoders from being applied consecutively
     if let Some(last_decoder) = current_node.state.path.last() {
-        if last_decoder.checker_description.contains("reciprocal") {
+        if is_reciprocal_decoder(&last_decoder.decoder) {
             let excluded_name = &last_decoder.decoder;
             decoders
                 .components
@@ -355,7 +365,7 @@ fn expand_node(
                 }
 
                 // Skip reciprocal decoders if the last one was reciprocal
-                if last_decoder.checker_description.contains("reciprocal")
+                if is_reciprocal_decoder(&last_decoder.decoder)
                     && last_decoder.decoder == decoder.get_name()
                 {
                     continue;
@@ -751,5 +761,49 @@ mod tests {
         if let Some(decoder_result) = result {
             assert!(!decoder_result.path.is_empty());
         }
-    }
 }
+
+#[test]
+fn test_reciprocal_decoders_not_applied_consecutively() {
+    // This test verifies that reciprocal decoders (like Atbash and Caesar)
+    // are not applied consecutively in the search path
+    
+    let (sender, receiver) = bounded::<Option<DecoderResult>>(1);
+    let stop = Arc::new(AtomicBool::new(false));
+    
+    // Use a simple input that could be decoded with reciprocal decoders
+    let input = "Ifmmp Xpsme"; // "Hello World" with Caesar shift of 1
+    
+    // Run A* search
+    std::thread::spawn(move || {
+        astar(input.to_string(), sender, stop);
+    });
+    
+    // Wait for result
+    let result = receiver.recv().unwrap();
+    
+    // Verify we got a result
+    assert!(result.is_some());
+    
+    if let Some(decoder_result) = result {
+        // Get the decoder path
+        let path = decoder_result.path;
+        
+        // Check that no reciprocal decoder is applied consecutively
+        for i in 1..path.len() {
+            let prev_decoder = &path[i-1];
+            let curr_decoder = &path[i];
+            
+            // If the previous decoder is reciprocal, it should not be the same as the current one
+            if is_reciprocal_decoder(&prev_decoder.decoder) {
+                assert_ne!(
+                    prev_decoder.decoder,
+                    curr_decoder.decoder,
+                    "Reciprocal decoder {} was applied consecutively",
+                    prev_decoder.decoder
+                );
+            }
+                }
+            }
+        }
+    }
