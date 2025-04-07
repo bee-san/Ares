@@ -188,15 +188,12 @@ impl ThreadSafePriorityQueue {
 fn expand_node(
     current_node: &AStarNode,
     seen_strings: &DashSet<String>,
-    stop: &Arc<AtomicBool>,
+    _stop: &Arc<AtomicBool>,  // Renamed to _stop to indicate it's intentionally unused
     _prune_threshold: usize,
 ) -> Vec<AStarNode> {
     let mut new_nodes = Vec::new();
 
-    // Check stop signal
-    if stop.load(AtomicOrdering::Relaxed) {
-        return new_nodes;
-    }
+    // No longer checking stop signal here
 
     // Determine which decoders to use based on next_decoder_name
     let mut decoders;
@@ -229,10 +226,7 @@ fn expand_node(
             decoders.components.len()
         );
 
-        // Check stop signal before processing decoders
-        if stop.load(AtomicOrdering::Relaxed) {
-            return new_nodes;
-        }
+        // No longer checking stop signal before processing decoders
 
         let athena_checker = Checker::<Athena>::new();
         let checker = CheckerTypes::CheckAthena(athena_checker);
@@ -269,10 +263,7 @@ fn expand_node(
             MyResults::Continue(results) => {
                 // Process each result
                 for r in results {
-                    // Skip if stop signal is set
-                    if stop.load(AtomicOrdering::Relaxed) {
-                        break;
-                    }
+                    // No longer checking stop signal during result processing
 
                     // Clone path to avoid modifying the original
                     let mut decoders_used = current_node.state.path.clone();
@@ -339,10 +330,7 @@ fn expand_node(
 
         // Process each decoder
         for decoder in all_decoders.components {
-            // Skip if stop signal is set
-            if stop.load(AtomicOrdering::Relaxed) {
-                break;
-            }
+            // No longer checking stop signal for each decoder
 
             // Skip decoders that were already tried
             if let Some(last_decoder) = current_node.state.path.last() {
@@ -474,8 +462,8 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
     let curr_depth = Arc::new(AtomicU32::new(1));
     let prune_threshold = Arc::new(AtomicUsize::new(INITIAL_PRUNE_THRESHOLD));
 
-    // Main A* loop
-    while !open_set.is_empty() && !stop.load(AtomicOrdering::Relaxed) {
+    // Main A* loop - no longer checking stop signal in loop condition
+    while !open_set.is_empty() {
         trace!(
             "Current depth is {:?}, open set size: {}",
             curr_depth.load(AtomicOrdering::Relaxed),
@@ -495,17 +483,19 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 expand_node(
                     node,
                     &seen_strings,
-                    &stop,
+                    &stop,  // Still passing stop for backward compatibility
                     prune_threshold.load(AtomicOrdering::Relaxed),
                 )
             })
             .collect();
 
-        // Check for result nodes
+        // Collect all successful nodes from the batch
+        let mut successful_nodes = Vec::new();
+        
+        // First pass: identify all successful nodes
         for node in &new_nodes {
             if let Some(decoder_name) = &node.next_decoder_name {
                 if decoder_name == "__RESULT__" {
-                    println!("DEBUG: Checking result node");
                     // Check if we've already processed this result
                     if let Some(text) = node.state.text.first() {
                         let result_hash = calculate_hash(text);
@@ -514,74 +504,78 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                             continue; // Skip this result, we've already processed it
                         } else {
                             println!("DEBUG: Processing new result: {:?}", text);
+                            successful_nodes.push(node);
                         }
                     }
-
-                    println!("DEBUG: Found result node with text: {:?}", node.state.text);
-                    // Found a result node
-                    decoded_how_many_times(curr_depth.load(AtomicOrdering::Relaxed));
-
-                    cli_pretty_printing::success(&format!(
-                        "DEBUG: astar.rs - Sending successful result with {} decoders",
-                        node.state.path.len()
-                    ));
-
-                    // If in top_results mode, store the result in the WaitAthena storage
-                    if get_config().top_results {
-                        // Store the first text in the vector (there should only be one)
-                        if let Some(plaintext) = node.state.text.first() {
-                            println!(
-                                "DEBUG: Processing result in top_results mode with plaintext: {}",
-                                plaintext
-                            );
-                            // Get the last decoder used
-                            let decoder_name = if let Some(last_decoder) = node.state.path.last() {
-                                last_decoder.decoder.to_string()
-                            } else {
-                                "Unknown".to_string()
-                            };
-
-                            // Get the checker name from the last decoder
-                            let checker_name = if let Some(last_decoder) = node.state.path.last() {
-                                last_decoder.checker_name.to_string()
-                            } else {
-                                "Unknown".to_string()
-                            };
-
-                            // Only store results that have a valid checker name
-                            if !checker_name.is_empty() && checker_name != "Unknown" {
-                                log::trace!(
-                                    "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
-                                    plaintext,
-                                    decoder_name,
-                                    checker_name
-                                );
-                                wait_athena_storage::add_plaintext_result(
-                                    plaintext.clone(),
-                                    format!(
-                                        "Decoded successfully at depth {}",
-                                        curr_depth.load(AtomicOrdering::Relaxed)
-                                    ),
-                                    checker_name,
-                                    decoder_name,
-                                );
-                            }
-                        }
-                    }
-
-                    // Send the result
-                    result_sender
-                        .send(Some(node.state.clone()))
-                        .expect("Should successfully send the result");
-
-                    // Only stop if not in top_results mode
-                    if !get_config().top_results {
-                        // Stop further iterations
-                        stop.store(true, AtomicOrdering::Relaxed);
-                        return;
-                    }
-                    // In top_results mode, continue searching
                 }
+            }
+        }
+        
+        // If we found any successful nodes in this batch
+        if !successful_nodes.is_empty() {
+            // Process the first successful node for logging and potential return
+            let first_successful = successful_nodes[0];
+            
+            println!("DEBUG: Found result node with text: {:?}", first_successful.state.text);
+            decoded_how_many_times(curr_depth.load(AtomicOrdering::Relaxed));
+            
+            cli_pretty_printing::success(&format!(
+                "DEBUG: astar.rs - Sending successful result with {} decoders",
+                first_successful.state.path.len()
+            ));
+            
+            // Process all successful nodes for top_results mode
+            if get_config().top_results {
+                // Store all successful results in WaitAthena storage
+                for node in &successful_nodes {
+                    if let Some(plaintext) = node.state.text.first() {
+                        println!(
+                            "DEBUG: Processing result in top_results mode with plaintext: {}",
+                            plaintext
+                        );
+                        
+                        // Get the last decoder used
+                        let decoder_name = if let Some(last_decoder) = node.state.path.last() {
+                            last_decoder.decoder.to_string()
+                        } else {
+                            "Unknown".to_string()
+                        };
+                        
+                        // Get the checker name from the last decoder
+                        let checker_name = if let Some(last_decoder) = node.state.path.last() {
+                            last_decoder.checker_name.to_string()
+                        } else {
+                            "Unknown".to_string()
+                        };
+                        
+                        // Only store results that have a valid checker name
+                        if !checker_name.is_empty() && checker_name != "Unknown" {
+                            log::trace!(
+                                "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
+                                plaintext,
+                                decoder_name,
+                                checker_name
+                            );
+                            wait_athena_storage::add_plaintext_result(
+                                plaintext.clone(),
+                                format!(
+                                    "Decoded successfully at depth {}",
+                                    curr_depth.load(AtomicOrdering::Relaxed)
+                                ),
+                                checker_name,
+                                decoder_name,
+                            );
+                        }
+                    }
+                }
+                
+                // In top_results mode, we continue processing after storing all results
+            } else {
+                // In normal mode, send the first successful result and return
+                result_sender
+                    .send(Some(first_successful.state.clone()))
+                    .expect("Should successfully send the result");
+                return;
             }
         }
 
@@ -622,11 +616,9 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
     }
 
     // If we get here, we've exhausted all possibilities without finding a solution
-    if !stop.load(AtomicOrdering::Relaxed) {
-        result_sender
-            .send(None)
-            .expect("Should successfully send the result");
-    }
+    result_sender
+        .send(None)
+        .expect("Should successfully send the result");
 }
 
 #[cfg(test)]
