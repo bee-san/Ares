@@ -30,6 +30,14 @@ impl Crack for Decoder<BrailleDecoder> {
         }
 
         let decoded_text = braille_to_text(text);
+        
+        // Check if the decoder actually transformed the input
+        // If the output is identical to the input, it means there were no Braille characters
+        // and we should return None for unencrypted_text
+        if decoded_text == text {
+            trace!("Braille decoder did not transform the input, returning None");
+            return results; // unencrypted_text is already None by default
+        }
 
         let checker_result = checker.check(&decoded_text);
         if checker_result.is_identified {
@@ -143,8 +151,8 @@ mod tests {
         let result = braille_decoder
             .crack("123ABC", &get_athena_checker())
             .unencrypted_text;
-        assert!(result.is_some());
-        assert_eq!(result.unwrap()[0], "123ABC");
+        // With the new behavior, the decoder should return None for non-Braille input
+        assert!(result.is_none());
     }
 
     #[test]
@@ -153,6 +161,7 @@ mod tests {
         let result = braille_decoder
             .crack("⠓⠑⠇⠇⠕123", &get_athena_checker())
             .unencrypted_text;
+        // Mixed content should still be decoded since it contains Braille characters
         assert!(result.is_some());
         assert_eq!(result.unwrap()[0], "hello123");
     }

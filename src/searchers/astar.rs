@@ -35,6 +35,7 @@
 
 use crate::cli_pretty_printing;
 use crate::cli_pretty_printing::decoded_how_many_times;
+use crate::decoders::crack_results::CrackResult;
 use crate::filtration_system::get_all_decoders;
 use crate::filtration_system::{get_decoder_by_name, get_decoder_tagged_decoders, MyResults};
 use crossbeam::channel::Sender;
@@ -193,6 +194,18 @@ fn expand_node(
 ) -> Vec<AStarNode> {
     let mut new_nodes = Vec::new();
 
+    println!("DEBUG: Expanding node with text: {:?}", current_node.state.text);
+    
+    // Print current path
+    let mut path_str = String::new();
+    for (i, decoder) in current_node.state.path.iter().enumerate() {
+        if i > 0 {
+            path_str.push_str(" -> ");
+        }
+        path_str.push_str(&format!("{}(success={})", decoder.decoder, decoder.success));
+    }
+    println!("DEBUG: Current path: {}", path_str);
+    
     // No longer checking stop signal here
 
     // Determine which decoders to use based on next_decoder_name
@@ -232,6 +245,7 @@ fn expand_node(
         let checker = CheckerTypes::CheckAthena(athena_checker);
         // since we only have decoders with the same name
         // we are cheating and just run that one decoder lol
+        println!("DEBUG: Running decoder: {}", current_node.next_decoder_name.as_ref().unwrap_or(&"None".to_string()));
         let decoder_results = decoders.run(&current_node.state.text[0], checker);
 
         // Process decoder results
@@ -243,6 +257,7 @@ fn expand_node(
                 if res.success {
                     let mut decoders_used = current_node.state.path.clone();
                     let text = res.unencrypted_text.clone().unwrap_or_default();
+                    println!("DEBUG: Found successful result with decoder: {} -> {:?}", res.decoder, text);
                     decoders_used.push(res.clone());
 
                     // Create a special "result" node with a very low total_cost to ensure it's processed first
@@ -291,6 +306,7 @@ fn expand_node(
                         continue;
                     }
 
+                    println!("DEBUG: Adding decoder {} to path with text: {:?}", r.decoder, text);
                     decoders_used.push(r.clone());
 
                     // Create new node with updated cost and heuristic
@@ -369,6 +385,7 @@ fn expand_node(
 
                     // Create decoder result
                     let mut decoders_used = current_node.state.path.clone();
+                    println!("DEBUG: Adding decoder {} to path with text: {:?}", decoder.get_name(), decoded_text);
                     decoders_used.push(result.clone());
 
                     // Create new node
@@ -399,7 +416,7 @@ fn expand_node(
             }
         }
     }
-
+    println!("DEBUG: Expanded node produced {} new nodes", new_nodes.len());
     new_nodes
 }
 
@@ -516,7 +533,37 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
             // Process the first successful node for logging and potential return
             let first_successful = successful_nodes[0];
             
-            println!("DEBUG: Found result node with text: {:?}", first_successful.state.text);
+            // Build decoder path string
+            let mut decoder_path = String::new();
+            for (i, decoder) in first_successful.state.path.iter().enumerate() {
+                if i > 0 {
+                    decoder_path.push_str(" -> ");
+                }
+                decoder_path.push_str(&format!("{}(success={})", decoder.decoder, decoder.success));
+            }
+            
+            println!(
+                "DEBUG: Found result node with text: {:?} | Decoder path: {}",
+                first_successful.state.text, decoder_path
+            );
+            
+            // Validate the path by applying each decoder in sequence
+            println!("DEBUG: Validating decoder path by applying each decoder in sequence:");
+            let mut current_text = first_successful.state.path[0].encrypted_text.clone();
+            println!("DEBUG: Starting with text: {}", current_text);
+            
+            for (i, decoder) in first_successful.state.path.iter().enumerate() {
+                if let Some(decoded_texts) = &decoder.unencrypted_text {
+                    if !decoded_texts.is_empty() {
+                        println!("DEBUG: Step {}: {} -> {}", i, current_text, decoded_texts[0]);
+                        current_text = decoded_texts[0].clone();
+                    } else {
+                        println!("DEBUG: Step {}: {} produced empty result", i, decoder.decoder);
+                    }
+                } else {
+                    println!("DEBUG: Step {}: {} produced no result", i, decoder.decoder);
+                }
+            }
             decoded_how_many_times(curr_depth.load(AtomicOrdering::Relaxed));
             
             cli_pretty_printing::success(&format!(
@@ -526,23 +573,45 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
             
             // Process all successful nodes for top_results mode
             if get_config().top_results {
-                // Store all successful results in WaitAthena storage
+                // Filter out failed decoders from the path before storing
                 for node in &successful_nodes {
-                    if let Some(plaintext) = node.state.text.first() {
+                    // Create a filtered copy with only successful decoders
+                    let mut filtered_path = Vec::new();
+                    for decoder in &node.state.path {
+                        if decoder.success {
+                            filtered_path.push(decoder.clone());
+                        }
+                    }
+                    
+                    // Create a new state with the filtered path
+                    let mut filtered_state = node.state.clone();
+                    filtered_state.path = filtered_path;
+                    
+                    // Store all successful results in WaitAthena storage
+                    if let Some(plaintext) = filtered_state.text.first() {
+                        // Build decoder path string for the filtered path
+                        let mut decoder_path = String::new();
+                        for (i, decoder) in filtered_state.path.iter().enumerate() {
+                            if i > 0 {
+                                decoder_path.push_str(" -> ");
+                            }
+                            decoder_path.push_str(&decoder.decoder);
+                        }
+                        
                         println!(
-                            "DEBUG: Processing result in top_results mode with plaintext: {}",
-                            plaintext
+                            "DEBUG: Processing result in top_results mode with plaintext: {} | Decoder path: {}",
+                            plaintext, decoder_path
                         );
                         
                         // Get the last decoder used
-                        let decoder_name = if let Some(last_decoder) = node.state.path.last() {
+                        let decoder_name = if let Some(last_decoder) = filtered_state.path.last() {
                             last_decoder.decoder.to_string()
                         } else {
                             "Unknown".to_string()
                         };
                         
                         // Get the checker name from the last decoder
-                        let checker_name = if let Some(last_decoder) = node.state.path.last() {
+                        let checker_name = if let Some(last_decoder) = filtered_state.path.last() {
                             last_decoder.checker_name.to_string()
                         } else {
                             "Unknown".to_string()
@@ -551,9 +620,9 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                         // Only store results that have a valid checker name
                         if !checker_name.is_empty() && checker_name != "Unknown" {
                             log::trace!(
-                                "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
+                                "Storing plaintext in WaitAthena storage: {} (decoder path: {}, checker: {})",
                                 plaintext,
-                                decoder_name,
+                                decoder_path,
                                 checker_name
                             );
                             wait_athena_storage::add_plaintext_result(
@@ -571,9 +640,16 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 
                 // In top_results mode, we continue processing after storing all results
             } else {
-                // In normal mode, send the first successful result and return
+                // Filter out failed decoders from the path before returning
+                let mut filtered_state = first_successful.state.clone();
+                filtered_state.path.retain(|decoder| decoder.success);
+                
+                println!("DEBUG: Filtered path to only include successful decoders: {}",
+                    filtered_state.path.iter().map(|d| d.decoder.to_string()).collect::<Vec<_>>().join(" -> "));
+                
+                // In normal mode, send the filtered result and return
                 result_sender
-                    .send(Some(first_successful.state.clone()))
+                    .send(Some(filtered_state))
                     .expect("Should successfully send the result");
                 return;
             }
