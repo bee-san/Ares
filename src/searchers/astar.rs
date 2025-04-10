@@ -55,7 +55,7 @@ use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::config::get_config;
 use crate::searchers::helper_functions::{
-    calculate_string_worth, generate_heuristic, update_decoder_stats,
+    calculate_string_worth, generate_heuristic,
 };
 use crate::storage::wait_athena_storage;
 use crate::DecoderResult;
@@ -80,16 +80,6 @@ fn is_reciprocal_decoder(decoder_name: &str) -> bool {
     decoder.components.iter().any(|d| {
         d.get_tags().contains(&"reciprocal")
     })
-}
-
-/// Calculate a hash for a string to use in the seen_strings set
-fn calculate_hash(text: &str) -> String {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-
-    let mut hasher = DefaultHasher::new();
-    text.hash(&mut hasher);
-    hasher.finish().to_string()
 }
 
 /// A* search node with priority based on f = g + h
@@ -199,41 +189,29 @@ impl ThreadSafePriorityQueue {
 fn expand_node(
     current_node: &AStarNode,
     seen_strings: &DashSet<String>,
-    _stop: &Arc<AtomicBool>,  // Renamed to _stop to indicate it's intentionally unused
     _prune_threshold: usize,
+    checker: &CheckerTypes, // Add checker parameter
 ) -> Vec<AStarNode> {
     let mut new_nodes = Vec::new();
-
-    println!("DEBUG: Expanding node with text: {:?}", current_node.state.text);
-    
-    // Print current path
-    let mut path_str = String::new();
-    for (i, decoder) in current_node.state.path.iter().enumerate() {
-        if i > 0 {
-            path_str.push_str(" -> ");
-        }
-        path_str.push_str(&format!("{}(success={})", decoder.decoder, decoder.success));
-    }
-    println!("DEBUG: Current path: {}", path_str);
-    
-    // No longer checking stop signal here
 
     // Determine which decoders to use based on next_decoder_name
     let mut decoders;
     if let Some(decoder_name) = &current_node.next_decoder_name {
         // If we have a specific decoder name, filter all decoders to only include that one
+        // this is 
         trace!("Using specific decoder: {}", decoder_name);
         // use get decoder by name from filtration
         decoders = get_decoder_by_name(decoder_name);
         // Update stats for the decoder
-        if !decoders.components.is_empty() {
-            update_decoder_stats(decoder_name, true);
-        }
     } else {
         decoders = get_decoder_tagged_decoders(&current_node.state);
     }
 
     // Prevent reciprocal decoders from being applied consecutively
+    // a reciprocal decoder is a decoder that can be used to encode and decode the same text
+    // example is reverse. Reverse(cat) = tac
+    // if we reverse it again Reverse(tac) = cat
+    // so we don't want to apply it consecutively
     if let Some(last_decoder) = current_node.state.path.last() {
         if is_reciprocal_decoder(&last_decoder.decoder) {
             let excluded_name = &last_decoder.decoder;
@@ -248,26 +226,23 @@ fn expand_node(
             "Found {} decoder-tagged decoders to execute",
             decoders.components.len()
         );
-
-        // No longer checking stop signal before processing decoders
-
-        let athena_checker = Checker::<Athena>::new();
-        let checker = CheckerTypes::CheckAthena(athena_checker);
+        
+        // Use the passed checker instead of creating a new one
         // since we only have decoders with the same name
         // we are cheating and just run that one decoder lol
-        println!("DEBUG: Running decoder: {}", current_node.next_decoder_name.as_ref().unwrap_or(&"None".to_string()));
-        let decoder_results = decoders.run(&current_node.state.text[0], checker);
+        let decoder_results = decoders.run(&current_node.state.text[0], checker.clone());
 
         // Process decoder results
         match decoder_results {
             MyResults::Break(res) => {
                 // Handle successful decoding
-                // This part remains mostly unchanged, but instead of sending results directly,
+                // instead of sending results directly,
                 // we'll return a special marker node that indicates a successful result
+                // this is because we want to ensure that the result is processed first as its the success
+                // its just a hacky way to ensure this works with multi processing
                 if res.success {
                     let mut decoders_used = current_node.state.path.clone();
                     let text = res.unencrypted_text.clone().unwrap_or_default();
-                    println!("DEBUG: Found successful result with decoder: {} -> {:?}", res.decoder, text);
                     decoders_used.push(res.clone());
 
                     // Create a special "result" node with a very low total_cost to ensure it's processed first
@@ -288,38 +263,34 @@ fn expand_node(
             MyResults::Continue(results) => {
                 // Process each result
                 for r in results {
-                    // No longer checking stop signal during result processing
-
                     // Clone path to avoid modifying the original
                     let mut decoders_used = current_node.state.path.clone();
 
                     // Get decoded text
                     let text = r.unencrypted_text.clone().unwrap_or_default();
 
-                    // Skip if text is empty or already seen
+                    // Skip if text is empty
                     if text.is_empty() {
-                        update_decoder_stats(r.decoder, false);
                         continue;
                     }
 
                     // Check if string is worth being decoded
                     // uses string heuristics. if heuristic is too low, it goes bye bye!
                     if !calculate_string_worth(&text[0]) {
-                        update_decoder_stats(r.decoder, false);
                         continue;
                     }
 
                     // Check if we've seen this string before to prevent cycles
-                    let text_hash = calculate_hash(&text[0]);
-                    if !seen_strings.insert(text_hash) {
-                        update_decoder_stats(r.decoder, false);
+                    if !seen_strings.insert(text[0].clone()) {
                         continue;
                     }
 
-                    println!("DEBUG: Adding decoder {} to path with text: {:?}", r.decoder, text);
                     decoders_used.push(r.clone());
 
                     // Create new node with updated cost and heuristic
+                    // for every "level" node costs increase
+                    // to encourage expanding nodes closer to the original text
+                    // rather than say 100 levels deep
                     let cost = current_node.cost + 1;
                     let heuristic = generate_heuristic(&text[0], &decoders_used, &None);
                     let total_cost = cost as f32 + heuristic;
@@ -338,8 +309,6 @@ fn expand_node(
                     // Add to new nodes
                     new_nodes.push(new_node);
 
-                    // Update decoder stats - mark as successful since it produced valid output
-                    update_decoder_stats(r.decoder, true);
                 }
             }
         }
@@ -372,30 +341,44 @@ fn expand_node(
                 }
             }
 
-            // Run the decoder
-            let athena_checker = Checker::<Athena>::new();
-            let checker = CheckerTypes::CheckAthena(athena_checker);
-            let result = decoder.crack(&current_node.state.text[0], &checker);
+            // Run the decoder using the passed checker
+            let result = decoder.crack(&current_node.state.text[0], checker);
+            if result.success {
+                let mut decoders_used = current_node.state.path.clone();
+                let text = result.unencrypted_text.clone().unwrap_or_default();
+                debug!("DEBUG: Found successful result with decoder: {} -> {:?}", result.decoder, text);
+                decoders_used.push(result.clone());
+
+                // Create a special "result" node with a very low total_cost to ensure it's processed first
+                let result_node = AStarNode {
+                    state: DecoderResult {
+                        text: text.clone(),
+                        path: decoders_used,
+                    },
+                    cost: current_node.cost + 1,
+                    heuristic: -1000.0, // Very negative to ensure highest priority
+                    total_cost: -1000.0, // Very negative to ensure highest priority
+                    next_decoder_name: Some("__RESULT__".to_string()), // Special marker
+                };
+
+                new_nodes.push(result_node);
+            }
 
             // Process the result
             if let Some(decoded_text) = &result.unencrypted_text {
                 if let Some(first_text) = decoded_text.first() {
                     // Skip if text is empty
                     if first_text.is_empty() {
-                        update_decoder_stats(decoder.get_name(), false);
                         continue;
                     }
 
                     // Check if we've seen this string before
-                    let text_hash = calculate_hash(first_text);
-                    if !seen_strings.insert(text_hash) {
-                        update_decoder_stats(decoder.get_name(), false);
+                    if !seen_strings.insert(first_text.to_string()) {
                         continue;
                     }
 
                     // Create decoder result
                     let mut decoders_used = current_node.state.path.clone();
-                    println!("DEBUG: Adding decoder {} to path with text: {:?}", decoder.get_name(), decoded_text);
                     decoders_used.push(result.clone());
 
                     // Create new node
@@ -416,17 +399,10 @@ fn expand_node(
 
                     // Add to new nodes
                     new_nodes.push(new_node);
-
-                    // Update decoder stats
-                    update_decoder_stats(decoder.get_name(), true);
                 }
-            } else {
-                // Update decoder stats for failed decoding
-                update_decoder_stats(decoder.get_name(), false);
             }
         }
     }
-    println!("DEBUG: Expanded node produced {} new nodes", new_nodes.len());
     new_nodes
 }
 
@@ -463,6 +439,10 @@ fn expand_node(
 pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
     // Calculate heuristic before moving input
     let initial_heuristic = generate_heuristic(&input, &[], &None);
+
+    // Create the Athena checker once
+    let athena_checker = Checker::<Athena>::new();
+    let checker = CheckerTypes::CheckAthena(athena_checker);
 
     let initial = DecoderResult {
         text: vec![input],
@@ -510,81 +490,53 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 expand_node(
                     node,
                     &seen_strings,
-                    &stop,  // Still passing stop for backward compatibility
                     prune_threshold.load(AtomicOrdering::Relaxed),
+                    &checker, // Pass the checker
                 )
             })
             .collect();
 
-        // Collect all successful nodes from the batch
-        let mut successful_nodes = Vec::new();
+        // First, identify indices of successful nodes
+        let mut successful_node_indices = Vec::new();
         
-        // First pass: identify all successful nodes
-        for node in &new_nodes {
+        for (i, node) in new_nodes.iter().enumerate() {
             if let Some(decoder_name) = &node.next_decoder_name {
                 if decoder_name == "__RESULT__" {
                     // Check if we've already processed this result
                     if let Some(text) = node.state.text.first() {
-                        let result_hash = calculate_hash(text);
-                        if !seen_results.insert(result_hash) {
-                            println!("DEBUG: Skipping duplicate result: {:?}", text);
-                            continue; // Skip this result, we've already processed it
-                        } else {
-                            println!("DEBUG: Processing new result: {:?}", text);
-                            successful_nodes.push(node);
+                        if !seen_results.contains(text) {
+                            successful_node_indices.push(i);
                         }
                     }
                 }
             }
         }
         
-        // If we found any successful nodes in this batch
-        if !successful_nodes.is_empty() {
+        // Process successful nodes if any were found
+        if !successful_node_indices.is_empty() {
+            // Add the successful results to seen_results to avoid duplicates
+            for &idx in &successful_node_indices {
+                if let Some(text) = new_nodes[idx].state.text.first() {
+                    seen_results.insert(text.clone());
+                }
+            }
+            
             // Process the first successful node for logging and potential return
-            let first_successful = successful_nodes[0];
+            let first_idx = successful_node_indices[0];
+            let first_successful = &new_nodes[first_idx];
             
-            // Build decoder path string
-            let mut decoder_path = String::new();
-            for (i, decoder) in first_successful.state.path.iter().enumerate() {
-                if i > 0 {
-                    decoder_path.push_str(" -> ");
-                }
-                decoder_path.push_str(&format!("{}(success={})", decoder.decoder, decoder.success));
-            }
-            
-            println!(
-                "DEBUG: Found result node with text: {:?} | Decoder path: {}",
-                first_successful.state.text, decoder_path
-            );
-            
-            // Validate the path by applying each decoder in sequence
-            println!("DEBUG: Validating decoder path by applying each decoder in sequence:");
-            let mut current_text = first_successful.state.path[0].encrypted_text.clone();
-            println!("DEBUG: Starting with text: {}", current_text);
-            
-            for (i, decoder) in first_successful.state.path.iter().enumerate() {
-                if let Some(decoded_texts) = &decoder.unencrypted_text {
-                    if !decoded_texts.is_empty() {
-                        println!("DEBUG: Step {}: {} -> {}", i, current_text, decoded_texts[0]);
-                        current_text = decoded_texts[0].clone();
-                    } else {
-                        println!("DEBUG: Step {}: {} produced empty result", i, decoder.decoder);
-                    }
-                } else {
-                    println!("DEBUG: Step {}: {} produced no result", i, decoder.decoder);
-                }
-            }
             decoded_how_many_times(curr_depth.load(AtomicOrdering::Relaxed));
             
             cli_pretty_printing::success(&format!(
-                "DEBUG: astar.rs - Sending successful result with {} decoders",
+                "Sending successful result with {} decoders",
                 first_successful.state.path.len()
             ));
             
             // Process all successful nodes for top_results mode
             if get_config().top_results {
                 // Filter out failed decoders from the path before storing
-                for node in &successful_nodes {
+                for &idx in &successful_node_indices {
+                    let node = &new_nodes[idx];
                     // Create a filtered copy with only successful decoders
                     let mut filtered_path = Vec::new();
                     for decoder in &node.state.path {
@@ -607,11 +559,6 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                             }
                             decoder_path.push_str(&decoder.decoder);
                         }
-                        
-                        println!(
-                            "DEBUG: Processing result in top_results mode with plaintext: {} | Decoder path: {}",
-                            plaintext, decoder_path
-                        );
                         
                         // Get the last decoder used
                         let decoder_name = if let Some(last_decoder) = filtered_state.path.last() {
@@ -651,11 +598,9 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                 // In top_results mode, we continue processing after storing all results
             } else {
                 // Filter out failed decoders from the path before returning
-                let mut filtered_state = first_successful.state.clone();
+                let first_node = &new_nodes[first_idx];
+                let mut filtered_state = first_node.state.clone();
                 filtered_state.path.retain(|decoder| decoder.success);
-                
-                println!("DEBUG: Filtered path to only include successful decoders: {}",
-                    filtered_state.path.iter().map(|d| d.decoder.to_string()).collect::<Vec<_>>().join(" -> "));
                 
                 // In normal mode, send the filtered result and return
                 result_sender
@@ -665,7 +610,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
             }
         }
 
-        // Filter out result nodes and add remaining nodes to open set
+        // Add non-result nodes to open set
         for node in new_nodes {
             if let Some(decoder_name) = &node.next_decoder_name {
                 if decoder_name != "__RESULT__" {
@@ -761,49 +706,49 @@ mod tests {
         if let Some(decoder_result) = result {
             assert!(!decoder_result.path.is_empty());
         }
-}
+    }
 
-#[test]
-fn test_reciprocal_decoders_not_applied_consecutively() {
-    // This test verifies that reciprocal decoders (like Atbash and Caesar)
-    // are not applied consecutively in the search path
-    
-    let (sender, receiver) = bounded::<Option<DecoderResult>>(1);
-    let stop = Arc::new(AtomicBool::new(false));
-    
-    // Use a simple input that could be decoded with reciprocal decoders
-    let input = "Ifmmp Xpsme"; // "Hello World" with Caesar shift of 1
-    
-    // Run A* search
-    std::thread::spawn(move || {
-        astar(input.to_string(), sender, stop);
-    });
-    
-    // Wait for result
-    let result = receiver.recv().unwrap();
-    
-    // Verify we got a result
-    assert!(result.is_some());
-    
-    if let Some(decoder_result) = result {
-        // Get the decoder path
-        let path = decoder_result.path;
+    #[test]
+    fn test_reciprocal_decoders_not_applied_consecutively() {
+        // This test verifies that reciprocal decoders (like Atbash and Caesar)
+        // are not applied consecutively in the search path
         
-        // Check that no reciprocal decoder is applied consecutively
-        for i in 1..path.len() {
-            let prev_decoder = &path[i-1];
-            let curr_decoder = &path[i];
+        let (sender, receiver) = bounded::<Option<DecoderResult>>(1);
+        let stop = Arc::new(AtomicBool::new(false));
+        
+        // Use a simple input that could be decoded with reciprocal decoders
+        let input = "Ifmmp Xpsme"; // "Hello World" with Caesar shift of 1
+        
+        // Run A* search
+        std::thread::spawn(move || {
+            astar(input.to_string(), sender, stop);
+        });
+        
+        // Wait for result
+        let result = receiver.recv().unwrap();
+        
+        // Verify we got a result
+        assert!(result.is_some());
+        
+        if let Some(decoder_result) = result {
+            // Get the decoder path
+            let path = decoder_result.path;
             
-            // If the previous decoder is reciprocal, it should not be the same as the current one
-            if is_reciprocal_decoder(&prev_decoder.decoder) {
-                assert_ne!(
-                    prev_decoder.decoder,
-                    curr_decoder.decoder,
-                    "Reciprocal decoder {} was applied consecutively",
-                    prev_decoder.decoder
-                );
-            }
+            // Check that no reciprocal decoder is applied consecutively
+            for i in 1..path.len() {
+                let prev_decoder = &path[i-1];
+                let curr_decoder = &path[i];
+                
+                // If the previous decoder is reciprocal, it should not be the same as the current one
+                if is_reciprocal_decoder(&prev_decoder.decoder) {
+                    assert_ne!(
+                        prev_decoder.decoder,
+                        curr_decoder.decoder,
+                        "Reciprocal decoder {} was applied consecutively",
+                        prev_decoder.decoder
+                    );
                 }
             }
         }
     }
+}

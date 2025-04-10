@@ -53,6 +53,34 @@ pub enum CheckerTypes {
     CheckWordlist(Checker<WordlistChecker>),
 }
 
+impl Clone for CheckerTypes {
+    fn clone(&self) -> Self {
+        match self {
+            CheckerTypes::CheckLemmeKnow(_) => {
+                CheckerTypes::CheckLemmeKnow(Checker::<LemmeKnow>::new())
+            }
+            CheckerTypes::CheckEnglish(_) => {
+                CheckerTypes::CheckEnglish(Checker::<EnglishChecker>::new())
+            }
+            CheckerTypes::CheckAthena(_) => {
+                CheckerTypes::CheckAthena(Checker::<Athena>::new())
+            }
+            CheckerTypes::CheckWaitAthena(_) => {
+                CheckerTypes::CheckWaitAthena(Checker::<WaitAthena>::new())
+            }
+            CheckerTypes::CheckRegex(_) => {
+                CheckerTypes::CheckRegex(Checker::<RegexChecker>::new())
+            }
+            CheckerTypes::CheckPassword(_) => {
+                CheckerTypes::CheckPassword(Checker::<PasswordChecker>::new())
+            }
+            CheckerTypes::CheckWordlist(_) => {
+                CheckerTypes::CheckWordlist(Checker::<WordlistChecker>::new())
+            }
+        }
+    }
+}
+
 impl CheckerTypes {
     /// This functions calls appropriate check function of Checker
     pub fn check(&self, text: &str) -> CheckResult {
