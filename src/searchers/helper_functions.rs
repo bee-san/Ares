@@ -8,6 +8,7 @@ use crate::CrackResult;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
 use std::sync::Mutex;
+use human_panic::human_panic;
 
 /// Track decoder success rates for adaptive learning
 pub static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
@@ -174,8 +175,10 @@ pub fn generate_heuristic(
         // Use the decoder's popularity via the get_popularity method (higher popularity = lower score)
         base_score += 1.0 - decoder.get_popularity();
     } else {
-        // If next decoder is None, add a moderate penalty
-        base_score += 0.5;
+        // if there is no next decoder, we should panic
+        // as this is meant to be set by us
+        // by panicing we freak out the developer into fixing this
+        human_panic::human_panic("No next decoder provided to generate_heuristic, cannot calculate heuristic based on popularity", None, None);
     }
 
     // 2. Depth penalty - exponential growth but not too aggressive

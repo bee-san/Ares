@@ -10,8 +10,7 @@
 //! 2. At each step:
 //!    - Extract a batch of nodes from the priority queue
 //!    - Process these nodes in parallel
-//!    - First run all "decoder"-tagged decoders (these are prioritized)
-//!    - Then run all other decoders with heuristic prioritization
+//!    - run all other decoders with heuristic prioritization
 //! 3. For each successful decoding, create a new node and add it to the priority queue
 //! 4. Continue until a plaintext is found or the search space is exhausted
 //!
@@ -185,6 +184,39 @@ impl ThreadSafePriorityQueue {
     }
 }
 
+fn create_new_nodes_from_results(text: String, path: Vec<CrackResult>, cost: u32, decoders_used: Vec<CrackResult>) -> Vec<AStarNode> {
+    // text, path, cost, heuristic, total_cost
+    // create a vector of new nodes where the next_decoder_name is the name of the decoder
+    // loop through every decoder possible and add them to next_decoder_name
+    // and update the heuristics based on this
+    let mut new_nodes = Vec::new();
+
+    // get all decoders
+    let all_decoders = get_all_decoders();
+    // loop through all decoders and calculate heuristics
+    for decoder in all_decoders.components {
+        let decoder_name = decoder.get_name().to_string();
+        let heuristic = generate_heuristic(&text, &decoders_used, &Some(decoder));
+        let total_cost = cost as f32 + heuristic;
+        
+        // Create a new node and add it to our collection
+        let new_node = AStarNode {
+            state: DecoderResult {
+                text: vec![text.clone()],
+                path: path.clone(),
+            },
+            cost,
+            heuristic,
+            total_cost,
+            next_decoder_name: Some(decoder_name),
+        };
+        
+        new_nodes.push(new_node);
+    }
+    
+    new_nodes
+}
+
 /// Expands a single node and returns a vector of new nodes
 fn expand_node(
     current_node: &AStarNode,
@@ -244,6 +276,7 @@ fn expand_node(
                     let mut decoders_used = current_node.state.path.clone();
                     let text = res.unencrypted_text.clone().unwrap_or_default();
                     decoders_used.push(res.clone());
+
 
                     // Create a special "result" node with a very low total_cost to ensure it's processed first
                     let result_node = AStarNode {
