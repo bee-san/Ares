@@ -244,10 +244,26 @@ mod tests {
                 "Vyc fnqkm spdpv nqo hjfxa qmcg 13 eiha umvl.",
                 &get_athena_checker(),
             )
-            .unencrypted_text;
+            .unencrypted_text.expect("No unencrypted text for Vigenere decoder");
 
-        assert!(result.is_some());
-        let _decoded_text = &result.as_ref().unwrap()[0];
+        let decoded_text = result.get(0).expect("No unencrypted text for Vigenere decoder");
+
+        assert_eq!(decoded_text, "The quick brown fox jumps over 13 lazy dogs.");
+    }
+
+    #[test]
+    fn test_vigenere_decoding_long() {
+        let vigenere_decoder = Decoder::<VigenereDecoder>::new();
+        let result = vigenere_decoder
+            .crack(
+                "eznwxg kce yjmwuckgrttta ucixkb ceb sxkwfv tpkqwwj rnima qw ccvwlgu mg xvktpnixl bgor, xgktwugcz (jcv emi equkkcs mw) Jcjc64, Wxfifvaxfit, Erchtz kkgftk, ZWV13, LPA xvkqugcz, ivf dycr uwtv. Gi namu rbktvkgu yazwzkkfbl ivf ycjkqavzah mw qfvlibng vyc tgkwfzlv mgxg rls txxnp rwx ixrimekqivv btvwlkee bxbpqu, mummv jrlseqvi dsamqxnv jprmzu fd tgkwfzlv tcbqdyibkincw.",
+                &get_athena_checker(),
+            )
+            .unencrypted_text.expect("No unencrypted text for Vigenere decoder");
+
+        let decoded_text = result.get(0).expect("No unencrypted text for Vigenere decoder");
+
+        assert_eq!(decoded_text, "ciphey can automatically detect and decode various types of encoded or encrypted text, including (but not limited to) Base64, Hexadecimal, Caesar cipher, ROT13, URL encoding, and many more. It uses advanced algorithms and heuristics to identify the encoding type and apply the appropriate decoding method, often handling multiple layers of encoding automatically.");
     }
 
     #[test]
@@ -258,10 +274,11 @@ mod tests {
                 "Jvjah Asgccihva! Vycgx'a i ffe xg ug ecmhxb",
                 &get_athena_checker(),
             )
-            .unencrypted_text;
+            .unencrypted_text.expect("No unencrypted text for Vigenere decoder");
 
-        assert!(result.is_some());
-        let _decoded_text = &result.as_ref().unwrap()[0];
+        let decoded_text = result.get(0).expect("No unencrypted text for Vigenere decoder");
+
+        assert_eq!(decoded_text, "Hello Skeletons! There's a dog in my closet");
     }
 
     #[test]
