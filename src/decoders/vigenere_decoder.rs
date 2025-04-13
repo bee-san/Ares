@@ -17,6 +17,17 @@ use std::path::Path;
 /// Expected Index of Coincidence for English text
 const EXPECTED_IOC: f64 = 0.0667;
 
+static VIGENERE_SQUARE: Lazy<Vec<Vec<char>>> = Lazy::new(|| {
+    let mut square = vec![vec![' '; 26]; 26];
+    for i in 0..26 {
+        for j in 0..26 {
+            square[i][j] = ((((j+i) % 26) as u8) + b'A') as char;
+        }
+    }
+    square
+});
+
+// english_bigrams.txt taken from http://practicalcryptography.com/media/cryptanalysis/files/english_bigrams.txt
 static ENGLISH_BIGRAMS: Lazy<Vec<Vec<i64>>> = Lazy::new(|| {
     let mut bigrams_vec = vec![vec![0; 26]; 26];
 
@@ -143,6 +154,13 @@ impl Crack for Decoder<VigenereDecoder> {
         self.link
     }
 }
+
+/// Ported from the PHP implementation shown in https://www.guballa.de/bits-and-bytes/implementierung-des-vigenere-solvers
+/// Attempts to break the Vigenere cipher using bigrams
+// fn break_vigenere(text: &str, key_length: usize) -> String {
+//     let mut key = vec![0; key_length];
+//     let s = match std::str::
+// }
 
 /// Calculate Index of Coincidence for text split into key_length columns
 fn calculate_average_ioc(text: &str, key_length: usize) -> f64 {
@@ -371,4 +389,31 @@ mod tests {
     fn test_english_bigrams_qz() {
         assert_eq!(ENGLISH_BIGRAMS[16][25], 280);
     }
+
+    #[test]
+    fn test_vigenere_square_aa() {
+        assert_eq!(VIGENERE_SQUARE[0][0], 'A');
+    }
+
+    #[test]
+    fn test_vigenere_square_az() {
+        assert_eq!(VIGENERE_SQUARE[0][25], 'Z');
+    }
+
+    #[test]
+    fn test_vigenere_square_za() {
+        assert_eq!(VIGENERE_SQUARE[25][0], 'Z');
+    }
+
+    #[test]
+    fn test_vigenere_square_zz() {
+        assert_eq!(VIGENERE_SQUARE[25][25], 'Y');
+    }
+
+    #[test]
+    fn test_vigenere_square_mt() {
+        assert_eq!(VIGENERE_SQUARE[12][19], 'F');
+    }
+
+
 }
