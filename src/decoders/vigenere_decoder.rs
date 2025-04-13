@@ -10,9 +10,52 @@ use crate::decoders::interface::check_string_success;
 use crate::storage::ENGLISH_FREQS;
 use gibberish_or_not::Sensitivity;
 use log::{debug, info, trace};
+use once_cell::sync::Lazy;
+use std::fs;
+use std::path::Path;
 
 /// Expected Index of Coincidence for English text
 const EXPECTED_IOC: f64 = 0.0667;
+
+static ENGLISH_BIGRAMS: Lazy<Vec<Vec<i64>>> = Lazy::new(|| {
+    let mut bigrams_vec = vec![vec![0; 26]; 26];
+
+    // Path to english bigrams file
+    let f_path = Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("src")
+        .join("decoders")
+        .join("ngrams")
+        .join("english_bigrams.txt");
+
+    // Read the file content
+    if let Ok(content) = fs::read_to_string(&f_path) {
+        let content_lines = content.split('\n');
+        for line in content_lines {
+            if line.is_empty() {
+                continue;
+            }
+            let line_split: Vec<&str> = line.split_ascii_whitespace().collect();
+            if line_split.is_empty() {
+                continue;
+            }
+            let mut chars_itr = line_split[0].chars();
+            let char1: char = chars_itr.next()
+                .expect("Could not retrieve first char")
+                .to_ascii_uppercase();
+            let char2: char = chars_itr.next()
+                .expect("Could not retrieve second char")
+                .to_ascii_uppercase();
+
+            let fitness = line_split[1]
+                .parse::<i64>()
+                .expect("Could not parse fitness value");
+
+            bigrams_vec[(char1 as u8 - b'A') as usize][(char2 as u8 - b'A') as usize] = fitness;
+        }
+    }
+
+    bigrams_vec
+});
 
 /// The Vigenère decoder struct
 pub struct VigenereDecoder;
@@ -244,9 +287,11 @@ mod tests {
                 "Vyc fnqkm spdpv nqo hjfxa qmcg 13 eiha umvl.",
                 &get_athena_checker(),
             )
-            .unencrypted_text.expect("No unencrypted text for Vigenere decoder");
+            .unencrypted_text
+            .expect("No unencrypted text for Vigenere decoder");
 
-        let decoded_text = result.get(0).expect("No unencrypted text for Vigenere decoder");
+        let decoded_text = result.first()
+            .expect("No unencrypted text for Vigenere decoder");
 
         assert_eq!(decoded_text, "The quick brown fox jumps over 13 lazy dogs.");
     }
@@ -261,7 +306,8 @@ mod tests {
             )
             .unencrypted_text.expect("No unencrypted text for Vigenere decoder");
 
-        let decoded_text = result.get(0).expect("No unencrypted text for Vigenere decoder");
+        let decoded_text = result.first()
+            .expect("No unencrypted text for Vigenere decoder");
 
         assert_eq!(decoded_text, "ciphey can automatically detect and decode various types of encoded or encrypted text, including (but not limited to) Base64, Hexadecimal, Caesar cipher, ROT13, URL encoding, and many more. It uses advanced algorithms and heuristics to identify the encoding type and apply the appropriate decoding method, often handling multiple layers of encoding automatically.");
     }
@@ -274,9 +320,11 @@ mod tests {
                 "Jvjah Asgccihva! Vycgx'a i ffe xg ug ecmhxb",
                 &get_athena_checker(),
             )
-            .unencrypted_text.expect("No unencrypted text for Vigenere decoder");
+            .unencrypted_text
+            .expect("No unencrypted text for Vigenere decoder");
 
-        let decoded_text = result.get(0).expect("No unencrypted text for Vigenere decoder");
+        let decoded_text = result.first()
+            .expect("No unencrypted text for Vigenere decoder");
 
         assert_eq!(decoded_text, "Hello Skeletons! There's a dog in my closet");
     }
@@ -297,5 +345,30 @@ mod tests {
             .crack("12345!@#$%", &get_athena_checker())
             .unencrypted_text;
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_english_bigrams_th() {
+        assert_eq!(ENGLISH_BIGRAMS[19][7], 116997844);
+    }
+
+    #[test]
+    fn test_english_bigrams_ec() {
+        assert_eq!(ENGLISH_BIGRAMS[4][2], 25775798);
+    }
+
+    #[test]
+    fn test_english_bigrams_ed() {
+        assert_eq!(ENGLISH_BIGRAMS[4][3], 46647960);
+    }
+
+    #[test]
+    fn test_english_bigrams_fd() {
+        assert_eq!(ENGLISH_BIGRAMS[5][3], 748027);
+    }
+
+    #[test]
+    fn test_english_bigrams_qz() {
+        assert_eq!(ENGLISH_BIGRAMS[16][25], 280);
     }
 }
