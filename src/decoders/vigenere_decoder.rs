@@ -282,4 +282,33 @@ mod tests {
             .unencrypted_text;
         assert!(result.is_none());
     }
+
+    #[test]
+    fn test_vigenere_decoding_long() {
+        let vigenere_decoder = Decoder::<VigenereDecoder>::new();
+        let result = vigenere_decoder
+            .crack(
+                "eznwxg kce yjmwuckgrttta ucixkb ceb sxkwfv tpkqwwj rnima qw ccvwlgu mg xvktpnixl bgor, xgktwugcz (jcv emi equkkcs mw) Jcjc64, Wxfifvaxfit, Erchtz kkgftk, ZWV13, LPA xvkqugcz, ivf dycr uwtv. Gi namu rbktvkgu yazwzkkfbl ivf ycjkqavzah mw qfvlibng vyc tgkwfzlv mgxg rls txxnp rwx ixrimekqivv btvwlkee bxbpqu, mummv jrlseqvi dsamqxnv jprmzu fd tgkwfzlv tcbqdyibkincw.",
+                &get_athena_checker(),
+            )
+            .unencrypted_text.expect("No unencrypted text for Vigenere decoder");
+
+        let decoded_text = result
+            .first()
+            .expect("No unencrypted text for Vigenere decoder");
+
+        assert_eq!(decoded_text, "ciphey can automatically detect and decode various types of encoded or encrypted text, including (but not limited to) Base64, Hexadecimal, Caesar cipher, ROT13, URL encoding, and many more. It uses advanced algorithms and heuristics to identify the encoding type and apply the appropriate decoding method, often handling multiple layers of encoding automatically.");
+    }
+
+    #[test]
+    fn test_vigenere_decoding_long_correct_key() {
+        let vigenere_decoder = Decoder::<VigenereDecoder>::new();
+        let result = vigenere_decoder
+            .crack(
+                "eznwxg kce yjmwuckgrttta ucixkb ceb sxkwfv tpkqwwj rnima qw ccvwlgu mg xvktpnixl bgor, xgktwugcz (jcv emi equkkcs mw) Jcjc64, Wxfifvaxfit, Erchtz kkgftk, ZWV13, LPA xvkqugcz, ivf dycr uwtv. Gi namu rbktvkgu yazwzkkfbl ivf ycjkqavzah mw qfvlibng vyc tgkwfzlv mgxg rls txxnp rwx ixrimekqivv btvwlkee bxbpqu, mummv jrlseqvi dsamqxnv jprmzu fd tgkwfzlv tcbqdyibkincw.",
+                &get_athena_checker(),
+            )
+            .key.expect("No key found for Vigenere decoder");
+        assert_eq!(result, "CRYPTII");
+    }
 }
