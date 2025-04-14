@@ -77,6 +77,7 @@ impl Crack for Decoder<VigenereDecoder> {
         let checker_result = checker_with_sensitivity.check(&final_text);
 
         results.unencrypted_text = Some(vec![final_text]);
+        results.key = Some(key);
         results.update_checker(&checker_result);
 
         results
