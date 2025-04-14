@@ -96,41 +96,53 @@ impl Crack for Decoder<VigenereDecoder> {
         }
 
         // Try key lengths from 1 to 20 (typical Vigenère key length range)
-        let mut best_key_length = 0;
-        let mut best_ioc = 0.0;
+        // let mut best_key_length = 0;
+        // let mut best_ioc = 0.0;
+        //
+        // for key_length in 1..=20 {
+        //     let ioc = calculate_average_ioc(&clean_text, key_length);
+        //     if (ioc - EXPECTED_IOC).abs() < (best_ioc - EXPECTED_IOC).abs() {
+        //         best_ioc = ioc;
+        //         best_key_length = key_length;
+        //     }
+        // }
+        //
+        // if best_key_length == 0 {
+        //     debug!("Failed to determine key length");
+        //     return results;
+        // }
+        //
+        // // Find the key using frequency analysis
+        // let key = find_key(&clean_text, best_key_length);
+        //
+        // // Decrypt using the found key
+        // let decrypted = decrypt(&clean_text, &key);
+        //
+        // // Reconstruct original formatting
+        // let final_text = reconstruct_formatting(text, &decrypted);
+        //
+        // if !check_string_success(&final_text, text) {
+        //     info!("Failed Vigenère decoding validation");
+        //     return results;
+        // }
 
-        for key_length in 1..=20 {
-            let ioc = calculate_average_ioc(&clean_text, key_length);
-            if (ioc - EXPECTED_IOC).abs() < (best_ioc - EXPECTED_IOC).abs() {
-                best_ioc = ioc;
-                best_key_length = key_length;
+        let mut unencrypted_text = String::new();
+        let checker_with_sensitivity = checker.with_sensitivity(Sensitivity::Medium);
+        let mut checker_result = checker_with_sensitivity.check(&text);
+
+        for key_length in 3..30 {
+            // Use Medium sensitivity for Vigenere decoder
+            let key = break_vigenere(text, key_length);
+            println!("Attempted key: {}", key);
+            let decode_attempt = decrypt(text, key.as_str());
+            checker_result = checker_with_sensitivity.check(&decode_attempt);
+            if checker_result.is_identified {
+                unencrypted_text = decode_attempt;
+                break;
             }
         }
 
-        if best_key_length == 0 {
-            debug!("Failed to determine key length");
-            return results;
-        }
-
-        // Find the key using frequency analysis
-        let key = find_key(&clean_text, best_key_length);
-
-        // Decrypt using the found key
-        let decrypted = decrypt(&clean_text, &key);
-
-        // Reconstruct original formatting
-        let final_text = reconstruct_formatting(text, &decrypted);
-
-        if !check_string_success(&final_text, text) {
-            info!("Failed Vigenère decoding validation");
-            return results;
-        }
-
-        // Use Medium sensitivity for Vigenere decoder
-        let checker_with_sensitivity = checker.with_sensitivity(Sensitivity::Medium);
-        let checker_result = checker_with_sensitivity.check(&final_text);
-
-        results.unencrypted_text = Some(vec![final_text]);
+        results.unencrypted_text = Some(vec![unencrypted_text]);
         results.update_checker(&checker_result);
 
         results
@@ -157,10 +169,56 @@ impl Crack for Decoder<VigenereDecoder> {
 
 /// Ported from the PHP implementation shown in https://www.guballa.de/bits-and-bytes/implementierung-des-vigenere-solvers
 /// Attempts to break the Vigenere cipher using bigrams
-// fn break_vigenere(text: &str, key_length: usize) -> String {
-//     let mut key = vec![0; key_length];
-//     let s = match std::str::
-// }
+fn break_vigenere(text: &str, key_length: usize) -> String {
+    let mut cipher_text: Vec<usize> = Vec::new();
+    for c in text.chars() {
+        if c.is_alphabetic() {
+            cipher_text.push(((c.to_ascii_uppercase() as u8) - b'A') as usize);
+        }
+    }
+
+    let mut best_fitness = 0;
+    let mut best_key_ch2 = ' ';
+    let mut best_score_0 = 0;
+    let mut best_key_ch1_0 = ' ';
+    let mut best_key_ch2_0 = ' ';
+    let mut prev_best_score = 0;
+    let mut prev_best_key_ch2 = ' ';
+
+    let mut key = vec![' '; key_length];
+    for key_idx in 0..key_length {
+        let mut best_key_ch1 = ' ';
+        best_fitness = 0;
+
+        for key_ch1 in 0..26 {
+            for key_ch2 in 0..26 {
+                let mut fitness = 0;
+                for text_idx in (key_idx..(cipher_text.len()-1)).step_by(key_length) {
+                    let clear_ch1 = (VIGENERE_SQUARE[cipher_text[text_idx]][key_ch1] as u8) - b'A';
+                    let clear_ch2 = (VIGENERE_SQUARE[cipher_text[text_idx+1]][key_ch2] as u8) - b'A';
+                    fitness += ENGLISH_BIGRAMS[clear_ch1 as usize][clear_ch2 as usize];
+                }
+                if fitness > best_fitness {
+                    best_fitness = fitness;
+                    best_key_ch1 = ((key_ch1 as u8) + b'A') as char;
+                    best_key_ch2 = ((key_ch2 as u8) + b'A') as char;
+                }
+            }
+        }
+        if key_idx == 0 {
+            best_score_0 = best_fitness;
+            best_key_ch1_0 = best_key_ch1;
+            best_key_ch2_0 = best_key_ch2;
+        }
+        else {
+            key[key_idx] = if prev_best_score > best_fitness { prev_best_key_ch2 } else { best_key_ch1 };
+        }
+        prev_best_score = best_fitness;
+        prev_best_key_ch2 = best_key_ch2
+    }
+    key[0] = if best_fitness > best_score_0 { best_key_ch2 } else { best_key_ch1_0 };
+    key.into_iter().collect()
+}
 
 /// Calculate Index of Coincidence for text split into key_length columns
 fn calculate_average_ioc(text: &str, key_length: usize) -> f64 {
