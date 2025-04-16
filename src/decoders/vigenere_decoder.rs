@@ -31,7 +31,7 @@ static ENGLISH_BIGRAMS: Lazy<Vec<Vec<i64>>> = Lazy::new(|| {
     // Path to english bigrams file
     let f_path = Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("src")
-        .join("decoders")
+        .join("storage")
         .join("ngrams")
         .join("english_bigrams.txt");
 
