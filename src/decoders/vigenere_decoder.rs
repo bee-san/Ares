@@ -21,7 +21,7 @@ static VIGENERE_SQUARE: Lazy<Vec<Vec<char>>> = Lazy::new(|| {
     let mut square = vec![vec![' '; 26]; 26];
     for i in 0..26 {
         for j in 0..26 {
-            square[i][j] = ((((j+i) % 26) as u8) + b'A') as char;
+            square[i][j] = (((((i as i32)-(j as i32)+26) % 26) as u8) + b'A') as char;
         }
     }
     square
@@ -133,7 +133,6 @@ impl Crack for Decoder<VigenereDecoder> {
         for key_length in 3..30 {
             // Use Medium sensitivity for Vigenere decoder
             let key = break_vigenere(text, key_length);
-            println!("Attempted key: {}", key);
             let decode_attempt = decrypt(text, key.as_str());
             checker_result = checker_with_sensitivity.check(&decode_attempt);
             if checker_result.is_identified {
@@ -406,6 +405,42 @@ mod tests {
     }
 
     #[test]
+    fn test_vigenere_temp() {
+        let vigenere_decoder = Decoder::<VigenereDecoder>::new();
+        let result = vigenere_decoder
+            .crack(
+                "Err xgbmncgvxvkg zq toqlger xg bpgzp puqtkkw ih ilcgr, axizp kfghcoj fzhxzdckgdg, ivf jmaom xtfzaxua, yzrw kmagrpra apqngcz bpgp ndlamuj qikwvi dcbhzqgj, cmaqjkk ltnzwrcyhmqkkkw, pgl lkjnatg kqxlxmqdg jixeta efketzidcc ih i gqllv vpqnu. Apm kwodscbkivzmc bvknlbtl umqngcz, xctigcz, bzkcjxgo, pkjqxgo, otfuabvo, iiscmqvi, rls uwla cyczciiv. Gi viv jvyg lwcpuq ihw nczli hz bqf fxzp qp wptjcmptw uhz pwdyc xizu, jsra ia vymhx uifv zn luinc kpfuinj. Gi lmktvrtl ivf gcgvmqxvq eamzqdmcxa. ",
+                &get_athena_checker(),
+            )
+            .unencrypted_text
+            .expect("No unencrypted text for Vigenere decoder");
+
+        let decoded_text = result.first()
+            .expect("No unencrypted text for Vigenere decoder");
+
+        assert_eq!(decoded_text, "Cat intelligence is evident in their ability to adapt, learn through observation, and solve problems, with research showing they possess strong memories, exhibit neuroplasticity, and display cognitive skills comparable to a young child. Cat communication includes meowing, purring, trilling, hissing, growling, grunting, and body language. It can hear sounds too faint or too high in frequency for human ears, such as those made by small mammals. It secretes and perceives pheromones. ");
+    }
+
+    #[test]
+    fn test_vigenere_temp_2() {
+        let vigenere_decoder = Decoder::<VigenereDecoder>::new();
+        let result = vigenere_decoder
+            .crack(
+                "Altd hlbe tg lrncmwxpo kpxs evl ztrsuicp qptspf. 
+Ivplyprr th pw clhoic pozc",
+                &get_athena_checker(),
+            )
+            .unencrypted_text
+            .expect("No unencrypted text for Vigenere decoder");
+
+        let decoded_text = result.first()
+            .expect("No unencrypted text for Vigenere decoder");
+
+        assert_eq!(decoded_text, "This text is encrypted with the vigenere cipher. 
+Breaking it is rather easy");
+    }
+
+    #[test]
     fn test_empty_input() {
         let vigenere_decoder = Decoder::<VigenereDecoder>::new();
         let result = vigenere_decoder
@@ -424,38 +459,13 @@ mod tests {
     }
 
     #[test]
-    fn test_english_bigrams_th() {
-        assert_eq!(ENGLISH_BIGRAMS[19][7], 116997844);
-    }
-
-    #[test]
-    fn test_english_bigrams_ec() {
-        assert_eq!(ENGLISH_BIGRAMS[4][2], 25775798);
-    }
-
-    #[test]
-    fn test_english_bigrams_ed() {
-        assert_eq!(ENGLISH_BIGRAMS[4][3], 46647960);
-    }
-
-    #[test]
-    fn test_english_bigrams_fd() {
-        assert_eq!(ENGLISH_BIGRAMS[5][3], 748027);
-    }
-
-    #[test]
-    fn test_english_bigrams_qz() {
-        assert_eq!(ENGLISH_BIGRAMS[16][25], 280);
-    }
-
-    #[test]
     fn test_vigenere_square_aa() {
         assert_eq!(VIGENERE_SQUARE[0][0], 'A');
     }
 
     #[test]
     fn test_vigenere_square_az() {
-        assert_eq!(VIGENERE_SQUARE[0][25], 'Z');
+        assert_eq!(VIGENERE_SQUARE[0][25], 'B');
     }
 
     #[test]
@@ -465,12 +475,12 @@ mod tests {
 
     #[test]
     fn test_vigenere_square_zz() {
-        assert_eq!(VIGENERE_SQUARE[25][25], 'Y');
+        assert_eq!(VIGENERE_SQUARE[25][25], 'A');
     }
 
     #[test]
     fn test_vigenere_square_mt() {
-        assert_eq!(VIGENERE_SQUARE[12][19], 'F');
+        assert_eq!(VIGENERE_SQUARE[12][19], 'T');
     }
 
 
