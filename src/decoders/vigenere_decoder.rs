@@ -101,7 +101,7 @@ impl Crack for Decoder<VigenereDecoder> {
             // Use Medium sensitivity for Vigenere decoder
             let key = break_vigenere(text, key_length);
             let key_str = key.as_str().trim();
-            if key_str.len() <= 0 {
+            if key_str.is_empty() {
                 continue;
             }
             let decode_attempt = decrypt(text, key_str);
