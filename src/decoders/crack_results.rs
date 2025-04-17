@@ -23,7 +23,7 @@ pub struct CrackResult {
     /// Description is a short description of the checker
     pub checker_description: &'static str,
     /// Key is optional as decoders do not use keys.
-    pub key: Option<&'static str>,
+    pub key: Option<String>,
     /// Description is a short description of the decoder
     pub description: &'static str,
     /// Link is a link to more info about the decoder
@@ -84,7 +84,7 @@ impl<'de> Deserialize<'de> for CrackResult {
             pub checker_name: String,
             /// Description of the checker
             pub checker_description: String,
-            /// Key intended for use in decryption attempts (currently unused)
+            /// Key intended for use in decryption attempts
             pub key: Option<String>,
             /// Description of the decoder
             pub description: String,
@@ -105,7 +105,7 @@ impl<'de> Deserialize<'de> for CrackResult {
                 decoder: decoder.get_name(),
                 checker_name: "",
                 checker_description: "",
-                key: None,
+                key: temp_cr.key,
                 description: decoder.get_description(),
                 link: decoder.get_link(),
             });
@@ -121,7 +121,7 @@ impl<'de> Deserialize<'de> for CrackResult {
             decoder: decoder.get_name(),
             checker_name: checker.get_name(),
             checker_description: checker.get_description(),
-            key: None,
+            key: temp_cr.key,
             description: decoder.get_description(),
             link: decoder.get_link(),
         })
@@ -235,7 +235,7 @@ mod tests {
 
     #[test]
     fn deserialize_crack_result_caesar() {
-        let json = String::from("{\"success\":true,\"encrypted_text\":\"ifmmp uijt jt mpoh ufyu\",\"unencrypted_text\":[\"hello this is long text\"],\"decoder\":\"caesar\",\"checker_name\":\"English Checker\",\"checker_description\":\"Uses gibberish detection to check if text is meaningful English\",\"key\":null,\"description\":\"Caesar cipher, also known as Caesar's cipher, the shift cipher, Caesar's code or Caesar shift, is one of the simplest and most widely known encryption techniques. It is a type of substitution cipher in which each letter in the plaintext is replaced by a letter some fixed number of positions down the alphabet. Uses Low sensitivity for gibberish detection.\",\"link\":\"https://en.wikipedia.org/wiki/Caesar_cipher\"}");
+        let json = String::from("{\"success\":true,\"encrypted_text\":\"ifmmp uijt jt mpoh ufyu\",\"unencrypted_text\":[\"hello this is long text\"],\"decoder\":\"caesar\",\"checker_name\":\"English Checker\",\"checker_description\":\"Uses gibberish detection to check if text is meaningful English\",\"key\":\"1\",\"description\":\"Caesar cipher, also known as Caesar's cipher, the shift cipher, Caesar's code or Caesar shift, is one of the simplest and most widely known encryption techniques. It is a type of substitution cipher in which each letter in the plaintext is replaced by a letter some fixed number of positions down the alphabet. Uses Low sensitivity for gibberish detection.\",\"link\":\"https://en.wikipedia.org/wiki/Caesar_cipher\"}");
 
         let checker = Checker::<EnglishChecker>::new();
         let check_result = CheckResult {
@@ -254,6 +254,7 @@ mod tests {
         expected_crack_result.success = true;
         expected_crack_result.unencrypted_text =
             Some(vec![String::from("hello this is long text")]);
+        expected_crack_result.key = Some(String::from("1"));
 
         let result = serde_json::from_str(json.as_str());
         assert!(result.is_ok());
@@ -277,8 +278,8 @@ mod tests {
             crack_result.checker_description,
             expected_crack_result.checker_description
         );
-        assert!(crack_result.key.is_none());
         assert_eq!(crack_result.description, expected_crack_result.description);
         assert_eq!(crack_result.link, expected_crack_result.link);
+        assert_eq!(crack_result.key, expected_crack_result.key);
     }
 }
