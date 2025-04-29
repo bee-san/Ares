@@ -21,7 +21,7 @@ bench = false
 # Please keep this list in alphabetical order
 [dependencies]
 ansi_term = "0.12.1"
-chrono = "0.4.40"
+chrono = "0.4.41"
 cipher_identifier = "0.2.0"
 clap = {version = "4.5.37", features = ["derive"]}
 colored = "3.0.0"
