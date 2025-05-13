@@ -76,6 +76,7 @@ impl Crack for Decoder<CaesarDecoder> {
                 trace!("Found a match with caesar shift {}", shift);
                 results.unencrypted_text = Some(vec![borrowed_decoded_text.to_string()]);
                 results.update_checker(&checker_result);
+                results.key = Some(shift.to_string());
                 return results;
             }
         }
@@ -159,6 +160,14 @@ mod tests {
     }
 
     #[test]
+    fn successful_decoding_correct_key() {
+        let caesar_decoder = Decoder::<CaesarDecoder>::new();
+        let result = caesar_decoder.crack("fyyfhp", &get_athena_checker());
+        let key = result.key.expect("No key found for caesar cipher");
+        assert_eq!(key, "21");
+    }
+
+    #[test]
     fn successful_decoding_one_step_forward() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
 
@@ -170,6 +179,15 @@ mod tests {
     }
 
     #[test]
+    fn successful_decoding_one_step_forward_correct_key() {
+        let caesar_decoder = Decoder::<CaesarDecoder>::new();
+
+        let result = caesar_decoder.crack("buubdl", &get_athena_checker());
+        let key = result.key.expect("No key found for caesar cipher");
+        assert_eq!(key, "25");
+    }
+
+    #[test]
     fn successful_decoding_one_step_backward() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
 
@@ -178,6 +196,15 @@ mod tests {
             .unencrypted_text
             .expect("No unencrypted text for caesar");
         assert_eq!(decoded_str[0], "attack");
+    }
+
+    #[test]
+    fn successful_decoding_one_step_backward_correct_key() {
+        let caesar_decoder = Decoder::<CaesarDecoder>::new();
+
+        let result = caesar_decoder.crack("zsszbj", &get_athena_checker());
+        let key = result.key.expect("No key found for caesar cipher");
+        assert_eq!(key, "1");
     }
 
     #[test]
@@ -195,6 +222,17 @@ mod tests {
     }
 
     #[test]
+    fn successful_decoding_longer_text_correct_key() {
+        let caesar_decoder = Decoder::<CaesarDecoder>::new();
+        let result = caesar_decoder.crack(
+            "Tqxxa ftue ue mz qjmybxq fqjf tffbe://saasxq.oay !",
+            &get_athena_checker(),
+        );
+        let key = result.key.expect("No key found for caesar cipher");
+        assert_eq!(key, "14");
+    }
+
+    #[test]
     fn successful_decoding_longer_text_with_puncuation() {
         let caesar_decoder = Decoder::<CaesarDecoder>::new();
         let result = caesar_decoder.crack(
@@ -205,6 +243,17 @@ mod tests {
             result.unencrypted_text.unwrap()[0],
             "Why, hello there. This is an example of long text with puncuation!"
         );
+    }
+
+    #[test]
+    fn successful_decoding_longer_text_with_puncuation_correct_key() {
+        let caesar_decoder = Decoder::<CaesarDecoder>::new();
+        let result = caesar_decoder.crack(
+            "Itk, tqxxa ftqdq. Ftue ue mz qjmybxq ar xazs fqjf iuft bgzogmfuaz!",
+            &get_athena_checker(),
+        );
+        let key = result.key.expect("No key found for caesar cipher");
+        assert_eq!(key, "14");
     }
 
     #[test]
