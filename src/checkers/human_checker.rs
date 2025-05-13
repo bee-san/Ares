@@ -3,8 +3,8 @@ use crate::cli_pretty_printing::human_checker_check;
 use crate::config::get_config;
 use crate::{cli_pretty_printing, timer};
 use dashmap::DashSet;
-use std::sync::OnceLock;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::OnceLock;
 use text_io::read;
 
 static SEEN_PROMPTS: OnceLock<DashSet<String>> = OnceLock::new();
@@ -24,8 +24,8 @@ fn get_seen_prompts() -> &'static DashSet<String> {
 pub fn human_checker(input: &CheckResult) -> bool {
     // Check if a human has already confirmed a result
     if HUMAN_CONFIRMED.load(Ordering::Relaxed) {
-            return true;
-        }
+        return true;
+    }
     timer::pause();
     // wait instead of get so it waits for config being set
     let config = get_config();
@@ -48,7 +48,9 @@ pub fn human_checker(input: &CheckResult) -> bool {
     // If the user confirmed, set the atomic boolean to true
     if result {
         HUMAN_CONFIRMED.store(true, Ordering::Relaxed);
-        cli_pretty_printing::success("DEBUG: Human confirmed a result, future checks will be skipped");
+        cli_pretty_printing::success(
+            "DEBUG: Human confirmed a result, future checks will be skipped",
+        );
     }
     timer::resume();
 
