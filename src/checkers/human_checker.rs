@@ -23,7 +23,7 @@ fn get_seen_prompts() -> &'static DashSet<String> {
 // compile this if we are not running tests
 pub fn human_checker(input: &CheckResult) -> bool {
     // Check if a human has already confirmed a result
-    if HUMAN_CONFIRMED.load(Ordering::Relaxed) {
+    if HUMAN_CONFIRMED.load(Ordering::Acquire) {
         return true;
     }
     timer::pause();
