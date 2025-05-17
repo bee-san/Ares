@@ -56,10 +56,6 @@ impl Check for Checker<Athena> {
                 check_res.is_identified = human_result;
                 check_res.text = regex_result.text;
                 check_res.description = regex_result.description;
-                cli_pretty_printing::success(&format!(
-                    "DEBUG: Athena regex checker - human_result: {}, check_res.is_identified: {}",
-                    human_result, check_res.is_identified
-                ));
                 return check_res;
             }
         } else {

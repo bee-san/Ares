@@ -31,6 +31,11 @@ impl Crack for Decoder<BrailleDecoder> {
 
         let decoded_text = braille_to_text(text);
 
+        // check if the decoder transformed the input
+        if decoded_text == text {
+            return results; // unencrypted text is already None by default
+        }
+
         let checker_result = checker.check(&decoded_text);
         if checker_result.is_identified {
             trace!("Found a match with braille");
@@ -153,8 +158,7 @@ mod tests {
         let result = braille_decoder
             .crack("123ABC", &get_athena_checker())
             .unencrypted_text;
-        assert!(result.is_some());
-        assert_eq!(result.unwrap()[0], "123ABC");
+        assert!(result.is_none());
     }
 
     #[test]
