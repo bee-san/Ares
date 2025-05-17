@@ -1,11 +1,25 @@
 use ciphey::checkers::athena::Athena;
 use ciphey::checkers::checker_type::{Check, Checker};
 use ciphey::checkers::CheckerTypes;
+use ciphey::config::{set_global_config, Config};
 use ciphey::decoders::base64_decoder::Base64Decoder;
 use ciphey::decoders::interface::{Crack, Decoder};
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use env_logger::Builder;
+use log::LevelFilter;
 
 pub fn criterion_benchmark(c: &mut Criterion) {
+    // Initialize logger with only error level to suppress debug messages
+    let mut builder = Builder::new();
+    builder.filter_level(LevelFilter::Error);
+    builder.init();
+
+    // Setup global config to suppress output
+    let mut config = Config::default();
+    config.api_mode = true;
+    config.verbose = 0;
+    set_global_config(config);
+
     let decode_base64 = Decoder::<Base64Decoder>::new();
     let athena_checker = Checker::<Athena>::new();
     let checker = CheckerTypes::CheckAthena(athena_checker);

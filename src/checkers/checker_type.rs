@@ -40,6 +40,25 @@ pub struct Checker<Type> {
     pub _phantom: std::marker::PhantomData<Type>,
 }
 
+/// Helper trait for returning info from a Checker
+pub trait CheckInfo {
+    /// Returns the checker name
+    fn get_name(&self) -> &str;
+    /// Returns the checker description
+    fn get_description(&self) -> &str;
+}
+
+impl<Type> CheckInfo for Checker<Type> {
+    /// Returns the checker name
+    fn get_name(&self) -> &str {
+        self.name
+    }
+    /// Returns the checker description
+    fn get_description(&self) -> &str {
+        self.description
+    }
+}
+
 /// Every checker must implement this trait
 /// Which checks the given text to see if its plaintext
 /// and returns CheckResult, which is our results object.

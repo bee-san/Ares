@@ -505,19 +505,19 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         for node in &new_nodes {
             if let Some(decoder_name) = &node.next_decoder_name {
                 if decoder_name == "__RESULT__" {
-                    println!("DEBUG: Checking result node");
+                    debug!("DEBUG: Checking result node");
                     // Check if we've already processed this result
                     if let Some(text) = node.state.text.first() {
                         let result_hash = calculate_hash(text);
                         if !seen_results.insert(result_hash) {
-                            println!("DEBUG: Skipping duplicate result: {:?}", text);
+                            debug!("DEBUG: Skipping duplicate result: {:?}", text);
                             continue; // Skip this result, we've already processed it
                         } else {
-                            println!("DEBUG: Processing new result: {:?}", text);
+                            debug!("DEBUG: Processing new result: {:?}", text);
                         }
                     }
 
-                    println!("DEBUG: Found result node with text: {:?}", node.state.text);
+                    debug!("DEBUG: Found result node with text: {:?}", node.state.text);
                     // Found a result node
                     decoded_how_many_times(curr_depth.load(AtomicOrdering::Relaxed));
 
@@ -530,7 +530,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
                     if get_config().top_results {
                         // Store the first text in the vector (there should only be one)
                         if let Some(plaintext) = node.state.text.first() {
-                            println!(
+                            debug!(
                                 "DEBUG: Processing result in top_results mode with plaintext: {}",
                                 plaintext
                             );

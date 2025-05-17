@@ -3,6 +3,8 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 
+/// Module housing functions for managing SQLite database
+pub mod database;
 /// Module for storing WaitAthena results
 pub mod wait_athena_storage;
 

@@ -21,10 +21,15 @@ bench = false
 # Please keep this list in alphabetical order
 [dependencies]
 ansi_term = "0.12.1"
-clap = {version = "4.5.35", features = ["derive"]}
+chrono = "0.4.41"
+cipher_identifier = "0.2.0"
+clap = {version = "4.5.38", features = ["derive"]}
+colored = "3.0.0"
 crossbeam = "0.8"
 dirs = "6.0.0"
 env_logger = "0.11.8"
+gibberish-or-not = "5.0.7"
+human-panic = "2.0.2"
 include_dir = "0.7.3"
 lazy-regex = "3.0.1"
 lazy_static = "1.4.0"
@@ -33,26 +38,26 @@ log = "0.4"
 memmap2 = "0.9.0"
 num = "0.4"
 once_cell = "1.21.3"
-proc-macro2 = "1.0.94" # Required due to https://github.com/rust-lang/rust/issues/113152
+proc-macro2 = "1.0.95" # Required due to https://github.com/rust-lang/rust/issues/113152
 rayon = "1.7.0"
 regex = "1.9.1"
-rpassword = "7.3.1"
+rpassword = "7.4.0"
+rusqlite = { version = "0.35", features = ["bundled"] }
 serde = { version = "1.0.197", features = ["derive"] }
 serde_derive = "1.0.197"
+serde_json = "1.0"
+serial_test = "3.2.0"
 text_io = "0.1.13"
-toml = "0.8.10"
-gibberish-or-not = "5.0.7"
-cipher_identifier = "0.2.0"
-rand = "0.9.0"  # For generating random values
-colored = "3.0.0"
-human-panic = "2.0.2"
+toml = "0.8.22"
+uuid = "1.16.0"
+rand = "0.9.1"  # For generating random values
 
 # Dependencies used for decoding
 base64 = "0.22.1"
 base65536 = "1.0.1"
 base91 = "0.1.0"
 bs58 = "0.5.0"
-data-encoding = "2.4.0"
+data-encoding = "2.9.0"
 urlencoding = "2.1.3"
 z85 = "3.0.5"
 brainfuck-exe = { version = "0.2.4", default-features = false }
@@ -60,7 +65,7 @@ dashmap = "6.1.0"
 
 # Dev dependencies
 [dev-dependencies]
-cargo-nextest = "0.9.93"
+cargo-nextest = "0.9.96"
 criterion = "0.5.1"
 
 [profile.release]
@@ -75,6 +80,14 @@ inherits = "release"
 
 [[bench]]
 name = "benchmark_crackers"
+harness = false
+
+[[bench]]
+name = "benchmark_decoders"
+harness = false
+
+[[bench]]
+name = "benchmark_whole_program"
 harness = false
 
 # Config for 'cargo dist'

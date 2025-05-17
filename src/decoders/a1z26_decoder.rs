@@ -79,6 +79,16 @@ impl Crack for Decoder<A1Z26Decoder> {
     fn get_name(&self) -> &str {
         self.name
     }
+
+    /// Gets the description for the current decoder
+    fn get_description(&self) -> &str {
+        self.description
+    }
+
+    /// Gets the link for the current decoder
+    fn get_link(&self) -> &str {
+        self.link
+    }
 }
 
 /// This function does the actual decoding
