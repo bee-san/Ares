@@ -47,7 +47,7 @@ pub fn human_checker(input: &CheckResult) -> bool {
     let result = reply.to_ascii_lowercase().starts_with('y');
     // If the user confirmed, set the atomic boolean to true
     if result {
-        HUMAN_CONFIRMED.store(true, Ordering::Relaxed);
+        HUMAN_CONFIRMED.store(true, Ordering::Release);
         cli_pretty_printing::success(
             "DEBUG: Human confirmed a result, future checks will be skipped",
         );
