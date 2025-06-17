@@ -410,9 +410,9 @@ dependencies = [
 
 [[package]]
 name = "cargo-nextest"
-version = "0.9.98"
+version = "0.9.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "38c9e69c1ac6b81c2cd61cdfda340d2fb2ca8e9eb3b981500f1041b42554f57b"
+checksum = "36a142aae90b89453f763ad7ba6eea9a791d6d82d68fbfa3bce5fa97fac2adef"
 dependencies = [
  "camino",
  "cfg-if",
@@ -513,9 +513,9 @@ dependencies = [
 
 [[package]]
 name = "cfg-if"
-version = "1.0.0"
+version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "baf1de4339761588bc0619e3cbc0120ee582ebb74b53b4efbf79117bd2da40fd"
+checksum = "9555578bc9e57714c812a1f84e4fc5b4d21fcb063490c624de019f7464c91268"
 
 [[package]]
 name = "cfg_aliases"
@@ -1083,9 +1083,9 @@ dependencies = [
 
 [[package]]
 name = "derive-where"
-version = "1.4.0"
+version = "1.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e73f2692d4bd3cac41dca28934a39894200c9fabf49586d77d0e5954af1d7902"
+checksum = "510c292c8cf384b1a340b816a9a6cf2599eb8f566a44949024af88418000c50b"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2202,9 +2202,9 @@ dependencies = [
 
 [[package]]
 name = "iddqd"
-version = "0.3.6"
+version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9f6ebdbf573a5215d3b9bf3388deedb9501d619a43184f926b376909e11ed3ed"
+checksum = "fcce2c6f521794eaabde7b11887b92ca033cc09bf9d5c36d78fd14936a6d053b"
 dependencies = [
  "allocator-api2",
  "equivalent",
@@ -2453,9 +2453,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.172"
+version = "0.2.173"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d750af042f7ef4f724306de029d18836c26c1765a54a6a3f094cbd23a7267ffa"
+checksum = "d8cfeafaffdbc32176b64fb251369d52ea9f0a8fbc6f8759edffef7b525d64bb"
 
 [[package]]
 name = "libm"
@@ -2732,9 +2732,9 @@ dependencies = [
 
 [[package]]
 name = "nextest-runner"
-version = "0.81.0"
+version = "0.82.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9751d03da983cb02dfaaffd95aa648af09c1dbf6a0e4d51e3fa89f09598293af"
+checksum = "fc3a78ca18caa582725b10b0d70e78f41c63701d2390884d48e1ac902e842e36"
 dependencies = [
  "aho-corasick",
  "async-scoped",
@@ -2803,7 +2803,7 @@ dependencies = [
  "unicode-ident",
  "unicode-normalization",
  "win32job",
- "windows-sys 0.59.0",
+ "windows-sys 0.60.2",
  "xxhash-rust",
  "zstd",
 ]
@@ -4206,9 +4206,9 @@ dependencies = [
 
 [[package]]
 name = "smallvec"
-version = "1.15.0"
+version = "1.15.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8917285742e9f3e1683f0a9c4e6b57960b7314d0b08d30d1ecd426713ee2eee9"
+checksum = "67b1b7a3b5fe4f1376887184045fcf45c69e92af734b7aaddc05fb777b6fbd03"
 
 [[package]]
 name = "smol_str"
@@ -5276,7 +5276,7 @@ checksum = "4286ad90ddb45071efd1a66dfa43eb02dd0dfbae1545ad6cc3c51cf34d7e8ba3"
 dependencies = [
  "windows-result",
  "windows-strings 0.3.1",
- "windows-targets 0.53.0",
+ "windows-targets 0.53.2",
 ]
 
 [[package]]
@@ -5349,6 +5349,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "windows-sys"
+version = "0.60.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f2f500e4d28234f72040990ec9d39e3a6b950f9f22d3dba18416c35882612bcb"
+dependencies = [
+ "windows-targets 0.53.2",
+]
+
+[[package]]
 name = "windows-targets"
 version = "0.48.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5381,9 +5390,9 @@ dependencies = [
 
 [[package]]
 name = "windows-targets"
-version = "0.53.0"
+version = "0.53.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1e4c7e8ceaaf9cb7d7507c974735728ab453b67ef8f18febdd7c11fe59dca8b"
+checksum = "c66f69fcc9ce11da9966ddb31a40968cad001c5bedeb5c2b82ede4253ab48aef"
 dependencies = [
  "windows_aarch64_gnullvm 0.53.0",
  "windows_aarch64_msvc 0.53.0",
