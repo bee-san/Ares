@@ -410,9 +410,9 @@ dependencies = [
 
 [[package]]
 name = "cargo-nextest"
-version = "0.9.100"
+version = "0.9.101"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "74e1003eeb47ed3d42cbdecf2bdf722c332736ab85440137050d90760c897e91"
+checksum = "bba92f87a7decec9ecfdf71b485f871981a1825ea745d04e3be0e6a214505f39"
 dependencies = [
  "camino",
  "cfg-if",
@@ -455,15 +455,15 @@ dependencies = [
 
 [[package]]
 name = "cargo-util-schemas"
-version = "0.2.0"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e63d2780ac94487eb9f1fea7b0d56300abc9eb488800854ca217f102f5caccca"
+checksum = "7dc1a6f7b5651af85774ae5a34b4e8be397d9cf4bc063b7e6dbd99a841837830"
 dependencies = [
  "semver",
  "serde",
  "serde-untagged",
  "serde-value",
- "thiserror 1.0.69",
+ "thiserror 2.0.12",
  "toml 0.8.23",
  "unicode-xid",
  "url",
@@ -471,9 +471,9 @@ dependencies = [
 
 [[package]]
 name = "cargo_metadata"
-version = "0.20.0"
+version = "0.21.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4f7835cfc6135093070e95eb2b53e5d9b5c403dc3a6be6040ee026270aa82502"
+checksum = "5cfca2aaa699835ba88faf58a06342a314a950d2b9686165e038286c30316868"
 dependencies = [
  "camino",
  "cargo-platform",
@@ -503,9 +503,9 @@ dependencies = [
 
 [[package]]
 name = "cfg-expr"
-version = "0.18.0"
+version = "0.20.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1a2b34126159980f92da2a08bdec0694fd80fb5eb9e48aff25d20a0d8dfa710d"
+checksum = "0d0390889d58f934f01cd49736275b4c2da15bcfc328c78ff2349907e6cabf22"
 dependencies = [
  "smallvec",
  "target-lexicon",
@@ -738,16 +738,16 @@ dependencies = [
 
 [[package]]
 name = "config"
-version = "0.15.11"
+version = "0.15.13"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "595aae20e65c3be792d05818e8c63025294ac3cb7e200f11459063a352a6ef80"
+checksum = "5b1eb4fb07bc7f012422df02766c7bd5971effb894f573865642f06fa3265440"
 dependencies = [
  "indexmap",
  "pathdiff",
  "ron",
  "serde",
  "serde_json",
- "toml 0.8.23",
+ "toml 0.9.2",
  "winnow",
 ]
 
@@ -1254,14 +1254,14 @@ dependencies = [
 
 [[package]]
 name = "duct"
-version = "0.13.7"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4ab5718d1224b63252cd0c6f74f6480f9ffeb117438a2e0f5cf6d9a4798929c"
+checksum = "b6ce170a0e8454fa0f9b0e5ca38a6ba17ed76a50916839d217eb5357e05cdfde"
 dependencies = [
  "libc",
- "once_cell",
  "os_pipe",
  "shared_child",
+ "shared_thread",
 ]
 
 [[package]]
@@ -1830,13 +1830,12 @@ dependencies = [
 
 [[package]]
 name = "guppy"
-version = "0.17.19"
+version = "0.17.20"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "81dfbb4e91461d20334e04ea276ec826d62f4509ccd641db47d4ae15277dbb03"
+checksum = "7eadc0c380d2c5f421758a5838ce593687da4a47d1dcf1169bf3bad629b764e7"
 dependencies = [
  "ahash",
  "camino",
- "cargo-util-schemas",
  "cargo_metadata",
  "cfg-if",
  "debug-ignore",
@@ -1927,6 +1926,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5971ac85611da7067dbfcabef3c70ebb5606018acd9e2a3903a0da507521e0d5"
 dependencies = [
  "allocator-api2",
+ "equivalent",
  "foldhash",
 ]
 
@@ -2769,9 +2769,9 @@ dependencies = [
 
 [[package]]
 name = "nextest-runner"
-version = "0.83.0"
+version = "0.84.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "92c421945d1abce4e7cc75401d57f5a00be2fd9e1591e82532b474ccd31b2f7e"
+checksum = "0af04de0e7adcbf90af1eca73b089fd364b023844ccc1692dd532ab5ae062936"
 dependencies = [
  "aho-corasick",
  "async-scoped",
@@ -2835,7 +2835,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "toml 0.8.23",
- "toml_edit",
+ "toml_edit 0.23.1",
  "tracing",
  "unicode-ident",
  "unicode-normalization",
@@ -3139,11 +3139,12 @@ checksum = "e3148f5046208a5d56bcfc03053e3ca6334e51da8dfb19b6cdc8b306fae3283e"
 
 [[package]]
 name = "petgraph"
-version = "0.7.1"
+version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3672b37090dbd86368a4145bc067582552b29c27377cad4e0a306c97f9bd7772"
+checksum = "54acf3a685220b533e437e264e4d932cfbdc4cc7ec0cd232ed73c08d03b8a7ca"
 dependencies = [
  "fixedbitset",
+ "hashbrown 0.15.4",
  "indexmap",
 ]
 
@@ -4183,6 +4184,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "shared_thread"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c7a6f98357c6bb0ebace19b22220e5543801d9de90ffe77f8abb27c056bac064"
+
+[[package]]
 name = "shell-words"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4485,9 +4492,9 @@ checksum = "e502f78cdbb8ba4718f566c418c52bc729126ffd16baee5baa718cf25dd5a69a"
 
 [[package]]
 name = "target-spec"
-version = "3.4.2"
+version = "3.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "49424d0fdcba4406e46d1cea3014c4d1987263790b8e5d1be45c4509c9d52553"
+checksum = "53928b291de23967df6740f2e584bb68101890f63d730292c0a5205092c8e0fa"
 dependencies = [
  "cfg-expr",
  "guppy-workspace-hack",
@@ -4754,11 +4761,10 @@ version = "0.8.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "dc1beb996b9d83529a9e75c17a1686767d148d70663143c7854d8b4a09ced362"
 dependencies = [
- "indexmap",
  "serde",
  "serde_spanned 0.6.9",
  "toml_datetime 0.6.11",
- "toml_edit",
+ "toml_edit 0.22.27",
 ]
 
 [[package]]
@@ -4805,6 +4811,21 @@ dependencies = [
  "serde_spanned 0.6.9",
  "toml_datetime 0.6.11",
  "toml_write",
+ "winnow",
+]
+
+[[package]]
+name = "toml_edit"
+version = "0.23.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b1f23a5f4511b296579b6c83e437fe85fa7ece22e3ec44e45ddb975bcf57c3dd"
+dependencies = [
+ "indexmap",
+ "serde",
+ "serde_spanned 1.0.0",
+ "toml_datetime 0.7.0",
+ "toml_parser",
+ "toml_writer",
  "winnow",
 ]
 
