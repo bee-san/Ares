@@ -410,9 +410,9 @@ dependencies = [
 
 [[package]]
 name = "cargo-nextest"
-version = "0.9.101"
+version = "0.9.102"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bba92f87a7decec9ecfdf71b485f871981a1825ea745d04e3be0e6a214505f39"
+checksum = "a90799eb4eb72ab5cd272ebfcfaf664518aab9edab3ba12c5d7c7ec60ea319f0"
 dependencies = [
  "camino",
  "cfg-if",
@@ -2095,7 +2095,7 @@ dependencies = [
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2",
+ "socket2 0.5.9",
  "tokio",
  "tower-service",
  "tracing",
@@ -2183,7 +2183,7 @@ dependencies = [
  "hyper 1.6.0",
  "libc",
  "pin-project-lite",
- "socket2",
+ "socket2 0.5.9",
  "tokio",
  "tower-service",
  "tracing",
@@ -2215,9 +2215,9 @@ dependencies = [
 
 [[package]]
 name = "iddqd"
-version = "0.3.8"
+version = "0.3.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "130e4294aea36b224e861b455440c0e9d53f7fba610948d083cefd6e25baf4ff"
+checksum = "1a90e534df930073905afbe06d0b1017c8791507a6063890c7643079377ac7f8"
 dependencies = [
  "allocator-api2",
  "equivalent",
@@ -2760,9 +2760,9 @@ dependencies = [
 
 [[package]]
 name = "nextest-runner"
-version = "0.84.0"
+version = "0.85.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0af04de0e7adcbf90af1eca73b089fd364b023844ccc1692dd532ab5ae062936"
+checksum = "8e2f3283b46e15d80958a9aa22877bcfc14855e20cfdae060c6bfda170131f4b"
 dependencies = [
  "aho-corasick",
  "async-scoped",
@@ -2826,7 +2826,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "toml 0.8.23",
- "toml_edit 0.23.1",
+ "toml_edit 0.23.3",
  "tracing",
  "unicode-ident",
  "unicode-normalization",
@@ -3364,7 +3364,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls",
- "socket2",
+ "socket2 0.5.9",
  "thiserror 2.0.12",
  "tokio",
  "tracing",
@@ -3401,7 +3401,7 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2",
+ "socket2 0.5.9",
  "tracing",
  "windows-sys 0.59.0",
 ]
@@ -4275,6 +4275,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "socket2"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "233504af464074f9d066d7b5416c5f9b894a5862a6506e306f7b816cdd6f1807"
+dependencies = [
+ "libc",
+ "windows-sys 0.59.0",
+]
+
+[[package]]
 name = "spki"
 version = "0.7.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4674,9 +4684,9 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.46.1"
+version = "1.47.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0cc3a2344dafbe23a245241fe8b09735b521110d30fcefbbd5feb1797ca35d17"
+checksum = "89e49afdadebb872d3145a5638b59eb0691ea23e46ca484037cfab3b76b95038"
 dependencies = [
  "backtrace",
  "bytes",
@@ -4686,9 +4696,9 @@ dependencies = [
  "pin-project-lite",
  "signal-hook-registry",
  "slab",
- "socket2",
+ "socket2 0.6.0",
  "tokio-macros",
- "windows-sys 0.52.0",
+ "windows-sys 0.59.0",
 ]
 
 [[package]]
@@ -4807,9 +4817,9 @@ dependencies = [
 
 [[package]]
 name = "toml_edit"
-version = "0.23.1"
+version = "0.23.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b1f23a5f4511b296579b6c83e437fe85fa7ece22e3ec44e45ddb975bcf57c3dd"
+checksum = "17d3b47e6b7a040216ae5302712c94d1cf88c95b47efa80e2c59ce96c878267e"
 dependencies = [
  "indexmap",
  "serde",
