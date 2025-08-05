@@ -48,7 +48,7 @@ serde_derive = "1.0.197"
 serde_json = "1.0"
 serial_test = "3.2.0"
 text_io = "0.1.13"
-toml = "0.9.4"
+toml = "0.9.5"
 uuid = "1.17.0"
 rand = "0.9.2"  # For generating random values
 
