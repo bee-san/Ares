@@ -336,9 +336,9 @@ checksum = "d71b6127be86fdcfddb610f7182ac57211d4b18a3e9c82eb2d17662f2227ad6a"
 
 [[package]]
 name = "camino"
-version = "1.1.10"
+version = "1.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0da45bc31171d8d6960122e222a67740df867c1dd53b4d51caa297084c185cab"
+checksum = "5d07aa9a93b00c76f71bc35d598bed923f6d4f3a9ca5c24b7737ae1a292841c0"
 dependencies = [
  "serde",
 ]
@@ -410,9 +410,9 @@ dependencies = [
 
 [[package]]
 name = "cargo-nextest"
-version = "0.9.102"
+version = "0.9.103"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a90799eb4eb72ab5cd272ebfcfaf664518aab9edab3ba12c5d7c7ec60ea319f0"
+checksum = "70cbe40eb7ffd64bfeaba375b0d8b67dd72e7a8fe1e90ed1f4d23dadc6834d10"
 dependencies = [
  "camino",
  "cfg-if",
@@ -422,6 +422,7 @@ dependencies = [
  "duct",
  "enable-ansi-support",
  "guppy",
+ "humantime",
  "idna_adapter",
  "indent_write",
  "itertools 0.14.0",
@@ -1096,9 +1097,9 @@ dependencies = [
 
 [[package]]
 name = "derive-where"
-version = "1.5.0"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "510c292c8cf384b1a340b816a9a6cf2599eb8f566a44949024af88418000c50b"
+checksum = "ef941ded77d15ca19b40374869ac6000af1c9f2a4c0f3d4c70926287e6364a8f"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -1254,9 +1255,9 @@ dependencies = [
 
 [[package]]
 name = "duct"
-version = "1.0.0"
+version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6ce170a0e8454fa0f9b0e5ca38a6ba17ed76a50916839d217eb5357e05cdfde"
+checksum = "d7478638a31d1f1f3d6c9f5e57c76b906a04ac4879d6fd0fb6245bc88f73fd0b"
 dependencies = [
  "libc",
  "os_pipe",
@@ -2481,9 +2482,9 @@ dependencies = [
 
 [[package]]
 name = "libc"
-version = "0.2.174"
+version = "0.2.175"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1171693293099992e19cddea4e8b849964e9846f4acee11b3948bcc337be8776"
+checksum = "6a82ae493e598baaea5209805c49bbf2ea7de956d50d7da0da1164f9c6d28543"
 
 [[package]]
 name = "libm"
@@ -2760,9 +2761,9 @@ dependencies = [
 
 [[package]]
 name = "nextest-runner"
-version = "0.85.0"
+version = "0.86.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8e2f3283b46e15d80958a9aa22877bcfc14855e20cfdae060c6bfda170131f4b"
+checksum = "54078b119ed19a55a69ffc68ef43aa7fa9f3ba5c67e36fd78bce00462c87dc0a"
 dependencies = [
  "aho-corasick",
  "async-scoped",
@@ -3070,9 +3071,9 @@ dependencies = [
 
 [[package]]
 name = "os_pipe"
-version = "1.2.1"
+version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ffd2b0a5634335b135d5728d84c5e0fd726954b87111f7506a61c502280d982"
+checksum = "db335f4760b14ead6290116f2427bf33a14d4f0617d49f78a246de10c1831224"
 dependencies = [
  "libc",
  "windows-sys 0.59.0",
@@ -4166,19 +4167,20 @@ dependencies = [
 
 [[package]]
 name = "shared_child"
-version = "1.0.2"
+version = "1.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e297bd52991bbe0686c086957bee142f13df85d1e79b0b21630a99d374ae9dc"
+checksum = "1e362d9935bc50f019969e2f9ecd66786612daae13e8f277be7bfb66e8bed3f7"
 dependencies = [
  "libc",
- "windows-sys 0.59.0",
+ "sigchld",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
 name = "shared_thread"
-version = "0.1.0"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c7a6f98357c6bb0ebace19b22220e5543801d9de90ffe77f8abb27c056bac064"
+checksum = "52b86057fcb5423f5018e331ac04623e32d6b5ce85e33300f92c79a1973928b0"
 
 [[package]]
 name = "shell-words"
@@ -4191,6 +4193,17 @@ name = "shlex"
 version = "1.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
+
+[[package]]
+name = "sigchld"
+version = "0.2.4"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "47106eded3c154e70176fc83df9737335c94ce22f821c32d17ed1db1f83badb1"
+dependencies = [
+ "libc",
+ "os_pipe",
+ "signal-hook",
+]
 
 [[package]]
 name = "signal-hook"
