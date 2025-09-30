@@ -43,7 +43,7 @@ rayon = "1.11.0"
 regex = "1.11.3"
 rpassword = "7.4.0"
 rusqlite = { version = "0.37", features = ["bundled"] }
-serde = { version = "1.0.227", features = ["derive"] }
+serde = { version = "1.0.228", features = ["derive"] }
 serde_derive = "1.0.197"
 serde_json = "1.0"
 serial_test = "3.2.0"
