@@ -54,7 +54,7 @@ use crate::checkers::checker_type::{Check, Checker};
 use crate::checkers::CheckerTypes;
 use crate::config::get_config;
 use crate::searchers::helper_functions::{
-    calculate_string_worth, generate_heuristic, update_decoder_stats,
+    calculate_string_worth, generate_heuristic, update_decoder_stats, check_if_string_cant_be_decoded
 };
 use crate::storage::wait_athena_storage;
 use crate::DecoderResult;
@@ -293,6 +293,12 @@ fn expand_node(
                         continue;
                     }
 
+                    // Check if the string cannot be decoded (aggressive pruning)
+                    if check_if_string_cant_be_decoded(&text[0]) {
+                        update_decoder_stats(r.decoder, false);
+                        continue;
+                    }
+
                     // Check if we've seen this string before to prevent cycles
                     let text_hash = calculate_hash(&text[0]);
                     if !seen_strings.insert(text_hash) {
@@ -368,6 +374,12 @@ fn expand_node(
                 if let Some(first_text) = decoded_text.first() {
                     // Skip if text is empty
                     if first_text.is_empty() {
+                        update_decoder_stats(decoder.get_name(), false);
+                        continue;
+                    }
+
+                    // Check if the string cannot be decoded (aggressive pruning)
+                    if check_if_string_cant_be_decoded(first_text) {
                         update_decoder_stats(decoder.get_name(), false);
                         continue;
                     }

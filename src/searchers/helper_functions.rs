@@ -66,25 +66,38 @@ pub fn is_common_sequence(prev_decoder: &str, current_cipher: &str) -> bool {
     // Define common sequences focusing on base decoders
     match (prev_decoder, current_cipher) {
         // Base64 commonly followed by other encodings
-        ("Base64Decoder", "Base32Decoder") => true,
-        ("Base64Decoder", "Base58Decoder") => true,
-        ("Base64Decoder", "Base85Decoder") => true,
-        ("Base64Decoder", "Base64Decoder") => true,
+        ("Base64", "Base32") => true,
+        ("Base64", "Base58 Bitcoin") => true,
+        ("Base64", "Base85") => true,
+        ("Base64", "Base64") => true,
+        ("Base64", "Quoted-Printable") => true,
+        ("Base64", "URL") => true,
 
         // Base32 sequences
-        ("Base32Decoder", "Base64Decoder") => true,
-        ("Base32Decoder", "Base85Decoder") => true,
-        ("Base32Decoder", "Base32Decoder") => true,
+        ("Base32", "Base64") => true,
+        ("Base32", "Base85") => true,
+        ("Base32", "Base32") => true,
 
         // Base58 sequences
-        ("Base58Decoder", "Base64Decoder") => true,
-        ("Base58Decoder", "Base32Decoder") => true,
-        ("Base58Decoder", "Base58Decoder") => true,
+        ("Base58 Bitcoin", "Base64") => true,
+        ("Base58 Bitcoin", "Base32") => true,
+        ("Base58 Bitcoin", "Base58 Bitcoin") => true,
 
-        // Base85 sequences
-        ("Base85Decoder", "Base64Decoder") => true,
-        ("Base85Decoder", "Base32Decoder") => true,
-        ("Base85Decoder", "Base85Decoder") => true,
+        // Base85/Ascii85 sequences
+        ("Ascii85", "Base64") => true,
+        ("Ascii85", "Base32") => true,
+        ("Z85", "Base64") => true,
+
+        // Hexadecimal sequences
+        ("Hexadecimal", "Base64") => true,
+        ("Hexadecimal", "Decimal") => true,
+
+        // Quoted-Printable often hides Base64
+        ("Quoted-Printable", "Base64") => true,
+
+        // URL Encoding
+        ("URL", "Base64") => true,
+
         // No match found
         _ => false,
     }
@@ -193,6 +206,7 @@ pub fn generate_heuristic(
     if path.len() > 1 {
         if let Some(previous_decoder) = path.last() {
             if let Some(next_decoder) = next_decoder {
+                // Only apply penalty if the previous decoder name is known
                 if !is_common_sequence(previous_decoder.decoder, next_decoder.get_name()) {
                     base_score += 0.25;
                 }

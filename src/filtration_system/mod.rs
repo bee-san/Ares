@@ -36,6 +36,21 @@ use crate::decoders::z85_decoder::Z85Decoder;
 
 use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
 
+// Import new decoders
+use crate::decoders::base62_decoder::Base62Decoder;
+use crate::decoders::ascii85_decoder::Ascii85Decoder;
+use crate::decoders::octal_decoder::OctalDecoder;
+use crate::decoders::decimal_decoder::DecimalDecoder;
+use crate::decoders::html_entity_decoder::HtmlEntityDecoder;
+use crate::decoders::punycode_decoder::PunycodeDecoder;
+use crate::decoders::quoted_printable_decoder::QuotedPrintableDecoder;
+use crate::decoders::uuencode_decoder::UUEncodeDecoder;
+use crate::decoders::base45_decoder::Base45Decoder;
+use crate::decoders::bacon_cipher_decoder::BaconCipherDecoder;
+use crate::decoders::base32hex_decoder::Base32HexDecoder;
+use crate::decoders::affine_cipher::AffineCipherDecoder;
+use crate::decoders::beaufort_decoder::BeaufortDecoder;
+
 use log::trace;
 use rayon::prelude::*;
 
@@ -254,6 +269,21 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
 
     let brainfuck = Decoder::<BrainfuckInterpreter>::new();
 
+    // New decoders
+    let base62 = Decoder::<Base62Decoder>::new();
+    let ascii85 = Decoder::<Ascii85Decoder>::new();
+    let octal = Decoder::<OctalDecoder>::new();
+    let decimal = Decoder::<DecimalDecoder>::new();
+    let html_entity = Decoder::<HtmlEntityDecoder>::new();
+    let punycode = Decoder::<PunycodeDecoder>::new();
+    let quoted_printable = Decoder::<QuotedPrintableDecoder>::new();
+    let uuencode = Decoder::<UUEncodeDecoder>::new();
+    let base45 = Decoder::<Base45Decoder>::new();
+    let bacon = Decoder::<BaconCipherDecoder>::new();
+    let base32hex = Decoder::<Base32HexDecoder>::new();
+    let affine = Decoder::<AffineCipherDecoder>::new();
+    let beaufort = Decoder::<BeaufortDecoder>::new();
+
     Decoders {
         components: vec![
             Box::new(vigenere),
@@ -280,6 +310,20 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
             Box::new(brailledecoder),
             Box::new(substitution_generic),
             Box::new(brainfuck),
+            // Add new decoders
+            Box::new(base62),
+            Box::new(ascii85),
+            Box::new(octal),
+            Box::new(decimal),
+            Box::new(html_entity),
+            Box::new(punycode),
+            Box::new(quoted_printable),
+            Box::new(uuencode),
+            Box::new(base45),
+            Box::new(bacon),
+            Box::new(base32hex),
+            Box::new(affine),
+            Box::new(beaufort),
         ],
     }
 }

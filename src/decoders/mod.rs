@@ -77,6 +77,21 @@ pub mod brainfuck_interpreter;
 /// The vigenere_decoder module decodes Vigenère cipher text
 pub mod vigenere_decoder;
 
+// New Decoders
+pub mod base62_decoder;
+pub mod ascii85_decoder;
+pub mod octal_decoder;
+pub mod decimal_decoder;
+pub mod html_entity_decoder;
+pub mod punycode_decoder;
+pub mod quoted_printable_decoder;
+pub mod uuencode_decoder;
+pub mod base45_decoder;
+pub mod bacon_cipher_decoder;
+pub mod base32hex_decoder;
+pub mod affine_cipher;
+pub mod beaufort_decoder;
+
 use atbash_decoder::AtbashDecoder;
 use base32_decoder::Base32Decoder;
 use base58_bitcoin_decoder::Base58BitcoinDecoder;
@@ -104,6 +119,21 @@ use vigenere_decoder::VigenereDecoder;
 use z85_decoder::Z85Decoder;
 
 use brainfuck_interpreter::BrainfuckInterpreter;
+
+// Use new decoders
+use base62_decoder::Base62Decoder;
+use ascii85_decoder::Ascii85Decoder;
+use octal_decoder::OctalDecoder;
+use decimal_decoder::DecimalDecoder;
+use html_entity_decoder::HtmlEntityDecoder;
+use punycode_decoder::PunycodeDecoder;
+use quoted_printable_decoder::QuotedPrintableDecoder;
+use uuencode_decoder::UUEncodeDecoder;
+use base45_decoder::Base45Decoder;
+use bacon_cipher_decoder::BaconCipherDecoder;
+use base32hex_decoder::Base32HexDecoder;
+use affine_cipher::AffineCipherDecoder;
+use beaufort_decoder::BeaufortDecoder;
 
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -161,6 +191,32 @@ pub enum DecoderType {
     BrainfuckInterpreter(brainfuck_interpreter::BrainfuckInterpreter),
     /// vigenere decoder
     VigenereDecoder(vigenere_decoder::VigenereDecoder),
+    /// base62 decoder
+    Base62Decoder(base62_decoder::Base62Decoder),
+    /// ascii85 decoder
+    Ascii85Decoder(ascii85_decoder::Ascii85Decoder),
+    /// octal decoder
+    OctalDecoder(octal_decoder::OctalDecoder),
+    /// decimal decoder
+    DecimalDecoder(decimal_decoder::DecimalDecoder),
+    /// html entity decoder
+    HtmlEntityDecoder(html_entity_decoder::HtmlEntityDecoder),
+    /// punycode decoder
+    PunycodeDecoder(punycode_decoder::PunycodeDecoder),
+    /// quoted printable decoder
+    QuotedPrintableDecoder(quoted_printable_decoder::QuotedPrintableDecoder),
+    /// uuencode decoder
+    UUEncodeDecoder(uuencode_decoder::UUEncodeDecoder),
+    /// base45 decoder
+    Base45Decoder(base45_decoder::Base45Decoder),
+    /// bacon cipher decoder
+    BaconCipherDecoder(bacon_cipher_decoder::BaconCipherDecoder),
+    /// base32hex decoder
+    Base32HexDecoder(base32hex_decoder::Base32HexDecoder),
+    /// affine cipher decoder
+    AffineCipherDecoder(affine_cipher::AffineCipherDecoder),
+    /// beaufort decoder
+    BeaufortDecoder(beaufort_decoder::BeaufortDecoder),
 }
 
 /// Wrapper struct to hold Decoders for DECODER_MAP
@@ -250,6 +306,58 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         (
             "Brainfuck",
             DecoderBox::new(Decoder::<BrainfuckInterpreter>::new()),
+        ),
+        (
+            "Base62",
+            DecoderBox::new(Decoder::<Base62Decoder>::new()),
+        ),
+        (
+            "Ascii85",
+            DecoderBox::new(Decoder::<Ascii85Decoder>::new()),
+        ),
+        (
+            "Octal",
+            DecoderBox::new(Decoder::<OctalDecoder>::new()),
+        ),
+        (
+            "Decimal",
+            DecoderBox::new(Decoder::<DecimalDecoder>::new()),
+        ),
+        (
+            "HTML Entity",
+            DecoderBox::new(Decoder::<HtmlEntityDecoder>::new()),
+        ),
+        (
+            "Punycode",
+            DecoderBox::new(Decoder::<PunycodeDecoder>::new()),
+        ),
+        (
+            "Quoted-Printable",
+            DecoderBox::new(Decoder::<QuotedPrintableDecoder>::new()),
+        ),
+        (
+            "UUEncode",
+            DecoderBox::new(Decoder::<UUEncodeDecoder>::new()),
+        ),
+        (
+            "Base45",
+            DecoderBox::new(Decoder::<Base45Decoder>::new()),
+        ),
+        (
+            "Bacon Cipher",
+            DecoderBox::new(Decoder::<BaconCipherDecoder>::new()),
+        ),
+        (
+            "Base32Hex",
+            DecoderBox::new(Decoder::<Base32HexDecoder>::new()),
+        ),
+        (
+            "Affine Cipher",
+            DecoderBox::new(Decoder::<AffineCipherDecoder>::new()),
+        ),
+        (
+            "Beaufort Cipher",
+            DecoderBox::new(Decoder::<BeaufortDecoder>::new()),
         ),
     ])
 });
