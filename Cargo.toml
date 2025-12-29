@@ -65,7 +65,7 @@ dashmap = "6.1.0"
 
 # Dev dependencies
 [dev-dependencies]
-cargo-nextest = "0.9.115"
+cargo-nextest = "0.9.116"
 criterion = "0.8.1"
 
 [profile.release]
