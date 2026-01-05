@@ -46,7 +46,7 @@ rusqlite = { version = "0.37", features = ["bundled"] }
 serde = { version = "1.0.228", features = ["derive"] }
 serde_derive = "1.0.197"
 serde_json = "1.0"
-serial_test = "3.2.0"
+serial_test = "3.3.1"
 text_io = "0.1.13"
 toml = "0.9.10"
 uuid = "1.19.0"
