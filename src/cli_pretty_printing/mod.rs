@@ -31,9 +31,10 @@ mod tests;
 use crate::storage;
 use crate::storage::wait_athena_storage::PlaintextResult;
 use crate::DecoderResult;
-use colored::Colorize;
 use std::env;
 use std::fs::write;
+use std::io::Write;
+use termcolor::{Buffer, Color, ColorSpec, WriteColor};
 use text_io::read;
 
 /// Parse RGB string in format "r,g,b" to RGB values.
@@ -138,16 +139,39 @@ fn color_string(text: &str, role: &str) -> String {
     };
 
     if let Some((r, g, b)) = parse_rgb(&rgb) {
-        text.truecolor(r, g, b).bold().to_string()
+        apply_color_with_rgb(text, r, g, b)
     } else {
         // Default to statement color if RGB parsing fails
         if let Some(statement_rgb) = config.colourscheme.get("statement") {
             if let Some((r, g, b)) = parse_rgb(statement_rgb) {
-                return text.truecolor(r, g, b).bold().to_string();
+                return apply_color_with_rgb(text, r, g, b);
             }
         }
-        text.white().to_string()
+        apply_color_with_rgb(text, 255, 255, 255)
     }
+}
+
+/// Helper function to apply color to text using RGB values with termcolor.
+///
+/// # Arguments
+/// * `text` - The text to be colored
+/// * `r` - Red value (0-255)
+/// * `g` - Green value (0-255)
+/// * `b` - Blue value (0-255)
+///
+/// # Returns
+/// * `String` - The text with ANSI color codes applied
+fn apply_color_with_rgb(text: &str, r: u8, g: u8, b: u8) -> String {
+    let mut buffer = Buffer::ansi();
+    let mut color_spec = ColorSpec::new();
+    color_spec.set_fg(Some(Color::Rgb(r, g, b)));
+    color_spec.set_bold(true);
+
+    buffer.set_color(&color_spec).unwrap_or(());
+    write!(&mut buffer, "{}", text).unwrap_or(());
+    buffer.reset().unwrap_or(());
+
+    String::from_utf8_lossy(buffer.as_slice()).to_string()
 }
 
 /// Colors text based on its role, defaulting to statement color if no role is specified.
@@ -295,8 +319,8 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
             "{}",
             question(
                 &format!(
-                    "{} of the plaintext is invisible characters, would you like to save to a file instead? (y/N)", 
-                    invis_char_percentage_string.white().bold()
+                    "{} of the plaintext is invisible characters, would you like to save to a file instead? (y/N)",
+                    apply_color_with_rgb(&invis_char_percentage_string, 255, 255, 255)
                 )
             )
         );
@@ -305,7 +329,7 @@ pub fn program_exiting_successful_decoding(result: DecoderResult) {
         if result {
             println!(
                 "Please enter a filename: (default: {}/ciphey_text.txt)",
-                env::var("HOME").unwrap_or_default().white().bold()
+                apply_color_with_rgb(&env::var("HOME").unwrap_or_default(), 255, 255, 255)
             );
             let mut file_path: String = read!("{}\n");
             if file_path.is_empty() {
