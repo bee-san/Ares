@@ -43,7 +43,17 @@ pub fn human_checker(input: &CheckResult) -> bool {
     }
 
     // Acquire the lock to ensure only one thread prompts the user at a time
-    let _guard = get_prompt_lock().lock().unwrap();
+    let lock_result = get_prompt_lock().lock();
+    let _guard = match lock_result {
+        Ok(guard) => guard,
+        Err(poisoned) => {
+            cli_pretty_printing::warning(
+                "DEBUG: Prompt lock was poisoned; proceeding with recovered lock guard",
+            );
+            // Recover the inner guard even though the mutex is poisoned
+            poisoned.into_inner()
+        }
+    };
 
     // Double-check HUMAN_CONFIRMED after acquiring the lock
     // Another thread might have confirmed while we were waiting for the lock
