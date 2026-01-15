@@ -50,7 +50,8 @@ serial_test = "3.3.1"
 text_io = "0.1.13"
 toml = "0.9.11"
 uuid = "1.19.0"
-rand = "0.9.2"  # For generating random values
+rand = "0.8"  # For generating random values - v0.8 required for candle-core compatibility
+half = "=2.3.1"  # Forced to v2.3.1 for compatibility with candle-core
 
 # Dependencies used for decoding
 base64 = "0.22.1"
