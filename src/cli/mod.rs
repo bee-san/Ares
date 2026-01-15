@@ -106,14 +106,17 @@ pub fn parse_cli_args() -> (String, Config) {
 
 /// When the CLI is called with `-f` to open a file
 /// this function opens it
-/// # Panics
-/// This can panic when opening a file which does not exist!
 pub fn read_and_parse_file(file_path: String) -> String {
-    // TODO pretty match on the errors to provide better output
-    // Else it'll panic
-    let mut file = File::open(file_path).unwrap();
+    let mut file = File::open(&file_path).unwrap_or_else(|err| {
+        eprintln!("Error: Cannot open file '{}': {}", file_path, err);
+        std::process::exit(1);
+    });
+
     let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+    file.read_to_string(&mut contents).unwrap_or_else(|err| {
+        eprintln!("Error: Cannot read file '{}': {}", file_path, err);
+        std::process::exit(1);
+    });
     // We can just put the file into the `Opts.text` and the program will work as normal
     // On Unix systems a line is defined as "\n{text}\n"
     // https://stackoverflow.com/a/729795
