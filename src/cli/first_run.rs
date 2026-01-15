@@ -4,13 +4,13 @@
 //! and user preferences. It provides functionality for creating and managing color schemes,
 //! handling user input, and converting between different color formats.
 
-use colored::Colorize;
 use gibberish_or_not::download_model_with_progress_bar;
 use rpassword;
 use std::collections::HashMap;
 use std::fmt::Display;
 use std::io::{self, Write};
 use std::path::Path;
+use termcolor::{Buffer, Color, ColorSpec, WriteColor};
 
 /// Represents a color scheme with RGB values for different message types and roles.
 /// Each color is stored as a comma-separated RGB string in the format "r,g,b"
@@ -42,7 +42,7 @@ pub struct ColorScheme {
 /// # Returns
 /// * `String` - The input text formatted in white color
 fn print_statement<T: Display>(text: T) -> String {
-    text.to_string().white().to_string()
+    apply_color(&text.to_string(), Color::White)
 }
 
 /// Prints a warning message in red color.
@@ -53,7 +53,7 @@ fn print_statement<T: Display>(text: T) -> String {
 /// # Returns
 /// * `String` - The input text formatted in red color
 fn print_warning<T: Display>(text: T) -> String {
-    text.to_string().red().to_string()
+    apply_color(&text.to_string(), Color::Red)
 }
 
 /// Prints a question prompt in yellow color.
@@ -64,7 +64,7 @@ fn print_warning<T: Display>(text: T) -> String {
 /// # Returns
 /// * `String` - The input text formatted in yellow color
 fn print_question<T: Display>(text: T) -> String {
-    text.to_string().yellow().to_string()
+    apply_color(&text.to_string(), Color::Yellow)
 }
 
 /// Prints a success message in green color.
@@ -75,7 +75,7 @@ fn print_question<T: Display>(text: T) -> String {
 /// # Returns
 /// * `String` - The input text formatted in green color
 fn print_success<T: Display>(text: T) -> String {
-    text.to_string().green().to_string()
+    apply_color(&text.to_string(), Color::Green)
 }
 
 /// Prints text in a specified RGB color.
@@ -97,10 +97,52 @@ fn print_rgb(text: &str, rgb: &str) -> String {
         parts[1].trim().parse::<u8>(),
         parts[2].trim().parse::<u8>(),
     ) {
-        text.truecolor(r, g, b).to_string()
+        apply_color_with_rgb(text, r, g, b)
     } else {
         text.to_string()
     }
+}
+
+/// Helper function to apply a basic color to text using termcolor.
+///
+/// # Arguments
+/// * `text` - The text to be colored
+/// * `color` - The color to apply
+///
+/// # Returns
+/// * `String` - The text with ANSI color codes applied
+fn apply_color(text: &str, color: Color) -> String {
+    let mut buffer = Buffer::ansi();
+    let mut color_spec = ColorSpec::new();
+    color_spec.set_fg(Some(color));
+
+    buffer.set_color(&color_spec).unwrap_or(());
+    write!(&mut buffer, "{}", text).unwrap_or(());
+    buffer.reset().unwrap_or(());
+
+    String::from_utf8_lossy(buffer.as_slice()).to_string()
+}
+
+/// Helper function to apply RGB color to text using termcolor.
+///
+/// # Arguments
+/// * `text` - The text to be colored
+/// * `r` - Red value (0-255)
+/// * `g` - Green value (0-255)
+/// * `b` - Blue value (0-255)
+///
+/// # Returns
+/// * `String` - The text with ANSI color codes applied
+fn apply_color_with_rgb(text: &str, r: u8, g: u8, b: u8) -> String {
+    let mut buffer = Buffer::ansi();
+    let mut color_spec = ColorSpec::new();
+    color_spec.set_fg(Some(Color::Rgb(r, g, b)));
+
+    buffer.set_color(&color_spec).unwrap_or(());
+    write!(&mut buffer, "{}", text).unwrap_or(());
+    buffer.reset().unwrap_or(());
+
+    String::from_utf8_lossy(buffer.as_slice()).to_string()
 }
 
 /// Returns the Capptucin color scheme with warm, muted colors.
