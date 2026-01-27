@@ -49,7 +49,7 @@ serde_json = "1.0"
 serial_test = "3.3.1"
 text_io = "0.1.13"
 toml = "0.9.11"
-uuid = "1.19.0"
+uuid = "1.20.0"
 rand = "0.9"  # For generating random values - v0.9 required for candle-core compatibility
 half = "=2.7.1"  # Forced to v2.3.1 for compatibility with candle-core
 
