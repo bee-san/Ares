@@ -112,6 +112,30 @@ fn update_identifier_in_config(config: &mut Config) {
     config.lemmeknow_config = make_identifier_from_config(config);
 }
 
+impl Clone for Config {
+    fn clone(&self) -> Self {
+        Config {
+            verbose: self.verbose,
+            lemmeknow_config: make_identifier_from_config(self),
+            lemmeknow_min_rarity: self.lemmeknow_min_rarity,
+            lemmeknow_max_rarity: self.lemmeknow_max_rarity,
+            lemmeknow_tags: self.lemmeknow_tags.clone(),
+            lemmeknow_exclude_tags: self.lemmeknow_exclude_tags.clone(),
+            lemmeknow_boundaryless: self.lemmeknow_boundaryless,
+            human_checker_on: self.human_checker_on,
+            timeout: self.timeout,
+            top_results: self.top_results,
+            api_mode: self.api_mode,
+            regex: self.regex.clone(),
+            wordlist_path: self.wordlist_path.clone(),
+            wordlist: self.wordlist.clone(),
+            colourscheme: self.colourscheme.clone(),
+            enhanced_detection: self.enhanced_detection,
+            model_path: self.model_path.clone(),
+        }
+    }
+}
+
 impl Default for Config {
     fn default() -> Self {
         let mut config = Config {

@@ -46,6 +46,8 @@ mod searchers;
 pub mod storage;
 /// Timer for internal use
 mod timer;
+/// TUI components for terminal user interface
+pub mod tui;
 
 use checkers::{
     athena::Athena,

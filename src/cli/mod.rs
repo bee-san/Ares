@@ -62,14 +62,24 @@ pub struct Opts {
     /// Enables enhanced plaintext detection with BERT model.
     #[arg(long)]
     enable_enhanced_detection: bool,
+    /// Disable the TUI (terminal user interface) and use classic CLI output
+    /// By default, TUI is enabled when running interactively in a terminal
+    #[arg(long)]
+    no_tui: bool,
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
 /// Into a library Struct for use within the program
 /// The library struct can be found in the [config](../config) folder.
+///
+/// # Returns
+///
+/// A tuple of (input_text, config, use_tui) where use_tui indicates whether
+/// to use the TUI or classic CLI output.
+///
 /// # Panics
 /// This function can panic when it gets both a file and text input at the same time.
-pub fn parse_cli_args() -> (String, Config) {
+pub fn parse_cli_args() -> (String, Config, bool) {
     let mut opts: Opts = Opts::parse();
     let min_log_level = match opts.verbose {
         0 => "Warn",
@@ -101,7 +111,11 @@ pub fn parse_cli_args() -> (String, Config) {
     trace!("Parsed the arguments");
     trace!("The inputted text is {}", &input_text);
 
-    cli_args_into_config_struct(opts, input_text)
+    // Determine if TUI should be used
+    let use_tui = !opts.no_tui;
+
+    let (text, config) = cli_args_into_config_struct(opts, input_text);
+    (text, config, use_tui)
 }
 
 /// When the CLI is called with `-f` to open a file

@@ -1,0 +1,14 @@
+//! TUI components for Ciphey.
+//!
+//! This module provides terminal user interface components built with Ratatui.
+
+pub mod app;
+pub mod colors;
+pub mod input;
+pub mod spinner;
+pub mod ui;
+pub mod widgets;
+
+mod run;
+
+pub use run::run_tui;
