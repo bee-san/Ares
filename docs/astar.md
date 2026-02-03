@@ -1,6 +1,6 @@
 # A* Search Implementation in ciphey
 
-The A* search algorithm in ciphey uses a sophisticated heuristic system for prioritizing decoder paths. This document details the mathematical foundations and implementation specifics.
+The A* search algorithm in ciphey uses a simplified design with heuristic-based prioritization for decoder paths. The implementation focuses on cycle detection via seen strings without pruning, using a NodeType enum for clean state management. This document details the mathematical foundations and implementation specifics.
 
 ## Core Algorithm
 
@@ -135,45 +135,6 @@ Citrix CTX1 → 0.1
 Unknown decoders → 0.5
 ```
 
-## Memory Management
-
-The search space is pruned using a quality-based retention system:
-
-1. When seen strings exceed threshold T:
-   - Calculate quality scores for all strings
-   - Sort by quality descending
-   - Keep top 50% highest quality strings
-   - Adjust T based on search progress:
-     \[T_{new} = T_{initial} - (5000 * \frac{depth}{MAX\_DEPTH})\]
-
-2. Early string filtering:
-   - Strings ≤ 2 characters are immediately rejected
-   - Non-printable character ratio affects priority but doesn't cause rejection
-
-### Implementation
-
-```rust
-if seen_count > prune_threshold {
-    // Quality-based pruning
-    let mut quality_scores: Vec<(String, f32)> = seen_strings
-        .iter()
-        .map(|s| (s.clone(), calculate_string_quality(s)))
-        .collect();
-        
-    // Keep top 50% highest quality strings
-    let keep_count = seen_strings.len() / 2;
-    seen_strings = quality_scores
-        .into_iter()
-        .take(keep_count)
-        .map(|(s, _)| s)
-        .collect();
-
-    // Dynamic threshold adjustment
-    prune_threshold = INITIAL_PRUNE_THRESHOLD 
-        - (progress_factor * 5000.0) as usize;
-}
-```
-
 ## Performance Optimizations
 
 1. **Initial Full Run**
@@ -196,10 +157,10 @@ if seen_count > prune_threshold {
    - Rates influence future path priorities through p_r penalty
    - Adapts to decoder performance during search
 
-5. **Dynamic Pruning**
-   - Threshold adjusts with search depth
-   - More aggressive pruning at deeper levels
-   - Balances memory usage with search completeness
+5. **Shared Checker Instances**
+   - Checker instances are created once and shared across all decode attempts
+   - Reduces overhead from repeated checker initialization
+   - Improves performance for deep search trees
 
 ## Implementation Notes
 

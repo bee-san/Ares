@@ -34,6 +34,53 @@ pub struct ColorScheme {
     pub statement: String,
 }
 
+/// Context for themed printing during first-run setup.
+/// Holds RGB color strings and provides methods to print with those colors.
+/// This allows the rest of the setup wizard to use the user's chosen theme
+/// immediately after selection.
+struct ThemeContext {
+    /// RGB color string for statement messages
+    statement: String,
+    /// RGB color string for warning messages
+    warning: String,
+    /// RGB color string for success messages
+    success: String,
+    /// RGB color string for question prompts
+    question: String,
+}
+
+impl ThemeContext {
+    /// Create a ThemeContext from a ColorScheme reference
+    fn from_scheme(scheme: &ColorScheme) -> Self {
+        Self {
+            statement: scheme.statement.clone(),
+            warning: scheme.warning.clone(),
+            success: scheme.success.clone(),
+            question: scheme.question.clone(),
+        }
+    }
+
+    /// Print text using the statement color
+    fn statement(&self, text: &str) -> String {
+        print_rgb(text, &self.statement)
+    }
+
+    /// Print text using the warning color
+    fn warning(&self, text: &str) -> String {
+        print_rgb(text, &self.warning)
+    }
+
+    /// Print text using the success color
+    fn success(&self, text: &str) -> String {
+        print_rgb(text, &self.success)
+    }
+
+    /// Print text using the question color
+    fn question(&self, text: &str) -> String {
+        print_rgb(text, &self.question)
+    }
+}
+
 /// Prints a statement in white color.
 ///
 /// # Arguments
@@ -74,6 +121,7 @@ fn print_question<T: Display>(text: T) -> String {
 ///
 /// # Returns
 /// * `String` - The input text formatted in green color
+#[allow(dead_code)]
 fn print_success<T: Display>(text: T) -> String {
     apply_color(&text.to_string(), Color::Green)
 }
@@ -187,6 +235,20 @@ fn get_girly_pop_scheme() -> ColorScheme {
     }
 }
 
+/// Returns the Autumnal Vibes color scheme with warm fall colors.
+///
+/// # Returns
+/// * `ColorScheme` - A color scheme with warm oranges, deep reds, and golden yellows
+fn get_autumnal_vibes_scheme() -> ColorScheme {
+    ColorScheme {
+        informational: "218,165,32".to_string(), // Goldenrod - rgb(218, 165, 32)
+        warning: "178,34,34".to_string(),        // Firebrick red - rgb(178, 34, 34)
+        success: "189,183,107".to_string(),      // Dark khaki/olive - rgb(189, 183, 107)
+        question: "255,140,0".to_string(),       // Dark orange - rgb(255, 140, 0)
+        statement: "210,105,30".to_string(),     // Chocolate brown - rgb(210, 105, 30)
+    }
+}
+
 /// Returns the default color scheme with standard terminal colors.
 ///
 /// # Returns
@@ -229,9 +291,10 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         false,
     );
 
-    let mut config = if !want_custom {
+    // Determine the color scheme - either default or user-selected
+    let chosen_scheme: ColorScheme = if !want_custom {
         // User doesn't want a custom color scheme, use default
-        color_scheme_to_hashmap(get_default_scheme())
+        get_default_scheme()
     } else {
         // Show color scheme options
         println!(
@@ -269,7 +332,16 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         print!("{} | ", print_rgb("Questions", &girly.question));
         println!("{}\n", print_rgb("Statements", &girly.statement));
 
-        println!("4. Default");
+        println!("4. Autumnal Vibes");
+        let autumnal = get_autumnal_vibes_scheme();
+        print!("   ");
+        print!("{} | ", print_rgb("Informational", &autumnal.informational));
+        print!("{} | ", print_rgb("Warning", &autumnal.warning));
+        print!("{} | ", print_rgb("Success", &autumnal.success));
+        print!("{} | ", print_rgb("Questions", &autumnal.question));
+        println!("{}\n", print_rgb("Statements", &autumnal.statement));
+
+        println!("5. Default");
         let default = get_default_scheme();
         print!("   ");
         print!("{} | ", print_rgb("Informational", &default.informational));
@@ -279,20 +351,21 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         println!("{}\n", print_rgb("Statements", &default.statement));
 
         // For the Custom option, show format instructions
-        println!("5. Custom");
+        println!("6. Custom");
         println!("   Format: r,g,b (e.g., 255,0,0 for red)");
         println!("   Values must be between 0 and 255");
         println!("   You'll be prompted to enter RGB values for each color.\n");
 
         // Get user's choice
-        let choice = get_user_input_range("Enter your choice (1-5): ", 1, 5);
+        let choice = get_user_input_range("Enter your choice (1-6): ", 1, 6);
 
         match choice {
-            1 => color_scheme_to_hashmap(get_capptucin_scheme()),
-            2 => color_scheme_to_hashmap(get_darcula_scheme()),
-            3 => color_scheme_to_hashmap(get_girly_pop_scheme()),
-            4 => color_scheme_to_hashmap(get_default_scheme()),
-            5 => {
+            1 => get_capptucin_scheme(),
+            2 => get_darcula_scheme(),
+            3 => get_girly_pop_scheme(),
+            4 => get_autumnal_vibes_scheme(),
+            5 => get_default_scheme(),
+            6 => {
                 // Custom color scheme
                 println!(
                     "\n{}",
@@ -305,27 +378,31 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
                 let question = get_user_input_rgb("Questions: ");
                 let statement = get_user_input_rgb("Statements: ");
 
-                let custom_scheme = ColorScheme {
+                ColorScheme {
                     informational,
                     warning,
                     success,
                     question,
                     statement,
-                };
-
-                color_scheme_to_hashmap(custom_scheme)
+                }
             }
             _ => unreachable!(),
         }
     };
 
+    // Create themed context for the rest of setup - applies user's choice immediately
+    let theme = ThemeContext::from_scheme(&chosen_scheme);
+
+    // Convert to HashMap for config storage
+    let mut config = color_scheme_to_hashmap(chosen_scheme);
+
     // ask about top_results
-    println!("\n{}", print_question("What sounds better to you?"));
+    println!("\n{}", theme.question("What sounds better to you?"));
     println!(
         "\n{}",
-        print_statement("1. ciphey will ask you everytime it detects plaintext if it is plaintext.\n2. ciphey stores all possible plaintext in a list, and at the end of the program presents it to you.")
+        theme.statement("1. ciphey will ask you everytime it detects plaintext if it is plaintext.\n2. ciphey stores all possible plaintext in a list, and at the end of the program presents it to you.")
     );
-    let wait_athena_choice = get_user_input_range("Enter your choice", 1, 2);
+    let wait_athena_choice = get_user_input_range_themed("Enter your choice", 1, 2, &theme);
 
     // Store the top_results choice in the config
     let top_results = wait_athena_choice == 2;
@@ -338,12 +415,13 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         // user has chosen to use top_results mode
         println!(
             "\n{}",
-            print_statement("ciphey by default runs for 5 seconds. For this mode we suggest 3 seconds. Please do not complain if you choose too high of a number and your PC freezes up.\n")
+            theme.statement("ciphey by default runs for 5 seconds. For this mode we suggest 3 seconds. Please do not complain if you choose too high of a number and your PC freezes up.\n")
         );
-        timeout = get_user_input_range(
+        timeout = get_user_input_range_themed(
             "How many seconds do you want ciphey to run? (3 suggested) seconds",
             1,
             500,
+            &theme,
         );
     }
 
@@ -353,21 +431,21 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     // Wordlist configuration
     println!(
         "{}",
-        print_question("\nWould you like ciphey to use custom wordlists to detect plaintext?")
+        theme.question("\nWould you like ciphey to use custom wordlists to detect plaintext?")
     );
     println!(
         "{}",
-        print_statement(
+        theme.statement(
             "ciphey can use custom wordlists to detect plaintext by checking for exact matches."
         )
     );
     println!(
         "{}",
-        print_warning("Note: If your wordlist is very large, this can generate excessive matches.")
+        theme.warning("Note: If your wordlist is very large, this can generate excessive matches.")
     );
 
-    if ask_yes_no_question("", false) {
-        if let Some(wordlist_path) = get_wordlist_path() {
+    if ask_yes_no_question_themed("", false, &theme) {
+        if let Some(wordlist_path) = get_wordlist_path_themed(&theme) {
             config.insert("wordlist_path".to_string(), wordlist_path);
         }
     }
@@ -375,34 +453,34 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
     // Enhanced detection section
     println!(
         "{}",
-        print_question("\nWould you like to enable Enhanced Plaintext Detection?")
+        theme.question("\nWould you like to enable Enhanced Plaintext Detection?")
     );
-    println!("{}", print_statement("This will increase accuracy by around 40%, and you will be asked less frequently if something is plaintext or not."));
+    println!("{}", theme.statement("This will increase accuracy by around 40%, and you will be asked less frequently if something is plaintext or not."));
     println!(
         "{}",
-        print_statement("This will download a 500mb AI model.")
-    );
-    println!(
-        "{}",
-        print_statement("You will need to follow these steps to download it:")
+        theme.statement("This will download a 500mb AI model.")
     );
     println!(
         "{}",
-        print_statement("1. Make a HuggingFace account https://huggingface.co/")
+        theme.statement("You will need to follow these steps to download it:")
     );
     println!(
         "{}",
-        print_statement("2. Make a READ Token https://huggingface.co/settings/tokens")
+        theme.statement("1. Make a HuggingFace account https://huggingface.co/")
     );
     println!(
         "{}",
-        print_warning(
+        theme.statement("2. Make a READ Token https://huggingface.co/settings/tokens")
+    );
+    println!(
+        "{}",
+        theme.warning(
             "Note: You will be able to do this later by running `ciphey --enable-enhanced-detection`"
         )
     );
-    println!("{}", print_statement("We will prompt you for the token if you click Yes. We will not store this token, just use it to download a model."));
+    println!("{}", theme.statement("We will prompt you for the token if you click Yes. We will not store this token, just use it to download a model."));
 
-    if ask_yes_no_question("", false) {
+    if ask_yes_no_question_themed("", false, &theme) {
         // Enable enhanced detection
         config.insert("enhanced_detection".to_string(), "true".to_string());
 
@@ -415,9 +493,8 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         std::fs::create_dir_all(&config_dir_path).unwrap_or_else(|_| {
             println!(
                 "{}",
-                print_warning(
-                    "Could not create models directory. Enhanced detection may not work."
-                )
+                theme
+                    .warning("Could not create models directory. Enhanced detection may not work.")
             );
         });
 
@@ -431,11 +508,11 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         // Prompt for HuggingFace token
         println!(
             "{}",
-            print_statement("Please enter your HuggingFace token:")
+            theme.statement("Please enter your HuggingFace token:")
         );
         print!(
             "{}",
-            print_question("Token [invisible for privacy reasons]: ")
+            theme.question("Token [invisible for privacy reasons]: ")
         );
         io::stdout().flush().unwrap();
 
@@ -446,19 +523,19 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
         if let Err(e) = download_model_with_progress_bar(&config_dir_path, Some(&token)) {
             println!(
                 "{}",
-                print_warning(format!("Failed to download model: {}", e))
+                theme.warning(&format!("Failed to download model: {}", e))
             );
             println!(
                 "{}",
-                print_warning("Enhanced detection may not work properly.")
+                theme.warning("Enhanced detection may not work properly.")
             );
         } else {
-            println!("{}", print_success("Model downloaded successfully!"));
+            println!("{}", theme.success("Model downloaded successfully!"));
         }
     }
 
     // show cute cat
-    if ask_yes_no_question("Do you want to see a cute cat?", false) {
+    if ask_yes_no_question_themed("Do you want to see a cute cat?", false, &theme) {
         println!(
             r#"
         /\_/\
@@ -513,6 +590,49 @@ fn ask_yes_no_question(question: &str, default_yes: bool) -> bool {
     }
 }
 
+/// Prompts the user with a yes/no question using the provided theme.
+///
+/// # Arguments
+/// * `question` - The question to display to the user
+/// * `default_yes` - Whether the default answer (when user presses enter) should be yes
+/// * `theme` - The ThemeContext to use for coloring output
+///
+/// # Returns
+/// * `bool` - true for yes, false for no
+fn ask_yes_no_question_themed(question: &str, default_yes: bool, theme: &ThemeContext) -> bool {
+    // Only print the question if it's not empty (for formatted sequences)
+    if !question.is_empty() {
+        println!("\n{}", theme.question(question));
+    }
+
+    // Create the prompt
+    let prompt = if default_yes { "(Y/n): " } else { "(y/N): " };
+
+    print!("{}", theme.question(prompt));
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    let input = input.trim().to_lowercase();
+
+    if input.is_empty() {
+        return default_yes;
+    }
+
+    match input.as_str() {
+        "y" | "yes" => true,
+        "n" | "no" => false,
+        _ => {
+            println!(
+                "{}",
+                theme.warning("Invalid input. Please enter 'y' or 'n'.")
+            );
+            ask_yes_no_question_themed(question, default_yes, theme)
+        }
+    }
+}
+
 /// Gets user input within a specified numeric range.
 ///
 /// # Arguments
@@ -544,6 +664,42 @@ fn get_user_input_range(prompt: &str, min: u32, max: u32) -> u32 {
                 ))
             );
             get_user_input_range(prompt, min, max)
+        }
+    }
+}
+
+/// Gets user input within a specified numeric range using the provided theme.
+///
+/// # Arguments
+/// * `prompt` - The prompt to display to the user
+/// * `min` - The minimum acceptable value (inclusive)
+/// * `max` - The maximum acceptable value (inclusive)
+/// * `theme` - The ThemeContext to use for coloring output
+///
+/// # Returns
+/// * `u32` - The user's input within the specified range
+fn get_user_input_range_themed(prompt: &str, min: u32, max: u32, theme: &ThemeContext) -> u32 {
+    // Create the input prompt with the provided prompt text
+    let input_prompt = format!("{} ({}-{}): ", prompt, min, max);
+    print!("{}", theme.question(&input_prompt));
+    io::stdout().flush().unwrap();
+
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
+
+    let input = input.trim();
+
+    match input.parse::<u32>() {
+        Ok(num) if num >= min && num <= max => num,
+        _ => {
+            println!(
+                "{}",
+                theme.warning(&format!(
+                    "Invalid input. Please enter a number between {} and {}.",
+                    min, max
+                ))
+            );
+            get_user_input_range_themed(prompt, min, max, theme)
         }
     }
 }
@@ -616,6 +772,7 @@ fn color_scheme_to_hashmap(scheme: ColorScheme) -> HashMap<String, String> {
 
 /// Prompts the user for a wordlist file path and validates that the file exists
 /// Returns the path if valid, or None if the user cancels
+#[allow(dead_code)]
 fn get_wordlist_path() -> Option<String> {
     println!(
         "\n{}",
@@ -646,6 +803,42 @@ fn get_wordlist_path() -> Option<String> {
         Err(e) => {
             println!("{}", print_warning(format!("Cannot read file: {}", e)));
             get_wordlist_path() // Recursively prompt until valid or cancelled
+        }
+    }
+}
+
+/// Prompts the user for a wordlist file path using the provided theme.
+/// Returns the path if valid, or None if the user cancels
+fn get_wordlist_path_themed(theme: &ThemeContext) -> Option<String> {
+    println!(
+        "\n{}",
+        theme.statement("Enter the path to your wordlist file:")
+    );
+    println!("{}", theme.statement("(Leave empty to cancel)"));
+
+    let mut input = String::new();
+    std::io::stdin()
+        .read_line(&mut input)
+        .expect("Failed to read input");
+    let input = input.trim();
+
+    if input.is_empty() {
+        println!("{}", theme.statement("No wordlist will be used."));
+        return None;
+    }
+
+    // Check if the file exists
+    if !Path::new(input).exists() {
+        println!("{}", theme.warning("File does not exist!"));
+        return get_wordlist_path_themed(theme); // Recursively prompt until valid or cancelled
+    }
+
+    // Check if the file is readable
+    match std::fs::File::open(input) {
+        Ok(_) => Some(input.to_string()),
+        Err(e) => {
+            println!("{}", theme.warning(&format!("Cannot read file: {}", e)));
+            get_wordlist_path_themed(theme) // Recursively prompt until valid or cancelled
         }
     }
 }

@@ -58,7 +58,9 @@ pub fn human_checker(input: &CheckResult) -> bool {
     cli_pretty_printing::success(&format!("DEBUG: Human checker returning: {}", result));
 
     if !result {
-        let fd_result = database::insert_human_rejection(uuid::Uuid::new_v4(), &input.text, input);
+        // Pass None for encoded_text and decoder_path for now
+        // These can be populated later when context threading is implemented
+        let fd_result = database::insert_human_rejection(&input.text, input, None, None);
         match fd_result {
             Ok(_) => (),
             Err(e) => {

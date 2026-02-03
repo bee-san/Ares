@@ -2,8 +2,20 @@
 //!
 //! This module contains helper functions used by the A* search algorithm
 //! for decoding encrypted or encoded text.
+//!
+//! ## Heuristic Design (Occam's Razor)
+//!
+//! The heuristic is designed with Occam's Razor in mind: simpler explanations
+//! (shorter decoding paths) are preferred. Key principles:
+//!
+//! 1. **Encoders vs Ciphers**: Repeated encoders (e.g., base64 × 5) are common
+//!    and cheap. Ciphers are rare and expensive.
+//! 2. **Path Complexity**: Rather than raw depth, we calculate "conceptual complexity"
+//!    where repeated same-encoder applications are discounted.
+//! 3. **Entropy**: Lower entropy text is more likely to be plaintext.
 
 use crate::decoders::interface::Crack;
+use crate::decoders::DECODER_MAP;
 use crate::CrackResult;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
@@ -12,6 +24,128 @@ use std::sync::Mutex;
 /// Track decoder success rates for adaptive learning
 pub static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
+
+/// Calculate Shannon entropy of a string (normalized to 0-1 range)
+///
+/// Entropy measures the "randomness" or information density of text.
+/// - Plaintext English typically has entropy ~0.4-0.5 (normalized)
+/// - Base64 encoded text has entropy ~0.75-0.85 (normalized)
+/// - Random/encrypted text has entropy ~0.95-1.0 (normalized)
+///
+/// Lower entropy suggests the text is more likely to be meaningful plaintext.
+///
+/// # Arguments
+///
+/// * `text` - The string to calculate entropy for
+///
+/// # Returns
+///
+/// * Normalized entropy value between 0.0 and 1.0
+pub fn calculate_entropy(text: &str) -> f32 {
+    if text.is_empty() {
+        return 1.0; // Empty string is maximally uncertain
+    }
+
+    let mut freq: HashMap<char, usize> = HashMap::new();
+    for c in text.chars() {
+        *freq.entry(c).or_insert(0) += 1;
+    }
+
+    let len = text.len() as f32;
+    let entropy: f32 = freq
+        .values()
+        .map(|&count| {
+            let p = count as f32 / len;
+            if p > 0.0 {
+                -p * p.log2()
+            } else {
+                0.0
+            }
+        })
+        .sum();
+
+    // Normalize: max entropy for ASCII printable is ~log2(95) ≈ 6.57
+    // We use 6.6 as the normalization factor
+    (entropy / 6.6).min(1.0)
+}
+
+/// Check if a decoder is an encoder (has "decoder" tag) vs a cipher
+///
+/// Encoders (Base64, Hex, etc.) can be nested many times.
+/// Ciphers (Caesar, Vigenère, etc.) are typically used 0-1 times.
+///
+/// # Arguments
+///
+/// * `decoder_name` - The name of the decoder to check
+///
+/// # Returns
+///
+/// * `true` if the decoder is an encoder, `false` if it's a cipher
+pub fn is_encoder(decoder_name: &str) -> bool {
+    if let Some(decoder_box) = DECODER_MAP.get(decoder_name) {
+        let decoder = decoder_box.get::<()>();
+        decoder.get_tags().contains(&"decoder")
+    } else {
+        // Default to treating unknown decoders as encoders (safer assumption)
+        true
+    }
+}
+
+/// Calculate category-aware path complexity for Occam's Razor
+///
+/// This function calculates the "conceptual complexity" of a decoding path,
+/// implementing Occam's Razor by making simpler explanations cheaper:
+///
+/// - Repeated same-encoder applications are cheap (0.2 each after the first)
+/// - Different encoders cost more (0.7 each)
+/// - Ciphers are expensive (2.0, escalating for multiple ciphers)
+///
+/// # Arguments
+///
+/// * `path` - The path of CrackResults representing decoders applied
+///
+/// # Returns
+///
+/// * The complexity score (lower = simpler = better)
+///
+/// # Examples
+///
+/// | Path | Cost |
+/// |------|------|
+/// | base64 × 5 | 0.7 + 0.2×4 = 1.5 |
+/// | base64 → base32 → hex | 0.7×3 = 2.1 |
+/// | base64 × 3 → caesar | 0.7 + 0.2×2 + 2.0 = 3.1 |
+/// | caesar → vigenere | 2.0 + 4.0 = 6.0 |
+pub fn calculate_path_complexity(path: &[CrackResult]) -> f32 {
+    if path.is_empty() {
+        return 0.0;
+    }
+
+    let mut complexity = 0.0;
+    let mut cipher_count = 0;
+    let mut prev_decoder: Option<&str> = None;
+
+    for step in path {
+        let is_enc = is_encoder(step.decoder);
+        let is_repeated = prev_decoder == Some(step.decoder);
+
+        if !is_enc {
+            // It's a cipher - expensive, escalating penalty for multiple
+            cipher_count += 1;
+            complexity += 2.0 * cipher_count as f32;
+        } else if is_repeated {
+            // Repeated same encoder (e.g., base64 → base64) is common
+            complexity += 0.2;
+        } else {
+            // Different encoder
+            complexity += 0.7;
+        }
+
+        prev_decoder = Some(step.decoder);
+    }
+
+    complexity
+}
 
 /// Update decoder statistics based on success or failure
 ///
@@ -148,59 +282,57 @@ pub fn calculate_non_printable_ratio(text: &str) -> f32 {
 /// Generate a heuristic value for A* search prioritization
 ///
 /// The heuristic estimates how close a state is to being plaintext.
-/// A lower value indicates a more promising state. This implementation uses:
-/// 1. Decoder popularity (lower heuristic for more popular decoders)
-/// 2. Adaptive depth penalty (higher heuristic for deeper paths, with increasing penalty as depth grows)
-/// 3. String quality component (higher heuristic for lower quality strings)
-/// 4. Uncommon sequence penalty (higher heuristic for uncommon decoder sequences)
+/// A lower value indicates a more promising state.
+///
+/// ## Design Philosophy (Occam's Razor)
+///
+/// This heuristic is designed with Occam's Razor in mind: simpler explanations
+/// should be preferred. The heuristic estimates the remaining "distance" to
+/// plaintext based on:
+///
+/// 1. **Entropy**: Lower entropy text is more likely to be plaintext
+/// 2. **Decoder success rate**: Use learned statistics about which decoders work
+/// 3. **String quality**: Penalize garbled or non-printable text
+///
+/// Note: Path complexity is handled separately in `calculate_path_complexity`
+/// and used as the `g` (cost) component of A*, not the `h` (heuristic).
 ///
 /// # Parameters
 ///
 /// * `text` - The text to analyze
-/// * `path` - The path of decoders used to reach the current state
+/// * `path` - The path of decoders used to reach the current state (unused in new impl)
 /// * `next_decoder` - The next decoder to be applied (if any)
 ///
 /// # Returns
 /// A float value representing the heuristic cost (lower is better)
+#[allow(unused_variables)]
 pub fn generate_heuristic(
     text: &str,
     path: &[CrackResult],
     next_decoder: &Option<Box<dyn Crack + Sync>>,
 ) -> f32 {
-    let mut base_score = 0.0;
+    let mut score = 0.0;
 
-    // 1. Popularity component - directly use (1.0 - popularity)
+    // 1. Entropy score: lower entropy = more plaintext-like = lower score
+    // Entropy is normalized to 0-1, we scale it for importance
+    let entropy = calculate_entropy(text);
+    score += entropy * 2.0; // Range: 0-2
+
+    // 2. Decoder success rate prior (if we know what decoder might be next)
+    // Higher success rate = lower penalty
     if let Some(decoder) = next_decoder {
-        // Use the decoder's popularity via the get_popularity method (higher popularity = lower score)
-        base_score += 1.0 - decoder.get_popularity();
+        let success_rate = get_decoder_success_rate(decoder.get_name());
+        score += (1.0 - success_rate) * 0.5; // Range: 0-0.5
     } else {
-        // If next decoder is None, add a moderate penalty
-        base_score += 0.5;
+        // Unknown next decoder, moderate penalty
+        score += 0.25;
     }
 
-    // 2. Depth penalty - exponential growth but not too aggressive
-    // Use an adaptive coefficient that increases as the path gets deeper
-    // This makes the algorithm more aggressive in pruning deep paths as the search progresses
-    let depth_coefficient = 0.05 * (1.0 + (path.len() as f32 / 20.0));
-    base_score += (depth_coefficient * path.len() as f32).powi(2);
-
-    // 3. String quality component - penalize low quality strings
-    // Lower quality = higher penalty
+    // 3. String quality penalty
     let quality = calculate_string_quality(text);
-    base_score += (1.0 - quality) * 0.5;
+    score += (1.0 - quality) * 0.5; // Range: 0-0.5
 
-    // 4. Penalty for uncommon pairings
-    if path.len() > 1 {
-        if let Some(previous_decoder) = path.last() {
-            if let Some(next_decoder) = next_decoder {
-                if !is_common_sequence(previous_decoder.decoder, next_decoder.get_name()) {
-                    base_score += 0.25;
-                }
-            }
-        }
-    }
-
-    base_score
+    score
 }
 
 /// Determines if a string is too short to be meaningfully decoded
@@ -250,24 +382,142 @@ mod tests {
     use crate::Decoder;
 
     #[test]
+    fn test_calculate_entropy() {
+        // Empty string should have max entropy (uncertain)
+        assert_eq!(calculate_entropy(""), 1.0);
+
+        // String with single repeated character should have very low entropy
+        let single_char = "aaaaaaaaaa";
+        assert!(calculate_entropy(single_char) < 0.1);
+
+        // Normal English text should have moderate entropy (~0.4-0.6)
+        let english = "Hello World this is a test";
+        let english_entropy = calculate_entropy(english);
+        assert!(english_entropy > 0.3 && english_entropy < 0.7);
+
+        // Base64 should have higher entropy than English
+        let base64 = "SGVsbG8gV29ybGQhdGhpcyBpcyBhIHRlc3Q=";
+        let base64_entropy = calculate_entropy(base64);
+        assert!(base64_entropy > english_entropy);
+
+        // Random-looking text should have high entropy
+        let random = "x9Kj2mPq8Zf3Yw5Lr1Nt";
+        let random_entropy = calculate_entropy(random);
+        assert!(random_entropy > 0.6);
+    }
+
+    #[test]
+    fn test_is_encoder() {
+        // Base64 should be an encoder (has "decoder" tag)
+        assert!(is_encoder("Base64"));
+
+        // Caesar should NOT be an encoder (it's a cipher)
+        assert!(!is_encoder("caesar"));
+
+        // Unknown decoder defaults to encoder (safer assumption)
+        assert!(is_encoder("UnknownDecoder12345"));
+    }
+
+    #[test]
+    fn test_calculate_path_complexity() {
+        // Empty path should have zero complexity
+        assert_eq!(calculate_path_complexity(&[]), 0.0);
+
+        // Create mock CrackResults for different decoder types
+        let base64_result = {
+            let mut r = CrackResult::new(&Decoder::default(), "test".to_string());
+            r.decoder = "Base64"; // This is an encoder
+            r
+        };
+
+        let caesar_result = {
+            let mut r = CrackResult::new(&Decoder::default(), "test".to_string());
+            r.decoder = "caesar"; // This is a cipher
+            r
+        };
+
+        // Single encoder: 0.7
+        let single_encoder = vec![base64_result.clone()];
+        assert!((calculate_path_complexity(&single_encoder) - 0.7).abs() < 0.01);
+
+        // Repeated encoder (base64 × 3): 0.7 + 0.2 + 0.2 = 1.1
+        let repeated_encoder = vec![
+            base64_result.clone(),
+            base64_result.clone(),
+            base64_result.clone(),
+        ];
+        assert!((calculate_path_complexity(&repeated_encoder) - 1.1).abs() < 0.01);
+
+        // Single cipher: 2.0
+        let single_cipher = vec![caesar_result.clone()];
+        assert!((calculate_path_complexity(&single_cipher) - 2.0).abs() < 0.01);
+
+        // Two ciphers: 2.0 + 4.0 = 6.0 (escalating penalty)
+        let two_ciphers = vec![caesar_result.clone(), caesar_result.clone()];
+        assert!((calculate_path_complexity(&two_ciphers) - 6.0).abs() < 0.01);
+
+        // Mixed: base64 × 3 + caesar = 1.1 + 2.0 = 3.1
+        let mixed = vec![
+            base64_result.clone(),
+            base64_result.clone(),
+            base64_result.clone(),
+            caesar_result.clone(),
+        ];
+        assert!((calculate_path_complexity(&mixed) - 3.1).abs() < 0.01);
+    }
+
+    #[test]
     fn test_generate_heuristic() {
-        // Create some CrackResults for path testing
-        let crack_result = CrackResult::new(&Decoder::default(), "test".to_string());
+        // Test that heuristic is non-negative
+        let h = generate_heuristic("test", &[], &None);
+        assert!(h >= 0.0);
 
-        // Test with different path lengths
-        let depth_0 = generate_heuristic("test", &[], &None);
-        let depth_5 = generate_heuristic("test", &vec![crack_result.clone(); 5], &None);
-        let depth_10 = generate_heuristic("test", &vec![crack_result.clone(); 10], &None);
+        // Test that lower entropy text has lower heuristic
+        // "aaaa" has very low entropy (repeated chars)
+        // "x9Kj2mPq" has higher entropy (looks random)
+        let low_entropy_h = generate_heuristic("aaaaaaaaaaaaaaaa", &[], &None);
+        let high_entropy_h = generate_heuristic("x9Kj2mPq8Zf3Yw5L", &[], &None);
+        assert!(low_entropy_h < high_entropy_h);
+    }
 
-        // Verify that deeper paths have higher scores
-        assert!(depth_0 < depth_5);
-        assert!(depth_5 < depth_10);
+    #[test]
+    fn test_path_complexity_occams_razor() {
+        // This test verifies that Occam's Razor is respected:
+        // base64 × 10 should be cheaper than caesar → vigenere → atbash
 
-        // Verify that the depth penalty is approximately (0.05 * depth)^2
-        assert!((depth_5 - depth_0 - 0.0625).abs() < 0.1);
+        let base64_result = {
+            let mut r = CrackResult::new(&Decoder::default(), "test".to_string());
+            r.decoder = "Base64";
+            r
+        };
 
-        // Verify base case isn't negative
-        assert!(depth_0 >= 0.0);
+        let caesar_result = {
+            let mut r = CrackResult::new(&Decoder::default(), "test".to_string());
+            r.decoder = "caesar";
+            r
+        };
+
+        let vigenere_result = {
+            let mut r = CrackResult::new(&Decoder::default(), "test".to_string());
+            r.decoder = "Vigenere";
+            r
+        };
+
+        // base64 × 10: 0.7 + 0.2×9 = 2.5
+        let many_base64: Vec<CrackResult> = (0..10).map(|_| base64_result.clone()).collect();
+        let base64_cost = calculate_path_complexity(&many_base64);
+
+        // caesar → vigenere (different ciphers): 2.0 + 4.0 = 6.0
+        let two_ciphers = vec![caesar_result.clone(), vigenere_result.clone()];
+        let cipher_cost = calculate_path_complexity(&two_ciphers);
+
+        // Verify Occam's Razor: 10 base64s < 2 different ciphers
+        assert!(
+            base64_cost < cipher_cost,
+            "base64×10 ({}) should be cheaper than caesar→vigenere ({})",
+            base64_cost,
+            cipher_cost
+        );
     }
 
     #[test]

@@ -275,8 +275,22 @@ fn success_result_to_cache(
             -1
         }
     };
+
+    // Extract checker_name and key_used from the last CrackResult in the path
+    let (checker_name, key_used) = match result.path.last() {
+        Some(last_result) => {
+            let checker = if last_result.checker_name.is_empty() {
+                None
+            } else {
+                Some(last_result.checker_name.to_string())
+            };
+            let key = last_result.key.clone();
+            (checker, key)
+        }
+        None => (None, None),
+    };
+
     let cache_entry = storage::database::CacheEntry {
-        uuid: uuid::Uuid::new_v4(),
         encoded_text: String::from(text),
         decoded_text: match result.text.last() {
             Some(d_text) => String::from(d_text),
@@ -284,6 +298,10 @@ fn success_result_to_cache(
         },
         path: result.path.clone(),
         execution_time_ms,
+        input_length: text.len() as i64,
+        decoder_count: result.path.len() as i64,
+        checker_name,
+        key_used,
     };
     storage::database::insert_cache(&cache_entry)
 }
@@ -336,7 +354,7 @@ pub fn set_test_db_path() {
     let mut path = get_test_dir_path();
     std::fs::create_dir_all(&path).expect("Could not create .ciphey directory");
     path.push("database.sqlite");
-    let _ = crate::storage::database::DB_PATH.set(Some(path));
+    crate::storage::database::set_db_path(Some(path));
 }
 
 /// Helper struct for testing database
@@ -358,6 +376,8 @@ impl Default for TestDatabase {
 #[doc(hidden)]
 impl Drop for TestDatabase {
     fn drop(&mut self) {
+        // Clear the DB_PATH so subsequent tests can set it fresh
+        crate::storage::database::clear_db_path();
         let mut db_file_path = self.path.as_path().to_path_buf();
         db_file_path.push("database.sqlite");
         let _ = std::fs::remove_file(&db_file_path);

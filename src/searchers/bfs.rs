@@ -2,6 +2,8 @@ use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::MyResults;
 use crossbeam::channel::Sender;
 
+use super::helper_functions::check_if_string_cant_be_decoded;
+
 use log::trace;
 use std::collections::HashSet;
 use std::sync::atomic::AtomicBool;
@@ -90,12 +92,6 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
         trace!("Refreshed the vector, {:?}", current_strings);
     }
     result_sender.try_send(None).ok();
-}
-
-/// If this returns False it will not attempt to decode that string
-#[allow(dead_code)]
-fn check_if_string_cant_be_decoded(text: &str) -> bool {
-    text.len() <= 2
 }
 
 #[cfg(test)]

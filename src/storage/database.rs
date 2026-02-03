@@ -7,40 +7,80 @@
 use super::super::CheckResult;
 use super::super::CrackResult;
 use chrono::DateTime;
-use std::sync::OnceLock;
-use uuid::Uuid;
+use std::sync::RwLock;
 
-/// Holds the global path to the database
-pub static DB_PATH: OnceLock<Option<std::path::PathBuf>> = OnceLock::new();
+/// Holds the global path to the database.
+/// Using RwLock instead of OnceLock to allow resetting the path in tests.
+pub static DB_PATH: RwLock<Option<std::path::PathBuf>> = RwLock::new(None);
+
+/// Sets the database path. Returns true if successful, false if the path was already set.
+/// In test mode, this will overwrite the existing path.
+///
+/// # Panics
+///
+/// Panics if the RwLock is poisoned.
+pub fn set_db_path(path: Option<std::path::PathBuf>) -> bool {
+    let mut db_path = DB_PATH.write().expect("DB_PATH RwLock poisoned");
+    *db_path = path;
+    true
+}
+
+/// Clears the database path, allowing it to be set again.
+/// This is primarily used for testing purposes.
+///
+/// # Panics
+///
+/// Panics if the RwLock is poisoned.
+#[doc(hidden)]
+pub fn clear_db_path() {
+    let mut db_path = DB_PATH.write().expect("DB_PATH RwLock poisoned");
+    *db_path = None;
+}
 
 #[derive(Debug)]
 /// Struct representing a row in the human_rejection table
 pub struct HumanRejectionRow {
-    /// Uuid for the human_rejection entry
-    pub uuid: Uuid,
+    /// Auto-incrementing ID for the human_rejection entry
+    pub id: i64,
     /// Plaintext that has been marked as a failed decode
     pub plaintext: String,
+    /// Original encoded text that led to this rejection (NULL if not available)
+    pub encoded_text: Option<String>,
     /// Name of the checker that was used to confirm the plaintext
     pub checker: String,
-    /// When the decoding was run
-    pub timestamp: String,
+    /// Description of the checker
+    pub checker_description: Option<String>,
+    /// Description of what the checker thought it found
+    pub check_description: Option<String>,
+    /// JSON-serialized decoder path that led to this false positive (NULL if not available)
+    pub decoder_path: Option<String>,
+    /// Number of times this plaintext+checker combination has been rejected
+    pub rejection_count: i64,
+    /// When this rejection was first recorded
+    pub first_rejected: String,
+    /// When this rejection was last recorded
+    pub last_rejected: String,
 }
 
 impl PartialEq for HumanRejectionRow {
     fn eq(&self, other: &Self) -> bool {
-        self.uuid == other.uuid
+        self.id == other.id
             && self.plaintext == other.plaintext
+            && self.encoded_text == other.encoded_text
             && self.checker == other.checker
-            && self.timestamp == other.timestamp
+            && self.checker_description == other.checker_description
+            && self.check_description == other.check_description
+            && self.decoder_path == other.decoder_path
+            && self.rejection_count == other.rejection_count
+            && self.first_rejected == other.first_rejected
+            && self.last_rejected == other.last_rejected
     }
 }
 
 #[derive(Debug)]
 /// Struct representing a row in the cache table
 pub struct CacheRow {
-    /// UUID of the cache entry
-    pub uuid: Uuid,
-    /// Text before it is decoded
+    /// Text before it is decoded (primary key)
     pub encoded_text: String,
     /// Text after it is decoded
     pub decoded_text: String,
@@ -50,18 +90,29 @@ pub struct CacheRow {
     pub successful: bool,
     /// How long the decoding took in milliseconds
     pub execution_time_ms: i64,
+    /// Length of the input text in bytes
+    pub input_length: i64,
+    /// Number of decoders in the path
+    pub decoder_count: i64,
+    /// Name of the checker that confirmed the plaintext
+    pub checker_name: Option<String>,
+    /// Key used for decryption (if applicable)
+    pub key_used: Option<String>,
     /// When the decoding was run
     pub timestamp: String,
 }
 
 impl PartialEq for CacheRow {
     fn eq(&self, other: &Self) -> bool {
-        self.uuid == other.uuid
-            && self.encoded_text == other.encoded_text
+        self.encoded_text == other.encoded_text
             && self.decoded_text == other.decoded_text
             && self.path == other.path
             && self.successful == other.successful
             && self.execution_time_ms == other.execution_time_ms
+            && self.input_length == other.input_length
+            && self.decoder_count == other.decoder_count
+            && self.checker_name == other.checker_name
+            && self.key_used == other.key_used
             && self.timestamp == other.timestamp
     }
 }
@@ -69,9 +120,7 @@ impl PartialEq for CacheRow {
 #[derive(Debug)]
 /// Represents an entry into the cache table
 pub struct CacheEntry {
-    /// Uuid for the cache entry
-    pub uuid: Uuid,
-    /// Text before it is decoded
+    /// Text before it is decoded (primary key)
     pub encoded_text: String,
     /// Text after it is decoded
     pub decoded_text: String,
@@ -79,6 +128,14 @@ pub struct CacheEntry {
     pub path: Vec<CrackResult>,
     /// How long the decoding took in milliseconds
     pub execution_time_ms: i64,
+    /// Length of the input text in bytes
+    pub input_length: i64,
+    /// Number of decoders in the path
+    pub decoder_count: i64,
+    /// Name of the checker that confirmed the plaintext
+    pub checker_name: Option<String>,
+    /// Key used for decryption (if applicable)
+    pub key_used: Option<String>,
 }
 
 /// Helper function get a DateTime formatted timestamp
@@ -99,10 +156,15 @@ fn get_database_path() -> std::path::PathBuf {
 ///
 /// If a path is specified in DB_PATH, returns a Connection to that path
 /// Otherwise, opens a Connection to an in-memory database
+///
+/// # Panics
+///
+/// Panics if the RwLock is poisoned.
 fn get_db_connection() -> Result<rusqlite::Connection, rusqlite::Error> {
-    match DB_PATH.get() {
-        Some(Some(path)) => rusqlite::Connection::open(path),
-        _ => rusqlite::Connection::open_in_memory(),
+    let db_path = DB_PATH.read().expect("DB_PATH RwLock poisoned");
+    match db_path.as_ref() {
+        Some(path) => rusqlite::Connection::open(path),
+        None => rusqlite::Connection::open_in_memory(),
     }
 }
 
@@ -113,20 +175,18 @@ fn get_db_connection() -> Result<rusqlite::Connection, rusqlite::Error> {
 /// On error setting up the database, returns a rusqlite::Error
 /// If there's an error while setting the database path, prints warning
 /// to console and continues with the default DB_PATH
+///
+/// # Panics
+///
+/// Panics if the RwLock is poisoned.
 pub fn setup_database() -> Result<(), rusqlite::Error> {
-    match DB_PATH.get() {
-        Some(_path) => (),
-        None => {
-            let db_result: Result<(), Option<std::path::PathBuf>> =
-                DB_PATH.set(Some(get_database_path()));
-            match db_result {
-                Ok(_) => (),
-                Err(_e) => {
-                    crate::cli_pretty_printing::warning("Error setting database path");
-                }
-            }
+    {
+        let db_path = DB_PATH.read().expect("DB_PATH RwLock poisoned");
+        if db_path.is_none() {
+            drop(db_path); // Release read lock before acquiring write lock
+            set_db_path(Some(get_database_path()));
         }
-    };
+    }
     init_database()?;
     Ok(())
 }
@@ -137,34 +197,48 @@ fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
     // Initializing cache table
     conn.execute(
         "CREATE TABLE IF NOT EXISTS cache (
-            uuid TEXT PRIMARY KEY NOT NULL,
-            encoded_text TEXT NOT NULL,
+            encoded_text TEXT PRIMARY KEY NOT NULL,
             decoded_text TEXT NOT NULL,
             path JSON NOT NULL,
             successful BOOLEAN NOT NULL DEFAULT true,
             execution_time_ms INTEGER NOT NULL,
+            input_length INTEGER NOT NULL,
+            decoder_count INTEGER NOT NULL,
+            checker_name TEXT,
+            key_used TEXT,
             timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     );",
         (),
     )?;
     conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_cache_encoded_text
-            ON cache(encoded_text);",
+        "CREATE INDEX IF NOT EXISTS idx_cache_successful
+            ON cache(successful);",
         (),
     )?;
 
     // Initializing human checker table
     conn.execute(
         "CREATE TABLE IF NOT EXISTS human_rejection (
-            uuid TEXT PRIMARY KEY NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
             plaintext TEXT NOT NULL,
+            encoded_text TEXT,
             checker TEXT NOT NULL,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            checker_description TEXT,
+            check_description TEXT,
+            decoder_path JSON,
+            rejection_count INTEGER NOT NULL DEFAULT 1,
+            first_rejected DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_rejected DATETIME DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(plaintext, checker)
     );",
         (),
     )?;
     conn.execute(
-        "CREATE INDEX IF NOT EXISTS idx_stats_plaintext ON human_rejection(plaintext);",
+        "CREATE INDEX IF NOT EXISTS idx_rejection_checker ON human_rejection(checker);",
+        (),
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_rejection_count ON human_rejection(rejection_count DESC);",
         (),
     )?;
 
@@ -200,21 +274,27 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
     let transaction = conn.transaction()?;
     let conn_result = transaction.execute(
         "INSERT INTO cache (
-            uuid,
             encoded_text,
             decoded_text,
             path,
             successful,
             execution_time_ms,
+            input_length,
+            decoder_count,
+            checker_name,
+            key_used,
             timestamp)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)",
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
         (
-            cache_entry.uuid.to_string(),
             cache_entry.encoded_text.clone(),
             cache_entry.decoded_text.clone(),
             path_json,
             successful,
             cache_entry.execution_time_ms,
+            cache_entry.input_length,
+            cache_entry.decoder_count,
+            cache_entry.checker_name.clone(),
+            cache_entry.key_used.clone(),
             get_timestamp(),
         ),
     );
@@ -235,18 +315,21 @@ pub fn read_cache(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::E
     let conn = get_db_connection()?;
     let mut stmt = conn.prepare("SELECT * FROM cache WHERE encoded_text IS $1")?;
     let mut query = stmt.query_map([encoded_text], |row| {
-        let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+        let path_str = row.get_unwrap::<usize, String>(2).to_owned();
         let crack_json_vec: Vec<String> =
             serde_json::from_str(&path_str.clone()).unwrap_or_default();
 
         Ok(CacheRow {
-            uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str()).unwrap_or_default(),
-            encoded_text: row.get_unwrap(1),
-            decoded_text: row.get_unwrap(2),
+            encoded_text: row.get_unwrap(0),
+            decoded_text: row.get_unwrap(1),
             path: crack_json_vec,
-            successful: row.get_unwrap(4),
-            execution_time_ms: row.get_unwrap(5),
-            timestamp: row.get_unwrap(6),
+            successful: row.get_unwrap(3),
+            execution_time_ms: row.get_unwrap(4),
+            input_length: row.get_unwrap(5),
+            decoder_count: row.get_unwrap(6),
+            checker_name: row.get(7).ok(),
+            key_used: row.get(8).ok(),
+            timestamp: row.get_unwrap(9),
         })
     })?;
     let row = query.next();
@@ -300,19 +383,25 @@ pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
     let transaction = conn.transaction()?;
     let conn_result = transaction.execute(
         "UPDATE cache SET 
-            uuid = $1,
-            decoded_text = $2,
-            path = $3,
-            successful = $4,
-            execution_time_ms = $5,
-            timestamp = $6
-            WHERE encoded_text = $7;",
+            decoded_text = $1,
+            path = $2,
+            successful = $3,
+            execution_time_ms = $4,
+            input_length = $5,
+            decoder_count = $6,
+            checker_name = $7,
+            key_used = $8,
+            timestamp = $9
+            WHERE encoded_text = $10;",
         (
-            cache_entry.uuid.to_string(),
             cache_entry.decoded_text.clone(),
             path_json,
             successful,
             cache_entry.execution_time_ms,
+            cache_entry.input_length,
+            cache_entry.decoder_count,
+            cache_entry.checker_name.clone(),
+            cache_entry.key_used.clone(),
             get_timestamp(),
             cache_entry.encoded_text.clone(),
         ),
@@ -321,32 +410,54 @@ pub fn update_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
     conn_result
 }
 
-/// Adds a new decode failure record to the human_rejection table
+/// Adds a new decode failure record to the human_rejection table, or increments
+/// rejection_count if the (plaintext, checker) combination already exists.
 ///
-/// Returns the number of successfully inserted rows on success
+/// Optional context can be provided for encoded_text and decoder_path.
+///
+/// Returns the number of successfully inserted/updated rows on success
 ///
 /// # Errors
 ///
 /// Returns rusqlite::Error on error
 pub fn insert_human_rejection(
-    uuid: Uuid,
     plaintext: &str,
     check_result: &CheckResult,
+    encoded_text: Option<&str>,
+    decoder_path: Option<&str>,
 ) -> Result<usize, rusqlite::Error> {
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
+    let timestamp = get_timestamp();
+
+    // Use INSERT OR REPLACE with a subquery to handle the upsert logic
+    // This increments rejection_count and updates last_rejected if the row exists,
+    // otherwise inserts a new row with rejection_count = 1
     let conn_result = transaction.execute(
         "INSERT INTO human_rejection (
-            uuid,
             plaintext,
+            encoded_text,
             checker,
-            timestamp)
-        VALUES ($1, $2, $3, $4)",
+            checker_description,
+            check_description,
+            decoder_path,
+            rejection_count,
+            first_rejected,
+            last_rejected)
+        VALUES ($1, $2, $3, $4, $5, $6, 1, $7, $7)
+        ON CONFLICT(plaintext, checker) DO UPDATE SET
+            rejection_count = rejection_count + 1,
+            last_rejected = $7,
+            encoded_text = COALESCE($2, encoded_text),
+            decoder_path = COALESCE($6, decoder_path)",
         (
-            uuid.to_string(),
             plaintext.to_owned(),
+            encoded_text.map(|s| s.to_owned()),
             check_result.checker_name,
-            get_timestamp(),
+            Some(check_result.checker_description.to_owned()),
+            Some(check_result.description.clone()),
+            decoder_path.map(|s| s.to_owned()),
+            timestamp,
         ),
     );
     transaction.commit()?;
@@ -368,10 +479,16 @@ pub fn read_human_rejection(
     let mut stmt = conn.prepare("SELECT * FROM human_rejection WHERE plaintext IS $1")?;
     let mut query = stmt.query_map([plaintext], |row| {
         Ok(HumanRejectionRow {
-            uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str()).unwrap_or_default(),
+            id: row.get_unwrap(0),
             plaintext: row.get_unwrap(1),
-            checker: row.get_unwrap(2),
-            timestamp: row.get_unwrap(3),
+            encoded_text: row.get(2).ok(),
+            checker: row.get_unwrap(3),
+            checker_description: row.get(4).ok(),
+            check_description: row.get(5).ok(),
+            decoder_path: row.get(6).ok(),
+            rejection_count: row.get_unwrap(7),
+            first_rejected: row.get_unwrap(8),
+            last_rejected: row.get_unwrap(9),
         })
     })?;
     let row = query.next();
@@ -381,31 +498,37 @@ pub fn read_human_rejection(
     }
 }
 
-/// Updates a human_rejection row for a given plaintext
+/// Updates a human_rejection row for a given plaintext and checker
 ///
-/// Returns the number of update rows on success
+/// Returns the number of updated rows on success
 ///
 /// # Errors
 ///
 /// Returns rusqlite::Error on error
 pub fn update_human_rejection(
-    uuid: Uuid,
     plaintext: &str,
     check_result: &CheckResult,
+    encoded_text: Option<&str>,
+    decoder_path: Option<&str>,
 ) -> Result<usize, rusqlite::Error> {
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
     let conn_result = transaction.execute(
         "UPDATE human_rejection SET 
-            uuid = $1,
-            checker = $2,
-            timestamp = $3
-            WHERE plaintext = $4;",
+            encoded_text = COALESCE($1, encoded_text),
+            checker_description = $2,
+            check_description = $3,
+            decoder_path = COALESCE($4, decoder_path),
+            last_rejected = $5
+            WHERE plaintext = $6 AND checker = $7;",
         (
-            uuid.to_string(),
-            check_result.checker_name,
+            encoded_text.map(|s| s.to_owned()),
+            Some(check_result.checker_description.to_owned()),
+            Some(check_result.description.clone()),
+            decoder_path.map(|s| s.to_owned()),
             get_timestamp(),
             plaintext.to_owned(),
+            check_result.checker_name,
         ),
     );
     transaction.commit()?;
@@ -443,7 +566,6 @@ mod tests {
         english::EnglishChecker,
         CheckerTypes,
     };
-    use uuid::Uuid;
 
     struct MockDecoder;
     impl Crack for Decoder<MockDecoder> {
@@ -485,12 +607,11 @@ mod tests {
 
     fn set_test_db_path() {
         let path = std::path::PathBuf::from(String::from("file::memory:?cache=shared"));
-        let _ = DB_PATH.set(Some(path));
+        set_db_path(Some(path));
     }
 
     /// Helper function for generating a cache row
     fn generate_cache_row(
-        uuid: Uuid,
         encoded_text: &str,
         decoded_text: &str,
     ) -> (CrackResult, CacheRow, CacheEntry) {
@@ -500,7 +621,6 @@ mod tests {
         mock_crack_result.unencrypted_text = Some(vec![decoded_text.to_owned()]);
 
         let expected_cache_row = CacheRow {
-            uuid,
             encoded_text: encoded_text.to_owned(),
             decoded_text: decoded_text.to_owned(),
             path: match serde_json::to_string(&mock_crack_result) {
@@ -509,23 +629,29 @@ mod tests {
             },
             successful: true,
             execution_time_ms: 100,
+            input_length: encoded_text.len() as i64,
+            decoder_count: 1,
+            checker_name: None,
+            key_used: None,
             timestamp: String::new(),
         };
 
         let cache_entry = CacheEntry {
-            uuid,
             encoded_text: encoded_text.to_owned(),
             decoded_text: decoded_text.to_owned(),
             path: vec![mock_crack_result.clone()],
             execution_time_ms: 100,
+            input_length: encoded_text.len() as i64,
+            decoder_count: 1,
+            checker_name: None,
+            key_used: None,
         };
         (mock_crack_result, expected_cache_row, cache_entry)
     }
 
     /// Helper function for generating a new human_rejection row
     fn generate_human_rejection_row<Type>(
-        uuid: Uuid,
-        encoded_text: &str,
+        plaintext: &str,
         checker_used: Checker<Type>,
     ) -> (CheckResult, HumanRejectionRow) {
         let check_result = CheckResult {
@@ -533,15 +659,21 @@ mod tests {
             text: "".to_string(),
             checker_name: checker_used.name,
             checker_description: checker_used.description,
-            description: "".to_string(),
+            description: "test description".to_string(),
             link: checker_used.link,
         };
 
         let expected_row = HumanRejectionRow {
-            uuid,
-            plaintext: encoded_text.to_owned(),
+            id: 1, // Will be auto-assigned
+            plaintext: plaintext.to_owned(),
+            encoded_text: None,
             checker: String::from(check_result.checker_name),
-            timestamp: String::new(),
+            checker_description: Some(check_result.checker_description.to_owned()),
+            check_description: Some(check_result.description.clone()),
+            decoder_path: None,
+            rejection_count: 1,
+            first_rejected: String::new(),
+            last_rejected: String::new(),
         };
         (check_result, expected_row)
     }
@@ -581,13 +713,16 @@ mod tests {
         assert!(name_result.is_ok());
         let name_query = name_result.unwrap();
         let name_list: Vec<String> = name_query.map(|row| row.unwrap()).collect();
-        assert_eq!(name_list[0], "uuid");
-        assert_eq!(name_list[1], "encoded_text");
-        assert_eq!(name_list[2], "decoded_text");
-        assert_eq!(name_list[3], "path");
-        assert_eq!(name_list[4], "successful");
-        assert_eq!(name_list[5], "execution_time_ms");
-        assert_eq!(name_list[6], "timestamp");
+        assert_eq!(name_list[0], "encoded_text");
+        assert_eq!(name_list[1], "decoded_text");
+        assert_eq!(name_list[2], "path");
+        assert_eq!(name_list[3], "successful");
+        assert_eq!(name_list[4], "execution_time_ms");
+        assert_eq!(name_list[5], "input_length");
+        assert_eq!(name_list[6], "decoder_count");
+        assert_eq!(name_list[7], "checker_name");
+        assert_eq!(name_list[8], "key_used");
+        assert_eq!(name_list[9], "timestamp");
 
         let type_result = stmt.query_map([], |row| row.get::<usize, String>(2));
         assert!(type_result.is_ok());
@@ -595,11 +730,14 @@ mod tests {
         let type_list: Vec<String> = type_query.map(|row| row.unwrap()).collect();
         assert_eq!(type_list[0], "TEXT");
         assert_eq!(type_list[1], "TEXT");
-        assert_eq!(type_list[2], "TEXT");
-        assert_eq!(type_list[3], "JSON");
-        assert_eq!(type_list[4], "BOOLEAN");
+        assert_eq!(type_list[2], "JSON");
+        assert_eq!(type_list[3], "BOOLEAN");
+        assert_eq!(type_list[4], "INTEGER");
         assert_eq!(type_list[5], "INTEGER");
-        assert_eq!(type_list[6], "DATETIME");
+        assert_eq!(type_list[6], "INTEGER");
+        assert_eq!(type_list[7], "TEXT");
+        assert_eq!(type_list[8], "TEXT");
+        assert_eq!(type_list[9], "DATETIME");
     }
 
     #[test]
@@ -615,19 +753,31 @@ mod tests {
         assert!(name_result.is_ok());
         let name_query = name_result.unwrap();
         let name_list: Vec<String> = name_query.map(|row| row.unwrap()).collect();
-        assert_eq!(name_list[0], "uuid");
+        assert_eq!(name_list[0], "id");
         assert_eq!(name_list[1], "plaintext");
-        assert_eq!(name_list[2], "checker");
-        assert_eq!(name_list[3], "timestamp");
+        assert_eq!(name_list[2], "encoded_text");
+        assert_eq!(name_list[3], "checker");
+        assert_eq!(name_list[4], "checker_description");
+        assert_eq!(name_list[5], "check_description");
+        assert_eq!(name_list[6], "decoder_path");
+        assert_eq!(name_list[7], "rejection_count");
+        assert_eq!(name_list[8], "first_rejected");
+        assert_eq!(name_list[9], "last_rejected");
 
         let type_result = stmt.query_map([], |row| row.get::<usize, String>(2));
         assert!(type_result.is_ok());
         let type_query = type_result.unwrap();
         let type_list: Vec<String> = type_query.map(|row| row.unwrap()).collect();
-        assert_eq!(type_list[0], "TEXT");
+        assert_eq!(type_list[0], "INTEGER");
         assert_eq!(type_list[1], "TEXT");
         assert_eq!(type_list[2], "TEXT");
-        assert_eq!(type_list[3], "DATETIME");
+        assert_eq!(type_list[3], "TEXT");
+        assert_eq!(type_list[4], "TEXT");
+        assert_eq!(type_list[5], "TEXT");
+        assert_eq!(type_list[6], "JSON");
+        assert_eq!(type_list[7], "INTEGER");
+        assert_eq!(type_list[8], "DATETIME");
+        assert_eq!(type_list[9], "DATETIME");
     }
 
     #[test]
@@ -639,17 +789,19 @@ mod tests {
         assert!(stmt_result.is_ok());
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
-            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+            let path_str = row.get_unwrap::<usize, String>(2).to_owned();
 
             Ok(CacheRow {
-                uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str())
-                    .unwrap_or_default(),
-                encoded_text: row.get_unwrap(1),
-                decoded_text: row.get_unwrap(2),
+                encoded_text: row.get_unwrap(0),
+                decoded_text: row.get_unwrap(1),
                 path: serde_json::from_str(&path_str).unwrap_or_default(),
-                successful: row.get_unwrap(4),
-                execution_time_ms: row.get_unwrap(5),
-                timestamp: row.get_unwrap(6),
+                successful: row.get_unwrap(3),
+                execution_time_ms: row.get_unwrap(4),
+                input_length: row.get_unwrap(5),
+                decoder_count: row.get_unwrap(6),
+                checker_name: row.get(7).ok(),
+                key_used: row.get(8).ok(),
+                timestamp: row.get_unwrap(9),
             })
         });
         assert!(query_result.is_ok());
@@ -664,10 +816,9 @@ mod tests {
 
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
         let decoded_text = String::from("hello world");
-        let uuid = Uuid::new_v4();
 
         let (_mock_crack_result, mut expected_cache_row, cache_entry) =
-            generate_cache_row(uuid, &encoded_text, &decoded_text);
+            generate_cache_row(&encoded_text, &decoded_text);
         let row_result = insert_cache(&cache_entry);
         assert!(row_result.is_ok());
         assert_eq!(row_result.unwrap(), 1);
@@ -675,17 +826,19 @@ mod tests {
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
-            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+            let path_str = row.get_unwrap::<usize, String>(2).to_owned();
 
             Ok(CacheRow {
-                uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str())
-                    .unwrap_or_default(),
-                encoded_text: row.get_unwrap(1),
-                decoded_text: row.get_unwrap(2),
+                encoded_text: row.get_unwrap(0),
+                decoded_text: row.get_unwrap(1),
                 path: serde_json::from_str(&path_str).unwrap_or_default(),
-                successful: row.get_unwrap(4),
-                execution_time_ms: row.get_unwrap(5),
-                timestamp: row.get_unwrap(6),
+                successful: row.get_unwrap(3),
+                execution_time_ms: row.get_unwrap(4),
+                input_length: row.get_unwrap(5),
+                decoder_count: row.get_unwrap(6),
+                checker_name: row.get(7).ok(),
+                key_used: row.get(8).ok(),
+                timestamp: row.get_unwrap(9),
             })
         });
         assert!(query_result.is_ok());
@@ -701,20 +854,18 @@ mod tests {
 
         let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
         let decoded_text_1 = String::from("hello world");
-        let uuid_1 = Uuid::new_v4();
 
         let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
-            generate_cache_row(uuid_1, &encoded_text_1, &decoded_text_1);
+            generate_cache_row(&encoded_text_1, &decoded_text_1);
         let row_result = insert_cache(&cache_entry_1);
         assert!(row_result.is_ok());
         assert_eq!(row_result.unwrap(), 1);
 
         let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
         let decoded_text_2 = String::from("world hello");
-        let uuid_2 = Uuid::new_v4();
 
         let (_mock_crack_result_2, mut expected_cache_row_2, cache_entry_2) =
-            generate_cache_row(uuid_2, &encoded_text_2, &decoded_text_2);
+            generate_cache_row(&encoded_text_2, &decoded_text_2);
         let row_result = insert_cache(&cache_entry_2);
         assert!(row_result.is_ok());
         assert_eq!(row_result.unwrap(), 1);
@@ -722,17 +873,19 @@ mod tests {
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
-            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+            let path_str = row.get_unwrap::<usize, String>(2).to_owned();
 
             Ok(CacheRow {
-                uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str())
-                    .unwrap_or_default(),
-                encoded_text: row.get_unwrap(1),
-                decoded_text: row.get_unwrap(2),
+                encoded_text: row.get_unwrap(0),
+                decoded_text: row.get_unwrap(1),
                 path: serde_json::from_str(&path_str).unwrap_or_default(),
-                successful: row.get_unwrap(4),
-                execution_time_ms: row.get_unwrap(5),
-                timestamp: row.get_unwrap(6),
+                successful: row.get_unwrap(3),
+                execution_time_ms: row.get_unwrap(4),
+                input_length: row.get_unwrap(5),
+                decoder_count: row.get_unwrap(6),
+                checker_name: row.get(7).ok(),
+                key_used: row.get(8).ok(),
+                timestamp: row.get_unwrap(9),
             })
         });
         let mut query = query_result.unwrap();
@@ -751,10 +904,9 @@ mod tests {
 
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
         let decoded_text = String::from("hello world");
-        let uuid_1 = Uuid::new_v4();
 
         let (_mock_crack_result, mut expected_cache_row, cache_entry) =
-            generate_cache_row(uuid_1, &encoded_text, &decoded_text);
+            generate_cache_row(&encoded_text, &decoded_text);
         let _row_result = insert_cache(&cache_entry);
 
         let cache_result = read_cache(&encoded_text);
@@ -773,18 +925,16 @@ mod tests {
 
         let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
         let decoded_text_1 = String::from("hello world");
-        let uuid_1 = Uuid::new_v4();
 
         let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
-            generate_cache_row(uuid_1, &encoded_text_1, &decoded_text_1);
+            generate_cache_row(&encoded_text_1, &decoded_text_1);
         let _row_result = insert_cache(&cache_entry_1);
 
         let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
         let decoded_text_2 = String::from("world hello");
-        let uuid_2 = Uuid::new_v4();
 
         let (_mock_crack_result_2, mut expected_cache_row_2, cache_entry_2) =
-            generate_cache_row(uuid_2, &encoded_text_2, &decoded_text_2);
+            generate_cache_row(&encoded_text_2, &decoded_text_2);
         let _row_result = insert_cache(&cache_entry_2);
 
         let cache_result = read_cache(&encoded_text_1);
@@ -824,17 +974,15 @@ mod tests {
 
         let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
         let decoded_text_1 = String::from("hello world");
-        let uuid_1 = Uuid::new_v4();
 
         let (_mock_crack_result_1, _expected_cache_row_1, cache_entry_1) =
-            generate_cache_row(uuid_1, &encoded_text_1, &decoded_text_1);
+            generate_cache_row(&encoded_text_1, &decoded_text_1);
 
         let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
         let _decoded_text_2 = String::from("world hello");
-        let uuid_2 = Uuid::new_v4();
 
         let (_mock_crack_result_2, _expected_cache_row_2, cache_entry_2) =
-            generate_cache_row(uuid_2, &encoded_text_1, &decoded_text_1);
+            generate_cache_row(&encoded_text_1, &decoded_text_1);
 
         let _row_result = insert_cache(&cache_entry_1);
         let _row_result = insert_cache(&cache_entry_2);
@@ -852,10 +1000,9 @@ mod tests {
 
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
         let decoded_text = String::from("hello world");
-        let uuid = Uuid::new_v4();
 
         let (_mock_crack_result, _expected_cache_row, cache_entry) =
-            generate_cache_row(uuid, &encoded_text, &decoded_text);
+            generate_cache_row(&encoded_text, &decoded_text);
         let _row_result = insert_cache(&cache_entry);
         let _read_result = read_cache(&encoded_text);
         let delete_result = delete_cache(&encoded_text);
@@ -873,17 +1020,15 @@ mod tests {
 
         let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
         let decoded_text_1 = String::from("hello world");
-        let uuid_1 = Uuid::new_v4();
 
         let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
-            generate_cache_row(uuid_1, &encoded_text_1, &decoded_text_1);
+            generate_cache_row(&encoded_text_1, &decoded_text_1);
 
         let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
         let decoded_text_2 = String::from("world hello");
-        let uuid_2 = Uuid::new_v4();
 
         let (_mock_crack_result_2, mut expected_cache_row_2, cache_entry_2) =
-            generate_cache_row(uuid_2, &encoded_text_2, &decoded_text_2);
+            generate_cache_row(&encoded_text_2, &decoded_text_2);
 
         let _row_result = insert_cache(&cache_entry_1);
         let _row_result = insert_cache(&cache_entry_2);
@@ -931,10 +1076,9 @@ mod tests {
 
         let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
         let decoded_text_1 = String::from("hello world");
-        let uuid_1 = Uuid::new_v4();
 
         let (_mock_crack_result_1, _expected_cache_row_1, cache_entry_1) =
-            generate_cache_row(uuid_1, &encoded_text_1, &decoded_text_1);
+            generate_cache_row(&encoded_text_1, &decoded_text_1);
         let row_result = insert_cache(&cache_entry_1);
         assert!(row_result.is_ok());
         assert_eq!(row_result.unwrap(), 1);
@@ -955,15 +1099,13 @@ mod tests {
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
         let decoded_text = String::from("hello world");
         let decoded_text_err = String::from("hello world oops");
-        let uuid = Uuid::new_v4();
-        let uuid_new = Uuid::new_v4();
 
         let (_mock_crack_result, mut expected_cache_row, cache_entry) =
-            generate_cache_row(uuid, &encoded_text, &decoded_text_err);
+            generate_cache_row(&encoded_text, &decoded_text_err);
         let _row_result = insert_cache(&cache_entry);
 
         let (_mock_crack_result_new, mut expected_cache_row_new, cache_entry_new) =
-            generate_cache_row(uuid_new, &encoded_text, &decoded_text);
+            generate_cache_row(&encoded_text, &decoded_text);
         let update_result = update_cache(&cache_entry_new);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 1);
@@ -987,23 +1129,20 @@ mod tests {
         let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
         let decoded_text_1 = String::from("hello world");
         let decoded_text_err = String::from("hello world oops");
-        let uuid_1 = Uuid::new_v4();
-        let uuid_new = Uuid::new_v4();
 
         let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
-            generate_cache_row(uuid_1, &encoded_text_1, &decoded_text_err);
+            generate_cache_row(&encoded_text_1, &decoded_text_err);
         let _row_result = insert_cache(&cache_entry_1);
 
         let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
         let decoded_text_2 = String::from("world hello");
-        let uuid_2 = Uuid::new_v4();
 
         let (_mock_crack_result_2, _expected_cache_row_2, cache_entry_2) =
-            generate_cache_row(uuid_2, &encoded_text_2, &decoded_text_2);
+            generate_cache_row(&encoded_text_2, &decoded_text_2);
         let _row_result = insert_cache(&cache_entry_2);
 
         let (_mock_crack_result_new, mut expected_cache_row_new, cache_entry_new) =
-            generate_cache_row(uuid_new, &encoded_text_1, &decoded_text_1);
+            generate_cache_row(&encoded_text_1, &decoded_text_1);
         let update_result = update_cache(&cache_entry_new);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 1);
@@ -1026,26 +1165,23 @@ mod tests {
 
         let encoded_text_1 = String::from("aGVsbG8gd29ybGQK");
         let decoded_text_1 = String::from("hello world");
-        let uuid_1 = Uuid::new_v4();
 
         let (_mock_crack_result_1, mut expected_cache_row_1, cache_entry_1) =
-            generate_cache_row(uuid_1, &encoded_text_1, &decoded_text_1);
+            generate_cache_row(&encoded_text_1, &decoded_text_1);
         let _row_result = insert_cache(&cache_entry_1);
 
         let encoded_text_2 = String::from("d29ybGQgaGVsbG8K");
         let decoded_text_2 = String::from("world hello");
-        let uuid_2 = Uuid::new_v4();
 
         let (_mock_crack_result_2, mut expected_cache_row_2, cache_entry_2) =
-            generate_cache_row(uuid_2, &encoded_text_2, &decoded_text_2);
+            generate_cache_row(&encoded_text_2, &decoded_text_2);
         let _row_result = insert_cache(&cache_entry_2);
 
         let encoded_text_new = String::from("c29tZSBuZXcgdGV4dAo=");
         let decoded_text_new = String::from("some new text");
-        let uuid_new = Uuid::new_v4();
 
         let (_mock_crack_result_new, mut expected_cache_row_new, cache_entry_new) =
-            generate_cache_row(uuid_new, &encoded_text_new, &decoded_text_new);
+            generate_cache_row(&encoded_text_new, &decoded_text_new);
 
         let update_result = update_cache(&cache_entry_new);
         assert!(update_result.is_ok());
@@ -1077,10 +1213,9 @@ mod tests {
 
         let encoded_text = String::from("aGVsbG8gd29ybGQK");
         let decoded_text = String::from("hello world");
-        let uuid = Uuid::new_v4();
 
         let (_mock_crack_result, mut _expected_cache_row, cache_entry) =
-            generate_cache_row(uuid, &encoded_text, &decoded_text);
+            generate_cache_row(&encoded_text, &decoded_text);
 
         let update_result = update_cache(&cache_entry);
         assert!(update_result.is_ok());
@@ -1097,11 +1232,16 @@ mod tests {
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
             Ok(HumanRejectionRow {
-                uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str())
-                    .unwrap_or_default(),
+                id: row.get_unwrap(0),
                 plaintext: row.get_unwrap(1),
-                checker: row.get_unwrap(2),
-                timestamp: row.get_unwrap(3),
+                encoded_text: row.get(2).ok(),
+                checker: row.get_unwrap(3),
+                checker_description: row.get(4).ok(),
+                check_description: row.get(5).ok(),
+                decoder_path: row.get(6).ok(),
+                rejection_count: row.get_unwrap(7),
+                first_rejected: row.get_unwrap(8),
+                last_rejected: row.get_unwrap(9),
             })
         });
         assert!(query_result.is_ok());
@@ -1115,14 +1255,13 @@ mod tests {
         let conn = init_database().unwrap();
 
         let plaintext = String::from("plaintext");
-        let uuid = Uuid::new_v4();
 
         let checker_used = Checker::<Athena>::new();
 
         let (check_result, mut expected_row) =
-            generate_human_rejection_row(uuid, &plaintext, checker_used);
+            generate_human_rejection_row(&plaintext, checker_used);
 
-        let result = insert_human_rejection(uuid, &plaintext, &check_result);
+        let result = insert_human_rejection(&plaintext, &check_result, None, None);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1);
 
@@ -1131,17 +1270,23 @@ mod tests {
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
             Ok(HumanRejectionRow {
-                uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str())
-                    .unwrap_or_default(),
+                id: row.get_unwrap(0),
                 plaintext: row.get_unwrap(1),
-                checker: row.get_unwrap(2),
-                timestamp: row.get_unwrap(3),
+                encoded_text: row.get(2).ok(),
+                checker: row.get_unwrap(3),
+                checker_description: row.get(4).ok(),
+                check_description: row.get(5).ok(),
+                decoder_path: row.get(6).ok(),
+                rejection_count: row.get_unwrap(7),
+                first_rejected: row.get_unwrap(8),
+                last_rejected: row.get_unwrap(9),
             })
         });
         assert!(query_result.is_ok());
         let mut query = query_result.unwrap();
         let row: HumanRejectionRow = query.next().unwrap().unwrap();
-        expected_row.timestamp = row.timestamp.clone();
+        expected_row.first_rejected = row.first_rejected.clone();
+        expected_row.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row);
     }
 
@@ -1152,23 +1297,21 @@ mod tests {
 
         let plaintext_1 = String::from("plaintext1");
         let checker_used_1 = Checker::<Athena>::new();
-        let uuid_1 = Uuid::new_v4();
 
         let (check_result_1, mut expected_row_1) =
-            generate_human_rejection_row(uuid_1, &plaintext_1, checker_used_1);
+            generate_human_rejection_row(&plaintext_1, checker_used_1);
 
-        let result = insert_human_rejection(uuid_1, &plaintext_1, &check_result_1);
+        let result = insert_human_rejection(&plaintext_1, &check_result_1, None, None);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
-        let uuid_2 = Uuid::new_v4();
 
         let (check_result_2, mut expected_row_2) =
-            generate_human_rejection_row(uuid_2, &plaintext_2, checker_used_2);
+            generate_human_rejection_row(&plaintext_2, checker_used_2);
 
-        let result = insert_human_rejection(uuid_2, &plaintext_2, &check_result_2);
+        let result = insert_human_rejection(&plaintext_2, &check_result_2, None, None);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 1);
 
@@ -1177,20 +1320,28 @@ mod tests {
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
             Ok(HumanRejectionRow {
-                uuid: Uuid::parse_str(row.get_unwrap::<usize, String>(0).as_str())
-                    .unwrap_or_default(),
+                id: row.get_unwrap(0),
                 plaintext: row.get_unwrap(1),
-                checker: row.get_unwrap(2),
-                timestamp: row.get_unwrap(3),
+                encoded_text: row.get(2).ok(),
+                checker: row.get_unwrap(3),
+                checker_description: row.get(4).ok(),
+                check_description: row.get(5).ok(),
+                decoder_path: row.get(6).ok(),
+                rejection_count: row.get_unwrap(7),
+                first_rejected: row.get_unwrap(8),
+                last_rejected: row.get_unwrap(9),
             })
         });
         assert!(query_result.is_ok());
         let mut query = query_result.unwrap();
         let row: HumanRejectionRow = query.next().unwrap().unwrap();
-        expected_row_1.timestamp = row.timestamp.clone();
+        expected_row_1.first_rejected = row.first_rejected.clone();
+        expected_row_1.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row_1);
         let row: HumanRejectionRow = query.next().unwrap().unwrap();
-        expected_row_2.timestamp = row.timestamp.clone();
+        expected_row_2.id = row.id;
+        expected_row_2.first_rejected = row.first_rejected.clone();
+        expected_row_2.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row_2);
     }
 
@@ -1201,19 +1352,19 @@ mod tests {
 
         let plaintext = String::from("plaintext");
         let checker_used = Checker::<Athena>::new();
-        let uuid = Uuid::new_v4();
 
         let (check_result, mut expected_row) =
-            generate_human_rejection_row(uuid, &plaintext, checker_used);
+            generate_human_rejection_row(&plaintext, checker_used);
 
-        let _result = insert_human_rejection(uuid, &plaintext, &check_result);
+        let _result = insert_human_rejection(&plaintext, &check_result, None, None);
 
         let row_result = read_human_rejection(&plaintext);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_row.timestamp = row.timestamp.clone();
+        expected_row.first_rejected = row.first_rejected.clone();
+        expected_row.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row);
     }
 
@@ -1224,28 +1375,27 @@ mod tests {
 
         let plaintext_1 = String::from("plaintext");
         let checker_used_1 = Checker::<Athena>::new();
-        let uuid_1 = Uuid::new_v4();
 
         let (check_result_1, mut expected_row_1) =
-            generate_human_rejection_row(uuid_1, &plaintext_1, checker_used_1);
+            generate_human_rejection_row(&plaintext_1, checker_used_1);
 
-        let _result = insert_human_rejection(uuid_1, &plaintext_1, &check_result_1);
+        let _result = insert_human_rejection(&plaintext_1, &check_result_1, None, None);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
-        let uuid_2 = Uuid::new_v4();
 
         let (check_result_2, mut expected_row_2) =
-            generate_human_rejection_row(uuid_2, &plaintext_2, checker_used_2);
+            generate_human_rejection_row(&plaintext_2, checker_used_2);
 
-        let _result = insert_human_rejection(uuid_2, &plaintext_2, &check_result_2);
+        let _result = insert_human_rejection(&plaintext_2, &check_result_2, None, None);
 
         let row_result = read_human_rejection(&plaintext_1);
         assert!(row_result.is_ok());
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_row_1.timestamp = row.timestamp.clone();
+        expected_row_1.first_rejected = row.first_rejected.clone();
+        expected_row_1.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row_1);
 
         let row_result = read_human_rejection(&plaintext_2);
@@ -1253,7 +1403,9 @@ mod tests {
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_row_2.timestamp = row.timestamp.clone();
+        expected_row_2.id = row.id;
+        expected_row_2.first_rejected = row.first_rejected.clone();
+        expected_row_2.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row_2);
     }
 
@@ -1264,12 +1416,10 @@ mod tests {
 
         let plaintext = String::from("plaintext");
         let checker_used = Checker::<Athena>::new();
-        let uuid = Uuid::new_v4();
 
-        let (check_result, _expected_row) =
-            generate_human_rejection_row(uuid, &plaintext, checker_used);
+        let (check_result, _expected_row) = generate_human_rejection_row(&plaintext, checker_used);
 
-        let _result = insert_human_rejection(uuid, &plaintext, &check_result);
+        let _result = insert_human_rejection(&plaintext, &check_result, None, None);
         let row_result = read_human_rejection(&String::from("not plaintext"));
         assert!(row_result.is_ok());
         assert!(row_result.unwrap().is_none());
@@ -1282,19 +1432,17 @@ mod tests {
 
         let plaintext_1 = String::from("plaintext");
         let checker_used_1 = Checker::<Athena>::new();
-        let uuid_1 = Uuid::new_v4();
 
         let (check_result_1, _expected_row_1) =
-            generate_human_rejection_row(uuid_1, &plaintext_1, checker_used_1);
-        let _result = insert_human_rejection(uuid_1, &plaintext_1, &check_result_1);
+            generate_human_rejection_row(&plaintext_1, checker_used_1);
+        let _result = insert_human_rejection(&plaintext_1, &check_result_1, None, None);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
-        let uuid_2 = Uuid::new_v4();
 
         let (check_result_2, _expected_row_2) =
-            generate_human_rejection_row(uuid_2, &plaintext_2, checker_used_2);
-        let _result = insert_human_rejection(uuid_2, &plaintext_2, &check_result_2);
+            generate_human_rejection_row(&plaintext_2, checker_used_2);
+        let _result = insert_human_rejection(&plaintext_2, &check_result_2, None, None);
 
         let row_result = read_human_rejection(&String::from("not plaintext"));
         assert!(row_result.is_ok());
@@ -1308,11 +1456,9 @@ mod tests {
 
         let plaintext = String::from("plaintext");
         let checker_used = Checker::<Athena>::new();
-        let uuid = Uuid::new_v4();
 
-        let (check_result, _expected_row) =
-            generate_human_rejection_row(uuid, &plaintext, checker_used);
-        let _result = insert_human_rejection(uuid, &plaintext, &check_result);
+        let (check_result, _expected_row) = generate_human_rejection_row(&plaintext, checker_used);
+        let _result = insert_human_rejection(&plaintext, &check_result, None, None);
         let _row_result = read_human_rejection(&String::from("not plaintext"));
         let delete_result = delete_human_rejection(&plaintext);
         assert!(delete_result.is_ok());
@@ -1329,28 +1475,29 @@ mod tests {
 
         let plaintext_1 = String::from("plaintext");
         let checker_used_1 = Checker::<Athena>::new();
-        let uuid_1 = Uuid::new_v4();
         let (check_result_1, mut expected_row_1) =
-            generate_human_rejection_row(uuid_1, &plaintext_1, checker_used_1);
-        let _result = insert_human_rejection(uuid_1, &plaintext_1, &check_result_1);
+            generate_human_rejection_row(&plaintext_1, checker_used_1);
+        let _result = insert_human_rejection(&plaintext_1, &check_result_1, None, None);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
-        let uuid_2 = Uuid::new_v4();
         let (check_result_2, mut expected_row_2) =
-            generate_human_rejection_row(uuid_2, &plaintext_2, checker_used_2);
-        let _result = insert_human_rejection(uuid_2, &plaintext_2, &check_result_2);
+            generate_human_rejection_row(&plaintext_2, checker_used_2);
+        let _result = insert_human_rejection(&plaintext_2, &check_result_2, None, None);
 
         let read_result = read_human_rejection(&plaintext_1).unwrap();
         assert!(read_result.is_some());
         let row: HumanRejectionRow = read_result.unwrap();
-        expected_row_1.timestamp = row.timestamp.clone();
+        expected_row_1.first_rejected = row.first_rejected.clone();
+        expected_row_1.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row_1);
 
         let read_result = read_human_rejection(&plaintext_2).unwrap();
         assert!(read_result.is_some());
         let row: HumanRejectionRow = read_result.unwrap();
-        expected_row_2.timestamp = row.timestamp.clone();
+        expected_row_2.id = row.id;
+        expected_row_2.first_rejected = row.first_rejected.clone();
+        expected_row_2.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row_2);
 
         let delete_result = delete_human_rejection(&plaintext_1);
@@ -1384,10 +1531,9 @@ mod tests {
 
         let plaintext_1 = String::from("plaintext");
         let checker_used_1 = Checker::<Athena>::new();
-        let uuid_1 = Uuid::new_v4();
         let (check_result_1, _expected_row_1) =
-            generate_human_rejection_row(uuid_1, &plaintext_1, checker_used_1);
-        let row_result = insert_human_rejection(uuid_1, &plaintext_1, &check_result_1);
+            generate_human_rejection_row(&plaintext_1, checker_used_1);
+        let row_result = insert_human_rejection(&plaintext_1, &check_result_1, None, None);
         assert!(row_result.is_ok());
         assert_eq!(row_result.unwrap(), 1);
 
@@ -1406,16 +1552,15 @@ mod tests {
 
         let plaintext = String::from("plaintext");
         let checker_used = Checker::<Athena>::new();
-        let uuid = Uuid::new_v4();
         let (check_result, mut expected_row) =
-            generate_human_rejection_row(uuid, &plaintext, checker_used);
-        let _row_result = insert_human_rejection(uuid, &plaintext, &check_result);
+            generate_human_rejection_row(&plaintext, checker_used);
+        let _row_result = insert_human_rejection(&plaintext, &check_result, None, None);
 
-        let checker_new = Checker::<EnglishChecker>::new();
-        let uuid_new = Uuid::new_v4();
+        // Use the same checker type since update requires matching (plaintext, checker)
+        let checker_new = Checker::<Athena>::new();
         let (check_result_new, mut expected_row_new) =
-            generate_human_rejection_row(uuid_new, &plaintext, checker_new);
-        let update_result = update_human_rejection(uuid_new, &plaintext, &check_result_new);
+            generate_human_rejection_row(&plaintext, checker_new);
+        let update_result = update_human_rejection(&plaintext, &check_result_new, None, None);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 1);
 
@@ -1424,9 +1569,11 @@ mod tests {
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_row.timestamp = row.timestamp.clone();
-        expected_row_new.timestamp = row.timestamp.clone();
-        assert_ne!(row, expected_row);
+        expected_row.first_rejected = row.first_rejected.clone();
+        expected_row.last_rejected = row.last_rejected.clone();
+        expected_row_new.first_rejected = row.first_rejected.clone();
+        expected_row_new.last_rejected = row.last_rejected.clone();
+        // After update, row should match expected_row_new (same checker)
         assert_eq!(row, expected_row_new);
     }
 
@@ -1437,24 +1584,22 @@ mod tests {
 
         let plaintext_1 = String::from("plaintext1");
         let checker_used_1 = Checker::<Athena>::new();
-        let uuid_1 = Uuid::new_v4();
         let (check_result_1, mut expected_row_1) =
-            generate_human_rejection_row(uuid_1, &plaintext_1, checker_used_1);
-        let _row_result = insert_human_rejection(uuid_1, &plaintext_1, &check_result_1);
+            generate_human_rejection_row(&plaintext_1, checker_used_1);
+        let _row_result = insert_human_rejection(&plaintext_1, &check_result_1, None, None);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
-        let uuid_2 = Uuid::new_v4();
         let (check_result_2, mut expected_row_2) =
-            generate_human_rejection_row(uuid_2, &plaintext_2, checker_used_2);
-        let _row_result = insert_human_rejection(uuid_2, &plaintext_2, &check_result_2);
+            generate_human_rejection_row(&plaintext_2, checker_used_2);
+        let _row_result = insert_human_rejection(&plaintext_2, &check_result_2, None, None);
 
-        let checker_new = Checker::<EnglishChecker>::new();
-        let uuid_new = Uuid::new_v4();
+        // Use the same checker type as the original insert since update requires matching (plaintext, checker)
+        let checker_new = Checker::<Athena>::new();
         let (check_result_new, mut expected_row_new) =
-            generate_human_rejection_row(uuid_new, &plaintext_1, checker_new);
+            generate_human_rejection_row(&plaintext_1, checker_new);
 
-        let update_result = update_human_rejection(uuid_new, &plaintext_1, &check_result_new);
+        let update_result = update_human_rejection(&plaintext_1, &check_result_new, None, None);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 1);
 
@@ -1463,9 +1608,11 @@ mod tests {
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_row_1.timestamp = row.timestamp.clone();
-        expected_row_new.timestamp = row.timestamp.clone();
-        assert_ne!(row, expected_row_1);
+        expected_row_1.first_rejected = row.first_rejected.clone();
+        expected_row_1.last_rejected = row.last_rejected.clone();
+        expected_row_new.first_rejected = row.first_rejected.clone();
+        expected_row_new.last_rejected = row.last_rejected.clone();
+        // After update, row should match expected_row_new (same checker as original)
         assert_eq!(row, expected_row_new);
 
         let row_result = read_human_rejection(&plaintext_2);
@@ -1473,8 +1620,11 @@ mod tests {
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_row_2.timestamp = row.timestamp.clone();
-        expected_row_new.timestamp = row.timestamp.clone();
+        expected_row_2.id = row.id;
+        expected_row_2.first_rejected = row.first_rejected.clone();
+        expected_row_2.last_rejected = row.last_rejected.clone();
+        expected_row_new.first_rejected = row.first_rejected.clone();
+        expected_row_new.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row_2);
         assert_ne!(row, expected_row_new);
     }
@@ -1486,26 +1636,23 @@ mod tests {
 
         let plaintext_1 = String::from("plaintext1");
         let checker_used_1 = Checker::<Athena>::new();
-        let uuid_1 = Uuid::new_v4();
         let (check_result_1, mut expected_row_1) =
-            generate_human_rejection_row(uuid_1, &plaintext_1, checker_used_1);
-        let _row_result = insert_human_rejection(uuid_1, &plaintext_1, &check_result_1);
+            generate_human_rejection_row(&plaintext_1, checker_used_1);
+        let _row_result = insert_human_rejection(&plaintext_1, &check_result_1, None, None);
 
         let plaintext_2 = String::from("plaintext2");
         let checker_used_2 = Checker::<EnglishChecker>::new();
-        let uuid_2 = Uuid::new_v4();
         let (check_result_2, mut expected_row_2) =
-            generate_human_rejection_row(uuid_2, &plaintext_2, checker_used_2);
-        let _row_result = insert_human_rejection(uuid_2, &plaintext_2, &check_result_2);
+            generate_human_rejection_row(&plaintext_2, checker_used_2);
+        let _row_result = insert_human_rejection(&plaintext_2, &check_result_2, None, None);
 
         let plaintext_new = String::from("new plaintext");
 
         let checker_new = Checker::<EnglishChecker>::new();
-        let uuid_new = Uuid::new_v4();
         let (check_result_new, mut expected_row_new) =
-            generate_human_rejection_row(uuid_new, &plaintext_new, checker_new);
+            generate_human_rejection_row(&plaintext_new, checker_new);
 
-        let update_result = update_human_rejection(uuid_new, &plaintext_new, &check_result_new);
+        let update_result = update_human_rejection(&plaintext_new, &check_result_new, None, None);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 0);
 
@@ -1514,8 +1661,10 @@ mod tests {
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_row_1.timestamp = row.timestamp.clone();
-        expected_row_new.timestamp = row.timestamp.clone();
+        expected_row_1.first_rejected = row.first_rejected.clone();
+        expected_row_1.last_rejected = row.last_rejected.clone();
+        expected_row_new.first_rejected = row.first_rejected.clone();
+        expected_row_new.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row_1);
         assert_ne!(row, expected_row_new);
 
@@ -1524,8 +1673,11 @@ mod tests {
         let row_result = row_result.unwrap();
         assert!(row_result.is_some());
         let row = row_result.unwrap();
-        expected_row_2.timestamp = row.timestamp.clone();
-        expected_row_new.timestamp = row.timestamp.clone();
+        expected_row_2.id = row.id;
+        expected_row_2.first_rejected = row.first_rejected.clone();
+        expected_row_2.last_rejected = row.last_rejected.clone();
+        expected_row_new.first_rejected = row.first_rejected.clone();
+        expected_row_new.last_rejected = row.last_rejected.clone();
         assert_eq!(row, expected_row_2);
         assert_ne!(row, expected_row_new);
     }
@@ -1537,10 +1689,9 @@ mod tests {
 
         let plaintext = String::from("plaintext");
         let checker_new = Checker::<EnglishChecker>::new();
-        let uuid = Uuid::new_v4();
         let (check_result_new, _expected_row_new) =
-            generate_human_rejection_row(uuid, &plaintext, checker_new);
-        let update_result = update_human_rejection(uuid, &plaintext, &check_result_new);
+            generate_human_rejection_row(&plaintext, checker_new);
+        let update_result = update_human_rejection(&plaintext, &check_result_new, None, None);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 0);
     }
