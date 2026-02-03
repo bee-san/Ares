@@ -23,7 +23,7 @@ bench = false
 ansi_term = "0.12.1"
 chrono = "0.4.43"
 cipher_identifier = "0.2.0"
-clap = {version = "4.5.56", features = ["derive"]}
+clap = {version = "4.5.57", features = ["derive"]}
 termcolor = "1.4"
 crossbeam = "0.8"
 dirs = "6.0.0"
