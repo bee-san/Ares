@@ -4,7 +4,7 @@
 //! runs the decoding in a background thread, and handles the event loop.
 
 use std::io::{self, Stdout};
-use std::sync::mpsc;
+use std::sync::mpsc::{self, Receiver};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -20,6 +20,9 @@ use crate::DecoderResult;
 
 use super::app::App;
 use super::colors::TuiColors;
+use super::human_checker_bridge::{
+    init_tui_confirmation_channel, take_confirmation_receiver, TuiConfirmationRequest,
+};
 use super::input::{copy_to_clipboard, handle_key_event, Action};
 use super::ui::draw;
 
@@ -57,6 +60,13 @@ const QUOTE_ROTATION_TICKS: usize = 30;
 ///
 /// May panic if terminal initialization fails in an unrecoverable way.
 pub fn run_tui(input_text: &str, config: Config) -> TuiResult<()> {
+    // Initialize the human checker bridge channel BEFORE spawning the cracker thread
+    // This allows the human checker to communicate with the TUI
+    init_tui_confirmation_channel();
+
+    // Take the confirmation receiver for the event loop
+    let confirmation_receiver = take_confirmation_receiver();
+
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -87,7 +97,7 @@ pub fn run_tui(input_text: &str, config: Config) -> TuiResult<()> {
     });
 
     // Run the main loop
-    let result = run_event_loop(&mut terminal, &mut app, &colors, rx);
+    let result = run_event_loop(&mut terminal, &mut app, &colors, rx, confirmation_receiver);
 
     // Restore terminal
     disable_raw_mode()?;
@@ -104,11 +114,13 @@ pub fn run_tui(input_text: &str, config: Config) -> TuiResult<()> {
 /// Runs the main event loop.
 ///
 /// Handles UI updates, keyboard input, and checks for decode completion.
+/// Also handles human checker confirmation requests from the cracker thread.
 fn run_event_loop(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     app: &mut App,
     colors: &TuiColors,
     result_receiver: mpsc::Receiver<Option<DecoderResult>>,
+    confirmation_receiver: Option<Receiver<TuiConfirmationRequest>>,
 ) -> TuiResult<()> {
     let tick_rate = Duration::from_millis(TICK_RATE_MS);
     let mut last_tick = Instant::now();
@@ -168,6 +180,14 @@ fn run_event_loop(
         // Check if should quit
         if app.should_quit {
             break;
+        }
+
+        // Check for human confirmation requests (non-blocking)
+        if let Some(ref conf_rx) = confirmation_receiver {
+            if let Ok(conf_request) = conf_rx.try_recv() {
+                // Transition to the human confirmation state
+                app.set_human_confirmation(conf_request.request, conf_request.response_tx);
+            }
         }
 
         // Check for decode result (non-blocking)

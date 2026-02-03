@@ -365,6 +365,11 @@ pub fn decoded_how_many_times(depth: u32) {
         return;
     }
 
+    // Skip printing in TUI mode - the TUI handles its own display
+    if crate::tui::human_checker_bridge::is_tui_confirmation_active() {
+        return;
+    }
+
     // Gets how many decoders we have
     // Then we add 25 for Caesar
     let decoders = crate::filtration_system::filter_and_get_decoders(&DecoderResult::default());

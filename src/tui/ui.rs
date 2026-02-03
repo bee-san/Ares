@@ -5,12 +5,18 @@
 //! state-specific renderers and handles overlay rendering.
 
 use ratatui::prelude::*;
-use ratatui::widgets::{Block, Borders, Clear, Paragraph, Wrap};
+use ratatui::widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph, Wrap};
 
-use super::app::{App, AppState};
+use super::app::{App, AppState, HumanConfirmationRequest};
 use super::colors::TuiColors;
 use super::spinner::Spinner;
 use super::widgets::{render_step_details, render_text_panel, PathViewer};
+
+/// Enhanced spinner frames for a more visible, flowing animation.
+const ENHANCED_SPINNER_FRAMES: &[&str] = &["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"];
+
+/// Decorated title for Ciphey using box drawing characters.
+const DECORATED_TITLE: &str = " ══ Ciphey ══ ";
 
 /// Main draw function that renders the TUI based on current application state.
 ///
@@ -46,6 +52,25 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
                 start_time,
                 colors,
             );
+        }
+        AppState::HumanConfirmation {
+            start_time,
+            current_quote,
+            spinner_frame,
+            request,
+            response_sender: _,
+        } => {
+            // Draw loading screen in background
+            draw_loading_screen(
+                frame,
+                area,
+                *spinner_frame,
+                *current_quote,
+                start_time,
+                colors,
+            );
+            // Draw confirmation modal on top
+            draw_human_confirmation_screen(frame, area, request, colors);
         }
         AppState::Results {
             result,
@@ -97,9 +122,9 @@ fn draw_loading_screen(
     start_time: &std::time::Instant,
     colors: &TuiColors,
 ) {
-    // Create outer block with title
+    // Create outer block with decorated title
     let outer_block = Block::default()
-        .title(" Ciphey ")
+        .title(DECORATED_TITLE)
         .title_style(colors.title)
         .borders(Borders::ALL)
         .border_style(colors.border);
@@ -107,7 +132,7 @@ fn draw_loading_screen(
     frame.render_widget(outer_block, area);
 
     // Create a centered content area
-    let inner_area = centered_rect(area, 80, 60);
+    let inner_area = centered_rect(area, 80, 70);
 
     // Create spinner with current frame
     let mut spinner = Spinner::new();
@@ -122,46 +147,94 @@ fn draw_loading_screen(
     let elapsed = start_time.elapsed();
     let elapsed_secs = elapsed.as_secs_f64();
 
-    // Build the content
-    let title_line = Line::from(Span::styled("Decrypting...", colors.highlight));
-
-    let spinner_line = Line::from(Span::styled(spinner.current_frame(), colors.accent));
+    // Get enhanced spinner frame (multiple characters for visibility)
+    let enhanced_frame = ENHANCED_SPINNER_FRAMES[spinner_frame % ENHANCED_SPINNER_FRAMES.len()];
+    let spinner_display = format!(
+        "  {}  {}  {}  ",
+        enhanced_frame, enhanced_frame, enhanced_frame
+    );
 
     // Parse quote and attribution
     let quote_text = spinner.current_quote();
     let (quote, attribution) = parse_quote(quote_text);
 
-    let quote_line = Line::from(Span::styled(format!("\"{}\"", quote), colors.text));
+    // Layout the inner area into sections
+    let inner_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(1), // Top padding
+            Constraint::Length(3), // Title box
+            Constraint::Length(1), // Spacing
+            Constraint::Length(1), // Spinner
+            Constraint::Length(2), // Spacing
+            Constraint::Min(5),    // Quote box
+            Constraint::Length(1), // Spacing
+            Constraint::Length(1), // Elapsed time
+            Constraint::Length(1), // Bottom padding
+        ])
+        .split(inner_area);
 
-    let attribution_line = if !attribution.is_empty() {
-        Line::from(Span::styled(format!("- {}", attribution), colors.muted))
-    } else {
-        Line::from("")
-    };
+    // Render decorated title "Decrypting..."
+    let title_text = "  Decrypting...  ";
+    let title_decoration = format!("╭{}╮", "─".repeat(title_text.len()));
+    let title_bottom = format!("╰{}╯", "─".repeat(title_text.len()));
 
+    let title_lines = vec![
+        Line::from(Span::styled(&title_decoration, colors.accent)),
+        Line::from(vec![
+            Span::styled("│", colors.accent),
+            Span::styled(title_text, colors.highlight),
+            Span::styled("│", colors.accent),
+        ]),
+        Line::from(Span::styled(&title_bottom, colors.accent)),
+    ];
+
+    let title_paragraph = Paragraph::new(title_lines).alignment(Alignment::Center);
+    frame.render_widget(title_paragraph, inner_chunks[1]);
+
+    // Render enhanced spinner
+    let spinner_line = Line::from(Span::styled(&spinner_display, colors.accent));
+    let spinner_paragraph = Paragraph::new(spinner_line).alignment(Alignment::Center);
+    frame.render_widget(spinner_paragraph, inner_chunks[3]);
+
+    // Calculate quote box dimensions
+    let quote_area = inner_chunks[5];
+
+    // Create a framed quote box
+    let quote_block = Block::default()
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(colors.muted)
+        .padding(Padding::horizontal(1));
+
+    let quote_inner = quote_block.inner(quote_area);
+    frame.render_widget(quote_block, quote_area);
+
+    // Render quote content inside the box
+    let mut quote_lines = vec![Line::from(Span::styled(
+        format!("\"{}\"", quote),
+        colors.text,
+    ))];
+
+    if !attribution.is_empty() {
+        quote_lines.push(Line::from(Span::styled(
+            format!("  — {}", attribution),
+            colors.muted,
+        )));
+    }
+
+    let quote_paragraph = Paragraph::new(quote_lines)
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: false });
+    frame.render_widget(quote_paragraph, quote_inner);
+
+    // Render elapsed time
     let elapsed_line = Line::from(Span::styled(
         format!("Elapsed: {:.1}s", elapsed_secs),
         colors.muted,
     ));
-
-    // Combine all lines with spacing
-    let lines = vec![
-        Line::from(""),
-        title_line,
-        Line::from(""),
-        spinner_line,
-        Line::from(""),
-        quote_line,
-        attribution_line,
-        Line::from(""),
-        elapsed_line,
-    ];
-
-    let paragraph = Paragraph::new(lines)
-        .alignment(Alignment::Center)
-        .wrap(Wrap { trim: false });
-
-    frame.render_widget(paragraph, inner_area);
+    let elapsed_paragraph = Paragraph::new(elapsed_line).alignment(Alignment::Center);
+    frame.render_widget(elapsed_paragraph, inner_chunks[7]);
 }
 
 /// Renders the results screen with three-column layout.
@@ -187,11 +260,12 @@ fn draw_results_screen(
     selected_step: usize,
     colors: &TuiColors,
 ) {
-    // Calculate layout chunks
+    // Calculate layout chunks with increased top row height
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(5), // Top row (Input | Path | Output)
+            Constraint::Length(7), // Top row (Input | Path | Output) - increased from 5
+            Constraint::Length(1), // Visual separator
             Constraint::Min(8),    // Step details
             Constraint::Length(1), // Status bar
         ])
@@ -217,9 +291,9 @@ fn draw_results_screen(
         false,
     );
 
-    // Render path viewer
+    // Render path viewer with decorated title
     let path_block = Block::default()
-        .title(" Path ")
+        .title(format!(" {} Path {} ", "─", "─"))
         .title_style(colors.title)
         .borders(Borders::ALL)
         .border_style(colors.border);
@@ -252,12 +326,20 @@ fn draw_results_screen(
         true,
     );
 
+    // Render visual separator line
+    let separator_line = Line::from(Span::styled(
+        "─".repeat(chunks[1].width as usize),
+        colors.border,
+    ));
+    let separator_paragraph = Paragraph::new(separator_line);
+    frame.render_widget(separator_paragraph, chunks[1]);
+
     // Render step details
     let current_step = result.path.get(selected_step);
-    render_step_details(chunks[1], frame.buffer_mut(), current_step, colors);
+    render_step_details(chunks[2], frame.buffer_mut(), current_step, colors);
 
     // Render status bar
-    draw_status_bar(frame, chunks[2], colors);
+    draw_status_bar(frame, chunks[3], colors);
 }
 
 /// Renders the failure screen with tips.
@@ -283,9 +365,9 @@ fn draw_failure_screen(
     elapsed: std::time::Duration,
     colors: &TuiColors,
 ) {
-    // Create outer block with title
+    // Create outer block with decorated title
     let outer_block = Block::default()
-        .title(" Ciphey ")
+        .title(DECORATED_TITLE)
         .title_style(colors.title)
         .borders(Borders::ALL)
         .border_style(colors.border);
@@ -425,6 +507,114 @@ fn draw_help_overlay(frame: &mut Frame, area: Rect, colors: &TuiColors) {
 
     let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
     frame.render_widget(paragraph, inner_area);
+}
+
+/// Renders the human confirmation modal for plaintext verification.
+///
+/// Displays a centered modal popup asking the user to confirm whether the
+/// detected plaintext is correct. The modal appears over the loading screen.
+///
+/// # Arguments
+///
+/// * `frame` - The Ratatui frame to render into
+/// * `area` - The full screen area
+/// * `request` - The confirmation request containing candidate text and checker info
+/// * `colors` - The color scheme to use
+#[allow(dead_code)]
+fn draw_human_confirmation_screen(
+    frame: &mut Frame,
+    area: Rect,
+    request: &HumanConfirmationRequest,
+    colors: &TuiColors,
+) {
+    // Calculate modal size (65% width, 55% height for better padding)
+    let modal_area = centered_rect(area, 65, 55);
+
+    // Clear the area behind the modal
+    frame.render_widget(Clear, modal_area);
+
+    // Create the modal block with double border
+    let modal_block = Block::default()
+        .title(" Confirm Plaintext? ")
+        .title_style(colors.highlight)
+        .borders(Borders::ALL)
+        .border_type(BorderType::Double)
+        .border_style(colors.accent)
+        .padding(Padding::new(2, 2, 1, 1)); // Add padding inside the modal
+
+    let inner_area = modal_block.inner(modal_area);
+    frame.render_widget(modal_block, modal_area);
+
+    // Calculate layout for the inner content
+    let inner_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(2), // "Detected by:" line with icon
+            Constraint::Length(1), // Spacing
+            Constraint::Min(5),    // Plaintext box (increased min height)
+            Constraint::Length(2), // Spacing
+            Constraint::Length(1), // Instructions with styled buttons
+        ])
+        .split(inner_area);
+
+    // Render "Detected by:" line with magnifying glass icon
+    let detected_by_line = Line::from(vec![
+        Span::styled("🔍 ", colors.accent),
+        Span::styled("Detected by: ", colors.label),
+        Span::styled(
+            format!("{} ({})", request.checker_name, request.description),
+            colors.text,
+        ),
+    ]);
+    let detected_paragraph = Paragraph::new(detected_by_line);
+    frame.render_widget(detected_paragraph, inner_chunks[0]);
+
+    // Prepare the plaintext text (truncate if too long)
+    let display_text = if request.text.len() > 200 {
+        format!("{}...", &request.text[..200])
+    } else {
+        request.text.clone()
+    };
+
+    // Create the plaintext box with rounded border and padding
+    let plaintext_block = Block::default()
+        .title(" Candidate Plaintext ")
+        .title_style(colors.muted)
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(colors.border)
+        .padding(Padding::horizontal(1));
+
+    let plaintext_inner = plaintext_block.inner(inner_chunks[2]);
+    frame.render_widget(plaintext_block, inner_chunks[2]);
+
+    // Render the plaintext text inside the box
+    let plaintext_paragraph =
+        Paragraph::new(Span::styled(&display_text, colors.text)).wrap(Wrap { trim: false });
+    frame.render_widget(plaintext_paragraph, plaintext_inner);
+
+    // Render styled button instructions at the bottom
+    let instructions = Line::from(vec![
+        Span::styled("Press ", colors.muted),
+        Span::styled(
+            " [Y] ",
+            colors
+                .success
+                .add_modifier(Modifier::BOLD)
+                .add_modifier(Modifier::REVERSED),
+        ),
+        Span::styled(" to accept  ", colors.muted),
+        Span::styled(
+            " [N] ",
+            colors
+                .error
+                .add_modifier(Modifier::BOLD)
+                .add_modifier(Modifier::REVERSED),
+        ),
+        Span::styled(" to reject", colors.muted),
+    ]);
+    let instructions_paragraph = Paragraph::new(instructions).alignment(Alignment::Center);
+    frame.render_widget(instructions_paragraph, inner_chunks[4]);
 }
 
 /// Renders a status message at the bottom of the screen.

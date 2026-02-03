@@ -117,6 +117,7 @@ mod tests {
 | `src/config/` | Global configuration management |
 | `src/cli/` | Command-line interface |
 | `src/storage/` | Database and caching |
+| `src/tui/` | Terminal User Interface (Ratatui-based) |
 
 ### Key Traits
 
@@ -296,4 +297,77 @@ CREATE TABLE human_rejection (
 - **`HumanRejectionRow`**: Output struct when reading rejection rows
 
 **Note**: Users upgrading from older versions must delete `~/.ciphey/database.sqlite` due to schema changes.
+
+## TUI Architecture
+
+The Terminal User Interface (`src/tui/`) is built with [Ratatui](https://ratatui.rs/) and provides an interactive experience for decoding operations.
+
+### TUI Components
+
+| File | Purpose |
+|------|---------|
+| `src/tui/mod.rs` | Module exports and public API |
+| `src/tui/app.rs` | Application state machine (`AppState` enum) |
+| `src/tui/run.rs` | Main entry point and event loop |
+| `src/tui/ui.rs` | Screen rendering functions |
+| `src/tui/input.rs` | Keyboard input handling |
+| `src/tui/colors.rs` | Color scheme from config |
+| `src/tui/spinner.rs` | Loading animation and quotes |
+| `src/tui/human_checker_bridge.rs` | Channel-based human checker communication |
+| `src/tui/widgets/` | Reusable UI widgets (text panels, path viewer, step details) |
+
+### Application States
+
+The TUI uses a state machine defined in `AppState`:
+
+```rust
+pub enum AppState {
+    Loading { ... },           // Decoding in progress
+    HumanConfirmation { ... }, // Waiting for user to confirm plaintext
+    Results { ... },           // Successful decode, showing results
+    Failure { ... },           // Decode failed
+}
+```
+
+### Human Checker Bridge
+
+When running in TUI mode, the human checker cannot use stdin directly (terminal is in raw mode). The `human_checker_bridge` module provides channel-based communication:
+
+```rust
+// In run.rs (TUI initialization):
+init_tui_confirmation_channel();
+let confirmation_receiver = take_confirmation_receiver();
+
+// In human_checker.rs (detection):
+if is_tui_confirmation_active() {
+    // Use channel-based confirmation
+    request_tui_confirmation(check_result)
+} else {
+    // Fall back to CLI stdin
+}
+```
+
+**Key functions:**
+- `init_tui_confirmation_channel()` - Initialize before starting TUI
+- `take_confirmation_receiver()` - Get receiver for event loop (one-time)
+- `request_tui_confirmation(&CheckResult)` - Request confirmation, blocks until response
+- `is_tui_confirmation_active()` - Check if TUI mode is active
+
+### Adding a New TUI State
+
+1. Add variant to `AppState` enum in `src/tui/app.rs`
+2. Add transition method to `App` struct (e.g., `set_my_state()`)
+3. Add rendering function in `src/tui/ui.rs` (e.g., `draw_my_screen()`)
+4. Update `draw()` function to handle the new state
+5. Update `handle_key_event()` in `src/tui/input.rs` for state-specific keys
+
+### TUI Color Scheme
+
+Colors are derived from the config's `colourscheme` hashmap in `src/tui/colors.rs`:
+
+```rust
+let colors = TuiColors::from_config(&config);
+// Available styles: colors.primary, colors.success, colors.error,
+// colors.text, colors.muted, colors.highlight, colors.accent, etc.
+```
 

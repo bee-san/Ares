@@ -25,10 +25,11 @@ pub enum Action {
 ///
 /// This function processes key events based on the current `AppState`:
 ///
-/// - **All states**: `q` or `Esc` quits, `?` toggles help overlay
-/// - **Loading**: Only quit and help are available
-/// - **Results**: Navigation with arrow keys/vim bindings, copy with `c`
-/// - **Failure**: Only quit and help are available
+/// - **All states**: `?` toggles help overlay, `Ctrl+C` quits
+/// - **Loading**: `q` or `Esc` quits
+/// - **HumanConfirmation**: `Y`/`y`/`Enter` accepts, `N`/`n`/`Escape` rejects (`q` does NOT quit)
+/// - **Results**: Navigation with arrow keys/vim bindings, copy with `c`, `q`/`Esc` quits
+/// - **Failure**: `q` or `Esc` quits
 ///
 /// # Arguments
 ///
@@ -48,13 +49,24 @@ pub enum Action {
 /// }
 /// ```
 pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
+    // Check if we're in human confirmation state (user must make a choice)
+    let in_confirmation = matches!(app.state, AppState::HumanConfirmation { .. });
+
     // Handle global key bindings that work in all states
     match key.code {
         KeyCode::Char('q') => {
-            app.should_quit = true;
-            return Action::None;
+            // q should NOT quit during confirmation - user must make a choice
+            if !in_confirmation {
+                app.should_quit = true;
+                return Action::None;
+            }
         }
         KeyCode::Esc => {
+            // In confirmation state, Escape means reject
+            if in_confirmation {
+                app.respond_to_confirmation(false);
+                return Action::None;
+            }
             app.should_quit = true;
             return Action::None;
         }
@@ -75,6 +87,21 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
         AppState::Loading { .. } => {
             // Only quit and help work in loading state
             Action::None
+        }
+        AppState::HumanConfirmation { .. } => {
+            // Handle confirmation keys: Y/y/Enter to accept, N/n to reject
+            // Escape is handled in the global bindings above
+            match key.code {
+                KeyCode::Char('y') | KeyCode::Char('Y') | KeyCode::Enter => {
+                    app.respond_to_confirmation(true);
+                    Action::None
+                }
+                KeyCode::Char('n') | KeyCode::Char('N') => {
+                    app.respond_to_confirmation(false);
+                    Action::None
+                }
+                _ => Action::None,
+            }
         }
         AppState::Results { result, .. } => {
             // Clone the output text if we might need it for clipboard

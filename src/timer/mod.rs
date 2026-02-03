@@ -44,9 +44,10 @@ pub fn start(duration: u32) -> Receiver<()> {
         match sender.send(()) {
             Ok(_) => log::debug!("Timer signal sent successfully"),
             Err(e) => {
-                // Just log the error instead of panicking
-                log::warn!(
-                    "Failed to send timer signal: {:?}. This is expected in benchmarks.",
+                // This happens when decoding finishes before the timeout expires,
+                // meaning the receiver was dropped - this is expected normal behavior
+                log::trace!(
+                    "Timer signal receiver dropped (decoding completed): {:?}",
                     e
                 );
             }

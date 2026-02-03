@@ -145,3 +145,13 @@ We also have a `is_password` function to determine if a string is an exact passw
 We now store statistics in a database. This is useful for seeing how ciphey is doing over time.
 
 
+TODO:
+- store wordlists in sqllite or something
+- Review code
+- Add more decoders
+- Make TUI pretty 
+- Make sure API works
+- Gibberish checker, can we use a better AI model or offer a selection?
+- Add more to LemmeKnow... Maybe fork it lol
+- Add hashcat support
+- Move first time run into tui if possible

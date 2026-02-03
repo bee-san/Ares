@@ -3,10 +3,33 @@
 //! This module defines the core state management for the terminal user interface,
 //! handling transitions between loading, results, and failure states.
 
+use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
+use crate::checkers::checker_result::CheckResult;
 use crate::decoders::crack_results::CrackResult;
 use crate::DecoderResult;
+
+/// A request for human confirmation of a potential plaintext.
+#[derive(Debug, Clone)]
+pub struct HumanConfirmationRequest {
+    /// The potential plaintext text to confirm.
+    pub text: String,
+    /// Description of why this might be plaintext (e.g., "English words detected").
+    pub description: String,
+    /// Name of the checker that found this candidate.
+    pub checker_name: String,
+}
+
+impl From<&CheckResult> for HumanConfirmationRequest {
+    fn from(check_result: &CheckResult) -> Self {
+        Self {
+            text: check_result.text.clone(),
+            description: check_result.description.clone(),
+            checker_name: check_result.checker_name.to_string(),
+        }
+    }
+}
 
 /// Represents the current state of the TUI application.
 #[derive(Debug)]
@@ -19,6 +42,19 @@ pub enum AppState {
         current_quote: usize,
         /// Current frame of the spinner animation.
         spinner_frame: usize,
+    },
+    /// Waiting for human confirmation of a potential plaintext.
+    HumanConfirmation {
+        /// When the loading started (preserved from Loading state).
+        start_time: Instant,
+        /// Current quote index (preserved from Loading state).
+        current_quote: usize,
+        /// Current spinner frame (preserved from Loading state).
+        spinner_frame: usize,
+        /// The confirmation request details.
+        request: HumanConfirmationRequest,
+        /// Channel to send the user's response back to the cracker thread.
+        response_sender: mpsc::Sender<bool>,
     },
     /// Decoding completed successfully with results to display.
     Results {
@@ -82,17 +118,29 @@ impl App {
     /// This method should be called on each tick to advance the spinner
     /// animation and rotate through loading quotes.
     pub fn tick(&mut self) {
-        if let AppState::Loading {
-            spinner_frame,
-            current_quote,
-            ..
-        } = &mut self.state
-        {
-            *spinner_frame = spinner_frame.wrapping_add(1);
-            // Rotate quotes every ~20 ticks (assuming ~10 ticks/sec, change every 2 seconds)
-            if *spinner_frame % 20 == 0 {
-                *current_quote = current_quote.wrapping_add(1);
+        match &mut self.state {
+            AppState::Loading {
+                spinner_frame,
+                current_quote,
+                ..
+            } => {
+                *spinner_frame = spinner_frame.wrapping_add(1);
+                // Rotate quotes every ~20 ticks (assuming ~10 ticks/sec, change every 2 seconds)
+                if *spinner_frame % 20 == 0 {
+                    *current_quote = current_quote.wrapping_add(1);
+                }
             }
+            AppState::HumanConfirmation {
+                spinner_frame,
+                current_quote,
+                ..
+            } => {
+                *spinner_frame = spinner_frame.wrapping_add(1);
+                if *spinner_frame % 20 == 0 {
+                    *current_quote = current_quote.wrapping_add(1);
+                }
+            }
+            _ => {}
         }
     }
 
@@ -119,6 +167,68 @@ impl App {
             input_text: self.input_text.clone(),
             elapsed,
         };
+    }
+
+    /// Transitions to the HumanConfirmation state to ask the user to verify plaintext.
+    ///
+    /// # Arguments
+    ///
+    /// * `request` - The confirmation request with candidate text details
+    /// * `response_sender` - Channel to send the user's response
+    pub fn set_human_confirmation(
+        &mut self,
+        request: HumanConfirmationRequest,
+        response_sender: mpsc::Sender<bool>,
+    ) {
+        // Preserve loading state animation values
+        let (start_time, current_quote, spinner_frame) = match &self.state {
+            AppState::Loading {
+                start_time,
+                current_quote,
+                spinner_frame,
+            } => (*start_time, *current_quote, *spinner_frame),
+            AppState::HumanConfirmation {
+                start_time,
+                current_quote,
+                spinner_frame,
+                ..
+            } => (*start_time, *current_quote, *spinner_frame),
+            _ => (Instant::now(), 0, 0),
+        };
+
+        self.state = AppState::HumanConfirmation {
+            start_time,
+            current_quote,
+            spinner_frame,
+            request,
+            response_sender,
+        };
+    }
+
+    /// Sends a response to the human confirmation request and returns to Loading state.
+    ///
+    /// # Arguments
+    ///
+    /// * `accepted` - Whether the user accepted the plaintext candidate
+    pub fn respond_to_confirmation(&mut self, accepted: bool) {
+        if let AppState::HumanConfirmation {
+            start_time,
+            current_quote,
+            spinner_frame,
+            response_sender,
+            ..
+        } = &self.state
+        {
+            // Send the response (ignore error if receiver dropped)
+            let _ = response_sender.send(accepted);
+
+            // Return to loading state
+            self.state = AppState::Loading {
+                start_time: *start_time,
+                current_quote: *current_quote,
+                spinner_frame: *spinner_frame,
+            };
+        }
     }
 
     /// Navigates to the next step in the decoding path.
