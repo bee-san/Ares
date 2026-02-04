@@ -304,21 +304,28 @@ Stores words for the wordlist checker with bloom filter acceleration:
 CREATE TABLE wordlist (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     word TEXT NOT NULL UNIQUE,           -- The dictionary word
-    source TEXT,                          -- Origin (e.g., "user_import", "builtin")
+    source TEXT NOT NULL,                 -- Origin (e.g., "user_import", "builtin")
+    enabled BOOLEAN NOT NULL DEFAULT true, -- Whether word is active for matching
     added_date DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX idx_wordlist_word ON wordlist(word);
+CREATE INDEX idx_wordlist_enabled ON wordlist(enabled);
 ```
 
 ### Key Wordlist Functions
 
 | Function | Purpose |
 |----------|---------|
-| `insert_word(&str, Option<&str>)` | Add single word with optional source |
-| `insert_words_batch(&[String], Option<&str>)` | Bulk insert words |
-| `word_exists(&str) -> bool` | Check if word is in database |
-| `import_wordlist(path, source)` | Import words from file |
-| `get_word_count() -> i64` | Total words in database |
+| `insert_word(&str, &str)` | Add single word with source (enabled by default) |
+| `insert_words_batch(&[(&str, &str)])` | Bulk insert words |
+| `word_exists(&str) -> bool` | Check if word exists AND is enabled |
+| `import_wordlist(&HashSet<String>, &str)` | Import words from HashSet |
+| `get_word_count() -> i64` | Count of enabled words |
+| `set_word_enabled(&str, bool)` | Enable/disable a word |
+| `set_words_enabled_batch(&[&str], bool)` | Batch enable/disable |
+| `get_disabled_words() -> Vec<WordlistRow>` | List all disabled words |
+| `get_disabled_word_count() -> i64` | Count of disabled words |
+| `read_word(&str) -> Option<WordlistRow>` | Get word details (regardless of enabled) |
 
 **Note**: Users upgrading from older versions must delete `~/.ciphey/database.sqlite` due to schema changes.
 

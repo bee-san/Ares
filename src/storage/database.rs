@@ -86,6 +86,8 @@ pub struct WordlistRow {
     pub word: String,
     /// Source of the word (e.g., "user_import", "rockyou", "ctf_flags")
     pub source: String,
+    /// Whether this word is enabled for matching (disabled words are ignored)
+    pub enabled: bool,
     /// When the word was added to the database
     pub added_date: String,
 }
@@ -95,6 +97,7 @@ impl PartialEq for WordlistRow {
         self.id == other.id
             && self.word == other.word
             && self.source == other.source
+            && self.enabled == other.enabled
             && self.added_date == other.added_date
     }
 }
@@ -272,12 +275,17 @@ pub(crate) fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             word TEXT NOT NULL UNIQUE,
             source TEXT NOT NULL,
+            enabled BOOLEAN NOT NULL DEFAULT true,
             added_date DATETIME DEFAULT CURRENT_TIMESTAMP
     );",
         (),
     )?;
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_wordlist_word ON wordlist(word);",
+        (),
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_wordlist_enabled ON wordlist(enabled);",
         (),
     )?;
 
@@ -598,6 +606,8 @@ pub fn delete_human_rejection(plaintext: &str) -> Result<usize, rusqlite::Error>
 
 /// Inserts a single word into the wordlist table
 ///
+/// New words are enabled by default.
+///
 /// Returns the number of successfully inserted rows on success (0 if word already exists)
 ///
 /// # Errors
@@ -607,7 +617,7 @@ pub fn insert_word(word: &str, source: &str) -> Result<usize, rusqlite::Error> {
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
     let conn_result = transaction.execute(
-        "INSERT OR IGNORE INTO wordlist (word, source, added_date) VALUES ($1, $2, $3)",
+        "INSERT OR IGNORE INTO wordlist (word, source, enabled, added_date) VALUES ($1, $2, true, $3)",
         (word.to_owned(), source.to_owned(), get_timestamp()),
     );
     transaction.commit()?;
@@ -618,6 +628,7 @@ pub fn insert_word(word: &str, source: &str) -> Result<usize, rusqlite::Error> {
 ///
 /// Each tuple in the slice is (word, source).
 /// Uses INSERT OR IGNORE to skip duplicates.
+/// New words are enabled by default.
 ///
 /// Returns the number of successfully inserted rows on success
 ///
@@ -632,7 +643,7 @@ pub fn insert_words_batch(words: &[(&str, &str)]) -> Result<usize, rusqlite::Err
     let mut total_inserted = 0;
     for (word, source) in words {
         let result = transaction.execute(
-            "INSERT OR IGNORE INTO wordlist (word, source, added_date) VALUES ($1, $2, $3)",
+            "INSERT OR IGNORE INTO wordlist (word, source, enabled, added_date) VALUES ($1, $2, true, $3)",
             (word.to_string(), source.to_string(), timestamp.clone()),
         )?;
         total_inserted += result;
@@ -642,28 +653,32 @@ pub fn insert_words_batch(words: &[(&str, &str)]) -> Result<usize, rusqlite::Err
     Ok(total_inserted)
 }
 
-/// Checks if a word exists in the wordlist table
+/// Checks if a word exists and is enabled in the wordlist table
 ///
-/// Returns true if the word exists, false otherwise
+/// Returns true if the word exists and is enabled, false otherwise.
+/// Disabled words are treated as non-existent for matching purposes.
 ///
 /// # Errors
 ///
 /// Returns rusqlite::Error on error
 pub fn word_exists(word: &str) -> Result<bool, rusqlite::Error> {
     let conn = get_db_connection()?;
-    let mut stmt = conn.prepare("SELECT 1 FROM wordlist WHERE word = $1 LIMIT 1")?;
+    let mut stmt =
+        conn.prepare("SELECT 1 FROM wordlist WHERE word = $1 AND enabled = true LIMIT 1")?;
     let exists = stmt.exists([word])?;
     Ok(exists)
 }
 
-/// Returns all words in the wordlist table (for bloom filter building)
+/// Returns all enabled words in the wordlist table (for bloom filter building)
+///
+/// Disabled words are excluded from the result.
 ///
 /// # Errors
 ///
 /// Returns rusqlite::Error on error
 pub fn read_all_words() -> Result<Vec<String>, rusqlite::Error> {
     let conn = get_db_connection()?;
-    let mut stmt = conn.prepare("SELECT word FROM wordlist")?;
+    let mut stmt = conn.prepare("SELECT word FROM wordlist WHERE enabled = true")?;
     let words = stmt
         .query_map([], |row| row.get::<usize, String>(0))?
         .filter_map(|r| r.ok())
@@ -671,14 +686,18 @@ pub fn read_all_words() -> Result<Vec<String>, rusqlite::Error> {
     Ok(words)
 }
 
-/// Returns the count of words in the wordlist table (for bloom filter sizing)
+/// Returns the count of enabled words in the wordlist table (for bloom filter sizing)
 ///
 /// # Errors
 ///
 /// Returns rusqlite::Error on error
 pub fn get_word_count() -> Result<i64, rusqlite::Error> {
     let conn = get_db_connection()?;
-    let count: i64 = conn.query_row("SELECT COUNT(*) FROM wordlist", [], |row| row.get(0))?;
+    let count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM wordlist WHERE enabled = true",
+        [],
+        |row| row.get(0),
+    )?;
     Ok(count)
 }
 
@@ -698,10 +717,98 @@ pub fn delete_word(word: &str) -> Result<usize, rusqlite::Error> {
     conn_result
 }
 
+/// Sets the enabled status of a word in the wordlist table
+///
+/// Use this to disable words that should be excluded from matching without deleting them.
+/// Disabled words won't appear in bloom filter builds or word existence checks.
+///
+/// Returns the number of updated rows on success (0 if word doesn't exist)
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn set_word_enabled(word: &str, enabled: bool) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute(
+        "UPDATE wordlist SET enabled = $1 WHERE word = $2",
+        (enabled, word.to_owned()),
+    );
+    transaction.commit()?;
+    conn_result
+}
+
+/// Sets the enabled status for multiple words at once (batch operation)
+///
+/// Returns the number of updated rows on success
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn set_words_enabled_batch(words: &[&str], enabled: bool) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+
+    let mut total_updated = 0;
+    for word in words {
+        let result = transaction.execute(
+            "UPDATE wordlist SET enabled = $1 WHERE word = $2",
+            (enabled, word.to_string()),
+        )?;
+        total_updated += result;
+    }
+
+    transaction.commit()?;
+    Ok(total_updated)
+}
+
+/// Returns all disabled words in the wordlist table
+///
+/// Useful for displaying which words have been disabled by the user.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn get_disabled_words() -> Result<Vec<WordlistRow>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, word, source, enabled, added_date FROM wordlist WHERE enabled = false",
+    )?;
+    let rows = stmt
+        .query_map([], |row| {
+            Ok(WordlistRow {
+                id: row.get_unwrap(0),
+                word: row.get_unwrap(1),
+                source: row.get_unwrap(2),
+                enabled: row.get_unwrap(3),
+                added_date: row.get_unwrap(4),
+            })
+        })?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(rows)
+}
+
+/// Returns the count of disabled words in the wordlist table
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn get_disabled_word_count() -> Result<i64, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM wordlist WHERE enabled = false",
+        [],
+        |row| row.get(0),
+    )?;
+    Ok(count)
+}
+
 /// Imports a HashSet of words into the database with a given source
 ///
 /// This is useful for migrating existing wordlists from config files
 /// to the database. Uses INSERT OR IGNORE to skip duplicates.
+/// New words are enabled by default.
 ///
 /// Returns the number of successfully inserted words
 ///
@@ -719,7 +826,7 @@ pub fn import_wordlist(
     let mut total_inserted = 0;
     for word in words {
         let result = transaction.execute(
-            "INSERT OR IGNORE INTO wordlist (word, source, added_date) VALUES ($1, $2, $3)",
+            "INSERT OR IGNORE INTO wordlist (word, source, enabled, added_date) VALUES ($1, $2, true, $3)",
             (word.clone(), source.to_owned(), timestamp.clone()),
         )?;
         total_inserted += result;
@@ -731,7 +838,8 @@ pub fn import_wordlist(
 
 /// Reads a word from the wordlist table by its exact value
 ///
-/// Returns Some(WordlistRow) if found, None otherwise
+/// Returns Some(WordlistRow) if found, None otherwise.
+/// Note: This returns the word regardless of its enabled status.
 ///
 /// # Errors
 ///
@@ -739,13 +847,14 @@ pub fn import_wordlist(
 pub fn read_word(word: &str) -> Result<Option<WordlistRow>, rusqlite::Error> {
     let conn = get_db_connection()?;
     let mut stmt =
-        conn.prepare("SELECT id, word, source, added_date FROM wordlist WHERE word = $1")?;
+        conn.prepare("SELECT id, word, source, enabled, added_date FROM wordlist WHERE word = $1")?;
     let mut query = stmt.query_map([word], |row| {
         Ok(WordlistRow {
             id: row.get_unwrap(0),
             word: row.get_unwrap(1),
             source: row.get_unwrap(2),
-            added_date: row.get_unwrap(3),
+            enabled: row.get_unwrap(3),
+            added_date: row.get_unwrap(4),
         })
     })?;
     match query.next() {
@@ -2087,9 +2196,178 @@ mod tests {
         let row = row.unwrap();
         assert_eq!(row.word, "readable_word");
         assert_eq!(row.source, "read_test");
+        assert!(row.enabled); // New words should be enabled by default
 
         // Non-existent word
         let row = read_word("nonexistent").unwrap();
         assert!(row.is_none());
+    }
+
+    #[test]
+    fn wordlist_set_word_enabled() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Insert a word (enabled by default)
+        insert_word("toggle_word", "test_source").unwrap();
+        assert!(word_exists("toggle_word").unwrap());
+
+        // Disable the word
+        let result = set_word_enabled("toggle_word", false);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        // word_exists should return false for disabled word
+        assert!(!word_exists("toggle_word").unwrap());
+
+        // But read_word should still find it
+        let row = read_word("toggle_word").unwrap();
+        assert!(row.is_some());
+        assert!(!row.unwrap().enabled);
+
+        // Re-enable the word
+        let result = set_word_enabled("toggle_word", true);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        // Now word_exists should return true again
+        assert!(word_exists("toggle_word").unwrap());
+    }
+
+    #[test]
+    fn wordlist_disabled_excluded_from_read_all() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Insert multiple words
+        insert_word("enabled1", "test_source").unwrap();
+        insert_word("enabled2", "test_source").unwrap();
+        insert_word("to_disable", "test_source").unwrap();
+
+        // Initially all 3 should be in read_all_words
+        let words = read_all_words().unwrap();
+        assert_eq!(words.len(), 3);
+
+        // Disable one word
+        set_word_enabled("to_disable", false).unwrap();
+
+        // Now only 2 should be returned
+        let words = read_all_words().unwrap();
+        assert_eq!(words.len(), 2);
+        assert!(words.contains(&"enabled1".to_string()));
+        assert!(words.contains(&"enabled2".to_string()));
+        assert!(!words.contains(&"to_disable".to_string()));
+    }
+
+    #[test]
+    fn wordlist_disabled_excluded_from_count() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Insert words
+        insert_word("count1", "test_source").unwrap();
+        insert_word("count2", "test_source").unwrap();
+        insert_word("count3", "test_source").unwrap();
+
+        // Initially count is 3
+        assert_eq!(get_word_count().unwrap(), 3);
+
+        // Disable one word
+        set_word_enabled("count2", false).unwrap();
+
+        // Count should now be 2
+        assert_eq!(get_word_count().unwrap(), 2);
+    }
+
+    #[test]
+    fn wordlist_get_disabled_words() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Insert words
+        insert_word("stay_enabled", "test_source").unwrap();
+        insert_word("disable_me1", "test_source").unwrap();
+        insert_word("disable_me2", "test_source").unwrap();
+
+        // Initially no disabled words
+        let disabled = get_disabled_words().unwrap();
+        assert_eq!(disabled.len(), 0);
+
+        // Disable some words
+        set_word_enabled("disable_me1", false).unwrap();
+        set_word_enabled("disable_me2", false).unwrap();
+
+        // Should have 2 disabled words
+        let disabled = get_disabled_words().unwrap();
+        assert_eq!(disabled.len(), 2);
+        let disabled_words: Vec<String> = disabled.iter().map(|r| r.word.clone()).collect();
+        assert!(disabled_words.contains(&"disable_me1".to_string()));
+        assert!(disabled_words.contains(&"disable_me2".to_string()));
+        assert!(!disabled_words.contains(&"stay_enabled".to_string()));
+    }
+
+    #[test]
+    fn wordlist_get_disabled_word_count() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Insert words
+        insert_word("word_a", "test_source").unwrap();
+        insert_word("word_b", "test_source").unwrap();
+        insert_word("word_c", "test_source").unwrap();
+
+        // Initially 0 disabled
+        assert_eq!(get_disabled_word_count().unwrap(), 0);
+
+        // Disable 2 words
+        set_word_enabled("word_a", false).unwrap();
+        set_word_enabled("word_c", false).unwrap();
+
+        // Should have 2 disabled
+        assert_eq!(get_disabled_word_count().unwrap(), 2);
+    }
+
+    #[test]
+    fn wordlist_set_words_enabled_batch() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Insert words
+        insert_word("batch_a", "test_source").unwrap();
+        insert_word("batch_b", "test_source").unwrap();
+        insert_word("batch_c", "test_source").unwrap();
+        insert_word("batch_d", "test_source").unwrap();
+
+        // Initially all enabled, count is 4
+        assert_eq!(get_word_count().unwrap(), 4);
+
+        // Disable multiple words at once
+        let result = set_words_enabled_batch(&["batch_a", "batch_c", "batch_d"], false);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 3);
+
+        // Only batch_b should be enabled
+        assert_eq!(get_word_count().unwrap(), 1);
+        assert!(word_exists("batch_b").unwrap());
+        assert!(!word_exists("batch_a").unwrap());
+
+        // Re-enable batch operation
+        let result = set_words_enabled_batch(&["batch_a", "batch_c"], true);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 2);
+
+        // Now 3 enabled
+        assert_eq!(get_word_count().unwrap(), 3);
+    }
+
+    #[test]
+    fn wordlist_set_word_enabled_nonexistent() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Try to disable a word that doesn't exist
+        let result = set_word_enabled("nonexistent_word", false);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0); // No rows updated
     }
 }

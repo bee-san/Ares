@@ -194,6 +194,19 @@ pub fn get_config_file_path() -> std::path::PathBuf {
     path
 }
 
+/// Checks if the config file exists (without loading it).
+///
+/// This is useful for determining if first-run setup should be shown.
+pub fn config_exists() -> bool {
+    let mut path = match dirs::home_dir() {
+        Some(p) => p,
+        None => return false,
+    };
+    path.push(".ciphey");
+    path.push("config.toml");
+    path.exists()
+}
+
 /// Create a default config file at the specified path
 ///
 /// # Panics
@@ -333,48 +346,17 @@ pub fn load_wordlist<P: AsRef<Path>>(path: P) -> io::Result<HashSet<String>> {
 }
 
 /// Get configuration from file or create default if it doesn't exist
+///
+/// Note: This function no longer runs the first-time setup wizard automatically.
+/// The setup wizard is handled at a higher level in main.rs to support TUI mode.
+/// If no config file exists, this will return the default configuration.
 pub fn get_config_file_into_struct() -> Config {
     let path = get_config_file_path();
 
     if !path.exists() {
-        // First run - get user preferences
-        let first_run_config = crate::cli::run_first_time_setup();
-        let mut config = Config::default();
-
-        // Extract color scheme values
-        config.colourscheme = first_run_config
-            .iter()
-            .filter(|(k, _)| !k.starts_with("wordlist") && *k != "timeout")
-            .map(|(k, v)| (k.clone(), v.clone()))
-            .collect();
-
-        // Set timeout if present
-        if let Some(timeout) = first_run_config.get("timeout") {
-            config.timeout = timeout.parse().unwrap_or(5);
-        }
-
-        // Extract wordlist path if present
-        if let Some(wordlist_path) = first_run_config.get("wordlist_path") {
-            config.wordlist_path = Some(wordlist_path.clone());
-
-            // Load the wordlist
-            match load_wordlist(wordlist_path) {
-                Ok(wordlist) => {
-                    config.wordlist = Some(wordlist);
-                }
-                Err(e) => {
-                    eprintln!(
-                        "Warning: Could not load wordlist at '{}': {}",
-                        wordlist_path, e
-                    );
-                    // Don't exit - just continue without the wordlist
-                }
-            }
-        }
-
-        // Save the config to file
-        save_config_to_file(&config, &path);
-        config
+        // No config file - return default
+        // First-run setup is handled separately in main.rs
+        Config::default()
     } else {
         // Existing config - read and parse it
         match read_config_file() {
@@ -405,6 +387,78 @@ pub fn get_config_file_into_struct() -> Config {
             }
         }
     }
+}
+
+/// Creates a Config from a first-run setup HashMap and saves it to disk.
+///
+/// This is called after the TUI or CLI first-run wizard completes.
+///
+/// # Arguments
+///
+/// * `setup_config` - HashMap of configuration values from the setup wizard
+///
+/// # Returns
+///
+/// The built Config struct
+pub fn create_config_from_setup(setup_config: std::collections::HashMap<String, String>) -> Config {
+    let path = get_config_file_path();
+    let mut config = Config::default();
+
+    // Extract color scheme values
+    config.colourscheme = setup_config
+        .iter()
+        .filter(|(k, _)| {
+            !k.starts_with("wordlist")
+                && *k != "timeout"
+                && *k != "top_results"
+                && *k != "enhanced_detection"
+                && *k != "model_path"
+        })
+        .map(|(k, v)| (k.clone(), v.clone()))
+        .collect();
+
+    // Set timeout if present
+    if let Some(timeout) = setup_config.get("timeout") {
+        config.timeout = timeout.parse().unwrap_or(5);
+    }
+
+    // Set top_results if present
+    if let Some(top_results) = setup_config.get("top_results") {
+        config.top_results = top_results.parse().unwrap_or(false);
+    }
+
+    // Set enhanced detection if present
+    if let Some(enhanced) = setup_config.get("enhanced_detection") {
+        config.enhanced_detection = enhanced.parse().unwrap_or(false);
+    }
+
+    // Set model path if present
+    if let Some(model_path) = setup_config.get("model_path") {
+        config.model_path = Some(model_path.clone());
+    }
+
+    // Extract wordlist path if present
+    if let Some(wordlist_path) = setup_config.get("wordlist_path") {
+        config.wordlist_path = Some(wordlist_path.clone());
+
+        // Load the wordlist
+        match load_wordlist(wordlist_path) {
+            Ok(wordlist) => {
+                config.wordlist = Some(wordlist);
+            }
+            Err(e) => {
+                eprintln!(
+                    "Warning: Could not load wordlist at '{}': {}",
+                    wordlist_path, e
+                );
+                // Don't exit - just continue without the wordlist
+            }
+        }
+    }
+
+    // Save the config to file
+    save_config_to_file(&config, &path);
+    config
 }
 
 /// Save a Config struct to a file
