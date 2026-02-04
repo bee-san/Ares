@@ -143,7 +143,7 @@ impl Crack for Decoder<VigenereDecoder> {
 fn break_vigenere(text: &str, key_length: usize) -> String {
     let mut cipher_text: Vec<usize> = Vec::new();
     for c in text.chars() {
-        if c.is_alphabetic() {
+        if c.is_ascii_alphabetic() {
             cipher_text.push(((c.to_ascii_uppercase() as u8) - b'A') as usize);
         }
     }
@@ -375,6 +375,20 @@ mod tests {
             .crack("12345!@#$%", &get_athena_checker())
             .unencrypted_text;
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn test_non_ascii_alphabetic_input() {
+        // This test ensures that non-ASCII alphabetic characters (like accented letters)
+        // don't cause a panic due to index out of bounds in the Vigenere square
+        let vigenere_decoder = Decoder::<VigenereDecoder>::new();
+        // Input with non-ASCII alphabetic characters: é, ñ, ü, etc.
+        // These are alphabetic but not ASCII alphabetic
+        let result = vigenere_decoder
+            .crack("Héllo Wörld café résumé naïve", &get_athena_checker())
+            .unencrypted_text;
+        // Should not panic, and should ignore the non-ASCII chars while processing ASCII ones
+        assert!(result.is_some());
     }
 
     #[test]

@@ -24,14 +24,15 @@ pub struct TuiConfirmationRequest {
 
 /// Global sender for TUI confirmation requests.
 ///
-/// This is set once during initialization and used by the human checker
-/// to send confirmation requests to the TUI.
-static TUI_CONFIRMATION_TX: OnceLock<Sender<TuiConfirmationRequest>> = OnceLock::new();
+/// This is wrapped in a Mutex so it can be replaced when rerunning Ciphey.
+/// The human checker uses this to send confirmation requests to the TUI.
+static TUI_CONFIRMATION_TX: OnceLock<Mutex<Option<Sender<TuiConfirmationRequest>>>> =
+    OnceLock::new();
 
 /// Global receiver for TUI confirmation requests, wrapped in a Mutex for thread-safe access.
 ///
 /// The receiver is wrapped in an Option inside a Mutex so it can be taken
-/// exactly once by the TUI event loop.
+/// by the TUI event loop and replaced when rerunning.
 static TUI_CONFIRMATION_RX: OnceLock<Mutex<Option<Receiver<TuiConfirmationRequest>>>> =
     OnceLock::new();
 
@@ -61,16 +62,57 @@ pub fn init_tui_confirmation_channel() -> bool {
     // Create a new channel
     let (tx, rx) = mpsc::channel();
 
-    // Try to set the sender - if this fails, we're already initialized
-    if TUI_CONFIRMATION_TX.set(tx).is_err() {
-        return false;
+    // Try to set the sender container - if this fails, we're already initialized
+    // but we'll replace the contents below
+    if TUI_CONFIRMATION_TX.set(Mutex::new(Some(tx))).is_err() {
+        // Already initialized - replace the sender
+        if let Some(mutex) = TUI_CONFIRMATION_TX.get() {
+            if let Ok(mut guard) = mutex.lock() {
+                *guard = Some(mpsc::channel().0);
+            }
+        }
     }
 
     // Set the receiver wrapped in Mutex<Option<_>>
-    // This should succeed since we just successfully set the sender
-    let _ = TUI_CONFIRMATION_RX.set(Mutex::new(Some(rx)));
+    if TUI_CONFIRMATION_RX.set(Mutex::new(Some(rx))).is_err() {
+        // Already initialized - this is fine, we'll use reinit for subsequent calls
+    }
 
     true
+}
+
+/// Reinitialize the TUI confirmation channel for a new decode run.
+///
+/// This function creates a fresh channel, replacing any existing sender/receiver.
+/// Call this when rerunning Ciphey to ensure the human checker can communicate
+/// with the TUI event loop properly.
+///
+/// # Returns
+///
+/// The new receiver if successful, `None` if the channel system wasn't initialized.
+///
+/// # Example
+///
+/// ```ignore
+/// use ciphey::tui::human_checker_bridge::reinit_tui_confirmation_channel;
+///
+/// // When rerunning Ciphey from a selected step:
+/// if let Some(new_receiver) = reinit_tui_confirmation_channel() {
+///     // Use new_receiver in the event loop
+/// }
+/// ```
+pub fn reinit_tui_confirmation_channel() -> Option<Receiver<TuiConfirmationRequest>> {
+    // Create a fresh channel
+    let (tx, rx) = mpsc::channel();
+
+    // Replace the sender
+    let tx_mutex = TUI_CONFIRMATION_TX.get()?;
+    if let Ok(mut guard) = tx_mutex.lock() {
+        *guard = Some(tx);
+    }
+
+    // Return the new receiver (don't store it - caller will use it directly)
+    Some(rx)
 }
 
 /// Get the receiver for TUI confirmation requests.
@@ -134,8 +176,12 @@ pub fn take_confirmation_receiver() -> Option<Receiver<TuiConfirmationRequest>> 
 /// }
 /// ```
 pub fn request_tui_confirmation(check_result: &CheckResult) -> Option<bool> {
-    // Get the sender, return None if not initialized
-    let tx = TUI_CONFIRMATION_TX.get()?;
+    // Get the sender from the Mutex, return None if not initialized or no sender
+    let tx_mutex = TUI_CONFIRMATION_TX.get()?;
+    let tx = {
+        let guard = tx_mutex.lock().ok()?;
+        guard.as_ref()?.clone()
+    };
 
     // Create a one-shot channel for the response
     let (response_tx, response_rx) = mpsc::channel();
@@ -178,7 +224,11 @@ pub fn request_tui_confirmation(check_result: &CheckResult) -> Option<bool> {
 /// }
 /// ```
 pub fn is_tui_confirmation_active() -> bool {
-    TUI_CONFIRMATION_TX.get().is_some()
+    TUI_CONFIRMATION_TX
+        .get()
+        .and_then(|m| m.lock().ok())
+        .map(|guard| guard.is_some())
+        .unwrap_or(false)
 }
 
 #[cfg(test)]

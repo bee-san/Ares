@@ -21,6 +21,19 @@ fn get_seen_prompts() -> &'static DashSet<String> {
     SEEN_PROMPTS.get_or_init(DashSet::new)
 }
 
+/// Resets human checker state for a fresh run.
+///
+/// This clears the seen prompts set and resets the confirmation flag,
+/// allowing the human checker to prompt again for previously seen candidates.
+/// Call this when rerunning Ciphey from the TUI to ensure the human checker
+/// behaves as if it's a fresh CLI invocation.
+pub fn reset_human_checker_state() {
+    HUMAN_CONFIRMED.store(false, Ordering::Release);
+    if let Some(prompts) = SEEN_PROMPTS.get() {
+        prompts.clear();
+    }
+}
+
 /// The Human Checker asks humans if the expected plaintext is real plaintext
 /// We can use all the automated checkers in the world, but sometimes they get false positives
 /// Humans have the last say.
@@ -32,8 +45,9 @@ fn get_seen_prompts() -> &'static DashSet<String> {
 // compile this if we are not running tests
 pub fn human_checker(input: &CheckResult) -> bool {
     // Check if a human has already confirmed a result
+    // If so, reject all other candidates - only one result should succeed
     if HUMAN_CONFIRMED.load(Ordering::Acquire) {
-        return true;
+        return false;
     }
     timer::pause();
     // wait instead of get so it waits for config being set

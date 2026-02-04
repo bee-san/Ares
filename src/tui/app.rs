@@ -146,13 +146,17 @@ impl App {
 
     /// Transitions the application to the Results state.
     ///
+    /// The selected step defaults to the last step in the path (the plaintext),
+    /// so pressing 'c' to copy will copy the final output by default.
+    ///
     /// # Arguments
     ///
     /// * `result` - The successful decoding result to display
     pub fn set_result(&mut self, result: DecoderResult) {
+        let last_step = result.path.len().saturating_sub(1);
         self.state = AppState::Results {
             result,
-            selected_step: 0,
+            selected_step: last_step,
             scroll_offset: 0,
         };
     }

@@ -17,6 +17,9 @@ use super::app::{App, AppState};
 pub enum Action {
     /// Copy the given string to the system clipboard.
     CopyToClipboard(String),
+    /// Rerun Ciphey with the given text as the new input.
+    /// This is used when the user wants to continue decoding from a selected step.
+    RerunFromSelected(String),
     /// No action required.
     None,
 }
@@ -28,7 +31,7 @@ pub enum Action {
 /// - **All states**: `?` toggles help overlay, `Ctrl+C` quits
 /// - **Loading**: `q` or `Esc` quits
 /// - **HumanConfirmation**: `Y`/`y`/`Enter` accepts, `N`/`n`/`Escape` rejects (`q` does NOT quit)
-/// - **Results**: Navigation with arrow keys/vim bindings, copy with `c`, `q`/`Esc` quits
+/// - **Results**: Navigation with arrow keys/vim bindings, `c` copies selected step, `Enter` reruns from selected, `q`/`Esc` quits
 /// - **Failure**: `q` or `Esc` quits
 ///
 /// # Arguments
@@ -38,14 +41,16 @@ pub enum Action {
 ///
 /// # Returns
 ///
-/// An `Action` indicating if any follow-up operation is needed (e.g., clipboard copy).
+/// An `Action` indicating if any follow-up operation is needed (e.g., clipboard copy, rerun).
 ///
 /// # Examples
 ///
 /// ```ignore
 /// let action = handle_key_event(&mut app, key_event);
-/// if let Action::CopyToClipboard(text) = action {
-///     copy_to_clipboard(&text)?;
+/// match action {
+///     Action::CopyToClipboard(text) => copy_to_clipboard(&text)?,
+///     Action::RerunFromSelected(text) => rerun_ciphey(&text),
+///     Action::None => {}
 /// }
 /// ```
 pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
@@ -103,11 +108,20 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
                 _ => Action::None,
             }
         }
-        AppState::Results { result, .. } => {
-            // Clone the output text if we might need it for clipboard
-            let output_text = result.text.first().cloned();
+        AppState::Results {
+            result,
+            selected_step,
+            ..
+        } => {
             let path_len = result.path.len();
-            handle_results_keys(app, key, output_text, path_len)
+            let selected = *selected_step;
+            // Get the selected step's unencrypted text for copy/rerun operations
+            let selected_step_text = result
+                .path
+                .get(selected)
+                .and_then(|step| step.unencrypted_text.as_ref())
+                .and_then(|texts| texts.first().cloned());
+            handle_results_keys(app, key, selected_step_text, path_len)
         }
         AppState::Failure { .. } => {
             // Only quit and help work in failure state
@@ -122,16 +136,16 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
 ///
 /// * `app` - Mutable reference to the application state
 /// * `key` - The keyboard event to process
-/// * `output_text` - The final output text (if any)
+/// * `selected_step_text` - The output text from the currently selected step (if any)
 /// * `path_len` - Length of the decoder path
 ///
 /// # Returns
 ///
-/// An `Action` if clipboard copy was requested, otherwise `Action::None`.
+/// An `Action` if clipboard copy or rerun was requested, otherwise `Action::None`.
 fn handle_results_keys(
     app: &mut App,
     key: KeyEvent,
-    output_text: Option<String>,
+    selected_step_text: Option<String>,
     path_len: usize,
 ) -> Action {
     match key.code {
@@ -145,10 +159,18 @@ fn handle_results_keys(
             app.next_step();
             Action::None
         }
-        // Copy final output to clipboard
+        // Copy selected step's output to clipboard
         KeyCode::Char('c') => {
-            if let Some(text) = output_text {
+            if let Some(text) = selected_step_text {
                 Action::CopyToClipboard(text)
+            } else {
+                Action::None
+            }
+        }
+        // Rerun Ciphey from the selected step's output
+        KeyCode::Enter => {
+            if let Some(text) = selected_step_text {
+                Action::RerunFromSelected(text)
             } else {
                 Action::None
             }

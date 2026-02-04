@@ -260,14 +260,14 @@ fn draw_results_screen(
     selected_step: usize,
     colors: &TuiColors,
 ) {
-    // Calculate layout chunks with increased top row height
+    // Calculate layout chunks - balanced split between top row and step details
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(7), // Top row (Input | Path | Output) - increased from 5
-            Constraint::Length(1), // Visual separator
-            Constraint::Min(8),    // Step details
-            Constraint::Length(1), // Status bar
+            Constraint::Percentage(40), // Top row (Input | Path | Output)
+            Constraint::Length(1),      // Visual separator
+            Constraint::Min(12),        // Step details - gets remaining space
+            Constraint::Length(1),      // Status bar
         ])
         .split(area);
 
@@ -436,6 +436,7 @@ fn draw_status_bar(frame: &mut Frame, area: Rect, colors: &TuiColors) {
         ("[q]", "Quit"),
         ("[←/→]", "Navigate"),
         ("[c]", "Copy"),
+        ("[Enter]", "Rerun"),
         ("[?]", "Help"),
     ];
 
@@ -483,11 +484,11 @@ fn draw_help_overlay(frame: &mut Frame, area: Rect, colors: &TuiColors) {
         ("q / Esc", "Quit the application"),
         ("← / h", "Select previous step"),
         ("→ / l", "Select next step"),
-        ("c", "Copy output to clipboard"),
-        ("C", "Copy full path to clipboard"),
+        ("c", "Copy selected step output to clipboard"),
+        ("Enter", "Rerun Ciphey from selected step"),
         ("?", "Toggle this help overlay"),
-        ("↑ / k", "Scroll up"),
-        ("↓ / j", "Scroll down"),
+        ("Home", "Go to first step"),
+        ("End", "Go to last step"),
     ];
 
     let mut lines = vec![

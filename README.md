@@ -155,3 +155,8 @@ TODO:
 - Add more to LemmeKnow... Maybe fork it lol
 - Add hashcat support
 - Move first time run into tui if possible
+- Ability to decode from a step in the TUI
+- Copy in TUI should copy current step
+- Add funny cryptography quotes
+- Quotes should be random
+- In cache, all successful steps in a cached hit should be stored

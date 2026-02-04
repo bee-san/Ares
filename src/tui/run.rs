@@ -21,7 +21,8 @@ use crate::DecoderResult;
 use super::app::App;
 use super::colors::TuiColors;
 use super::human_checker_bridge::{
-    init_tui_confirmation_channel, take_confirmation_receiver, TuiConfirmationRequest,
+    init_tui_confirmation_channel, reinit_tui_confirmation_channel, take_confirmation_receiver,
+    TuiConfirmationRequest,
 };
 use super::input::{copy_to_clipboard, handle_key_event, Action};
 use super::ui::draw;
@@ -96,8 +97,15 @@ pub fn run_tui(input_text: &str, config: Config) -> TuiResult<()> {
         let _ = tx.send(result);
     });
 
-    // Run the main loop
-    let result = run_event_loop(&mut terminal, &mut app, &colors, rx, confirmation_receiver);
+    // Run the main loop (pass config for potential reruns)
+    let result = run_event_loop(
+        &mut terminal,
+        &mut app,
+        &colors,
+        &config,
+        Some(rx),
+        confirmation_receiver,
+    );
 
     // Restore terminal
     disable_raw_mode()?;
@@ -115,17 +123,23 @@ pub fn run_tui(input_text: &str, config: Config) -> TuiResult<()> {
 ///
 /// Handles UI updates, keyboard input, and checks for decode completion.
 /// Also handles human checker confirmation requests from the cracker thread.
+/// Supports rerunning Ciphey from a selected step by spawning a new decode thread.
 fn run_event_loop(
     terminal: &mut Terminal<CrosstermBackend<Stdout>>,
     app: &mut App,
     colors: &TuiColors,
-    result_receiver: mpsc::Receiver<Option<DecoderResult>>,
-    confirmation_receiver: Option<Receiver<TuiConfirmationRequest>>,
+    config: &Config,
+    initial_result_receiver: Option<mpsc::Receiver<Option<DecoderResult>>>,
+    initial_confirmation_receiver: Option<Receiver<TuiConfirmationRequest>>,
 ) -> TuiResult<()> {
     let tick_rate = Duration::from_millis(TICK_RATE_MS);
     let mut last_tick = Instant::now();
-    let start_time = Instant::now();
+    let mut start_time = Instant::now();
     let mut tick_count: usize = 0;
+
+    // Use Option so we can replace the receivers when rerunning
+    let mut result_receiver = initial_result_receiver;
+    let mut confirmation_receiver = initial_confirmation_receiver;
 
     loop {
         // Draw the UI
@@ -153,6 +167,43 @@ fn run_event_loop(
                                 app.set_status(format!("Copy failed: {}", e));
                             }
                         },
+                        Action::RerunFromSelected(new_input) => {
+                            // Reset all global state for a fresh run
+                            // This ensures the rerun behaves exactly like a fresh CLI invocation
+                            crate::checkers::reset_human_checker_state();
+                            crate::timer::reset();
+                            crate::storage::wait_athena_storage::clear_plaintext_results();
+
+                            // Reset app to loading state with new input
+                            app.input_text = new_input.clone();
+                            app.state = super::app::AppState::Loading {
+                                start_time: Instant::now(),
+                                current_quote: 0,
+                                spinner_frame: 0,
+                            };
+                            app.clear_status();
+
+                            // Reset timing
+                            start_time = Instant::now();
+                            tick_count = 0;
+
+                            // Reinitialize the human checker confirmation channel for the new run
+                            // This creates a fresh channel so the new decode thread can communicate
+                            confirmation_receiver = reinit_tui_confirmation_channel();
+
+                            // Create new channel and spawn new decode thread
+                            let (tx, rx) = mpsc::channel::<Option<DecoderResult>>();
+                            result_receiver = Some(rx);
+
+                            let config_clone = config.clone();
+                            thread::spawn(move || {
+                                crate::config::set_global_config(config_clone.clone());
+                                let result = crate::perform_cracking(&new_input, config_clone);
+                                let _ = tx.send(result);
+                            });
+
+                            app.set_status("Rerunning Ciphey...".to_string());
+                        }
                         Action::None => {}
                     }
                 }
@@ -191,14 +242,16 @@ fn run_event_loop(
         }
 
         // Check for decode result (non-blocking)
-        if let Ok(result) = result_receiver.try_recv() {
-            match result {
-                Some(decoder_result) => {
-                    app.set_result(decoder_result);
-                }
-                None => {
-                    let elapsed = start_time.elapsed();
-                    app.set_failure(elapsed);
+        if let Some(ref rx) = result_receiver {
+            if let Ok(result) = rx.try_recv() {
+                match result {
+                    Some(decoder_result) => {
+                        app.set_result(decoder_result);
+                    }
+                    None => {
+                        let elapsed = start_time.elapsed();
+                        app.set_failure(elapsed);
+                    }
                 }
             }
         }
