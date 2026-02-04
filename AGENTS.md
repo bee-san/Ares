@@ -296,6 +296,30 @@ CREATE TABLE human_rejection (
 - **`CacheRow`**: Output struct when reading cache rows  
 - **`HumanRejectionRow`**: Output struct when reading rejection rows
 
+### Wordlist Table (Fast Dictionary Lookup)
+
+Stores words for the wordlist checker with bloom filter acceleration:
+
+```sql
+CREATE TABLE wordlist (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    word TEXT NOT NULL UNIQUE,           -- The dictionary word
+    source TEXT,                          -- Origin (e.g., "user_import", "builtin")
+    added_date DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX idx_wordlist_word ON wordlist(word);
+```
+
+### Key Wordlist Functions
+
+| Function | Purpose |
+|----------|---------|
+| `insert_word(&str, Option<&str>)` | Add single word with optional source |
+| `insert_words_batch(&[String], Option<&str>)` | Bulk insert words |
+| `word_exists(&str) -> bool` | Check if word is in database |
+| `import_wordlist(path, source)` | Import words from file |
+| `get_word_count() -> i64` | Total words in database |
+
 **Note**: Users upgrading from older versions must delete `~/.ciphey/database.sqlite` due to schema changes.
 
 ## TUI Architecture
@@ -445,4 +469,68 @@ When testing human checker integration:
 - The order of prompts is non-deterministic due to parallel processing
 - Test should verify the FINAL result matches expected plaintext, not prompt order
 
+## Bloom Filter Integration
+
+### Overview
+
+The wordlist checker uses a two-tier lookup system for fast dictionary matching:
+
+1. **Bloom Filter** (fast, ~1% false positive rate) - stored at `~/.ciphey/wordlist_bloom.dat`
+2. **SQLite Database** (accurate) - verifies bloom filter positives
+3. **Config Fallback** - `config.wordlist` HashSet for backward compatibility
+
+### Architecture
+
+```
+Input Word
+    ↓
+Bloom Filter Check (O(1), ~1% false positives)
+    ↓
+┌───────────────────┬─────────────────────┐
+│ "Definitely not"  │ "Maybe present"     │
+│ → Fast rejection  │ → SQLite query      │
+│                   │ → Confirm/reject    │
+└───────────────────┴─────────────────────┘
+    ↓ (if no DB)
+Fallback to config.wordlist HashSet
+```
+
+### Key Files
+
+| File | Purpose |
+|------|---------|
+| `src/storage/bloom.rs` | Bloom filter build/save/load functions |
+| `src/storage/database.rs` | Wordlist table CRUD operations |
+| `src/checkers/wordlist.rs` | Two-tier lookup implementation |
+| `src/cli/first_run.rs` | Wordlist import during setup |
+
+### Bloom Filter Functions
+
+| Function | Purpose |
+|----------|---------|
+| `build_bloom_filter_from_db()` | Create bloom filter from all DB words |
+| `save_bloom_filter(&Bloom)` | Serialize to `~/.ciphey/wordlist_bloom.dat` |
+| `load_bloom_filter() -> Option<Bloom>` | Deserialize from disk |
+| `bloom_filter_exists() -> bool` | Check if cached filter exists |
+| `delete_bloom_filter()` | Remove cached filter |
+
+### Important: Bloom Filter Rebuild
+
+The bloom filter is NOT automatically rebuilt when the database changes. After modifying the wordlist database (insert/delete), you must manually rebuild:
+
+```rust
+use crate::storage::bloom::{build_bloom_filter_from_db, save_bloom_filter};
+
+let bloom = build_bloom_filter_from_db();
+save_bloom_filter(&bloom);
+```
+
+**Future work**: Auto-rebuild bloom filter on wordlist DB modifications.
+
+### Why Two Tiers?
+
+- **Bloom filters** have false positives but NO false negatives
+- A "definitely not in set" response is 100% reliable → fast rejection
+- A "maybe in set" response requires DB verification → accurate final answer
+- This gives O(1) rejection for most non-words while maintaining accuracy
 

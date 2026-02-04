@@ -58,6 +58,7 @@ half = "=2.4.1"  # Pinned for rand 0.8 compatibility with candle-core
 
 # Dependencies used for decoding
 base64 = "0.22.1"
+bloomfilter = { version = "1.0", features = ["serde"] }  # Probabilistic data structure for fast wordlist membership testing
 base65536 = "1.0.1"
 base91 = "0.1.0"
 bs58 = "0.5.0"

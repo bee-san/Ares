@@ -8,9 +8,11 @@ use gibberish_or_not::download_model_with_progress_bar;
 use rpassword;
 use std::collections::HashMap;
 use std::fmt::Display;
-use std::io::{self, Write};
+use std::io::{self, BufRead, BufReader, Write};
 use std::path::Path;
 use termcolor::{Buffer, Color, ColorSpec, WriteColor};
+
+use crate::storage::database::{import_wordlist, setup_database};
 
 /// Represents a color scheme with RGB values for different message types and roles.
 /// Each color is stored as a comma-separated RGB string in the format "r,g,b"
@@ -446,7 +448,27 @@ pub fn run_first_time_setup() -> HashMap<String, String> {
 
     if ask_yes_no_question_themed("", false, &theme) {
         if let Some(wordlist_path) = get_wordlist_path_themed(&theme) {
-            config.insert("wordlist_path".to_string(), wordlist_path);
+            config.insert("wordlist_path".to_string(), wordlist_path.clone());
+
+            // Import wordlist to database for bloom filter support
+            println!("{}", theme.statement("Importing wordlist to database..."));
+            match import_wordlist_to_database(&wordlist_path, "user_import") {
+                Ok(count) => {
+                    println!(
+                        "{}",
+                        theme.success(&format!("Imported {} words to database", count))
+                    );
+                }
+                Err(e) => {
+                    println!(
+                        "{}",
+                        theme.warning(&format!(
+                            "Could not import wordlist to database: {}. Will use file-based wordlist instead.",
+                            e
+                        ))
+                    );
+                }
+            }
         }
     }
 
@@ -841,4 +863,48 @@ fn get_wordlist_path_themed(theme: &ThemeContext) -> Option<String> {
             get_wordlist_path_themed(theme) // Recursively prompt until valid or cancelled
         }
     }
+}
+
+/// Imports a wordlist file into the database
+///
+/// Reads the wordlist file line by line and imports each word into the
+/// database wordlist table. This enables bloom filter-backed lookups.
+///
+/// # Arguments
+///
+/// * `wordlist_path` - Path to the wordlist file
+/// * `source` - Source identifier for the imported words (e.g., "user_import")
+///
+/// # Returns
+///
+/// Returns the number of words successfully imported
+///
+/// # Errors
+///
+/// Returns an error if the file cannot be read or database operations fail
+fn import_wordlist_to_database(wordlist_path: &str, source: &str) -> Result<usize, String> {
+    // Ensure database is set up
+    setup_database().map_err(|e| format!("Failed to setup database: {}", e))?;
+
+    // Open and read the wordlist file
+    let file =
+        std::fs::File::open(wordlist_path).map_err(|e| format!("Failed to open file: {}", e))?;
+    let reader = BufReader::new(file);
+
+    // Collect words into a HashSet (deduplicates and matches import_wordlist signature)
+    let mut words = std::collections::HashSet::new();
+    for line in reader.lines() {
+        if let Ok(word) = line {
+            let trimmed = word.trim();
+            if !trimmed.is_empty() {
+                words.insert(trimmed.to_string());
+            }
+        }
+    }
+
+    // Import to database
+    let count =
+        import_wordlist(&words, source).map_err(|e| format!("Failed to import words: {}", e))?;
+
+    Ok(count)
 }

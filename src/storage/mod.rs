@@ -3,6 +3,8 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::Path;
 
+/// Module for bloom filter management (fast wordlist membership testing)
+pub mod bloom;
 /// Module housing functions for managing SQLite database
 pub mod database;
 /// Module for storing WaitAthena results

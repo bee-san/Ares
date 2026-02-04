@@ -78,6 +78,28 @@ impl PartialEq for HumanRejectionRow {
 }
 
 #[derive(Debug)]
+/// Struct representing a row in the wordlist table
+pub struct WordlistRow {
+    /// Auto-incrementing ID for the wordlist entry
+    pub id: i64,
+    /// The word stored in the wordlist
+    pub word: String,
+    /// Source of the word (e.g., "user_import", "rockyou", "ctf_flags")
+    pub source: String,
+    /// When the word was added to the database
+    pub added_date: String,
+}
+
+impl PartialEq for WordlistRow {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.word == other.word
+            && self.source == other.source
+            && self.added_date == other.added_date
+    }
+}
+
+#[derive(Debug)]
 /// Struct representing a row in the cache table
 pub struct CacheRow {
     /// Text before it is decoded (primary key)
@@ -192,7 +214,9 @@ pub fn setup_database() -> Result<(), rusqlite::Error> {
 }
 
 /// Initializes database with default schema
-fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
+///
+/// This is pub(crate) to allow tests in sibling modules to initialize the database
+pub(crate) fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
     let conn = get_db_connection()?;
     // Initializing cache table
     conn.execute(
@@ -239,6 +263,21 @@ fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
     )?;
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_rejection_count ON human_rejection(rejection_count DESC);",
+        (),
+    )?;
+
+    // Initializing wordlist table for bloom filter-backed word lookups
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS wordlist (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            word TEXT NOT NULL UNIQUE,
+            source TEXT NOT NULL,
+            added_date DATETIME DEFAULT CURRENT_TIMESTAMP
+    );",
+        (),
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_wordlist_word ON wordlist(word);",
         (),
     )?;
 
@@ -551,6 +590,168 @@ pub fn delete_human_rejection(plaintext: &str) -> Result<usize, rusqlite::Error>
     );
     transaction.commit()?;
     conn_result
+}
+
+// ============================================================================
+// Wordlist Table Functions
+// ============================================================================
+
+/// Inserts a single word into the wordlist table
+///
+/// Returns the number of successfully inserted rows on success (0 if word already exists)
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn insert_word(word: &str, source: &str) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute(
+        "INSERT OR IGNORE INTO wordlist (word, source, added_date) VALUES ($1, $2, $3)",
+        (word.to_owned(), source.to_owned(), get_timestamp()),
+    );
+    transaction.commit()?;
+    conn_result
+}
+
+/// Bulk inserts words into the wordlist table (efficient batch operation)
+///
+/// Each tuple in the slice is (word, source).
+/// Uses INSERT OR IGNORE to skip duplicates.
+///
+/// Returns the number of successfully inserted rows on success
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn insert_words_batch(words: &[(&str, &str)]) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let timestamp = get_timestamp();
+
+    let mut total_inserted = 0;
+    for (word, source) in words {
+        let result = transaction.execute(
+            "INSERT OR IGNORE INTO wordlist (word, source, added_date) VALUES ($1, $2, $3)",
+            (word.to_string(), source.to_string(), timestamp.clone()),
+        )?;
+        total_inserted += result;
+    }
+
+    transaction.commit()?;
+    Ok(total_inserted)
+}
+
+/// Checks if a word exists in the wordlist table
+///
+/// Returns true if the word exists, false otherwise
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn word_exists(word: &str) -> Result<bool, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let mut stmt = conn.prepare("SELECT 1 FROM wordlist WHERE word = $1 LIMIT 1")?;
+    let exists = stmt.exists([word])?;
+    Ok(exists)
+}
+
+/// Returns all words in the wordlist table (for bloom filter building)
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn read_all_words() -> Result<Vec<String>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let mut stmt = conn.prepare("SELECT word FROM wordlist")?;
+    let words = stmt
+        .query_map([], |row| row.get::<usize, String>(0))?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(words)
+}
+
+/// Returns the count of words in the wordlist table (for bloom filter sizing)
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn get_word_count() -> Result<i64, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let count: i64 = conn.query_row("SELECT COUNT(*) FROM wordlist", [], |row| row.get(0))?;
+    Ok(count)
+}
+
+/// Deletes a word from the wordlist table
+///
+/// Returns number of successfully deleted rows on success
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn delete_word(word: &str) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result =
+        transaction.execute("DELETE FROM wordlist WHERE word = $1", (word.to_owned(),));
+    transaction.commit()?;
+    conn_result
+}
+
+/// Imports a HashSet of words into the database with a given source
+///
+/// This is useful for migrating existing wordlists from config files
+/// to the database. Uses INSERT OR IGNORE to skip duplicates.
+///
+/// Returns the number of successfully inserted words
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn import_wordlist(
+    words: &std::collections::HashSet<String>,
+    source: &str,
+) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let timestamp = get_timestamp();
+
+    let mut total_inserted = 0;
+    for word in words {
+        let result = transaction.execute(
+            "INSERT OR IGNORE INTO wordlist (word, source, added_date) VALUES ($1, $2, $3)",
+            (word.clone(), source.to_owned(), timestamp.clone()),
+        )?;
+        total_inserted += result;
+    }
+
+    transaction.commit()?;
+    Ok(total_inserted)
+}
+
+/// Reads a word from the wordlist table by its exact value
+///
+/// Returns Some(WordlistRow) if found, None otherwise
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn read_word(word: &str) -> Result<Option<WordlistRow>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let mut stmt =
+        conn.prepare("SELECT id, word, source, added_date FROM wordlist WHERE word = $1")?;
+    let mut query = stmt.query_map([word], |row| {
+        Ok(WordlistRow {
+            id: row.get_unwrap(0),
+            word: row.get_unwrap(1),
+            source: row.get_unwrap(2),
+            added_date: row.get_unwrap(3),
+        })
+    })?;
+    match query.next() {
+        Some(row) => Ok(Some(row?)),
+        None => Ok(None),
+    }
 }
 
 #[cfg(test)]
@@ -1694,5 +1895,201 @@ mod tests {
         let update_result = update_human_rejection(&plaintext, &check_result_new, None, None);
         assert!(update_result.is_ok());
         assert_eq!(update_result.unwrap(), 0);
+    }
+
+    // ============================================================================
+    // Wordlist Table Tests
+    // ============================================================================
+
+    #[test]
+    fn wordlist_table_created() {
+        set_test_db_path();
+        let conn = init_database().unwrap();
+
+        let stmt_result =
+            conn.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='wordlist';");
+        assert!(stmt_result.is_ok());
+        let mut stmt = stmt_result.unwrap();
+
+        let query_result = stmt.query_map([], |row| row.get::<usize, String>(0));
+        assert!(query_result.is_ok());
+        assert_eq!(query_result.unwrap().count(), 1);
+    }
+
+    #[test]
+    fn wordlist_insert_single_word() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let result = insert_word("password123", "test_source");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        // Verify word exists
+        let exists = word_exists("password123").unwrap();
+        assert!(exists);
+    }
+
+    #[test]
+    fn wordlist_insert_duplicate_word() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Insert first time
+        let result = insert_word("duplicate_word", "test_source");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        // Insert same word again - should be ignored (INSERT OR IGNORE)
+        let result = insert_word("duplicate_word", "test_source");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+    }
+
+    #[test]
+    fn wordlist_word_exists() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Word doesn't exist initially
+        let exists = word_exists("nonexistent_word").unwrap();
+        assert!(!exists);
+
+        // Insert word
+        insert_word("test_word", "test_source").unwrap();
+
+        // Now it should exist
+        let exists = word_exists("test_word").unwrap();
+        assert!(exists);
+    }
+
+    #[test]
+    fn wordlist_read_all_words() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Insert multiple words
+        insert_word("word1", "test_source").unwrap();
+        insert_word("word2", "test_source").unwrap();
+        insert_word("word3", "test_source").unwrap();
+
+        // Read all words
+        let words = read_all_words().unwrap();
+        assert_eq!(words.len(), 3);
+        assert!(words.contains(&"word1".to_string()));
+        assert!(words.contains(&"word2".to_string()));
+        assert!(words.contains(&"word3".to_string()));
+    }
+
+    #[test]
+    fn wordlist_get_word_count() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Initially empty
+        let count = get_word_count().unwrap();
+        assert_eq!(count, 0);
+
+        // Insert words
+        insert_word("word1", "test_source").unwrap();
+        insert_word("word2", "test_source").unwrap();
+
+        // Count should be 2
+        let count = get_word_count().unwrap();
+        assert_eq!(count, 2);
+    }
+
+    #[test]
+    fn wordlist_delete_word() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Insert word
+        insert_word("to_delete", "test_source").unwrap();
+        assert!(word_exists("to_delete").unwrap());
+
+        // Delete word
+        let result = delete_word("to_delete");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 1);
+
+        // Verify deleted
+        assert!(!word_exists("to_delete").unwrap());
+    }
+
+    #[test]
+    fn wordlist_delete_nonexistent() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let result = delete_word("nonexistent");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 0);
+    }
+
+    #[test]
+    fn wordlist_import_hashset() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Create a HashSet of words
+        let mut words = std::collections::HashSet::new();
+        words.insert("import1".to_string());
+        words.insert("import2".to_string());
+        words.insert("import3".to_string());
+
+        // Import
+        let result = import_wordlist(&words, "import_test");
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 3);
+
+        // Verify all words exist
+        assert!(word_exists("import1").unwrap());
+        assert!(word_exists("import2").unwrap());
+        assert!(word_exists("import3").unwrap());
+
+        // Verify count
+        assert_eq!(get_word_count().unwrap(), 3);
+    }
+
+    #[test]
+    fn wordlist_insert_batch() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let words = vec![
+            ("batch1", "batch_test"),
+            ("batch2", "batch_test"),
+            ("batch3", "batch_test"),
+        ];
+
+        let result = insert_words_batch(&words);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), 3);
+
+        // Verify all words exist
+        assert!(word_exists("batch1").unwrap());
+        assert!(word_exists("batch2").unwrap());
+        assert!(word_exists("batch3").unwrap());
+    }
+
+    #[test]
+    fn wordlist_read_word() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Insert a word
+        insert_word("readable_word", "read_test").unwrap();
+
+        // Read it back
+        let row = read_word("readable_word").unwrap();
+        assert!(row.is_some());
+        let row = row.unwrap();
+        assert_eq!(row.word, "readable_word");
+        assert_eq!(row.source, "read_test");
+
+        // Non-existent word
+        let row = read_word("nonexistent").unwrap();
+        assert!(row.is_none());
     }
 }
