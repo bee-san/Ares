@@ -288,58 +288,37 @@ fn expand_node(
     // The A* heuristic will prioritize which results to explore first
     let decoder_results = decoders.run(&current_node.state.text[0], checker);
 
-    match decoder_results {
-        MyResults::Break(res) => {
-            // A decoder succeeded (checker confirmed plaintext)
-            if res.success {
-                let mut decoders_used = current_node.state.path.clone();
-                let text = res.unencrypted_text.clone().unwrap_or_default();
-                decoders_used.push(res.clone());
+    // Get all results - both successful and unsuccessful
+    // MyResults::Break now contains (best_success, other_results)
+    // MyResults::Continue contains only unsuccessful results
+    let results_to_process: Vec<CrackResult> = decoder_results.all_results();
 
-                let result_cost = calculate_path_complexity(&decoders_used);
-                let result_node = AStarNode {
-                    state: DecoderResult {
-                        text: text.clone(),
-                        path: decoders_used,
-                    },
-                    cost: result_cost,
-                    heuristic: -1000.0, // Very negative to ensure highest priority
-                    total_cost: -1000.0,
-                    node_type: NodeType::Result,
-                };
-                new_nodes.push(result_node);
-            }
+    for r in results_to_process {
+        if stop.load(AtomicOrdering::Relaxed) {
+            break;
         }
-        MyResults::Continue(results) => {
-            // Process each decoder result
-            for r in results {
-                if stop.load(AtomicOrdering::Relaxed) {
-                    break;
-                }
 
-                // If a decoder succeeded, create a result node
-                if r.success {
-                    let mut decoders_used = current_node.state.path.clone();
-                    let text = r.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(r.clone());
+        // If a decoder succeeded, create a result node
+        if r.success {
+            let mut decoders_used = current_node.state.path.clone();
+            let text = r.unencrypted_text.clone().unwrap_or_default();
+            decoders_used.push(r.clone());
 
-                    let result_cost = calculate_path_complexity(&decoders_used);
-                    let result_node = AStarNode {
-                        state: DecoderResult {
-                            text: text.clone(),
-                            path: decoders_used,
-                        },
-                        cost: result_cost,
-                        heuristic: -1000.0,
-                        total_cost: -1000.0,
-                        node_type: NodeType::Result,
-                    };
-                    new_nodes.push(result_node);
-                } else if let Some(node) = create_node_from_result(&r, current_node, seen_strings) {
-                    // Create regular node for further exploration
-                    new_nodes.push(node);
-                }
-            }
+            let result_cost = calculate_path_complexity(&decoders_used);
+            let result_node = AStarNode {
+                state: DecoderResult {
+                    text: text.clone(),
+                    path: decoders_used,
+                },
+                cost: result_cost,
+                heuristic: -1000.0, // Very negative to ensure highest priority
+                total_cost: -1000.0,
+                node_type: NodeType::Result,
+            };
+            new_nodes.push(result_node);
+        } else if let Some(node) = create_node_from_result(&r, current_node, seen_strings) {
+            // Create regular node for further exploration
+            new_nodes.push(node);
         }
     }
 
@@ -414,105 +393,140 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
             .flat_map(|node| expand_node(node, &seen_strings, &stop))
             .collect();
 
-        // Check for result nodes
-        for node in &new_nodes {
+        // Collect result nodes and regular nodes separately
+        let mut result_nodes: Vec<&AStarNode> = Vec::new();
+        let mut regular_nodes: Vec<AStarNode> = Vec::new();
+
+        for node in new_nodes {
             if matches!(node.node_type, NodeType::Result) {
                 // Check if we've already processed this result
                 if let Some(text) = node.state.text.first() {
                     let result_hash = calculate_hash(text);
-                    if !seen_results.insert(result_hash) {
-                        continue; // Skip this result, we've already processed it
-                    }
+                    if seen_results.insert(result_hash) {
+                        // New result - check human confirmation if needed
+                        let should_include =
+                            if let Some(confirmed_text) = get_human_confirmed_text() {
+                                let normalized_result = text
+                                    .to_ascii_lowercase()
+                                    .chars()
+                                    .filter(|c| !c.is_ascii_punctuation())
+                                    .collect::<String>();
+                                let normalized_confirmed = confirmed_text
+                                    .to_ascii_lowercase()
+                                    .chars()
+                                    .filter(|c| !c.is_ascii_punctuation())
+                                    .collect::<String>();
+                                normalized_result == normalized_confirmed
+                            } else {
+                                true
+                            };
 
-                    // If human checker confirmed a specific text, verify this result matches
-                    // The human sees normalized text (lowercase, no punctuation), so we compare
-                    // the normalized versions
-                    if let Some(confirmed_text) = get_human_confirmed_text() {
-                        let normalized_result = text
-                            .to_ascii_lowercase()
-                            .chars()
-                            .filter(|c| !c.is_ascii_punctuation())
-                            .collect::<String>();
-                        let normalized_confirmed = confirmed_text
-                            .to_ascii_lowercase()
-                            .chars()
-                            .filter(|c| !c.is_ascii_punctuation())
-                            .collect::<String>();
-
-                        if normalized_result != normalized_confirmed {
-                            continue; // Skip results that don't match what the human confirmed
+                        if should_include {
+                            // We need to store the node for later sorting
+                            // For now, add to regular_nodes and mark as result
+                            regular_nodes.push(node);
                         }
                     }
                 }
-
-                // Found a result node
-                decoded_how_many_times(curr_depth.load(AtomicOrdering::Relaxed));
-
-                // If in top_results mode, store the result in the WaitAthena storage
-                if get_config().top_results {
-                    // Store the first text in the vector (there should only be one)
-                    if let Some(plaintext) = node.state.text.first() {
-                        debug!(
-                            "DEBUG: Processing result in top_results mode with plaintext: {}",
-                            plaintext
-                        );
-                        // Get the last decoder used
-                        let decoder_name = if let Some(last_decoder) = node.state.path.last() {
-                            last_decoder.decoder.to_string()
-                        } else {
-                            "Unknown".to_string()
-                        };
-
-                        // Get the checker name from the last decoder
-                        let checker_name = if let Some(last_decoder) = node.state.path.last() {
-                            last_decoder.checker_name.to_string()
-                        } else {
-                            "Unknown".to_string()
-                        };
-
-                        // Only store results that have a valid checker name
-                        if !checker_name.is_empty() && checker_name != "Unknown" {
-                            log::trace!(
-                                "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
-                                plaintext,
-                                decoder_name,
-                                checker_name
-                            );
-                            wait_athena_storage::add_plaintext_result(
-                                plaintext.clone(),
-                                format!(
-                                    "Decoded successfully at depth {}",
-                                    curr_depth.load(AtomicOrdering::Relaxed)
-                                ),
-                                checker_name,
-                                decoder_name,
-                            );
-                        }
-                    }
-                }
-
-                // Send the result
-                result_sender
-                    .send(Some(node.state.clone()))
-                    .expect("Should successfully send the result");
-
-                // Only stop if not in top_results mode
-                if !get_config().top_results {
-                    // Stop further iterations
-                    stop.store(true, AtomicOrdering::Relaxed);
-                    return;
-                }
-                // In top_results mode, continue searching
+            } else {
+                regular_nodes.push(node);
             }
         }
 
-        // Filter out result nodes, add remaining nodes to open set, and update depth
-        for node in new_nodes {
-            if matches!(node.node_type, NodeType::Regular { .. }) {
-                // Track max depth (actual path length, not complexity score)
-                curr_depth.fetch_max(node.state.path.len() as u32, AtomicOrdering::Relaxed);
-                open_set.lock().unwrap().push(node);
+        // Separate out result nodes from regular nodes for sorting
+        let (mut collected_results, non_results): (Vec<_>, Vec<_>) = regular_nodes
+            .into_iter()
+            .partition(|n| matches!(n.node_type, NodeType::Result));
+
+        // If we have result nodes, sort by path complexity and pick the best one
+        if !collected_results.is_empty() {
+            // Sort by cost (path complexity) - lower is better
+            collected_results.sort_by(|a, b| {
+                a.cost
+                    .partial_cmp(&b.cost)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
+
+            // Get the best result (lowest cost)
+            let best_result = collected_results.remove(0);
+
+            trace!(
+                "Found {} result nodes, best cost: {} (decoder path: {:?})",
+                collected_results.len() + 1,
+                best_result.cost,
+                best_result
+                    .state
+                    .path
+                    .iter()
+                    .map(|p| p.decoder)
+                    .collect::<Vec<_>>()
+            );
+
+            // Found a result node
+            decoded_how_many_times(curr_depth.load(AtomicOrdering::Relaxed));
+
+            // If in top_results mode, store the result in the WaitAthena storage
+            if get_config().top_results {
+                // Store the first text in the vector (there should only be one)
+                if let Some(plaintext) = best_result.state.text.first() {
+                    debug!(
+                        "DEBUG: Processing result in top_results mode with plaintext: {}",
+                        plaintext
+                    );
+                    // Get the last decoder used
+                    let decoder_name = if let Some(last_decoder) = best_result.state.path.last() {
+                        last_decoder.decoder.to_string()
+                    } else {
+                        "Unknown".to_string()
+                    };
+
+                    // Get the checker name from the last decoder
+                    let checker_name = if let Some(last_decoder) = best_result.state.path.last() {
+                        last_decoder.checker_name.to_string()
+                    } else {
+                        "Unknown".to_string()
+                    };
+
+                    // Only store results that have a valid checker name
+                    if !checker_name.is_empty() && checker_name != "Unknown" {
+                        log::trace!(
+                            "Storing plaintext in WaitAthena storage: {} (decoder: {}, checker: {})",
+                            plaintext,
+                            decoder_name,
+                            checker_name
+                        );
+                        wait_athena_storage::add_plaintext_result(
+                            plaintext.clone(),
+                            format!(
+                                "Decoded successfully at depth {}",
+                                curr_depth.load(AtomicOrdering::Relaxed)
+                            ),
+                            checker_name,
+                            decoder_name,
+                        );
+                    }
+                }
             }
+
+            // Send the result
+            result_sender
+                .send(Some(best_result.state.clone()))
+                .expect("Should successfully send the result");
+
+            // Only stop if not in top_results mode
+            if !get_config().top_results {
+                // Stop further iterations
+                stop.store(true, AtomicOrdering::Relaxed);
+                return;
+            }
+            // In top_results mode, continue searching
+        }
+
+        // Add remaining regular nodes to open set
+        for node in non_results {
+            // Track max depth (actual path length, not complexity score)
+            curr_depth.fetch_max(node.state.path.len() as u32, AtomicOrdering::Relaxed);
+            open_set.lock().unwrap().push(node);
         }
     }
 

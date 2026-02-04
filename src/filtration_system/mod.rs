@@ -1,8 +1,6 @@
 //! Proposal: https://broadleaf-angora-7db.notion.site/Filtration-System-7143b36a42f1466faea3077bfc7e859e
 //! Given a filter object, return an array of decoders/crackers which have been filtered
 
-use std::sync::mpsc::channel;
-
 use crate::checkers::CheckerTypes;
 use crate::decoders::atbash_decoder::AtbashDecoder;
 use crate::decoders::base32_decoder::Base32Decoder;
@@ -49,63 +47,134 @@ pub struct Decoders {
     pub components: Vec<Box<dyn Crack + Sync>>,
 }
 
+/// Default number of decoders to run concurrently
+const DEFAULT_DECODER_BATCH_SIZE: usize = 4;
+
 impl Decoders {
-    /// Iterate over all of the decoders and run .crack(text) on them
-    /// Then if the checker succeed, we short-circuit the iterator
-    /// and stop all processing as soon as possible.
+    /// Iterate over all of the decoders and run .crack(text) on them.
+    ///
+    /// Unlike the previous implementation, this does NOT short-circuit on first success.
+    /// Instead, it collects ALL results and returns the best successful result based on
+    /// decoder popularity (higher popularity = preferred). This prevents race conditions
+    /// where a false positive from a slower decoder beats the correct result.
+    ///
+    /// Decoders are processed in batches to limit concurrency and ensure predictable ordering.
+    ///
     /// We are using Trait Objects
     /// https://doc.rust-lang.org/book/ch17-02-trait-objects.html
     /// Which allows us to have multiple different structs in the same vector
-    /// But each struct shciphey the same `.crack()` method, so it's fine.
+    /// But each struct shares the same `.crack()` method, so it's fine.
     pub fn run(&self, text: &str, checker: CheckerTypes) -> MyResults {
-        trace!("Running .crack() on all decoders");
-        let (sender, receiver) = channel();
-        self.components
-            .into_par_iter()
-            .try_for_each_with(sender, |s, i| {
-                let results = i.crack(text, &checker);
-                if results.success {
-                    s.send(results.clone()).expect("expected no send error!");
-                    // returning None short-circuits the iterator
-                    // we don't process any further as we got success
-                    return None;
-                }
-                s.send(results.clone()).expect("expected no send error!");
-                // return Some(()) to indicate that continue processing
-                Some(())
-            });
+        self.run_with_batch_size(text, checker, DEFAULT_DECODER_BATCH_SIZE)
+    }
+
+    /// Run decoders with a specific batch size for concurrency control.
+    ///
+    /// # Arguments
+    /// * `text` - The text to decode
+    /// * `checker` - The checker to validate results
+    /// * `batch_size` - Maximum number of decoders to run concurrently
+    pub fn run_with_batch_size(
+        &self,
+        text: &str,
+        checker: CheckerTypes,
+        batch_size: usize,
+    ) -> MyResults {
+        trace!(
+            "Running .crack() on {} decoders with batch size {}",
+            self.components.len(),
+            batch_size
+        );
 
         let mut all_results: Vec<CrackResult> = Vec::new();
+        let mut successful_results: Vec<CrackResult> = Vec::new();
 
-        while let Ok(result) = receiver.recv() {
-            // if we recv success, break.
-            if result.success {
-                return MyResults::Break(result);
+        // Process decoders in batches to limit concurrency
+        for chunk in self.components.chunks(batch_size) {
+            // Run this batch in parallel
+            let batch_results: Vec<CrackResult> = chunk
+                .par_iter()
+                .map(|decoder| decoder.crack(text, &checker))
+                .collect();
+
+            // Separate successful and unsuccessful results
+            for result in batch_results {
+                if result.success {
+                    successful_results.push(result);
+                } else {
+                    all_results.push(result);
+                }
             }
-            all_results.push(result)
+        }
+
+        // If we have successful results, return the best one AND all other results
+        if !successful_results.is_empty() {
+            // Sort by popularity (highest first) - more popular decoders are more likely correct
+            successful_results.sort_by(|a, b| {
+                let pop_a = get_decoder_popularity_by_name(a.decoder);
+                let pop_b = get_decoder_popularity_by_name(b.decoder);
+                pop_b
+                    .partial_cmp(&pop_a)
+                    .unwrap_or(std::cmp::Ordering::Equal)
+            });
+
+            let best_result = successful_results.remove(0);
+            trace!(
+                "Found {} successful results, best: {} (popularity: {})",
+                successful_results.len() + 1,
+                best_result.decoder,
+                get_decoder_popularity_by_name(best_result.decoder)
+            );
+
+            // Combine remaining successful results with unsuccessful results
+            all_results.extend(successful_results);
+            return MyResults::Break(best_result, all_results);
         }
 
         MyResults::Continue(all_results)
     }
 }
 
+/// Get decoder popularity by name for sorting results
+fn get_decoder_popularity_by_name(decoder_name: &str) -> f32 {
+    use crate::decoders::DECODER_MAP;
+
+    if let Some(decoder_box) = DECODER_MAP.get(decoder_name) {
+        let decoder = decoder_box.get::<()>();
+        decoder.get_popularity()
+    } else {
+        0.5 // Default for unknown decoders
+    }
+}
+
 /// [`Enum`] for our custom results.
-/// if our checker succeed, we return `Break` variant contining [`CrackResult`]
-/// else we return `Continue` with the decoded results.
+/// `Break` contains a successful result AND all other results for continued exploration.
+/// `Continue` contains only unsuccessful results.
 pub enum MyResults {
-    /// Variant containing successful [`CrackResult`]
-    Break(CrackResult),
-    /// Contains [`Vec`] of [`CrackResult`] for further processing
+    /// Variant containing successful [`CrackResult`] and all other results
+    /// The first element is the best successful result, the second is all other results
+    Break(CrackResult, Vec<CrackResult>),
+    /// Contains [`Vec`] of [`CrackResult`] for further processing (no successes)
     Continue(Vec<CrackResult>),
 }
 
 impl MyResults {
-    /// named with _ to pass dead_code warning
-    /// as we aren't using it, it's just used in tests
+    /// Get the successful result if any
     pub fn _break_value(self) -> Option<CrackResult> {
         match self {
-            MyResults::Break(val) => Some(val),
+            MyResults::Break(val, _) => Some(val),
             MyResults::Continue(_) => None,
+        }
+    }
+
+    /// Get all results (both successful and unsuccessful) as a single vector
+    pub fn all_results(self) -> Vec<CrackResult> {
+        match self {
+            MyResults::Break(success, mut others) => {
+                others.insert(0, success);
+                others
+            }
+            MyResults::Continue(results) => results,
         }
     }
 }

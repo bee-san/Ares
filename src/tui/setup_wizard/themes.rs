@@ -161,6 +161,17 @@ pub static THEMES: &[Theme] = &[
         },
     },
     Theme {
+        name: "Skeletal",
+        icon: None,
+        scheme: ColorScheme {
+            informational: (248, 248, 240),
+            warning: (255, 140, 0),
+            success: (152, 251, 152),
+            question: (138, 43, 226),
+            statement: (211, 211, 211),
+        },
+    },
+    Theme {
         name: "Default",
         icon: None,
         scheme: ColorScheme {

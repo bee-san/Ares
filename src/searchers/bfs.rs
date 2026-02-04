@@ -35,13 +35,17 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
         current_strings.into_iter().try_for_each(|current_string| {
             let res = super::perform_decoding(&current_string);
 
-            match res {
-                // if it's Break variant, we have cracked the text successfully
-                // so just stop processing further.
-                MyResults::Break(res) => {
-                    let mut decoders_used = current_string.path;
-                    let text = res.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(res);
+            // Get all results using the new all_results() method
+            let all_results = res.all_results();
+            let mut found_success = false;
+
+            for r in all_results {
+                if r.success && !found_success {
+                    // First successful result - return it
+                    found_success = true;
+                    let mut decoders_used = current_string.path.clone();
+                    let text = r.unencrypted_text.clone().unwrap_or_default();
+                    decoders_used.push(r);
                     let result_text = DecoderResult {
                         text,
                         path: decoders_used,
@@ -54,36 +58,27 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
 
                     // stop further iterations
                     stop.store(true, std::sync::atomic::Ordering::Relaxed);
-                    None // short-circuits the iterator
-                }
-                MyResults::Continue(results_vec) => {
-                    new_strings.extend(results_vec.into_iter().flat_map(|mut r| {
-                        let mut decoders_used = current_string.path.clone();
-                        // text is a vector of strings
-                        let mut text = r.unencrypted_text.take().unwrap_or_default();
+                    return None; // short-circuits the iterator
+                } else if !r.success {
+                    // Unsuccessful result - continue exploring
+                    let mut decoders_used = current_string.path.clone();
+                    let mut text = r.unencrypted_text.clone().unwrap_or_default();
 
-                        text.retain(|s| {
-                            !check_if_string_cant_be_decoded(s) && seen_strings.insert(s.clone())
-                        });
+                    text.retain(|s| {
+                        !check_if_string_cant_be_decoded(s) && seen_strings.insert(s.clone())
+                    });
 
-                        if text.is_empty() {
-                            return None;
-                        }
-
-                        decoders_used.push(r);
-                        Some(DecoderResult {
-                            // and this is a vector of strings
-                            // TODO we should probably loop through all `text` and create Text structs for each one
-                            // and append those structs
-                            // I think we should keep text as a single string
-                            // and just create more of them....
+                    if !text.is_empty() {
+                        let mut r_clone = r;
+                        decoders_used.push(r_clone);
+                        new_strings.push(DecoderResult {
                             text,
-                            path: decoders_used.to_vec(),
-                        })
-                    }));
-                    Some(()) // indicate we want to continue processing
+                            path: decoders_used,
+                        });
+                    }
                 }
             }
+            Some(()) // indicate we want to continue processing
         });
 
         current_strings = new_strings;

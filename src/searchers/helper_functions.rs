@@ -91,6 +91,29 @@ pub fn is_encoder(decoder_name: &str) -> bool {
     }
 }
 
+/// Get the popularity score for a decoder
+///
+/// Higher popularity means the cipher is more commonly used and should be
+/// tried before less popular ciphers. For example, Caesar (0.8) should be
+/// tried before Vigenere (0.6).
+///
+/// # Arguments
+///
+/// * `decoder_name` - The name of the decoder to check
+///
+/// # Returns
+///
+/// * The popularity score (0.0 to 1.0), defaults to 0.5 if unknown
+pub fn get_decoder_popularity(decoder_name: &str) -> f32 {
+    if let Some(decoder_box) = DECODER_MAP.get(decoder_name) {
+        let decoder = decoder_box.get::<()>();
+        decoder.get_popularity()
+    } else {
+        // Default to moderate popularity for unknown decoders
+        0.5
+    }
+}
+
 /// Calculate category-aware path complexity for Occam's Razor
 ///
 /// This function calculates the "conceptual complexity" of a decoding path,
@@ -98,7 +121,8 @@ pub fn is_encoder(decoder_name: &str) -> bool {
 ///
 /// - Repeated same-encoder applications are cheap (0.2 each after the first)
 /// - Different encoders cost more (0.7 each)
-/// - Ciphers are expensive (2.0, escalating for multiple ciphers)
+/// - Ciphers are expensive (base cost 2.0, escalating for multiple ciphers)
+/// - Cipher cost is adjusted by popularity: higher popularity = lower cost
 ///
 /// # Arguments
 ///
@@ -114,8 +138,9 @@ pub fn is_encoder(decoder_name: &str) -> bool {
 /// |------|------|
 /// | base64 × 5 | 0.7 + 0.2×4 = 1.5 |
 /// | base64 → base32 → hex | 0.7×3 = 2.1 |
-/// | base64 × 3 → caesar | 0.7 + 0.2×2 + 2.0 = 3.1 |
-/// | caesar → vigenere | 2.0 + 4.0 = 6.0 |
+/// | base64 × 3 → caesar (0.8 pop) | 0.7 + 0.2×2 + 2.0×1.2 = 3.5 |
+/// | base64 × 3 → vigenere (0.6 pop) | 0.7 + 0.2×2 + 2.0×1.4 = 3.9 |
+/// | caesar → vigenere | 2.0×1.2 + 4.0×1.4 = 7.8 |
 pub fn calculate_path_complexity(path: &[CrackResult]) -> f32 {
     if path.is_empty() {
         return 0.0;
@@ -132,7 +157,13 @@ pub fn calculate_path_complexity(path: &[CrackResult]) -> f32 {
         if !is_enc {
             // It's a cipher - expensive, escalating penalty for multiple
             cipher_count += 1;
-            complexity += 2.0 * cipher_count as f32;
+
+            // Get cipher popularity to adjust cost
+            // More popular ciphers (like Caesar) get lower cost multiplier
+            let popularity = get_decoder_popularity(step.decoder);
+            let popularity_multiplier = 2.0 - popularity; // Range: 1.0 to 2.0
+
+            complexity += 2.0 * cipher_count as f32 * popularity_multiplier;
         } else if is_repeated {
             // Repeated same encoder (e.g., base64 → base64) is common
             complexity += 0.2;
