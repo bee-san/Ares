@@ -146,17 +146,9 @@ We now store statistics in a database. This is useful for seeing how ciphey is d
 
 
 TODO:
-- store wordlists in sqllite or something
-- Review code
 - Add more decoders
-- Make TUI pretty 
 - Make sure API works
 - Gibberish checker, can we use a better AI model or offer a selection?
 - Add more to LemmeKnow... Maybe fork it lol
 - Add hashcat support
-- Move first time run into tui if possible
-- Ability to decode from a step in the TUI
-- Copy in TUI should copy current step
-- Add funny cryptography quotes
-- Quotes should be random
-- In cache, all successful steps in a cached hit should be stored
+- Lemmeknow as first decoder does not show useful info
