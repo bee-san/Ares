@@ -5,7 +5,7 @@
 
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use super::app::{SetupApp, SetupState};
+use super::app::{SetupApp, SetupState, WordlistFocus};
 use super::themes::THEMES;
 
 /// Handles a keyboard event for the setup wizard.
@@ -197,99 +197,236 @@ fn handle_timeout_keys(app: &mut SetupApp, key: KeyEvent) {
 /// Handles keys on the wordlist configuration screen.
 fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
     if let SetupState::WordlistConfig {
-        paths,
+        custom_paths,
         current_input,
         cursor,
-        input_focused,
+        selected_predefined,
+        focus,
+        custom_url,
+        custom_url_source,
+        download_progress,
     } = &mut app.state
     {
-        if *input_focused {
-            // Currently typing a path
+        // Don't allow input during downloads
+        if download_progress.is_some() {
             match key.code {
-                KeyCode::Char(c) => {
-                    current_input.insert(*cursor, c);
-                    *cursor += 1;
-                }
-                KeyCode::Backspace => {
-                    if *cursor > 0 {
-                        *cursor -= 1;
-                        current_input.remove(*cursor);
-                    }
-                }
-                KeyCode::Delete => {
-                    if *cursor < current_input.len() {
-                        current_input.remove(*cursor);
-                    }
-                }
-                KeyCode::Left => {
-                    if *cursor > 0 {
-                        *cursor -= 1;
-                    }
-                }
-                KeyCode::Right => {
-                    if *cursor < current_input.len() {
-                        *cursor += 1;
-                    }
-                }
-                KeyCode::Home => {
-                    *cursor = 0;
-                }
-                KeyCode::End => {
-                    *cursor = current_input.len();
-                }
-                KeyCode::Enter => {
-                    // Try to add the current path
-                    if !current_input.is_empty() {
-                        match SetupApp::validate_wordlist_path(current_input) {
-                            Ok(()) => {
-                                // Valid path - add to list and clear input
-                                paths.push(current_input.clone());
-                                current_input.clear();
-                                *cursor = 0;
-                            }
-                            Err(_) => {
-                                // Invalid path - clear and let user try again
-                                // The UI will show feedback
-                                current_input.clear();
-                                *cursor = 0;
-                            }
-                        }
-                    }
-                }
-                KeyCode::Down | KeyCode::Tab => {
-                    // Move focus to Done button
-                    *input_focused = false;
-                }
                 KeyCode::Esc => {
-                    if !current_input.is_empty() {
-                        // Clear current input
-                        current_input.clear();
-                        *cursor = 0;
-                    } else if !paths.is_empty() {
-                        // Remove last added path
-                        paths.pop();
-                    } else {
-                        // Go back
-                        app.prev_step();
+                    // Cancel download (not implemented fully, just mark as failed)
+                    if let Some(progress) = download_progress {
+                        progress.failed.push("Cancelled by user".to_string());
                     }
                 }
                 _ => {}
             }
-        } else {
-            // Focused on Done button
-            match key.code {
-                KeyCode::Enter | KeyCode::Char(' ') => {
-                    // Proceed to next step
-                    app.next_step();
+            return;
+        }
+
+        match focus {
+            WordlistFocus::PredefinedList => {
+                // Navigating predefined wordlist checkboxes
+                let predefined_wordlists = crate::storage::download::get_predefined_wordlists();
+                let max_index = if predefined_wordlists.is_empty() {
+                    0
+                } else {
+                    predefined_wordlists.len() - 1
+                };
+
+                match key.code {
+                    KeyCode::Up | KeyCode::Char('k') | KeyCode::Char('K') => {
+                        // Navigate up (only if we have wordlists)
+                        if !predefined_wordlists.is_empty() {
+                            // For now, we'll just stay at the first item
+                            // In a full implementation, we'd track the cursor position
+                        }
+                    }
+                    KeyCode::Down | KeyCode::Char('j') | KeyCode::Char('J') => {
+                        // Navigate down
+                        if !predefined_wordlists.is_empty() {
+                            // For now, we'll just stay at the first item
+                        }
+                    }
+                    KeyCode::Char(' ') | KeyCode::Enter => {
+                        // Toggle selection of first wordlist (simplified)
+                        // In a full implementation, we'd track which item is highlighted
+                        if selected_predefined.is_empty() {
+                            selected_predefined.push(0);
+                        } else if selected_predefined.contains(&0) {
+                            selected_predefined.retain(|&x| x != 0);
+                        } else {
+                            selected_predefined.push(0);
+                        }
+                    }
+                    KeyCode::Char('1') => {
+                        // Quick toggle first wordlist
+                        if selected_predefined.contains(&0) {
+                            selected_predefined.retain(|&x| x != 0);
+                        } else {
+                            selected_predefined.push(0);
+                        }
+                    }
+                    KeyCode::Char('2') => {
+                        // Quick toggle second wordlist
+                        if predefined_wordlists.len() > 1 {
+                            if selected_predefined.contains(&1) {
+                                selected_predefined.retain(|&x| x != 1);
+                            } else {
+                                selected_predefined.push(1);
+                            }
+                        }
+                    }
+                    KeyCode::Tab | KeyCode::Right => {
+                        // Move to custom input
+                        *focus = WordlistFocus::CustomInput;
+                    }
+                    KeyCode::Esc => {
+                        app.prev_step();
+                    }
+                    _ => {}
                 }
-                KeyCode::Up | KeyCode::Tab | KeyCode::BackTab => {
-                    // Move focus back to input
-                    *input_focused = true;
+            }
+            WordlistFocus::CustomInput => {
+                // Typing custom file path
+                match key.code {
+                    KeyCode::Char(c) => {
+                        current_input.insert(*cursor, c);
+                        *cursor += 1;
+                    }
+                    KeyCode::Backspace => {
+                        if *cursor > 0 {
+                            *cursor -= 1;
+                            current_input.remove(*cursor);
+                        }
+                    }
+                    KeyCode::Delete => {
+                        if *cursor < current_input.len() {
+                            current_input.remove(*cursor);
+                        }
+                    }
+                    KeyCode::Left => {
+                        if *cursor > 0 {
+                            *cursor -= 1;
+                        }
+                    }
+                    KeyCode::Right => {
+                        if *cursor < current_input.len() {
+                            *cursor += 1;
+                        }
+                    }
+                    KeyCode::Home => {
+                        *cursor = 0;
+                    }
+                    KeyCode::End => {
+                        *cursor = current_input.len();
+                    }
+                    KeyCode::Enter => {
+                        // Try to add the current path
+                        if !current_input.is_empty() {
+                            match SetupApp::validate_wordlist_path(current_input) {
+                                Ok(()) => {
+                                    // Valid path - add to list and clear input
+                                    custom_paths.push(current_input.clone());
+                                    current_input.clear();
+                                    *cursor = 0;
+                                }
+                                Err(_) => {
+                                    // Invalid path - clear and let user try again
+                                    current_input.clear();
+                                    *cursor = 0;
+                                }
+                            }
+                        }
+                    }
+                    KeyCode::Tab => {
+                        // Move to custom URL input
+                        *focus = WordlistFocus::CustomUrlInput;
+                    }
+                    KeyCode::Esc => {
+                        if !current_input.is_empty() {
+                            // Clear current input
+                            current_input.clear();
+                            *cursor = 0;
+                        } else {
+                            // Go back to predefined list
+                            *focus = WordlistFocus::PredefinedList;
+                        }
+                    }
+                    _ => {}
                 }
-                KeyCode::Char('q') | KeyCode::Esc => {
-                    app.prev_step();
+            }
+            WordlistFocus::CustomUrlInput => {
+                // Typing custom URL
+                match key.code {
+                    KeyCode::Char(c) => {
+                        custom_url.push(c);
+                    }
+                    KeyCode::Backspace => {
+                        custom_url.pop();
+                    }
+                    KeyCode::Enter => {
+                        // Move to source name input if URL is not empty
+                        if !custom_url.is_empty() {
+                            *focus = WordlistFocus::CustomUrlSource;
+                        }
+                    }
+                    KeyCode::Tab => {
+                        // Move to Done
+                        *focus = WordlistFocus::Done;
+                    }
+                    KeyCode::Esc => {
+                        if !custom_url.is_empty() {
+                            custom_url.clear();
+                        } else {
+                            *focus = WordlistFocus::CustomInput;
+                        }
+                    }
+                    _ => {}
                 }
-                _ => {}
+            }
+            WordlistFocus::CustomUrlSource => {
+                // Typing custom URL source name
+                match key.code {
+                    KeyCode::Char(c) => {
+                        custom_url_source.push(c);
+                    }
+                    KeyCode::Backspace => {
+                        custom_url_source.pop();
+                    }
+                    KeyCode::Enter => {
+                        // Add URL to a list (we'd need to add a field for this)
+                        // For now, just go back to URL input
+                        if !custom_url_source.is_empty() && !custom_url.is_empty() {
+                            // Would add to custom URL list here
+                            custom_url.clear();
+                            custom_url_source.clear();
+                            *focus = WordlistFocus::CustomUrlInput;
+                        }
+                    }
+                    KeyCode::Esc => {
+                        if !custom_url_source.is_empty() {
+                            custom_url_source.clear();
+                        } else {
+                            *focus = WordlistFocus::CustomUrlInput;
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            WordlistFocus::Done => {
+                // Focused on Done button
+                match key.code {
+                    KeyCode::Enter | KeyCode::Char(' ') => {
+                        // Start downloads and proceed
+                        app.next_step();
+                    }
+                    KeyCode::Up | KeyCode::Tab | KeyCode::BackTab => {
+                        // Move focus back to predefined list
+                        *focus = WordlistFocus::PredefinedList;
+                    }
+                    KeyCode::Esc => {
+                        app.prev_step();
+                    }
+                    _ => {}
+                }
             }
         }
     }

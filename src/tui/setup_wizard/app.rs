@@ -43,14 +43,22 @@ pub enum SetupState {
     },
     /// Wordlist configuration
     WordlistConfig {
-        /// List of already added wordlist paths
-        paths: Vec<String>,
-        /// Current path being typed
+        /// List of already added custom file paths
+        custom_paths: Vec<String>,
+        /// Current path being typed (for custom file input)
         current_input: String,
         /// Cursor position in the current input
         cursor: usize,
-        /// Whether currently focused on input (false = focused on Done button)
-        input_focused: bool,
+        /// Selection state for predefined wordlists (indexes into get_predefined_wordlists())
+        selected_predefined: Vec<usize>,
+        /// Current UI focus
+        focus: WordlistFocus,
+        /// Custom URL being typed
+        custom_url: String,
+        /// Custom URL source name
+        custom_url_source: String,
+        /// Download progress if downloading (None if not downloading)
+        download_progress: Option<DownloadProgress>,
     },
     /// Enhanced detection (AI model) configuration
     EnhancedDetection {
@@ -162,6 +170,34 @@ fn parse_rgb(s: &str) -> Option<(u8, u8, u8)> {
     Some((r, g, b))
 }
 
+/// Focus state for the wordlist configuration screen.
+#[derive(Debug, Clone, PartialEq)]
+pub enum WordlistFocus {
+    /// Navigating predefined wordlist checkboxes
+    PredefinedList,
+    /// Typing custom file path
+    CustomInput,
+    /// Typing custom URL
+    CustomUrlInput,
+    /// Typing custom URL source name
+    CustomUrlSource,
+    /// Focused on Done button
+    Done,
+}
+
+/// Download progress information for wordlist downloads.
+#[derive(Debug, Clone)]
+pub struct DownloadProgress {
+    /// Current wordlist index being downloaded
+    pub current: usize,
+    /// Total wordlists to download
+    pub total: usize,
+    /// Status message
+    pub status: String,
+    /// List of failed downloads (wordlist names)
+    pub failed: Vec<String>,
+}
+
 /// Main setup wizard application struct.
 #[derive(Debug)]
 pub struct SetupApp {
@@ -185,6 +221,8 @@ pub struct SetupApp {
     pub timeout: u32,
     /// Wordlist paths (multiple allowed)
     pub wordlist_paths: Vec<String>,
+    /// Selected predefined wordlist indexes
+    pub selected_predefined_wordlists: Vec<usize>,
     /// Whether enhanced detection is enabled
     pub enhanced_detection: bool,
     /// HuggingFace token (not stored, just used for download)
@@ -208,6 +246,7 @@ impl SetupApp {
             top_results: false,
             timeout: 5,
             wordlist_paths: Vec::new(),
+            selected_predefined_wordlists: Vec::new(),
             enhanced_detection: false,
             hf_token: None,
             model_path: None,
@@ -272,26 +311,64 @@ impl SetupApp {
                     }
                 } else {
                     SetupState::WordlistConfig {
-                        paths: Vec::new(),
+                        custom_paths: Vec::new(),
                         current_input: String::new(),
                         cursor: 0,
-                        input_focused: true,
+                        selected_predefined: Vec::new(),
+                        focus: WordlistFocus::PredefinedList,
+                        custom_url: String::new(),
+                        custom_url_source: String::new(),
+                        download_progress: None,
                     }
                 }
             }
             SetupState::TimeoutConfig { value, .. } => {
                 self.timeout = *value;
                 SetupState::WordlistConfig {
-                    paths: Vec::new(),
+                    custom_paths: Vec::new(),
                     current_input: String::new(),
                     cursor: 0,
-                    input_focused: true,
+                    selected_predefined: Vec::new(),
+                    focus: WordlistFocus::PredefinedList,
+                    custom_url: String::new(),
+                    custom_url_source: String::new(),
+                    download_progress: None,
                 }
             }
-            SetupState::WordlistConfig { paths, .. } => {
-                // Save all the wordlist paths
-                self.wordlist_paths = paths.clone();
-                SetupState::EnhancedDetection { selected: 0 }
+            SetupState::WordlistConfig {
+                custom_paths,
+                selected_predefined,
+                ..
+            } => {
+                // Check if we need to download anything
+                let total_downloads = selected_predefined.len() + custom_paths.len();
+
+                if total_downloads > 0 {
+                    // Start downloads - update state to show progress
+                    let paths_clone = custom_paths.clone();
+                    let selected_clone = selected_predefined.clone();
+
+                    SetupState::WordlistConfig {
+                        custom_paths: paths_clone.clone(),
+                        current_input: String::new(),
+                        cursor: 0,
+                        selected_predefined: selected_clone.clone(),
+                        focus: WordlistFocus::Done,
+                        custom_url: String::new(),
+                        custom_url_source: String::new(),
+                        download_progress: Some(DownloadProgress {
+                            current: 0,
+                            total: total_downloads,
+                            status: "Preparing downloads...".to_string(),
+                            failed: Vec::new(),
+                        }),
+                    }
+                } else {
+                    // No downloads needed, go straight to next step
+                    self.wordlist_paths = custom_paths.clone();
+                    self.selected_predefined_wordlists = selected_predefined.clone();
+                    SetupState::EnhancedDetection { selected: 0 }
+                }
             }
             SetupState::EnhancedDetection { selected } => {
                 if *selected == 1 {
@@ -354,10 +431,14 @@ impl SetupApp {
                 }
             }
             SetupState::EnhancedDetection { .. } => SetupState::WordlistConfig {
-                paths: self.wordlist_paths.clone(),
+                custom_paths: self.wordlist_paths.clone(),
                 current_input: String::new(),
                 cursor: 0,
-                input_focused: true,
+                selected_predefined: self.selected_predefined_wordlists.clone(),
+                focus: WordlistFocus::PredefinedList,
+                custom_url: String::new(),
+                custom_url_source: String::new(),
+                download_progress: None,
             },
             SetupState::TokenInput { .. } => SetupState::EnhancedDetection { selected: 1 },
             SetupState::Downloading { .. } => SetupState::TokenInput {

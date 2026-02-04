@@ -69,6 +69,15 @@ pub struct Config {
     pub enhanced_detection: bool,
     /// Path to the enhanced detection model. If None, will use the default path.
     pub model_path: Option<String>,
+    /// Depth penalty for A* search - adds cost per depth level to ensure
+    /// shallow unexplored decoders eventually become competitive.
+    /// Default: 0.15 (at depth ~13, exploring deeper costs more than trying Caesar at depth 0)
+    pub depth_penalty: f32,
+    /// Maximum number of decoders to try per node expansion in A* search.
+    /// Lower values = faster but may miss correct path.
+    /// Higher values = more thorough but slower.
+    /// Default: 5 (covers Base64, Base32, Hex, Binary, URL - the most common encodings)
+    pub decoder_batch_size: usize,
 }
 
 /// Cell for storing global Config
@@ -132,6 +141,8 @@ impl Clone for Config {
             colourscheme: self.colourscheme.clone(),
             enhanced_detection: self.enhanced_detection,
             model_path: self.model_path.clone(),
+            depth_penalty: self.depth_penalty,
+            decoder_batch_size: self.decoder_batch_size,
         }
     }
 }
@@ -156,6 +167,8 @@ impl Default for Config {
             enhanced_detection: false,
             model_path: None,
             colourscheme: HashMap::new(),
+            depth_penalty: 0.5,
+            decoder_batch_size: 5,
         };
 
         // Set default colors
@@ -256,6 +269,8 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "wordlist_path",
             "question",
             "colourscheme",
+            "depth_penalty",
+            "decoder_batch_size",
         ];
         for key in table.keys() {
             if !known_keys.contains(&key.as_str()) {

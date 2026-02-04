@@ -7,6 +7,8 @@ use std::path::Path;
 pub mod bloom;
 /// Module housing functions for managing SQLite database
 pub mod database;
+/// Module for downloading and importing wordlists from URLs
+pub mod download;
 /// Module for storing WaitAthena results
 pub mod wait_athena_storage;
 

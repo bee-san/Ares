@@ -238,6 +238,82 @@ When adjusting the heuristic, keep in mind:
 3. Entropy is a good proxy for "plaintext-likeness"
 4. Test with both simple cases (single base64) and complex cases (nested encoding + cipher)
 
+### Batched Decoder Exploration
+
+The A* algorithm uses **batched decoder exploration** to balance speed and correctness:
+
+#### The Problem
+
+Running all decoders in parallel at each node causes race conditions where slow decoders (like Vigenère) can find false positives that beat correct results from faster decoder chains (like Base64 → Caesar).
+
+#### The Solution
+
+At each node, only the **top X decoders** (ranked by estimated cost) are tried. Remaining decoders are queued as "continuation nodes" for later exploration.
+
+#### Config Options
+
+| Option | Default | Purpose |
+|--------|---------|---------|
+| `decoder_batch_size` | 5 | Number of decoders to try per node expansion |
+| `depth_penalty` | 0.5 | Cost added per depth level to favor shallow exploration |
+
+#### Decoder Ranking (`rank_decoders()`)
+
+Decoders are ranked by estimated cost considering:
+1. **Path complexity**: Encoders cheap (~0.7), ciphers expensive (~2.0+)
+2. **Same-encoder bonus**: Repeated same encoder very cheap (0.2)
+3. **Historical success rates**: From `DECODER_SUCCESS_RATES`
+4. **Input entropy**: High entropy favors encoders
+
+#### Continuation Nodes
+
+When a node has remaining untried decoders:
+1. Results from tried decoders become child nodes (for further exploration)
+2. A "continuation node" is created with the remaining decoders
+3. The continuation node has a small penalty (+0.05) to prefer exploring results first
+4. A* will eventually revisit the continuation node if other paths don't succeed
+
+#### Depth Penalty
+
+The depth penalty ensures shallow unexplored paths eventually become competitive:
+
+```
+total_cost = path_complexity + (depth × depth_penalty) + heuristic
+```
+
+Example with `depth_penalty = 0.5`:
+- Base64 at depth 1: 0.7 + 0.5 = 1.2
+- Base64 × 5 at depth 5: 1.5 + 2.5 = 4.0
+- Caesar at depth 1: 3.0 + 0.5 = 3.5 (eventually competitive with deep encoder paths)
+
+#### Node Structure
+
+```rust
+struct AStarNode {
+    state: DecoderResult,      // Current text and path
+    depth: usize,              // Path length
+    cost: f32,                 // g = path_complexity + depth_penalty
+    heuristic: f32,            // h = estimated cost to plaintext
+    total_cost: f32,           // f = g + h
+    node_type: NodeType,       // Regular (with untried_decoders) or Result
+}
+
+enum NodeType {
+    Regular {
+        next_decoder: Option<String>,  // Specific decoder to try (if any)
+        untried_decoders: Vec<String>, // Decoders not yet tried at this node
+    },
+    Result,  // Successfully found plaintext
+}
+```
+
+#### Why This Works
+
+1. **Encoders naturally rank first** (cost ~0.7 vs ~3.0 for ciphers)
+2. **Depth penalty prevents infinite encoder chains** (eventually ciphers become competitive)
+3. **Continuation nodes ensure all decoders eventually get tried**
+4. **A* priority queue orders everything optimally**
+
 ## Database Schema
 
 The SQLite database is stored at `~/.ciphey/database.sqlite` and serves two purposes:
@@ -416,15 +492,17 @@ The A* search runs decoders in parallel via Rayon. When the human checker is ena
 
 ### Don't Hardcode Decoder Priority
 
-**Anti-pattern**: Running "encoder-tagged" decoders first, then ciphers.
+**Anti-pattern**: Running "encoder-tagged" decoders first, then ciphers in a separate pass.
 
-**Correct approach**: Run ALL decoders at each node and let A*'s heuristic (`calculate_path_complexity`) naturally prioritize via Occam's Razor. The cost function already makes:
+**Correct approach**: Use the **batched decoder exploration** system with A*'s heuristic (`rank_decoders()`) to naturally prioritize decoders. The ranking system already makes:
 - Encoders cheap (0.7 base, 0.2 for repeated same-encoder)
 - Ciphers expensive (2.0+, escalating for multiple ciphers)
 
-This is more general and works for any new decoder without special-casing.
+The depth penalty ensures ciphers eventually get tried at shallow depths before exploring too deep with encoders. See "Batched Decoder Exploration" section above.
 
-### Node Expansion Must Try All Decoders
+### Node Expansion and Continuation Nodes
+
+The A* algorithm uses batched exploration where only top-ranked decoders are tried per expansion. Key points:
 
 In `create_node_from_result()`, setting `next_decoder: Some(decoder_name)` limits the next expansion to only that decoder. This breaks cipher detection because:
 

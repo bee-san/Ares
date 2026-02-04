@@ -27,7 +27,7 @@ use crossterm::{
 };
 use ratatui::prelude::*;
 
-pub use app::{SetupApp, SetupState};
+pub use app::{DownloadProgress, SetupApp, SetupState, WordlistFocus};
 use input::handle_setup_key_event;
 pub use themes::{ColorScheme, Theme, THEMES};
 use ui::draw_setup;
@@ -46,6 +46,18 @@ enum DownloadMessage {
     Complete(String),
     /// Download failed with error
     Failed(String),
+}
+
+/// Message from the wordlist download thread.
+enum WordlistDownloadMessage {
+    /// Progress update (current index, status message)
+    Progress(usize, String),
+    /// Single wordlist download completed
+    WordlistComplete(String),
+    /// Single wordlist download failed
+    WordlistFailed(String),
+    /// All downloads complete
+    AllComplete,
 }
 
 /// Runs the first-time setup wizard in TUI mode.
@@ -109,10 +121,189 @@ fn run_setup_event_loop(
 
     // Channel for download progress (only created when downloading)
     let mut download_rx: Option<mpsc::Receiver<DownloadMessage>> = None;
+    // Channel for wordlist download progress
+    let mut wordlist_download_rx: Option<mpsc::Receiver<WordlistDownloadMessage>> = None;
 
     loop {
         // Draw the UI
         terminal.draw(|frame| draw_setup(frame, app))?;
+
+        // Check if we need to start wordlist downloads
+        if let SetupState::WordlistConfig {
+            selected_predefined,
+            custom_paths,
+            download_progress,
+            ..
+        } = &mut app.state
+        {
+            // Check if we need to initiate downloads (user clicked Done and we have selections)
+            if download_progress.is_none()
+                && (!selected_predefined.is_empty() || !custom_paths.is_empty())
+                && wordlist_download_rx.is_none()
+            {
+                // This would be triggered when transitioning to next step
+                // For now, we'll handle it in the next_step() transition
+            }
+
+            // If download_progress is Some and we don't have a channel, start downloads
+            if let Some(progress) = download_progress {
+                if wordlist_download_rx.is_none() && progress.current == 0 {
+                    let (tx, rx) = mpsc::channel();
+                    wordlist_download_rx = Some(rx);
+
+                    let selected_indices = selected_predefined.clone();
+                    let custom_path_list = custom_paths.clone();
+
+                    // Spawn download thread
+                    thread::spawn(move || {
+                        let predefined = crate::storage::download::get_predefined_wordlists();
+                        let mut current_index = 0;
+                        let total = selected_indices.len() + custom_path_list.len();
+
+                        // Download predefined wordlists
+                        for &idx in &selected_indices {
+                            if idx < predefined.len() {
+                                current_index += 1;
+                                let wordlist = &predefined[idx];
+
+                                let _ = tx.send(WordlistDownloadMessage::Progress(
+                                    current_index,
+                                    format!("Downloading {}...", wordlist.name),
+                                ));
+
+                                match crate::storage::download::download_wordlist_from_url(
+                                    &wordlist.url,
+                                ) {
+                                    Ok(words) => {
+                                        match crate::storage::download::import_wordlist_with_bloom_rebuild(
+                                            &words,
+                                            &wordlist.source_id,
+                                        ) {
+                                            Ok(_) => {
+                                                let _ = tx.send(
+                                                    WordlistDownloadMessage::WordlistComplete(
+                                                        wordlist.name.clone(),
+                                                    ),
+                                                );
+                                            }
+                                            Err(e) => {
+                                                let _ = tx.send(
+                                                    WordlistDownloadMessage::WordlistFailed(
+                                                        format!("{}: {}", wordlist.name, e),
+                                                    ),
+                                                );
+                                            }
+                                        }
+                                    }
+                                    Err(e) => {
+                                        let _ = tx.send(WordlistDownloadMessage::WordlistFailed(
+                                            format!("{}: {}", wordlist.name, e),
+                                        ));
+                                    }
+                                }
+                            }
+                        }
+
+                        // Import custom file paths
+                        for path in &custom_path_list {
+                            current_index += 1;
+
+                            let _ = tx.send(WordlistDownloadMessage::Progress(
+                                current_index,
+                                format!("Importing {}...", path),
+                            ));
+
+                            // Extract filename for source
+                            let source = std::path::Path::new(path)
+                                .file_stem()
+                                .and_then(|s| s.to_str())
+                                .unwrap_or("custom")
+                                .to_string();
+
+                            match crate::storage::download::import_wordlist_from_file(
+                                path, &source,
+                            ) {
+                                Ok(_) => {
+                                    let _ = tx.send(WordlistDownloadMessage::WordlistComplete(
+                                        path.clone(),
+                                    ));
+                                }
+                                Err(e) => {
+                                    let _ = tx.send(WordlistDownloadMessage::WordlistFailed(
+                                        format!("{}: {}", path, e),
+                                    ));
+                                }
+                            }
+                        }
+
+                        // All done
+                        let _ = tx.send(WordlistDownloadMessage::AllComplete);
+                    });
+                }
+            }
+        }
+
+        // Check for wordlist download progress updates
+        if let Some(ref rx) = wordlist_download_rx {
+            match rx.try_recv() {
+                Ok(WordlistDownloadMessage::Progress(current, status)) => {
+                    if let SetupState::WordlistConfig {
+                        download_progress, ..
+                    } = &mut app.state
+                    {
+                        if let Some(progress) = download_progress {
+                            progress.current = current;
+                            progress.status = status;
+                        }
+                    }
+                }
+                Ok(WordlistDownloadMessage::WordlistComplete(_name)) => {
+                    // Individual wordlist completed, continue
+                }
+                Ok(WordlistDownloadMessage::WordlistFailed(error)) => {
+                    if let SetupState::WordlistConfig {
+                        download_progress, ..
+                    } = &mut app.state
+                    {
+                        if let Some(progress) = download_progress {
+                            progress.failed.push(error);
+                        }
+                    }
+                }
+                Ok(WordlistDownloadMessage::AllComplete) => {
+                    // Save wordlist selections before moving to next step
+                    if let SetupState::WordlistConfig {
+                        custom_paths,
+                        selected_predefined,
+                        ..
+                    } = &app.state
+                    {
+                        app.wordlist_paths = custom_paths.clone();
+                        app.selected_predefined_wordlists = selected_predefined.clone();
+                    }
+                    // All downloads complete, move to next step
+                    app.state = SetupState::EnhancedDetection { selected: 0 };
+                    wordlist_download_rx = None;
+                }
+                Err(mpsc::TryRecvError::Empty) => {
+                    // No message yet
+                }
+                Err(mpsc::TryRecvError::Disconnected) => {
+                    // Thread disconnected unexpectedly
+                    if let SetupState::WordlistConfig {
+                        download_progress, ..
+                    } = &mut app.state
+                    {
+                        if let Some(progress) = download_progress {
+                            progress
+                                .failed
+                                .push("Download thread disconnected unexpectedly".to_string());
+                        }
+                    }
+                    wordlist_download_rx = None;
+                }
+            }
+        }
 
         // Check if we need to start a download
         if let SetupState::Downloading {

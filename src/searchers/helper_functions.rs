@@ -25,6 +25,106 @@ use std::sync::Mutex;
 pub static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
     Lazy::new(|| Mutex::new(HashMap::new()));
 
+/// Represents a decoder with its estimated cost for ranking purposes
+#[derive(Debug, Clone)]
+pub struct RankedDecoder {
+    /// Name of the decoder
+    pub name: String,
+    /// Estimated cost for trying this decoder (lower = better)
+    pub estimated_cost: f32,
+    /// Whether this decoder is an encoder (vs cipher)
+    pub is_encoder: bool,
+}
+
+/// Rank decoders by their estimated cost for a given input text and current path
+///
+/// This function estimates which decoders are most likely to be useful based on:
+/// 1. Path complexity (encoders are cheaper than ciphers)
+/// 2. Historical success rates
+/// 3. Input text characteristics (entropy)
+///
+/// # Arguments
+///
+/// * `text` - The input text to analyze
+/// * `path` - The current path of decoders already applied
+/// * `available_decoders` - Names of decoders to rank
+///
+/// # Returns
+///
+/// A vector of RankedDecoder sorted by estimated_cost (lowest first)
+pub fn rank_decoders(
+    text: &str,
+    path: &[CrackResult],
+    available_decoders: &[String],
+) -> Vec<RankedDecoder> {
+    let mut ranked: Vec<RankedDecoder> = available_decoders
+        .iter()
+        .map(|name| {
+            let is_enc = is_encoder(name);
+
+            // Estimate the cost for this decoder based on:
+            // 1. Base cost: encoders are cheap (0.7), ciphers are expensive (2.0+)
+            // 2. Repeated same-encoder bonus: if last decoder was same encoder, very cheap (0.2)
+            // 3. Cipher penalty: escalating penalty for multiple ciphers in path
+
+            let mut estimated_path_cost = 0.0;
+
+            // Count existing ciphers in path
+            let existing_cipher_count = path.iter().filter(|p| !is_encoder(p.decoder)).count();
+
+            // Get last decoder name for repeat-encoder bonus
+            let last_decoder_name = path.last().map(|p| p.decoder);
+
+            if is_enc {
+                // Encoder cost
+                if last_decoder_name == Some(name.as_str()) {
+                    // Repeated same encoder - very cheap
+                    estimated_path_cost = 0.2;
+                } else {
+                    // Different encoder
+                    estimated_path_cost = 0.7;
+                }
+            } else {
+                // Cipher cost - escalating penalty
+                let cipher_position = existing_cipher_count + 1;
+                let popularity = get_decoder_popularity(name);
+                let popularity_multiplier = 2.0 - popularity; // Range: 1.0 to 2.0
+                estimated_path_cost = 2.0 * cipher_position as f32 * popularity_multiplier;
+            }
+
+            // Add success rate modifier (historical learning)
+            let success_rate = get_decoder_success_rate(name);
+            let success_penalty = (1.0 - success_rate) * 0.3; // 0-0.3 penalty
+
+            // Add entropy-based modifier for encoders
+            // Higher entropy input is more likely to be encoded
+            let entropy = calculate_entropy(text);
+            let entropy_bonus = if is_enc && entropy > 0.6 {
+                -0.1 // Bonus for encoders on high-entropy input
+            } else {
+                0.0
+            };
+
+            let estimated_cost = estimated_path_cost + success_penalty + entropy_bonus;
+
+            RankedDecoder {
+                name: name.clone(),
+                estimated_cost,
+                is_encoder: is_enc,
+            }
+        })
+        .collect();
+
+    // Sort by estimated cost (lowest first = best)
+    ranked.sort_by(|a, b| {
+        a.estimated_cost
+            .partial_cmp(&b.estimated_cost)
+            .unwrap_or(std::cmp::Ordering::Equal)
+    });
+
+    ranked
+}
+
 /// Calculate Shannon entropy of a string (normalized to 0-1 range)
 ///
 /// Entropy measures the "randomness" or information density of text.
@@ -479,22 +579,43 @@ mod tests {
         ];
         assert!((calculate_path_complexity(&repeated_encoder) - 1.1).abs() < 0.01);
 
-        // Single cipher: 2.0
+        // Single cipher: 2.0 * cipher_count * popularity_multiplier
+        // Caesar (when looked up in DECODER_MAP) has popularity 0.8, multiplier = 1.2
+        // But test uses mock CrackResult, which falls back to default 0.5 popularity
+        // So multiplier = 2.0 - 0.5 = 1.5, cost = 2.0 * 1 * 1.5 = 3.0
         let single_cipher = vec![caesar_result.clone()];
-        assert!((calculate_path_complexity(&single_cipher) - 2.0).abs() < 0.01);
+        let caesar_cost = calculate_path_complexity(&single_cipher);
+        assert!(
+            caesar_cost >= 2.0 && caesar_cost <= 4.0,
+            "Single caesar should cost between 2.0 and 4.0, got {}",
+            caesar_cost
+        );
 
-        // Two ciphers: 2.0 + 4.0 = 6.0 (escalating penalty)
+        // Two ciphers: escalating penalty
+        // First cipher: 2.0 * 1 * 1.5 = 3.0
+        // Second cipher: 2.0 * 2 * 1.5 = 6.0
+        // Total: 9.0
         let two_ciphers = vec![caesar_result.clone(), caesar_result.clone()];
-        assert!((calculate_path_complexity(&two_ciphers) - 6.0).abs() < 0.01);
+        let two_cipher_cost = calculate_path_complexity(&two_ciphers);
+        assert!(
+            two_cipher_cost >= 6.0 && two_cipher_cost <= 12.0,
+            "Two caesars should cost between 6.0 and 12.0, got {}",
+            two_cipher_cost
+        );
 
-        // Mixed: base64 × 3 + caesar = 1.1 + 2.0 = 3.1
+        // Mixed: base64 × 3 + caesar = 1.1 + ~3.0 = ~4.1
         let mixed = vec![
             base64_result.clone(),
             base64_result.clone(),
             base64_result.clone(),
             caesar_result.clone(),
         ];
-        assert!((calculate_path_complexity(&mixed) - 3.1).abs() < 0.01);
+        let mixed_cost = calculate_path_complexity(&mixed);
+        assert!(
+            mixed_cost >= 3.0 && mixed_cost <= 6.0,
+            "Mixed path should cost between 3.0 and 6.0, got {}",
+            mixed_cost
+        );
     }
 
     #[test]

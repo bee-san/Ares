@@ -6,7 +6,9 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, BorderType, Borders, Padding, Paragraph};
 
-use super::app::{CustomColors, SetupApp, SetupState, TOTAL_STEPS};
+use super::app::{
+    CustomColors, DownloadProgress, SetupApp, SetupState, WordlistFocus, TOTAL_STEPS,
+};
 use super::themes::{ColorScheme, THEMES};
 
 /// ASCII art logo for the welcome screen.
@@ -93,17 +95,25 @@ pub fn draw_setup(frame: &mut Frame, app: &SetupApp) {
             draw_timeout_config(frame, main_chunks[1], *value)
         }
         SetupState::WordlistConfig {
-            paths,
+            custom_paths,
             current_input,
             cursor,
-            input_focused,
+            selected_predefined,
+            focus,
+            custom_url,
+            custom_url_source,
+            download_progress,
         } => draw_wordlist_config(
             frame,
             main_chunks[1],
-            paths,
+            custom_paths,
             current_input,
             *cursor,
-            *input_focused,
+            selected_predefined,
+            focus,
+            custom_url,
+            custom_url_source,
+            download_progress.as_ref(),
         ),
         SetupState::EnhancedDetection { selected } => {
             draw_enhanced_detection(frame, main_chunks[1], *selected)
@@ -669,15 +679,26 @@ fn draw_timeout_config(frame: &mut Frame, area: Rect, value: u32) {
 }
 
 /// Draws the wordlist configuration screen.
+#[allow(clippy::too_many_arguments)]
 fn draw_wordlist_config(
     frame: &mut Frame,
     area: Rect,
-    paths: &[String],
+    custom_paths: &[String],
     current_input: &str,
     _cursor: usize,
-    input_focused: bool,
+    selected_predefined: &[usize],
+    focus: &WordlistFocus,
+    custom_url: &str,
+    custom_url_source: &str,
+    download_progress: Option<&DownloadProgress>,
 ) {
-    let content_area = centered_rect(area, 85, 85);
+    // If downloading, show progress overlay
+    if let Some(progress) = download_progress {
+        draw_wordlist_download_progress(frame, area, progress);
+        return;
+    }
+
+    let content_area = centered_rect(area, 90, 90);
 
     let block = Block::default()
         .title(" Wordlist Configuration ")
@@ -690,28 +711,121 @@ fn draw_wordlist_config(
     let inner = block.inner(content_area);
     frame.render_widget(block, content_area);
 
+    // Split into left and right panels
+    let panels = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
+        .split(inner);
+
+    // Left panel: Predefined wordlists
+    draw_predefined_wordlists(frame, panels[0], selected_predefined, focus);
+
+    // Right panel: Custom options
+    draw_custom_wordlists(
+        frame,
+        panels[1],
+        custom_paths,
+        current_input,
+        custom_url,
+        custom_url_source,
+        focus,
+    );
+}
+
+/// Draws the predefined wordlists panel.
+fn draw_predefined_wordlists(
+    frame: &mut Frame,
+    area: Rect,
+    selected_predefined: &[usize],
+    focus: &WordlistFocus,
+) {
     let mut lines = vec![
         Line::from(Span::styled(
-            "Add custom wordlists for plaintext detection (optional)",
-            Style::default().fg(Color::White),
+            "Predefined Wordlists",
+            Style::default().fg(SECONDARY).add_modifier(Modifier::BOLD),
         )),
         Line::from(Span::styled(
-            "Wordlists help identify plaintext by matching against known words.",
+            "Select wordlists to download",
             Style::default().fg(MUTED),
         )),
         Line::from(""),
     ];
 
-    // Show added wordlists
-    if !paths.is_empty() {
+    let predefined_wordlists = crate::storage::download::get_predefined_wordlists();
+    let is_focused = matches!(focus, WordlistFocus::PredefinedList);
+
+    for (i, wordlist) in predefined_wordlists.iter().enumerate() {
+        let is_selected = selected_predefined.contains(&i);
+        let checkbox = if is_selected { "[✓]" } else { "[ ]" };
+
+        let prefix = if is_focused && i == 0 { "> " } else { "  " };
+
+        let style = if is_focused && i == 0 {
+            Style::default().fg(ACCENT)
+        } else {
+            Style::default().fg(Color::White)
+        };
+
+        lines.push(Line::from(vec![
+            Span::styled(prefix, style),
+            Span::styled(
+                format!("{} ", checkbox),
+                if is_selected {
+                    Style::default().fg(SUCCESS)
+                } else {
+                    Style::default().fg(MUTED)
+                },
+            ),
+            Span::styled(format!("{}. {}", i + 1, wordlist.name), style),
+        ]));
+
         lines.push(Line::from(Span::styled(
-            "Added wordlists:",
-            Style::default().fg(SECONDARY),
+            format!("     {}", wordlist.description),
+            Style::default().fg(MUTED).add_modifier(Modifier::ITALIC),
         )));
-        for (i, path) in paths.iter().enumerate() {
-            // Truncate long paths for display
-            let display_path = if path.len() > 50 {
-                format!("...{}", &path[path.len() - 47..])
+        lines.push(Line::from(""));
+    }
+
+    if predefined_wordlists.is_empty() {
+        lines.push(Line::from(Span::styled(
+            "No predefined wordlists available",
+            Style::default().fg(MUTED),
+        )));
+    }
+
+    let content = Paragraph::new(lines);
+    frame.render_widget(content, area);
+}
+
+/// Draws the custom wordlists panel.
+#[allow(clippy::too_many_arguments)]
+fn draw_custom_wordlists(
+    frame: &mut Frame,
+    area: Rect,
+    custom_paths: &[String],
+    current_input: &str,
+    custom_url: &str,
+    custom_url_source: &str,
+    focus: &WordlistFocus,
+) {
+    let mut lines = vec![
+        Line::from(Span::styled(
+            "Custom Options",
+            Style::default().fg(SECONDARY).add_modifier(Modifier::BOLD),
+        )),
+        Line::from(""),
+    ];
+
+    // Section 1: Custom File Paths
+    lines.push(Line::from(Span::styled(
+        "File Paths:",
+        Style::default().fg(Color::White),
+    )));
+
+    if !custom_paths.is_empty() {
+        for (i, path) in custom_paths.iter().enumerate() {
+            let display_path = if path.len() > 35 {
+                format!("...{}", &path[path.len() - 32..])
             } else {
                 path.clone()
             };
@@ -720,20 +834,14 @@ fn draw_wordlist_config(
                 Span::styled(display_path, Style::default().fg(Color::White)),
             ]));
         }
-        lines.push(Line::from(""));
     }
 
-    // Input field
-    let input_style = if input_focused {
-        Style::default().fg(ACCENT)
-    } else {
-        Style::default().fg(MUTED)
-    };
-
-    let input_border = if input_focused { "> " } else { "  " };
+    // Input field for custom path
+    let is_path_focused = matches!(focus, WordlistFocus::CustomInput);
+    let path_prefix = if is_path_focused { "> " } else { "  " };
 
     let display_input = if current_input.is_empty() {
-        "Enter path to wordlist file..."
+        "Enter file path..."
     } else {
         current_input
     };
@@ -745,10 +853,16 @@ fn draw_wordlist_config(
     };
 
     lines.push(Line::from(vec![
-        Span::styled(input_border, input_style),
-        Span::styled("Path: ", Style::default().fg(SECONDARY)),
+        Span::styled(
+            path_prefix,
+            if is_path_focused {
+                Style::default().fg(ACCENT)
+            } else {
+                Style::default().fg(MUTED)
+            },
+        ),
         Span::styled(display_input, text_style),
-        if input_focused {
+        if is_path_focused {
             Span::styled("_", Style::default().fg(ACCENT))
         } else {
             Span::styled("", Style::default())
@@ -756,9 +870,88 @@ fn draw_wordlist_config(
     ]));
 
     lines.push(Line::from(""));
+    lines.push(Line::from(""));
+
+    // Section 2: Custom URLs
+    lines.push(Line::from(Span::styled(
+        "Custom URL:",
+        Style::default().fg(Color::White),
+    )));
+
+    let is_url_focused = matches!(focus, WordlistFocus::CustomUrlInput);
+    let url_prefix = if is_url_focused { "> " } else { "  " };
+
+    let display_url = if custom_url.is_empty() {
+        "Enter URL..."
+    } else {
+        custom_url
+    };
+
+    let url_text_style = if custom_url.is_empty() {
+        Style::default().fg(MUTED).add_modifier(Modifier::ITALIC)
+    } else {
+        Style::default().fg(Color::White)
+    };
+
+    lines.push(Line::from(vec![
+        Span::styled(
+            url_prefix,
+            if is_url_focused {
+                Style::default().fg(ACCENT)
+            } else {
+                Style::default().fg(MUTED)
+            },
+        ),
+        Span::styled(display_url, url_text_style),
+        if is_url_focused {
+            Span::styled("_", Style::default().fg(ACCENT))
+        } else {
+            Span::styled("", Style::default())
+        },
+    ]));
+
+    // Source name input (shown if URL is not empty)
+    if !custom_url.is_empty() {
+        let is_source_focused = matches!(focus, WordlistFocus::CustomUrlSource);
+        let source_prefix = if is_source_focused { "> " } else { "  " };
+
+        let display_source = if custom_url_source.is_empty() {
+            "Source name..."
+        } else {
+            custom_url_source
+        };
+
+        let source_text_style = if custom_url_source.is_empty() {
+            Style::default().fg(MUTED).add_modifier(Modifier::ITALIC)
+        } else {
+            Style::default().fg(Color::White)
+        };
+
+        lines.push(Line::from(vec![
+            Span::styled(
+                source_prefix,
+                if is_source_focused {
+                    Style::default().fg(ACCENT)
+                } else {
+                    Style::default().fg(MUTED)
+                },
+            ),
+            Span::styled("Name: ", Style::default().fg(MUTED)),
+            Span::styled(display_source, source_text_style),
+            if is_source_focused {
+                Span::styled("_", Style::default().fg(ACCENT))
+            } else {
+                Span::styled("", Style::default())
+            },
+        ]));
+    }
+
+    lines.push(Line::from(""));
+    lines.push(Line::from(""));
 
     // Done button
-    let done_style = if !input_focused {
+    let is_done_focused = matches!(focus, WordlistFocus::Done);
+    let done_style = if is_done_focused {
         Style::default()
             .fg(Color::Black)
             .bg(SUCCESS)
@@ -767,33 +960,95 @@ fn draw_wordlist_config(
         Style::default().fg(SUCCESS)
     };
 
-    let done_prefix = if !input_focused { "> " } else { "  " };
+    let done_prefix = if is_done_focused { "> " } else { "  " };
 
     lines.push(Line::from(vec![
         Span::styled(
             done_prefix,
-            if !input_focused {
+            if is_done_focused {
                 Style::default().fg(SUCCESS)
             } else {
                 Style::default().fg(MUTED)
             },
         ),
         Span::styled(" Done ", done_style),
-        Span::styled(
-            if paths.is_empty() {
-                " (skip wordlists)"
-            } else {
-                ""
-            },
-            Style::default().fg(MUTED),
-        ),
     ]));
 
     lines.push(Line::from(""));
     lines.push(Line::from(Span::styled(
-        "[Enter] Add path  [Down/Tab] Go to Done  [Esc] Remove last/Back",
+        "[Space/Enter] Toggle  [Tab] Next  [1-2] Quick toggle  [Esc] Back",
         Style::default().fg(MUTED),
     )));
+
+    let content = Paragraph::new(lines);
+    frame.render_widget(content, area);
+}
+
+/// Draws the download progress overlay.
+fn draw_wordlist_download_progress(frame: &mut Frame, area: Rect, progress: &DownloadProgress) {
+    let overlay_area = centered_rect(area, 60, 40);
+
+    let block = Block::default()
+        .title(" Downloading Wordlists ")
+        .title_style(Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(Style::default().fg(Color::Gray))
+        .padding(Padding::new(2, 2, 1, 1));
+
+    let inner = block.inner(overlay_area);
+    frame.render_widget(block, overlay_area);
+
+    let mut lines = vec![
+        Line::from(Span::styled(
+            format!("Downloading {} of {}", progress.current, progress.total),
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
+        )),
+        Line::from(""),
+        Line::from(Span::styled(
+            &progress.status,
+            Style::default().fg(SECONDARY),
+        )),
+        Line::from(""),
+    ];
+
+    // Progress bar
+    let progress_pct = if progress.total > 0 {
+        (progress.current as f32 / progress.total as f32 * 100.0) as u16
+    } else {
+        0
+    };
+
+    let bar_width = 40;
+    let filled =
+        (bar_width as f32 * progress.current as f32 / progress.total.max(1) as f32) as usize;
+    let empty = bar_width - filled;
+
+    let bar = format!(
+        "[{}{}] {}%",
+        "=".repeat(filled),
+        " ".repeat(empty),
+        progress_pct
+    );
+
+    lines.push(Line::from(Span::styled(bar, Style::default().fg(ACCENT))));
+    lines.push(Line::from(""));
+
+    // Show failures if any
+    if !progress.failed.is_empty() {
+        lines.push(Line::from(Span::styled(
+            "Failed downloads:",
+            Style::default().fg(ERROR),
+        )));
+        for failure in &progress.failed {
+            lines.push(Line::from(Span::styled(
+                format!("  • {}", failure),
+                Style::default().fg(MUTED),
+            )));
+        }
+    }
 
     let content = Paragraph::new(lines);
     frame.render_widget(content, inner);
@@ -1151,13 +1406,20 @@ fn draw_controls(frame: &mut Frame, area: Rect, state: &SetupState) {
             ("[Enter]", "Confirm"),
             ("[Backspace]", "Back"),
         ],
-        SetupState::WordlistConfig { input_focused, .. } => {
-            if *input_focused {
-                vec![("[Enter]", "Add"), ("[Down]", "Done"), ("[Esc]", "Remove")]
-            } else {
-                vec![("[Enter]", "Continue"), ("[Up]", "Add more")]
+        SetupState::WordlistConfig { focus, .. } => match focus {
+            WordlistFocus::PredefinedList => vec![
+                ("[Space]", "Toggle"),
+                ("[Tab]", "Next"),
+                ("[1-2]", "Quick"),
+                ("[Esc]", "Back"),
+            ],
+            WordlistFocus::CustomInput
+            | WordlistFocus::CustomUrlInput
+            | WordlistFocus::CustomUrlSource => {
+                vec![("[Enter]", "Add"), ("[Tab]", "Next"), ("[Esc]", "Clear")]
             }
-        }
+            WordlistFocus::Done => vec![("[Enter]", "Continue"), ("[Tab]", "Back")],
+        },
         SetupState::EnhancedDetection { .. } => vec![
             ("[Y/N]", "Choose"),
             ("[Enter]", "Confirm"),

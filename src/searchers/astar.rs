@@ -10,8 +10,9 @@
 //! 2. At each step:
 //!    - Extract a batch of nodes from the priority queue
 //!    - Process these nodes in parallel
-//!    - First run all "decoder"-tagged decoders (these are prioritized)
-//!    - Then run all other decoders with heuristic prioritization
+//!    - For each node, rank available decoders by estimated cost
+//!    - Run only the top X decoders (configurable via decoder_batch_size)
+//!    - Queue remaining decoders for later exploration
 //! 3. For each successful decoding, create a new node and add it to the priority queue
 //! 4. Continue until a plaintext is found or the search space is exhausted
 //!
@@ -19,11 +20,12 @@
 //!
 //! Nodes are prioritized using an f-score where:
 //! - f = g + h
-//! - g = depth in the search tree (cost so far)
+//! - g = path complexity + depth penalty (cost so far)
 //! - h = heuristic value (estimated cost to goal)
 //!
-//! The current implementation uses a simple placeholder heuristic of 1.0,
-//! but has been improved with Cipher Identifier for better prioritization.
+//! The depth penalty ensures that shallow unexplored paths eventually become
+//! competitive with deep explored paths, preventing the algorithm from
+//! getting stuck exploring only one branch.
 //!
 //! ## Parallel Processing
 //!
@@ -34,7 +36,7 @@
 //! - Special result nodes handle successful decodings in a thread-safe manner
 
 use crate::cli_pretty_printing::decoded_how_many_times;
-use crate::filtration_system::{get_all_decoders, get_decoder_by_name, MyResults};
+use crate::filtration_system::{get_all_decoders, get_decoder_by_name};
 use crate::CrackResult;
 use crossbeam::channel::Sender;
 
@@ -54,7 +56,8 @@ use crate::checkers::get_human_confirmed_text;
 use crate::checkers::CheckerTypes;
 use crate::config::get_config;
 use crate::searchers::helper_functions::{
-    calculate_path_complexity, calculate_string_worth, generate_heuristic, update_decoder_stats,
+    calculate_path_complexity, calculate_string_worth, generate_heuristic, rank_decoders,
+    update_decoder_stats,
 };
 use crate::storage::wait_athena_storage;
 use crate::DecoderResult;
@@ -66,8 +69,11 @@ const PARALLEL_BATCH_SIZE: usize = 10;
 enum NodeType {
     /// Regular node to continue exploring
     Regular {
-        /// The name of the next decoder to try when this node is expanded
+        /// The name of the next decoder to try when this node is expanded (if specific)
         next_decoder: Option<String>,
+        /// Decoders that haven't been tried yet at this node (for batched exploration)
+        /// If empty, all decoders have been tried
+        untried_decoders: Vec<String>,
     },
     /// Node containing a successful decoding result
     Result,
@@ -90,7 +96,7 @@ fn calculate_hash(text: &str) -> String {
 /// - The path of decoders used to reach this state
 /// - Cost metrics for prioritization
 ///
-/// ## Cost Calculation (Occam's Razor)
+/// ## Cost Calculation (Occam's Razor + Depth Penalty)
 ///
 /// The cost (g) uses "path complexity" rather than raw depth, implementing
 /// Occam's Razor by favoring simpler explanations:
@@ -98,13 +104,22 @@ fn calculate_hash(text: &str) -> String {
 /// - Different encoders cost more (0.7 each)
 /// - Ciphers are expensive (2.0+, escalating for multiple)
 ///
-/// This means base64×10 is cheaper than caesar→vigenere→atbash.
+/// Additionally, a depth penalty is added to ensure unexplored shallow paths
+/// eventually become competitive with deep explored paths:
+/// - cost = path_complexity + (depth * depth_penalty)
+///
+/// This means base64×10 is cheaper than caesar→vigenere→atbash,
+/// but eventually trying caesar at depth 0 becomes competitive with
+/// going deeper into base64 chains.
 #[derive(Debug)]
 struct AStarNode {
     /// Current state containing the decoded text and path of decoders used
     state: DecoderResult,
 
-    /// Cost so far (g) - represents the path complexity
+    /// Depth in the search tree (path length)
+    depth: usize,
+
+    /// Cost so far (g) - represents the path complexity + depth penalty
     /// Uses category-aware complexity rather than raw depth
     cost: f32,
 
@@ -125,9 +140,13 @@ struct AStarNode {
 impl std::fmt::Debug for NodeType {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            NodeType::Regular { next_decoder } => f
+            NodeType::Regular {
+                next_decoder,
+                untried_decoders,
+            } => f
                 .debug_struct("Regular")
                 .field("next_decoder", next_decoder)
+                .field("untried_count", &untried_decoders.len())
                 .finish(),
             NodeType::Result => write!(f, "Result"),
         }
@@ -178,6 +197,7 @@ fn create_node_from_result(
     result: &CrackResult,
     current_node: &AStarNode,
     seen_strings: &DashSet<String>,
+    all_decoder_names: &[String],
 ) -> Option<AStarNode> {
     let text = result.unencrypted_text.clone()?;
 
@@ -204,15 +224,22 @@ fn create_node_from_result(
     let mut path = current_node.state.path.clone();
     path.push(result.clone());
 
-    // Calculate cost using path complexity (Occam's Razor aware)
-    // This makes repeated same-encoder cheap, ciphers expensive
-    let cost = calculate_path_complexity(&path);
+    let config = get_config();
+    let depth = path.len();
+
+    // Calculate cost using path complexity (Occam's Razor aware) + depth penalty
+    // The depth penalty ensures shallow unexplored paths eventually become competitive
+    let path_complexity = calculate_path_complexity(&path);
+    let depth_penalty = depth as f32 * config.depth_penalty;
+    let cost = path_complexity + depth_penalty;
+
     let heuristic = generate_heuristic(&text[0], &path, &None);
 
     update_decoder_stats(result.decoder, true);
 
     Some(AStarNode {
         state: DecoderResult { text, path },
+        depth,
         cost,
         heuristic,
         total_cost: cost + heuristic,
@@ -220,15 +247,25 @@ fn create_node_from_result(
             // Don't specify a next decoder - let A* try all decoders
             // The heuristic will naturally prioritize the same decoder for nested encodings
             next_decoder: None,
+            // All decoders are untried at a new node
+            untried_decoders: all_decoder_names.to_vec(),
         },
     })
 }
 
 /// Expands a single node and returns a vector of new nodes
+///
+/// This function implements batched decoder exploration:
+/// 1. If the node has untried decoders, rank them by estimated cost
+/// 2. Take the top X decoders (decoder_batch_size from config)
+/// 3. Run those decoders and create child nodes
+/// 4. If there are remaining untried decoders, create a "continuation node"
+///    that will try the next batch later
 fn expand_node(
     current_node: &AStarNode,
     seen_strings: &DashSet<String>,
     stop: &Arc<AtomicBool>,
+    all_decoder_names: &[String],
 ) -> Vec<AStarNode> {
     let mut new_nodes = Vec::new();
 
@@ -242,25 +279,63 @@ fn expand_node(
         return new_nodes;
     }
 
-    // Get the next decoder name from the node type (if specified)
-    let next_decoder_name = match &current_node.node_type {
-        NodeType::Regular { next_decoder } => next_decoder.clone(),
+    // Get the untried decoders and next decoder from the node type
+    let (next_decoder_name, untried_decoders) = match &current_node.node_type {
+        NodeType::Regular {
+            next_decoder,
+            untried_decoders,
+        } => (next_decoder.clone(), untried_decoders.clone()),
         NodeType::Result => return new_nodes,
     };
 
-    // Get decoders to run
-    let mut decoders = if let Some(decoder_name) = &next_decoder_name {
+    let config = get_config();
+    let batch_size = config.decoder_batch_size;
+
+    // Get decoders to run this iteration
+    let decoders_to_run: Vec<String> = if let Some(decoder_name) = &next_decoder_name {
         // If we have a specific decoder name, only run that one
         trace!("Using specific decoder: {}", decoder_name);
-        let d = get_decoder_by_name(decoder_name);
-        if !d.components.is_empty() {
-            update_decoder_stats(decoder_name, true);
-        }
-        d
+        vec![decoder_name.clone()]
+    } else if untried_decoders.is_empty() {
+        // No more decoders to try at this node
+        return new_nodes;
     } else {
-        // Otherwise, get ALL decoders and let A* prioritize via heuristic
-        get_all_decoders()
+        // Rank untried decoders and take top batch_size
+        let ranked = rank_decoders(
+            &current_node.state.text[0],
+            &current_node.state.path,
+            &untried_decoders,
+        );
+
+        trace!(
+            "Depth {}: Ranked {} decoders, taking top {}",
+            current_node.depth,
+            ranked.len(),
+            batch_size
+        );
+
+        ranked
+            .into_iter()
+            .take(batch_size)
+            .map(|rd| rd.name)
+            .collect()
     };
+
+    // Calculate remaining decoders for continuation node
+    let remaining_decoders: Vec<String> = untried_decoders
+        .into_iter()
+        .filter(|d| !decoders_to_run.contains(d))
+        .collect();
+
+    // Get the actual decoder components to run
+    let mut decoders = crate::filtration_system::Decoders {
+        components: Vec::new(),
+    };
+
+    for decoder_name in &decoders_to_run {
+        let d = get_decoder_by_name(decoder_name);
+        decoders.components.extend(d.components);
+    }
 
     // Prevent reciprocal decoders from being applied consecutively
     if let Some(last_decoder) = current_node.state.path.last() {
@@ -272,7 +347,7 @@ fn expand_node(
         }
     }
 
-    if decoders.components.is_empty() {
+    if decoders.components.is_empty() && remaining_decoders.is_empty() {
         return new_nodes;
     }
 
@@ -284,42 +359,84 @@ fn expand_node(
     // Create checker
     let checker = CheckerTypes::CheckAthena(Checker::<Athena>::new());
 
-    // Run all decoders and collect results
-    // The A* heuristic will prioritize which results to explore first
-    let decoder_results = decoders.run(&current_node.state.text[0], checker);
+    // Run the batch of decoders
+    if !decoders.components.is_empty() {
+        let decoder_results = decoders.run(&current_node.state.text[0], checker);
 
-    // Get all results - both successful and unsuccessful
-    // MyResults::Break now contains (best_success, other_results)
-    // MyResults::Continue contains only unsuccessful results
-    let results_to_process: Vec<CrackResult> = decoder_results.all_results();
+        // Get all results - both successful and unsuccessful
+        let results_to_process: Vec<CrackResult> = decoder_results.all_results();
 
-    for r in results_to_process {
-        if stop.load(AtomicOrdering::Relaxed) {
-            break;
+        for r in results_to_process {
+            if stop.load(AtomicOrdering::Relaxed) {
+                break;
+            }
+
+            // If a decoder succeeded, create a result node
+            if r.success {
+                let mut decoders_used = current_node.state.path.clone();
+                let text = r.unencrypted_text.clone().unwrap_or_default();
+                decoders_used.push(r.clone());
+
+                trace!(
+                    "Result found at depth {}: decoder={}, text_preview='{}'",
+                    decoders_used.len(),
+                    r.decoder,
+                    text.get(0)
+                        .map(|t| t.chars().take(50).collect::<String>())
+                        .unwrap_or_default()
+                );
+
+                let depth = decoders_used.len();
+                let path_complexity = calculate_path_complexity(&decoders_used);
+                let depth_penalty = depth as f32 * config.depth_penalty;
+                let result_cost = path_complexity + depth_penalty;
+
+                let result_node = AStarNode {
+                    state: DecoderResult {
+                        text: text.clone(),
+                        path: decoders_used,
+                    },
+                    depth,
+                    cost: result_cost,
+                    heuristic: -1000.0, // Very negative to ensure highest priority
+                    total_cost: -1000.0,
+                    node_type: NodeType::Result,
+                };
+                new_nodes.push(result_node);
+            } else if let Some(node) =
+                create_node_from_result(&r, current_node, seen_strings, all_decoder_names)
+            {
+                // Create regular node for further exploration
+                new_nodes.push(node);
+            }
         }
+    }
 
-        // If a decoder succeeded, create a result node
-        if r.success {
-            let mut decoders_used = current_node.state.path.clone();
-            let text = r.unencrypted_text.clone().unwrap_or_default();
-            decoders_used.push(r.clone());
+    // If there are remaining decoders, create a continuation node
+    // This node represents "trying more decoders at the same input"
+    if !remaining_decoders.is_empty() {
+        trace!(
+            "Creating continuation node with {} remaining decoders",
+            remaining_decoders.len()
+        );
 
-            let result_cost = calculate_path_complexity(&decoders_used);
-            let result_node = AStarNode {
-                state: DecoderResult {
-                    text: text.clone(),
-                    path: decoders_used,
-                },
-                cost: result_cost,
-                heuristic: -1000.0, // Very negative to ensure highest priority
-                total_cost: -1000.0,
-                node_type: NodeType::Result,
-            };
-            new_nodes.push(result_node);
-        } else if let Some(node) = create_node_from_result(&r, current_node, seen_strings) {
-            // Create regular node for further exploration
-            new_nodes.push(node);
-        }
+        // The continuation node has slightly higher cost to prefer exploring
+        // results from tried decoders first, but not too high
+        let continuation_penalty = 0.05; // Small penalty per batch
+        let continuation_cost = current_node.cost + continuation_penalty;
+
+        let continuation_node = AStarNode {
+            state: current_node.state.clone(),
+            depth: current_node.depth,
+            cost: continuation_cost,
+            heuristic: current_node.heuristic,
+            total_cost: continuation_cost + current_node.heuristic,
+            node_type: NodeType::Regular {
+                next_decoder: None,
+                untried_decoders: remaining_decoders,
+            },
+        };
+        new_nodes.push(continuation_node);
     }
 
     new_nodes
@@ -328,16 +445,19 @@ fn expand_node(
 /// A* search implementation for finding the correct sequence of decoders
 ///
 /// This algorithm uses A* search with Occam's Razor-based heuristics to find the
-/// simplest decoding path. It explores all decoders at each node, with the path
-/// complexity function naturally prioritizing:
+/// simplest decoding path. It explores decoders in batches (configurable via
+/// decoder_batch_size), with the path complexity function naturally prioritizing:
 /// - Encoders (cheap) over ciphers (expensive)
 /// - Repeated same-encoder sequences (very cheap)
 /// - Shorter paths over longer paths
 ///
+/// A depth penalty ensures that unexplored shallow paths eventually become
+/// competitive with deep explored paths.
+///
 /// ## Heuristic Design
 ///
 /// The f-score (f = g + h) prioritizes exploration:
-/// - g (path cost): Cheaper for encoders, expensive for ciphers
+/// - g (path cost): path_complexity + (depth * depth_penalty)
 /// - h (heuristic): Based on entropy, string quality, decoder success rates
 ///
 /// ## Parameters
@@ -346,6 +466,14 @@ fn expand_node(
 /// - `result_sender`: Channel to send the result when found
 /// - `stop`: Atomic boolean to signal when to stop the search
 pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
+    // Get all decoder names upfront for creating new nodes
+    let all_decoders = get_all_decoders();
+    let all_decoder_names: Vec<String> = all_decoders
+        .components
+        .iter()
+        .map(|d| d.get_name().to_string())
+        .collect();
+
     // Calculate heuristic before moving input
     let initial_heuristic = generate_heuristic(&input, &[], &None);
 
@@ -364,10 +492,14 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
     // Add initial node to open set
     open_set.lock().unwrap().push(AStarNode {
         state: initial,
+        depth: 0,
         cost: 0.0,
         heuristic: initial_heuristic,
         total_cost: initial_heuristic, // f = g + h = 0 + h
-        node_type: NodeType::Regular { next_decoder: None },
+        node_type: NodeType::Regular {
+            next_decoder: None,
+            untried_decoders: all_decoder_names.clone(),
+        },
     });
 
     let curr_depth = Arc::new(AtomicU32::new(1));
@@ -390,11 +522,10 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         // Process nodes in parallel
         let new_nodes: Vec<AStarNode> = batch
             .par_iter()
-            .flat_map(|node| expand_node(node, &seen_strings, &stop))
+            .flat_map(|node| expand_node(node, &seen_strings, &stop, &all_decoder_names))
             .collect();
 
         // Collect result nodes and regular nodes separately
-        let mut result_nodes: Vec<&AStarNode> = Vec::new();
         let mut regular_nodes: Vec<AStarNode> = Vec::new();
 
         for node in new_nodes {
