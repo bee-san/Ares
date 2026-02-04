@@ -220,9 +220,8 @@ fn run_setup_event_loop(
                                 .unwrap_or("custom")
                                 .to_string();
 
-                            match crate::storage::download::import_wordlist_from_file(
-                                path, &source,
-                            ) {
+                            match crate::storage::download::import_wordlist_from_file(path, &source)
+                            {
                                 Ok(_) => {
                                     let _ = tx.send(WordlistDownloadMessage::WordlistComplete(
                                         path.clone(),

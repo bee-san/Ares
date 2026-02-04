@@ -79,6 +79,12 @@ pub struct TuiColors {
 
     /// Style for links.
     pub link: Style,
+
+    /// Style for checker name.
+    pub checker_name: Style,
+
+    /// Style for checker extra info (e.g., what LemmeKnow identified).
+    pub checker_info: Style,
 }
 
 impl TuiColors {
@@ -142,6 +148,10 @@ impl TuiColors {
             link: Style::default()
                 .fg(Color::Blue)
                 .add_modifier(Modifier::UNDERLINED),
+            checker_name: Style::default()
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::BOLD),
+            checker_info: Style::default().fg(Color::Magenta),
         }
     }
 }
@@ -181,6 +191,10 @@ impl Default for TuiColors {
             link: Style::default()
                 .fg(Color::Blue)
                 .add_modifier(Modifier::UNDERLINED),
+            checker_name: Style::default()
+                .fg(Color::Magenta)
+                .add_modifier(Modifier::BOLD),
+            checker_info: Style::default().fg(Color::Magenta),
         }
     }
 }

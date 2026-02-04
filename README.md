@@ -1,3 +1,4 @@
+
  
  <p align="center">
  <br><br>
@@ -152,3 +153,4 @@ TODO:
 - Add more to LemmeKnow... Maybe fork it lol
 - Add hashcat support
 - Lemmeknow as first decoder does not show useful info
+- include checker info in the box

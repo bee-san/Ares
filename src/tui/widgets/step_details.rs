@@ -147,6 +147,23 @@ fn render_step_content(area: Rect, buf: &mut Buffer, result: &CrackResult, color
             Span::styled("Link: ", colors.label.add_modifier(Modifier::BOLD)),
             Span::styled(result.link, colors.link),
         ]));
+        lines.push(Line::from(""));
+    }
+
+    // Add checker information if present
+    if !result.checker_name.is_empty() {
+        lines.push(Line::from(vec![
+            Span::styled("Checker: ", colors.label.add_modifier(Modifier::BOLD)),
+            Span::styled(result.checker_name, colors.checker_name),
+        ]));
+
+        // Add checker's extra info (e.g., what LemmeKnow identified)
+        if !result.check_description.is_empty() {
+            lines.push(Line::from(vec![
+                Span::styled("Identified: ", colors.label.add_modifier(Modifier::BOLD)),
+                Span::styled(&result.check_description, colors.checker_info),
+            ]));
+        }
     }
 
     let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });

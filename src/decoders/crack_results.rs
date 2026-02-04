@@ -22,6 +22,8 @@ pub struct CrackResult {
     pub checker_name: &'static str,
     /// Description is a short description of the checker
     pub checker_description: &'static str,
+    /// Extra information from the checker (e.g., what LemmeKnow identified)
+    pub check_description: String,
     /// Key is optional as decoders do not use keys.
     pub key: Option<String>,
     /// Description is a short description of the decoder
@@ -40,6 +42,7 @@ impl CrackResult {
             decoder: decoder_used.name,
             checker_name: "",
             checker_description: "",
+            check_description: String::new(),
             key: None,
             description: decoder_used.description,
             link: decoder_used.link,
@@ -50,6 +53,7 @@ impl CrackResult {
     pub fn update_checker(&mut self, checker_result: &CheckResult) {
         self.checker_name = checker_result.checker_name;
         self.checker_description = checker_result.checker_description;
+        self.check_description = checker_result.description.clone();
         self.success = checker_result.is_identified;
     }
 
@@ -84,6 +88,9 @@ impl<'de> Deserialize<'de> for CrackResult {
             pub checker_name: String,
             /// Description of the checker
             pub checker_description: String,
+            /// Extra information from the checker (e.g., what LemmeKnow identified)
+            #[serde(default)]
+            pub check_description: String,
             /// Key intended for use in decryption attempts
             pub key: Option<String>,
             /// Description of the decoder
@@ -105,6 +112,7 @@ impl<'de> Deserialize<'de> for CrackResult {
                 decoder: decoder.get_name(),
                 checker_name: "",
                 checker_description: "",
+                check_description: temp_cr.check_description,
                 key: temp_cr.key,
                 description: decoder.get_description(),
                 link: decoder.get_link(),
@@ -121,6 +129,7 @@ impl<'de> Deserialize<'de> for CrackResult {
             decoder: decoder.get_name(),
             checker_name: checker.get_name(),
             checker_description: checker.get_description(),
+            check_description: temp_cr.check_description,
             key: temp_cr.key,
             description: decoder.get_description(),
             link: decoder.get_link(),
@@ -179,7 +188,7 @@ mod tests {
     fn get_json_success() {
         let mock_decoder = Decoder::<MockDecoder>::new();
         let crack_result = CrackResult::new(&mock_decoder, String::from("text that is encrypted"));
-        let expected_str = String::from("{\"success\":false,\"encrypted_text\":\"text that is encrypted\",\"unencrypted_text\":null,\"decoder\":\"MockEncoding\",\"checker_name\":\"\",\"checker_description\":\"\",\"key\":null,\"description\":\"A mocked decoder for testing\",\"link\":\"https://en.wikipedia.org/wiki/Mock_object\"}");
+        let expected_str = String::from("{\"success\":false,\"encrypted_text\":\"text that is encrypted\",\"unencrypted_text\":null,\"decoder\":\"MockEncoding\",\"checker_name\":\"\",\"checker_description\":\"\",\"check_description\":\"\",\"key\":null,\"description\":\"A mocked decoder for testing\",\"link\":\"https://en.wikipedia.org/wiki/Mock_object\"}");
         let crack_json_result = crack_result.get_json();
         assert!(crack_json_result.is_ok());
         assert_eq!(crack_json_result.unwrap(), expected_str);
