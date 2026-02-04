@@ -371,3 +371,78 @@ let colors = TuiColors::from_config(&config);
 // colors.text, colors.muted, colors.highlight, colors.accent, etc.
 ```
 
+## Lessons Learned & Common Pitfalls
+
+### Parallel Processing with Human Checker
+
+The A* search runs decoders in parallel via Rayon. When the human checker is enabled, multiple decoders may trigger human confirmation prompts simultaneously. Key considerations:
+
+1. **Race conditions**: Multiple decoders can find "valid" plaintext at the same time. The human might confirm one result while another decoder's result wins the race.
+
+2. **Solution**: Store the human-confirmed text (`get_human_confirmed_text()` in `src/checkers/human_checker.rs`) and filter result nodes in A* to only accept results matching what the human confirmed.
+
+3. **Result matching**: Compare normalized versions (lowercase, no punctuation) since the human sees cleaned-up text.
+
+### Don't Hardcode Decoder Priority
+
+**Anti-pattern**: Running "encoder-tagged" decoders first, then ciphers.
+
+**Correct approach**: Run ALL decoders at each node and let A*'s heuristic (`calculate_path_complexity`) naturally prioritize via Occam's Razor. The cost function already makes:
+- Encoders cheap (0.7 base, 0.2 for repeated same-encoder)
+- Ciphers expensive (2.0+, escalating for multiple ciphers)
+
+This is more general and works for any new decoder without special-casing.
+
+### Node Expansion Must Try All Decoders
+
+In `create_node_from_result()`, setting `next_decoder: Some(decoder_name)` limits the next expansion to only that decoder. This breaks cipher detection because:
+
+1. Base64 decodes `dXJ5eWIgamJleXE=` → `uryyb jbeyq`
+2. If `next_decoder: Some("Base64")`, only Base64 runs on `uryyb jbeyq`
+3. Caesar (which could decode ROT13) never gets tried!
+
+**Fix**: Set `next_decoder: None` to allow all decoders at each node.
+
+### Decoder `success` Field Semantics
+
+A decoder's `CrackResult.success` should ONLY be `true` when:
+1. The decoder produced output, AND
+2. A checker confirmed the output is valid plaintext
+
+**Anti-pattern** (caused bugs):
+```rust
+// BAD: Setting success just because we got output
+if !decoded_strings.is_empty() {
+    results.success = true;
+}
+```
+
+**Correct pattern**:
+```rust
+// GOOD: Only set success if checker confirmed
+if inner_decoder_result.success {
+    results.success = true;
+    // ... collect the confirmed text
+}
+```
+
+### UTF-8 String Safety
+
+When creating string previews for logging/debugging, don't slice by byte index:
+
+```rust
+// BAD: Panics on multi-byte UTF-8 characters
+let preview = &text[..20];
+
+// GOOD: Safe for any UTF-8 string
+let preview = text.chars().take(20).collect::<String>();
+```
+
+### Testing Human Checker Flows
+
+When testing human checker integration:
+- Use `printf 'n\ny\n'` to simulate saying "no" then "yes" to prompts
+- The order of prompts is non-deterministic due to parallel processing
+- Test should verify the FINAL result matches expected plaintext, not prompt order
+
+

@@ -171,7 +171,7 @@ fn run_event_loop(
                             // Reset all global state for a fresh run
                             // This ensures the rerun behaves exactly like a fresh CLI invocation
                             crate::checkers::reset_human_checker_state();
-                            crate::timer::reset();
+                            crate::timer::resume();
                             crate::storage::wait_athena_storage::clear_plaintext_results();
 
                             // Reset app to loading state with new input

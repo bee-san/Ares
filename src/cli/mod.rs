@@ -82,9 +82,10 @@ pub struct Opts {
 pub fn parse_cli_args() -> (String, Config, bool) {
     let mut opts: Opts = Opts::parse();
     let min_log_level = match opts.verbose {
-        0 => "Warn",
-        1 => "Info",
-        2 => "Debug",
+        0 => "Error",
+        1 => "Warn",
+        2 => "Info",
+        3 => "Debug",
         _ => "Trace",
     };
     env_logger::init_from_env(

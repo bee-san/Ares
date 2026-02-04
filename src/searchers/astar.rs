@@ -33,10 +33,8 @@
 //! - Batch processing extracts multiple nodes from the priority queue
 //! - Special result nodes handle successful decodings in a thread-safe manner
 
-use crate::cli_pretty_printing;
 use crate::cli_pretty_printing::decoded_how_many_times;
-use crate::filtration_system::get_all_decoders;
-use crate::filtration_system::{get_decoder_by_name, get_decoder_tagged_decoders, MyResults};
+use crate::filtration_system::{get_all_decoders, get_decoder_by_name, MyResults};
 use crate::CrackResult;
 use crossbeam::channel::Sender;
 
@@ -52,6 +50,7 @@ use rayon::prelude::*;
 
 use crate::checkers::athena::Athena;
 use crate::checkers::checker_type::{Check, Checker};
+use crate::checkers::get_human_confirmed_text;
 use crate::checkers::CheckerTypes;
 use crate::config::get_config;
 use crate::searchers::helper_functions::{
@@ -218,7 +217,9 @@ fn create_node_from_result(
         heuristic,
         total_cost: cost + heuristic,
         node_type: NodeType::Regular {
-            next_decoder: Some(result.decoder.to_string()),
+            // Don't specify a next decoder - let A* try all decoders
+            // The heuristic will naturally prioritize the same decoder for nested encodings
+            next_decoder: None,
         },
     })
 }
@@ -236,26 +237,30 @@ fn expand_node(
         return new_nodes;
     }
 
-    // Get the next decoder name from the node type
+    // Result nodes should not be expanded
+    if matches!(current_node.node_type, NodeType::Result) {
+        return new_nodes;
+    }
+
+    // Get the next decoder name from the node type (if specified)
     let next_decoder_name = match &current_node.node_type {
         NodeType::Regular { next_decoder } => next_decoder.clone(),
-        NodeType::Result => return new_nodes, // Result nodes should not be expanded
+        NodeType::Result => return new_nodes,
     };
 
-    // Determine which decoders to use based on next_decoder_name
-    let mut decoders;
-    if let Some(decoder_name) = &next_decoder_name {
-        // If we have a specific decoder name, filter all decoders to only include that one
+    // Get decoders to run
+    let mut decoders = if let Some(decoder_name) = &next_decoder_name {
+        // If we have a specific decoder name, only run that one
         trace!("Using specific decoder: {}", decoder_name);
-        // use get decoder by name from filtration
-        decoders = get_decoder_by_name(decoder_name);
-        // Update stats for the decoder
-        if !decoders.components.is_empty() {
+        let d = get_decoder_by_name(decoder_name);
+        if !d.components.is_empty() {
             update_decoder_stats(decoder_name, true);
         }
+        d
     } else {
-        decoders = get_decoder_tagged_decoders(&current_node.state);
-    }
+        // Otherwise, get ALL decoders and let A* prioritize via heuristic
+        get_all_decoders()
+    };
 
     // Prevent reciprocal decoders from being applied consecutively
     if let Some(last_decoder) = current_node.state.path.last() {
@@ -267,109 +272,73 @@ fn expand_node(
         }
     }
 
-    if !decoders.components.is_empty() {
-        trace!(
-            "Found {} decoder-tagged decoders to execute",
-            decoders.components.len()
-        );
+    if decoders.components.is_empty() {
+        return new_nodes;
+    }
 
-        // Check stop signal before processing decoders
-        if stop.load(AtomicOrdering::Relaxed) {
-            return new_nodes;
+    // Check stop signal before processing
+    if stop.load(AtomicOrdering::Relaxed) {
+        return new_nodes;
+    }
+
+    // Create checker
+    let checker = CheckerTypes::CheckAthena(Checker::<Athena>::new());
+
+    // Run all decoders and collect results
+    // The A* heuristic will prioritize which results to explore first
+    let decoder_results = decoders.run(&current_node.state.text[0], checker);
+
+    match decoder_results {
+        MyResults::Break(res) => {
+            // A decoder succeeded (checker confirmed plaintext)
+            if res.success {
+                let mut decoders_used = current_node.state.path.clone();
+                let text = res.unencrypted_text.clone().unwrap_or_default();
+                decoders_used.push(res.clone());
+
+                let result_cost = calculate_path_complexity(&decoders_used);
+                let result_node = AStarNode {
+                    state: DecoderResult {
+                        text: text.clone(),
+                        path: decoders_used,
+                    },
+                    cost: result_cost,
+                    heuristic: -1000.0, // Very negative to ensure highest priority
+                    total_cost: -1000.0,
+                    node_type: NodeType::Result,
+                };
+                new_nodes.push(result_node);
+            }
         }
+        MyResults::Continue(results) => {
+            // Process each decoder result
+            for r in results {
+                if stop.load(AtomicOrdering::Relaxed) {
+                    break;
+                }
 
-        // Create checker for this batch of decoders
-        let checker = CheckerTypes::CheckAthena(Checker::<Athena>::new());
-
-        // since we only have decoders with the same name
-        // we are cheating and just run that one decoder lol
-        let decoder_results = decoders.run(&current_node.state.text[0], checker);
-
-        // Process decoder results
-        match decoder_results {
-            MyResults::Break(res) => {
-                // Handle successful decoding
-                // This part remains mostly unchanged, but instead of sending results directly,
-                // we'll return a special marker node that indicates a successful result
-                if res.success {
+                // If a decoder succeeded, create a result node
+                if r.success {
                     let mut decoders_used = current_node.state.path.clone();
-                    let text = res.unencrypted_text.clone().unwrap_or_default();
-                    decoders_used.push(res.clone());
+                    let text = r.unencrypted_text.clone().unwrap_or_default();
+                    decoders_used.push(r.clone());
 
-                    // Calculate path complexity for the result
                     let result_cost = calculate_path_complexity(&decoders_used);
-
-                    // Create a special "result" node with a very low total_cost to ensure it's processed first
                     let result_node = AStarNode {
                         state: DecoderResult {
                             text: text.clone(),
                             path: decoders_used,
                         },
                         cost: result_cost,
-                        heuristic: -1000.0, // Very negative to ensure highest priority
-                        total_cost: -1000.0, // Very negative to ensure highest priority
+                        heuristic: -1000.0,
+                        total_cost: -1000.0,
                         node_type: NodeType::Result,
                     };
-
                     new_nodes.push(result_node);
+                } else if let Some(node) = create_node_from_result(&r, current_node, seen_strings) {
+                    // Create regular node for further exploration
+                    new_nodes.push(node);
                 }
-            }
-            MyResults::Continue(results) => {
-                // Process each result using the helper function
-                for r in results {
-                    // Skip if stop signal is set
-                    if stop.load(AtomicOrdering::Relaxed) {
-                        break;
-                    }
-
-                    if let Some(node) = create_node_from_result(&r, current_node, seen_strings) {
-                        new_nodes.push(node);
-                    }
-                }
-            }
-        }
-    }
-
-    // If no decoder-tagged decoders or they didn't produce results,
-    // try all available decoders
-    if new_nodes.is_empty() {
-        // This part remains similar to the original implementation
-        // but adapted to return nodes instead of adding them to open_set
-
-        // Get all decoders
-        let all_decoders = get_all_decoders();
-
-        // Create checker for individual decoder runs
-        let checker = CheckerTypes::CheckAthena(Checker::<Athena>::new());
-
-        // Process each decoder
-        for decoder in all_decoders.components {
-            // Skip if stop signal is set
-            if stop.load(AtomicOrdering::Relaxed) {
-                break;
-            }
-
-            // Skip decoders that were already tried
-            if let Some(last_decoder) = current_node.state.path.last() {
-                if last_decoder.decoder == decoder.get_name() {
-                    continue;
-                }
-
-                // Skip reciprocal decoders if the last one was reciprocal
-                if last_decoder.checker_description.contains("reciprocal") {
-                    continue;
-                }
-            }
-
-            // Run the decoder
-            let result = decoder.crack(&current_node.state.text[0], &checker);
-
-            // Process the result using the helper function
-            if let Some(node) = create_node_from_result(&result, current_node, seen_strings) {
-                new_nodes.push(node);
-            } else if result.unencrypted_text.is_none() {
-                // Update decoder stats for failed decoding (no text at all)
-                update_decoder_stats(decoder.get_name(), false);
             }
         }
     }
@@ -379,19 +348,18 @@ fn expand_node(
 
 /// A* search implementation for finding the correct sequence of decoders
 ///
-/// This algorithm prioritizes decoders using a heuristic function and executes
-/// "decoder"-tagged decoders immediately at each level. The search proceeds in a
-/// best-first manner, exploring the most promising nodes first based on the f-score.
+/// This algorithm uses A* search with Occam's Razor-based heuristics to find the
+/// simplest decoding path. It explores all decoders at each node, with the path
+/// complexity function naturally prioritizing:
+/// - Encoders (cheap) over ciphers (expensive)
+/// - Repeated same-encoder sequences (very cheap)
+/// - Shorter paths over longer paths
 ///
-/// ## Execution Order
+/// ## Heuristic Design
 ///
-/// 1. At each node, first run all "decoder"-tagged decoders
-///    - These are considered more likely to produce meaningful results
-///    - If any of these decoders produces plaintext, we return immediately
-///
-/// 2. Then run all non-"decoder"-tagged decoders
-///    - These are prioritized using the heuristic function
-///    - Results are added to the priority queue for future exploration
+/// The f-score (f = g + h) prioritizes exploration:
+/// - g (path cost): Cheaper for encoders, expensive for ciphers
+/// - h (heuristic): Based on entropy, string quality, decoder success rates
 ///
 /// ## Parameters
 ///
@@ -449,26 +417,36 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
         // Check for result nodes
         for node in &new_nodes {
             if matches!(node.node_type, NodeType::Result) {
-                debug!("DEBUG: Checking result node");
                 // Check if we've already processed this result
                 if let Some(text) = node.state.text.first() {
                     let result_hash = calculate_hash(text);
                     if !seen_results.insert(result_hash) {
-                        debug!("DEBUG: Skipping duplicate result: {:?}", text);
                         continue; // Skip this result, we've already processed it
-                    } else {
-                        debug!("DEBUG: Processing new result: {:?}", text);
+                    }
+
+                    // If human checker confirmed a specific text, verify this result matches
+                    // The human sees normalized text (lowercase, no punctuation), so we compare
+                    // the normalized versions
+                    if let Some(confirmed_text) = get_human_confirmed_text() {
+                        let normalized_result = text
+                            .to_ascii_lowercase()
+                            .chars()
+                            .filter(|c| !c.is_ascii_punctuation())
+                            .collect::<String>();
+                        let normalized_confirmed = confirmed_text
+                            .to_ascii_lowercase()
+                            .chars()
+                            .filter(|c| !c.is_ascii_punctuation())
+                            .collect::<String>();
+
+                        if normalized_result != normalized_confirmed {
+                            continue; // Skip results that don't match what the human confirmed
+                        }
                     }
                 }
 
-                debug!("DEBUG: Found result node with text: {:?}", node.state.text);
                 // Found a result node
                 decoded_how_many_times(curr_depth.load(AtomicOrdering::Relaxed));
-
-                cli_pretty_printing::success(&format!(
-                    "DEBUG: astar.rs - Sending successful result with {} decoders",
-                    node.state.path.len()
-                ));
 
                 // If in top_results mode, store the result in the WaitAthena storage
                 if get_config().top_results {

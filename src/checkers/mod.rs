@@ -29,6 +29,8 @@ pub mod human_checker;
 
 // Re-export reset function for use by TUI rerun
 pub use human_checker::reset_human_checker_state;
+// Re-export function to get human-confirmed text
+pub use human_checker::get_human_confirmed_text;
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 pub mod lemmeknow_checker;
 /// The Password checker checks if the text matches a known common password

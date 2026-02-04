@@ -7,11 +7,11 @@
 /// Braille/unicode spinner frames for smooth animation.
 const SPINNER_FRAMES: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
+/// Enhanced braille spinner frames for more visible animation (fuller dots).
+pub const ENHANCED_SPINNER_FRAMES: &[&str] = &["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"];
+
 /// Collection of funny and interesting cryptography-related quotes.
 const QUOTES: &[&str] = &[
-"Hello, GCHQ!",
-"Hello, NSA!",
-"Hello, World!",
     "The only truly secure system is one that is powered off. - Gene Spafford",
     "Cryptography is typically bypassed, not penetrated. - Adi Shamir",
     "Base64 isn't encryption, it's encoding. Now you know!",

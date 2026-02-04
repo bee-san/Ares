@@ -79,11 +79,3 @@ pub fn pause() {
 pub fn resume() {
     PAUSED.store(false, Relaxed);
 }
-
-/// Resets the timer pause state.
-///
-/// Call this when restarting a decode run to ensure the timer
-/// isn't stuck in a paused state from a previous run.
-pub fn reset() {
-    PAUSED.store(false, Relaxed);
-}

@@ -6,7 +6,7 @@ use crate::timer;
 use crate::tui::human_checker_bridge::{is_tui_confirmation_active, request_tui_confirmation};
 use dashmap::DashSet;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 use text_io::read;
 
 /// Set of prompts that have already been shown to avoid duplicate confirmation requests.
@@ -16,6 +16,30 @@ static SEEN_PROMPTS: OnceLock<DashSet<String>> = OnceLock::new();
 /// Once set to true, future human checker calls will be skipped.
 static HUMAN_CONFIRMED: AtomicBool = AtomicBool::new(false);
 
+/// Storage for the human-confirmed plaintext.
+/// When a human confirms a result, the plaintext is stored here so the search
+/// can retrieve the exact text that was confirmed.
+static HUMAN_CONFIRMED_TEXT: OnceLock<Mutex<Option<String>>> = OnceLock::new();
+
+/// Returns the human-confirmed plaintext text if available.
+/// This should be called by the search algorithm to ensure the correct
+/// text is returned when the human confirms a result.
+pub fn get_human_confirmed_text() -> Option<String> {
+    HUMAN_CONFIRMED_TEXT
+        .get_or_init(|| Mutex::new(None))
+        .lock()
+        .ok()
+        .and_then(|guard| guard.clone())
+}
+
+/// Stores the human-confirmed plaintext text.
+fn set_human_confirmed_text(text: &str) {
+    let mutex = HUMAN_CONFIRMED_TEXT.get_or_init(|| Mutex::new(None));
+    if let Ok(mut guard) = mutex.lock() {
+        *guard = Some(text.to_string());
+    }
+}
+
 /// Returns a reference to the set of already-seen prompt keys.
 fn get_seen_prompts() -> &'static DashSet<String> {
     SEEN_PROMPTS.get_or_init(DashSet::new)
@@ -23,14 +47,21 @@ fn get_seen_prompts() -> &'static DashSet<String> {
 
 /// Resets human checker state for a fresh run.
 ///
-/// This clears the seen prompts set and resets the confirmation flag,
-/// allowing the human checker to prompt again for previously seen candidates.
+/// This clears the seen prompts set, resets the confirmation flag,
+/// and clears any stored confirmed text, allowing the human checker
+/// to prompt again for previously seen candidates.
 /// Call this when rerunning Ciphey from the TUI to ensure the human checker
 /// behaves as if it's a fresh CLI invocation.
 pub fn reset_human_checker_state() {
     HUMAN_CONFIRMED.store(false, Ordering::Release);
     if let Some(prompts) = SEEN_PROMPTS.get() {
         prompts.clear();
+    }
+    // Clear any previously confirmed text
+    if let Some(mutex) = HUMAN_CONFIRMED_TEXT.get() {
+        if let Ok(mut guard) = mutex.lock() {
+            *guard = None;
+        }
     }
 }
 
@@ -84,9 +115,10 @@ pub fn human_checker(input: &CheckResult) -> bool {
         reply.to_ascii_lowercase().starts_with('y')
     };
 
-    // If the user confirmed, set the atomic boolean to true
+    // If the user confirmed, set the atomic boolean to true and store the text
     if result {
         HUMAN_CONFIRMED.store(true, Ordering::Release);
+        set_human_confirmed_text(&input.text);
     }
     timer::resume();
 

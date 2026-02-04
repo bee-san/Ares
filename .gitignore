@@ -24,3 +24,7 @@ doc/
 .aider*
 .cursor
 .opencode
+
+# Vim swap files
+*.swp
+*.swo

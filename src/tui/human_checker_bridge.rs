@@ -59,26 +59,15 @@ static TUI_CONFIRMATION_RX: OnceLock<Mutex<Option<Receiver<TuiConfirmationReques
 /// }
 /// ```
 pub fn init_tui_confirmation_channel() -> bool {
-    // Create a new channel
     let (tx, rx) = mpsc::channel();
 
-    // Try to set the sender container - if this fails, we're already initialized
-    // but we'll replace the contents below
-    if TUI_CONFIRMATION_TX.set(Mutex::new(Some(tx))).is_err() {
-        // Already initialized - replace the sender
-        if let Some(mutex) = TUI_CONFIRMATION_TX.get() {
-            if let Ok(mut guard) = mutex.lock() {
-                *guard = Some(mpsc::channel().0);
-            }
-        }
-    }
+    // Try to set both sender and receiver - only succeeds on first call
+    // If already initialized, return false (caller should use reinit for re-initialization)
+    let tx_set = TUI_CONFIRMATION_TX.set(Mutex::new(Some(tx))).is_ok();
+    let rx_set = TUI_CONFIRMATION_RX.set(Mutex::new(Some(rx))).is_ok();
 
-    // Set the receiver wrapped in Mutex<Option<_>>
-    if TUI_CONFIRMATION_RX.set(Mutex::new(Some(rx))).is_err() {
-        // Already initialized - this is fine, we'll use reinit for subsequent calls
-    }
-
-    true
+    // Return true only if both were newly set (first initialization)
+    tx_set && rx_set
 }
 
 /// Reinitialize the TUI confirmation channel for a new decode run.
@@ -235,7 +224,11 @@ pub fn is_tui_confirmation_active() -> bool {
 mod tests {
     use super::*;
 
-    /// Create a test CheckResult
+    // Note: Testing channel initialization is difficult because OnceLock persists
+    // across tests in the same process. True unit tests would require process
+    // isolation. The channel logic is tested indirectly via integration tests.
+
+    /// Create a test CheckResult for use in tests.
     fn make_test_check_result() -> CheckResult {
         CheckResult {
             is_identified: true,
@@ -248,22 +241,12 @@ mod tests {
     }
 
     #[test]
-    fn test_is_tui_confirmation_active_before_init() {
-        // Note: This test may fail if run after other tests that initialize the channel
-        // since OnceLock persists across tests in the same process.
-        // In a fresh state, this should return false.
-        // We can't reliably test this without process isolation.
-    }
+    fn test_human_confirmation_request_from_check_result() {
+        let check_result = make_test_check_result();
+        let request = HumanConfirmationRequest::from(&check_result);
 
-    #[test]
-    fn test_request_without_init_returns_none() {
-        // In a fresh process without init, this should return None.
-        // However, if other tests have already initialized, this test behavior changes.
-        // This test documents expected behavior rather than strictly testing it.
-        let result = make_test_check_result();
-
-        // If not initialized, should return None
-        // If initialized by another test, behavior depends on receiver state
-        let _ = request_tui_confirmation(&result);
+        assert_eq!(request.text, "test plaintext");
+        assert_eq!(request.description, "Test description");
+        assert_eq!(request.checker_name, "TestChecker");
     }
 }

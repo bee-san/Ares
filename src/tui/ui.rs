@@ -9,11 +9,23 @@ use ratatui::widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph, Wr
 
 use super::app::{App, AppState, HumanConfirmationRequest};
 use super::colors::TuiColors;
-use super::spinner::Spinner;
+use super::spinner::{Spinner, ENHANCED_SPINNER_FRAMES};
 use super::widgets::{render_step_details, render_text_panel, PathViewer};
 
-/// Enhanced spinner frames for a more visible, flowing animation.
-const ENHANCED_SPINNER_FRAMES: &[&str] = &["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"];
+/// Modal width as percentage of screen width.
+const MODAL_WIDTH_PERCENT: u16 = 65;
+/// Modal height as percentage of screen height.
+const MODAL_HEIGHT_PERCENT: u16 = 55;
+/// Maximum plaintext preview length before truncation.
+const MAX_PLAINTEXT_PREVIEW_LEN: usize = 200;
+/// Help overlay width as percentage of screen.
+const HELP_WIDTH_PERCENT: u16 = 50;
+/// Help overlay height as percentage of screen.
+const HELP_HEIGHT_PERCENT: u16 = 60;
+/// Loading screen content width percentage.
+const LOADING_WIDTH_PERCENT: u16 = 80;
+/// Loading screen content height percentage.
+const LOADING_HEIGHT_PERCENT: u16 = 70;
 
 /// Decorated title for Ciphey using box drawing characters.
 const DECORATED_TITLE: &str = " ══ Ciphey ══ ";
@@ -132,7 +144,7 @@ fn draw_loading_screen(
     frame.render_widget(outer_block, area);
 
     // Create a centered content area
-    let inner_area = centered_rect(area, 80, 70);
+    let inner_area = centered_rect(area, LOADING_WIDTH_PERCENT, LOADING_HEIGHT_PERCENT);
 
     // Create spinner with current frame
     let mut spinner = Spinner::new();
@@ -293,7 +305,7 @@ fn draw_results_screen(
 
     // Render path viewer with decorated title
     let path_block = Block::default()
-        .title(format!(" {} Path {} ", "─", "─"))
+        .title(" ─ Path ─ ")
         .title_style(colors.title)
         .borders(Borders::ALL)
         .border_style(colors.border);
@@ -375,7 +387,7 @@ fn draw_failure_screen(
     frame.render_widget(outer_block, area);
 
     // Create inner area for content
-    let inner_area = centered_rect(area, 80, 70);
+    let inner_area = centered_rect(area, LOADING_WIDTH_PERCENT, LOADING_HEIGHT_PERCENT);
 
     // Truncate input if too long
     let display_input = if input_text.len() > 50 {
@@ -464,7 +476,7 @@ fn draw_status_bar(frame: &mut Frame, area: Rect, colors: &TuiColors) {
 /// * `colors` - The color scheme to use
 fn draw_help_overlay(frame: &mut Frame, area: Rect, colors: &TuiColors) {
     // Calculate popup size and position
-    let popup_area = centered_rect(area, 50, 60);
+    let popup_area = centered_rect(area, HELP_WIDTH_PERCENT, HELP_HEIGHT_PERCENT);
 
     // Clear the area behind the popup
     frame.render_widget(Clear, popup_area);
@@ -521,7 +533,6 @@ fn draw_help_overlay(frame: &mut Frame, area: Rect, colors: &TuiColors) {
 /// * `area` - The full screen area
 /// * `request` - The confirmation request containing candidate text and checker info
 /// * `colors` - The color scheme to use
-#[allow(dead_code)]
 fn draw_human_confirmation_screen(
     frame: &mut Frame,
     area: Rect,
@@ -529,7 +540,7 @@ fn draw_human_confirmation_screen(
     colors: &TuiColors,
 ) {
     // Calculate modal size (65% width, 55% height for better padding)
-    let modal_area = centered_rect(area, 65, 55);
+    let modal_area = centered_rect(area, MODAL_WIDTH_PERCENT, MODAL_HEIGHT_PERCENT);
 
     // Clear the area behind the modal
     frame.render_widget(Clear, modal_area);
@@ -571,8 +582,8 @@ fn draw_human_confirmation_screen(
     frame.render_widget(detected_paragraph, inner_chunks[0]);
 
     // Prepare the plaintext text (truncate if too long)
-    let display_text = if request.text.len() > 200 {
-        format!("{}...", &request.text[..200])
+    let display_text = if request.text.len() > MAX_PLAINTEXT_PREVIEW_LEN {
+        format!("{}...", &request.text[..MAX_PLAINTEXT_PREVIEW_LEN])
     } else {
         request.text.clone()
     };
