@@ -37,6 +37,20 @@ pub enum Action {
         /// The decoder path as JSON strings.
         path: Vec<String>,
     },
+    /// Switch to the highlighted branch.
+    SwitchToBranch(i64),
+    /// Open the branch mode prompt for creating a new branch.
+    OpenBranchPrompt,
+    /// Open the decoder search modal.
+    OpenDecoderSearch,
+    /// Return to parent branch (Backspace when viewing a branch).
+    ReturnToParent,
+    /// Run a full A* search as a branch.
+    RunBranchFullSearch(String),
+    /// Run single layer decoding as a branch.
+    RunBranchSingleLayer(String),
+    /// Run a specific decoder as a branch.
+    RunBranchDecoder(String, String),
     /// No action required.
     None,
 }
@@ -75,6 +89,11 @@ pub enum Action {
 /// }
 /// ```
 pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
+    // Handle decoder search overlay FIRST (it floats on top of Results)
+    if app.is_decoder_search_active() {
+        return handle_decoder_search_keys(app, key);
+    }
+
     // Check if we're in a state that has its own key handling
     let in_home = matches!(app.state, AppState::Home { .. });
     let in_confirmation = matches!(app.state, AppState::HumanConfirmation { .. });
@@ -110,6 +129,9 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
         }
         AppState::ToggleListEditor { .. } => {
             return handle_toggle_list_editor_keys(app, key);
+        }
+        AppState::BranchModePrompt { .. } => {
+            return handle_branch_mode_prompt_keys(app, key);
         }
         _ => {}
     }
@@ -214,57 +236,126 @@ fn handle_results_keys(
     app: &mut App,
     key: KeyEvent,
     selected_step_text: Option<String>,
-    path_len: usize,
+    _path_len: usize,
 ) -> Action {
+    // Track whether we're currently viewing a branch
+    let is_viewing_branch = if let AppState::Results { branch_path, .. } = &app.state {
+        branch_path.is_branch()
+    } else {
+        false
+    };
+
+    // Check if there are branches at the current step
+    let has_branches = app.has_branches();
+
+    // Get highlighted branch cache_id if any
+    let highlighted_branch_id = app.get_highlighted_branch().map(|b| b.cache_id);
+
     match key.code {
+        // Handle 'g' key for gg command (go to first step)
+        KeyCode::Char('g') => {
+            if app.pending_g {
+                // gg - go to first step
+                app.pending_g = false;
+                app.first_step();
+            } else {
+                // First g - set pending
+                app.pending_g = true;
+            }
+            Action::None
+        }
         // Return to home screen
         KeyCode::Char('b') => {
+            app.pending_g = false;
             app.return_to_home();
             Action::None
         }
-        // Navigation: previous step
+        // Navigation: previous step (h/Left)
         KeyCode::Left | KeyCode::Char('h') => {
+            app.pending_g = false;
             app.prev_step();
             Action::None
         }
-        // Navigation: next step
+        // Navigation: next step (l/Right)
         KeyCode::Right | KeyCode::Char('l') => {
+            app.pending_g = false;
             app.next_step();
+            Action::None
+        }
+        // Navigation: previous branch (k/Up)
+        KeyCode::Up | KeyCode::Char('k') => {
+            app.pending_g = false;
+            if has_branches {
+                app.prev_branch();
+            }
+            Action::None
+        }
+        // Navigation: next branch (j/Down)
+        KeyCode::Down | KeyCode::Char('j') => {
+            app.pending_g = false;
+            if has_branches {
+                app.next_branch();
+            }
+            Action::None
+        }
+        // Go to first step (Home key)
+        KeyCode::Home => {
+            app.pending_g = false;
+            app.first_step();
+            Action::None
+        }
+        // Go to last step (G or End key)
+        KeyCode::End | KeyCode::Char('G') => {
+            app.pending_g = false;
+            app.last_step();
             Action::None
         }
         // Copy selected step's output to clipboard (vim-style 'y' for yank)
         KeyCode::Char('c') | KeyCode::Char('y') => {
+            app.pending_g = false;
             if let Some(text) = selected_step_text {
                 Action::CopyToClipboard(text)
             } else {
                 Action::None
             }
         }
-        // Rerun Ciphey from the selected step's output
+        // Enter: Switch to branch if one is highlighted, otherwise open branch prompt
         KeyCode::Enter => {
-            if let Some(text) = selected_step_text {
-                Action::RerunFromSelected(text)
+            app.pending_g = false;
+            if let Some(cache_id) = highlighted_branch_id {
+                Action::SwitchToBranch(cache_id)
+            } else if has_branches {
+                // No branch highlighted but branches exist - do nothing or could select first
+                Action::None
+            } else if selected_step_text.is_some() {
+                // No branches - open branch prompt to create one
+                Action::OpenBranchPrompt
             } else {
                 Action::None
             }
         }
-        // Go to first step
-        KeyCode::Home => {
-            if let AppState::Results { selected_step, .. } = &mut app.state {
-                *selected_step = 0;
+        // Backspace: Return to parent branch (when viewing a branch)
+        KeyCode::Backspace => {
+            app.pending_g = false;
+            if is_viewing_branch {
+                Action::ReturnToParent
+            } else {
+                Action::None
             }
+        }
+        // Slash: Open decoder search modal
+        KeyCode::Char('/') => {
+            app.pending_g = false;
+            if selected_step_text.is_some() {
+                Action::OpenDecoderSearch
+            } else {
+                Action::None
+            }
+        }
+        _ => {
+            app.pending_g = false;
             Action::None
         }
-        // Go to last step
-        KeyCode::End => {
-            if let AppState::Results { selected_step, .. } = &mut app.state {
-                if path_len > 0 {
-                    *selected_step = path_len - 1;
-                }
-            }
-            Action::None
-        }
-        _ => Action::None,
     }
 }
 
@@ -954,6 +1045,144 @@ fn handle_save_confirmation_keys(app: &mut App, key: KeyEvent) -> Action {
             Action::None
         }
         _ => Action::None,
+    }
+}
+
+/// Handles key events in the BranchModePrompt state.
+fn handle_branch_mode_prompt_keys(app: &mut App, key: KeyEvent) -> Action {
+    use super::app::BranchMode;
+
+    if let AppState::BranchModePrompt {
+        selected_mode,
+        branch_context,
+    } = &mut app.state
+    {
+        match key.code {
+            // Navigate between modes
+            KeyCode::Up | KeyCode::Char('k') => {
+                *selected_mode = BranchMode::FullSearch;
+                Action::None
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                *selected_mode = BranchMode::SingleLayer;
+                Action::None
+            }
+            // Confirm selection
+            KeyCode::Enter => {
+                let mode = *selected_mode;
+                let context = branch_context.clone();
+                // Close the modal and return an action
+                // The event loop will handle running the appropriate branch operation
+                app.close_branch_mode_prompt();
+                match mode {
+                    BranchMode::FullSearch => {
+                        // Run full A* search as a branch
+                        Action::RunBranchFullSearch(context.text_to_decode)
+                    }
+                    BranchMode::SingleLayer => {
+                        // Run all decoders once on this text
+                        Action::RunBranchSingleLayer(context.text_to_decode)
+                    }
+                }
+            }
+            // Cancel
+            KeyCode::Esc => {
+                app.close_branch_mode_prompt();
+                Action::None
+            }
+            _ => Action::None,
+        }
+    } else {
+        Action::None
+    }
+}
+
+/// Handles key events for the DecoderSearch overlay.
+fn handle_decoder_search_keys(app: &mut App, key: KeyEvent) -> Action {
+    if let Some(ref mut overlay) = app.decoder_search {
+        match key.code {
+            // Navigate list
+            KeyCode::Up | KeyCode::Char('k') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                if overlay.selected_index > 0 {
+                    overlay.selected_index -= 1;
+                }
+                Action::None
+            }
+            KeyCode::Down | KeyCode::Char('j') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                if !overlay.filtered_decoders.is_empty()
+                    && overlay.selected_index < overlay.filtered_decoders.len() - 1
+                {
+                    overlay.selected_index += 1;
+                }
+                Action::None
+            }
+            // Also allow arrow keys without modifier
+            KeyCode::Up => {
+                if overlay.selected_index > 0 {
+                    overlay.selected_index -= 1;
+                }
+                Action::None
+            }
+            KeyCode::Down => {
+                if !overlay.filtered_decoders.is_empty()
+                    && overlay.selected_index < overlay.filtered_decoders.len() - 1
+                {
+                    overlay.selected_index += 1;
+                }
+                Action::None
+            }
+            // Confirm selection - run the selected decoder
+            KeyCode::Enter => {
+                if let Some(decoder_name) = overlay.filtered_decoders.get(overlay.selected_index) {
+                    let decoder_to_run = decoder_name.to_string();
+                    let text = overlay.branch_context.text_to_decode.clone();
+                    app.close_decoder_search();
+                    // Return an action to run the specific decoder
+                    Action::RunBranchDecoder(text, decoder_to_run)
+                } else {
+                    Action::None
+                }
+            }
+            // Cancel
+            KeyCode::Esc => {
+                app.close_decoder_search();
+                Action::None
+            }
+            // Text input
+            KeyCode::Char(c) => {
+                overlay.text_input.insert_char(c);
+                // Update filtered list
+                let query = overlay.text_input.get_text().to_lowercase();
+                overlay.filtered_decoders = overlay
+                    .all_decoders
+                    .iter()
+                    .filter(|name| name.to_lowercase().contains(&query))
+                    .copied()
+                    .collect();
+                overlay.selected_index = 0;
+                Action::None
+            }
+            KeyCode::Backspace => {
+                overlay.text_input.backspace();
+                // Update filtered list
+                let query = overlay.text_input.get_text().to_lowercase();
+                if query.is_empty() {
+                    overlay.filtered_decoders = overlay.all_decoders.clone();
+                } else {
+                    overlay.filtered_decoders = overlay
+                        .all_decoders
+                        .iter()
+                        .filter(|name| name.to_lowercase().contains(&query))
+                        .copied()
+                        .collect();
+                }
+                overlay.selected_index = 0;
+                Action::None
+            }
+            _ => Action::None,
+        }
+    } else {
+        Action::None
     }
 }
 

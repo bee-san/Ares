@@ -463,6 +463,82 @@ if is_tui_confirmation_active() {
 - `request_tui_confirmation(&CheckResult)` - Request confirmation, blocks until response
 - `is_tui_confirmation_active()` - Check if TUI mode is active
 
+### TUI Keybindings
+
+The TUI has different keybindings depending on the current state. When adding new keybindings:
+1. Add the key handler in `src/tui/input.rs`
+2. Update the status bar in `draw_status_bar()` in `src/tui/ui.rs`
+3. Update the help overlay in `draw_help_overlay()` in `src/tui/ui.rs`
+4. Document the keybinding below
+
+#### Home Screen Keybindings
+
+| Key | Action |
+|-----|--------|
+| `Tab` | Switch focus between history panel and input |
+| `Enter` | Submit input for decoding (or select history entry) |
+| `Ctrl+Enter` | Insert newline in multi-line input |
+| `Ctrl+S` | Open settings panel |
+| `Esc` | Quit (or deselect history if focused) |
+| `↑/↓` or `j/k` | Navigate history (when history focused) |
+| `←/→` | Move cursor in input (or switch to history) |
+
+#### Results Screen Keybindings
+
+| Key | Action |
+|-----|--------|
+| `←` / `h` | Select previous step in path |
+| `→` / `l` | Select next step in path |
+| `↑` / `k` | Select previous branch (if branches exist) |
+| `↓` / `j` | Select next branch (if branches exist) |
+| `gg` | Go to first step (vim-style) |
+| `G` / `End` | Go to last step |
+| `Home` | Go to first step |
+| `y` / `c` | Yank (copy) selected step's output to clipboard |
+| `Enter` | Select highlighted branch, or open branch prompt |
+| `Backspace` | Return to parent branch (when viewing a branch) |
+| `/` | Open decoder search modal |
+| `b` | Return to home screen |
+| `?` | Toggle help overlay |
+| `Ctrl+S` | Open settings panel |
+| `q` / `Esc` | Quit the application |
+
+#### Human Confirmation Keybindings
+
+| Key | Action |
+|-----|--------|
+| `Y` / `y` / `Enter` | Accept the plaintext candidate |
+| `N` / `n` / `Esc` | Reject the plaintext candidate |
+
+#### Settings Screen Keybindings
+
+| Key | Action |
+|-----|--------|
+| `Tab` / `Shift+Tab` | Cycle through sections |
+| `↑/↓` or `j/k` | Navigate fields within section |
+| `←/→` or `h/l` | Switch sections |
+| `Enter` | Edit selected field |
+| `Space` | Toggle boolean fields |
+| `Ctrl+S` | Save settings and return |
+| `Esc` | Show save confirmation (if changes) or close |
+
+#### Decoder Search Keybindings
+
+| Key | Action |
+|-----|--------|
+| `↑` / `Ctrl+k` | Select previous decoder |
+| `↓` / `Ctrl+j` | Select next decoder |
+| `Enter` | Run selected decoder on current text |
+| `Esc` | Cancel and close search |
+| (typing) | Filter decoder list |
+
+#### Failure Screen Keybindings
+
+| Key | Action |
+|-----|--------|
+| `b` / `Backspace` | Return to home screen |
+| `q` / `Esc` | Quit the application |
+
 ### Adding a New TUI State
 
 1. Add variant to `AppState` enum in `src/tui/app.rs`
@@ -1124,4 +1200,184 @@ When modifying TUI widgets:
 - **Truncate long text** - Use `MAX_TEXT_LENGTH` constants (e.g., 200 chars)
 - **Use `chars().take(n)` not `[..n]`** - Safe for UTF-8 strings
 - **Wrap text properly** - Use `Wrap { trim: false }` to preserve formatting
+
+## Decoder Tree Branching
+
+The TUI supports exploring alternative decoding paths through a branching system. Users can create branches from any step in the decoding path to try different decoders.
+
+### Results Screen Layout
+
+The Results screen uses a **full-width path panel** (not a 3-column layout):
+
+```
++---------------------------- Ciphey -----------------------------+
+|  +--- Path (Main) or Path (Main > B2 > B1) --------------------+ |
+|  |  [Input] --> [Base64] --> [Caesar] --> [Plaintext]          | |
+|  |                              [3 branches]                    | |
+|  |                                                              | |
+|  |  --- Branches from step 2 (3 total) ------------------------ | |
+|  |  > [ROT13] --> "hello world" ✓                              | |
+|  |    [Hex] --> "48454c4c4f" (2 sub)                           | |
+|  |    [Reverse] --> "dlrow olleh"                              | |
+|  +--------------------------------------------------------------+ |
+|  +--- Step Details ---------------------------------------------+ |
+|  |  Decoder: Caesar | Key: 13                                   | |
+|  |  Input: "uryyb jbeyq" | Output: "hello world"               | |
+|  +--------------------------------------------------------------+ |
++------------------------------------------------------------------+
+```
+
+### Branch-Related AppState Fields
+
+The `Results` state includes branch navigation fields:
+
+```rust
+Results {
+    result: DecoderResult,
+    selected_step: usize,
+    scroll_offset: usize,
+    // Branch fields
+    cache_id: Option<i64>,           // For database linking
+    branch_path: BranchPath,         // Current position in hierarchy
+    current_branches: Vec<BranchSummary>,  // Branches at selected step
+    highlighted_branch: Option<usize>,      // Which branch is highlighted
+    branch_scroll_offset: usize,     // Scroll offset for branch list
+}
+```
+
+### Branch Navigation Keybindings
+
+| Key | Action |
+|-----|--------|
+| `h` / `Left` | Previous step in path |
+| `l` / `Right` | Next step in path |
+| `j` / `Down` | Next branch in list |
+| `k` / `Up` | Previous branch in list |
+| `gg` | Jump to first step |
+| `G` | Jump to last step |
+| `Enter` | Switch to highlighted branch |
+| `Backspace` | Return to parent branch |
+| `/` | Open decoder search modal |
+
+### Vim-Style Decoder Search
+
+Press `/` in the Results screen to open a vim-style decoder search modal. This allows you to quickly try a specific decoder on the selected step's output:
+
+1. **Floating overlay** - The search modal floats on top of the Results screen (doesn't replace it)
+2. **Fuzzy filtering** - Type to filter the decoder list (e.g., "bas" shows Base64, Base32, etc.)
+3. **Arrow navigation** - Use `↑`/`↓` or `Ctrl+k`/`Ctrl+j` to navigate the filtered list
+4. **Enter to run** - Press `Enter` to run the selected decoder on the current step's output
+5. **Escape to cancel** - Press `Esc` to close without running
+
+The decoder search creates a **manual branch** in the database, allowing you to explore alternative decoding paths.
+
+**Tip:** The decoder search is visible in the status bar at the bottom of the Results screen as `[/] Search`.
+
+### Branch-Related Actions
+
+The `Action` enum includes:
+
+```rust
+Action::SwitchToBranch(i64)        // Switch to a branch by cache_id
+Action::OpenBranchPrompt           // Open branch mode selection modal
+Action::OpenDecoderSearch          // Open vim-style decoder search
+Action::ReturnToParent             // Go back up branch hierarchy
+Action::RunBranchFullSearch(String)   // Run full A* on branch text
+Action::RunBranchSingleLayer(String)  // Run all decoders once
+Action::RunBranchDecoder(String, String)  // Run specific decoder
+```
+
+### PathViewer Branch Indicator
+
+The `PathViewer` widget can show a branch indicator below the selected decoder:
+
+```rust
+// Use render_with_branch_count() instead of render() when branches exist
+path_viewer.render_with_branch_count(
+    area,
+    buf,
+    &result.path,
+    selected_step,
+    current_branches.len(),  // Shows "[N branches]" below selected box
+    colors,
+);
+```
+
+### Key Files for Branching
+
+| File | Purpose |
+|------|---------|
+| `src/tui/app/state.rs` | `BranchContext`, `BranchPath`, `BranchMode` structs |
+| `src/tui/app/branches.rs` | Branch navigation methods |
+| `src/tui/ui.rs` | `render_branch_list()`, `render_branch_row()` functions |
+| `src/tui/widgets/path_viewer.rs` | `render_with_branch_count()`, branch indicator |
+| `src/tui/input.rs` | Vim keybindings, branch action handling |
+| `src/tui/run.rs` | Branch action execution |
+| `src/storage/database.rs` | `BranchSummary`, branch query functions |
+
+### Database Branch Columns
+
+The `cache` table has columns for branch relationships:
+
+```sql
+parent_cache_id INTEGER REFERENCES cache(rowid),  -- Parent entry (NULL for root)
+branch_step INTEGER,                               -- Step index in parent's path
+branch_type TEXT                                   -- 'auto', 'single_layer', 'manual'
+```
+
+## More Lessons Learned
+
+### Trait Imports for Associated Functions
+
+When calling trait methods like `::new()` from a different module, you must import the trait even when fully qualifying the type:
+
+```rust
+// ERROR: no function or associated item named `new` found
+crate::checkers::checker_type::Checker::<crate::checkers::athena::Athena>::new()
+
+// CORRECT: Import the trait that provides `new()`
+use crate::checkers::checker_type::Check;
+crate::checkers::checker_type::Checker::<crate::checkers::athena::Athena>::new()
+```
+
+This is because Rust requires the trait to be in scope to call its methods, even when the method is called on a concrete type.
+
+### Layout Constraint Ordering
+
+When using `Layout::default().constraints()`, the order matters and constraints are applied sequentially:
+
+```rust
+// Top-heavy layout: path gets 55%, step details gets remaining
+let chunks = Layout::default()
+    .direction(Direction::Vertical)
+    .constraints([
+        Constraint::Min(10),      // Path panel - gets at least 10 rows
+        Constraint::Length(1),    // Separator - exactly 1 row
+        Constraint::Min(8),       // Step details - gets at least 8 rows
+        Constraint::Length(1),    // Status bar - exactly 1 row
+    ])
+    .split(area);
+```
+
+Use `Constraint::Percentage()` for proportional splits and `Constraint::Min()` for flexible sections.
+
+### Conditional Widget Rendering
+
+When a section should only appear conditionally (like a branch list), check before allocating layout space:
+
+```rust
+if current_branches.is_empty() {
+    // Full area for path viewer
+    path_viewer.render(path_inner, buf, &result.path, selected_step, colors);
+} else {
+    // Split area: path viewer + branch list
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([Constraint::Percentage(55), Constraint::Min(4)])
+        .split(path_inner);
+    
+    path_viewer.render_with_branch_count(...);
+    render_branch_list(...);
+}
+```
 

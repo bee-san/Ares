@@ -7,16 +7,18 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph, Wrap};
 
-use super::app::{App, AppState, HistoryEntry, HumanConfirmationRequest, WordlistManagerFocus};
+use super::app::{
+    App, AppState, BranchPath, HistoryEntry, HumanConfirmationRequest, WordlistManagerFocus,
+};
 use super::colors::TuiColors;
 use super::multiline_text_input::MultilineTextInput;
 use super::settings::SettingsModel;
 use super::spinner::{Spinner, ENHANCED_SPINNER_FRAMES};
 use super::widgets::{
     render_list_editor, render_settings_screen as render_settings_panel, render_step_details,
-    render_text_panel, render_toggle_list_editor, render_wordlist_manager, PathViewer,
-    WordlistFocus,
+    render_toggle_list_editor, render_wordlist_manager, PathViewer, WordlistFocus,
 };
+use crate::storage::database::BranchSummary;
 
 /// Modal width as percentage of screen width.
 const MODAL_WIDTH_PERCENT: u16 = 65;
@@ -25,9 +27,9 @@ const MODAL_HEIGHT_PERCENT: u16 = 55;
 /// Maximum plaintext preview length before truncation.
 const MAX_PLAINTEXT_PREVIEW_LEN: usize = 200;
 /// Help overlay width as percentage of screen.
-const HELP_WIDTH_PERCENT: u16 = 50;
+const HELP_WIDTH_PERCENT: u16 = 55;
 /// Help overlay height as percentage of screen.
-const HELP_HEIGHT_PERCENT: u16 = 60;
+const HELP_HEIGHT_PERCENT: u16 = 75;
 /// Loading screen content width percentage.
 const LOADING_WIDTH_PERCENT: u16 = 80;
 /// Loading screen content height percentage.
@@ -110,9 +112,24 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
         AppState::Results {
             result,
             selected_step,
+            branch_path,
+            current_branches,
+            highlighted_branch,
+            branch_scroll_offset,
             ..
         } => {
-            draw_results_screen(frame, area, &app.input_text, result, *selected_step, colors);
+            draw_results_screen(
+                frame,
+                area,
+                &app.input_text,
+                result,
+                *selected_step,
+                branch_path,
+                current_branches,
+                *highlighted_branch,
+                *branch_scroll_offset,
+                colors,
+            );
         }
         AppState::Failure {
             input_text,
@@ -220,6 +237,60 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
                 selected_items,
                 *cursor_index,
                 *scroll_offset,
+                colors,
+            );
+        }
+        AppState::BranchModePrompt {
+            selected_mode,
+            branch_context: _,
+        } => {
+            draw_branch_mode_prompt(frame, area, *selected_mode, colors);
+        }
+        AppState::DecoderSearch {
+            text_input,
+            all_decoders: _,
+            filtered_decoders,
+            selected_index,
+            branch_context,
+        } => {
+            // First, render the underlying Results screen from the branch context
+            // Load the parent result from the database to show underneath
+            if let Some(parent_id) = branch_context.parent_cache_id {
+                if let Ok(Some(cache_row)) = crate::storage::database::get_cache_by_id(parent_id) {
+                    let crack_results: Vec<crate::decoders::crack_results::CrackResult> = cache_row
+                        .path
+                        .iter()
+                        .filter_map(|json_str| serde_json::from_str(json_str).ok())
+                        .collect();
+
+                    let result = crate::DecoderResult {
+                        text: vec![cache_row.decoded_text.clone()],
+                        path: crack_results,
+                    };
+
+                    // Draw the Results screen as background
+                    draw_results_screen(
+                        frame,
+                        area,
+                        &cache_row.encoded_text,
+                        &result,
+                        branch_context.branch_step,
+                        &BranchPath::new(),
+                        &[], // No branches shown
+                        None,
+                        0,
+                        colors,
+                    );
+                }
+            }
+
+            // Then overlay the decoder search modal
+            draw_decoder_search(
+                frame,
+                area,
+                text_input.get_text(),
+                filtered_decoders,
+                *selected_index,
                 colors,
             );
         }
@@ -389,80 +460,90 @@ fn draw_loading_screen(
 /// * `input_text` - The original input text
 /// * `result` - The successful decoding result
 /// * `selected_step` - Index of the currently selected step
+/// * `branch_path` - Current position in branch hierarchy
+/// * `current_branches` - Branches for the currently selected step
+/// * `highlighted_branch` - Index of highlighted branch (if any)
+/// * `branch_scroll_offset` - Scroll offset for branch list
 /// * `colors` - The color scheme to use
+#[allow(clippy::too_many_arguments)]
 fn draw_results_screen(
     frame: &mut Frame,
     area: Rect,
-    input_text: &str,
+    _input_text: &str,
     result: &crate::DecoderResult,
     selected_step: usize,
+    branch_path: &BranchPath,
+    current_branches: &[BranchSummary],
+    highlighted_branch: Option<usize>,
+    branch_scroll_offset: usize,
     colors: &TuiColors,
 ) {
-    // Calculate layout chunks - balanced split between top row and step details
+    // Calculate layout chunks - full-width path panel on top, step details below
+    // Branch list is integrated into the path panel
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Percentage(40), // Top row (Input | Path | Output)
-            Constraint::Length(1),      // Visual separator
-            Constraint::Min(12),        // Step details - gets remaining space
-            Constraint::Length(1),      // Status bar
+            Constraint::Min(10),   // Path panel (with optional branch list)
+            Constraint::Length(1), // Visual separator
+            Constraint::Min(8),    // Step details
+            Constraint::Length(1), // Status bar
         ])
         .split(area);
 
-    // Split top row into three columns
-    let top_chunks = Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints([
-            Constraint::Percentage(25), // Input
-            Constraint::Percentage(50), // Path
-            Constraint::Percentage(25), // Output
-        ])
-        .split(chunks[0]);
-
-    // Render input panel
-    render_text_panel(
-        top_chunks[0],
-        frame.buffer_mut(),
-        "Input",
-        input_text,
-        colors,
-        false,
-    );
-
-    // Render path viewer with decorated title
+    // Render path panel with breadcrumb header
+    let path_title = format!(" ─ Path ({}) ─ ", branch_path.display());
     let path_block = Block::default()
-        .title(" ─ Path ─ ")
+        .title(path_title)
         .title_style(colors.title)
         .borders(Borders::ALL)
         .border_style(colors.border);
 
-    let path_inner = path_block.inner(top_chunks[1]);
-    frame.render_widget(path_block, top_chunks[1]);
+    let path_inner = path_block.inner(chunks[0]);
+    frame.render_widget(path_block, chunks[0]);
 
-    let path_viewer = PathViewer::new();
-    path_viewer.render(
-        path_inner,
-        frame.buffer_mut(),
-        &result.path,
-        selected_step,
-        colors,
-    );
+    // Split path panel into path viewer and branch list (if branches exist)
+    if current_branches.is_empty() {
+        // No branches - full area for path viewer
+        let path_viewer = PathViewer::new();
+        path_viewer.render(
+            path_inner,
+            frame.buffer_mut(),
+            &result.path,
+            selected_step,
+            colors,
+        );
+    } else {
+        // Split: 55% path viewer, 45% branch list
+        let path_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Percentage(55), // Path viewer
+                Constraint::Min(4),         // Branch list
+            ])
+            .split(path_inner);
 
-    // Render output panel
-    let output_text = result
-        .text
-        .first()
-        .map(|s| s.as_str())
-        .unwrap_or("(no output)");
+        // Render path viewer with branch count indicator
+        let path_viewer = PathViewer::new();
+        path_viewer.render_with_branch_count(
+            path_chunks[0],
+            frame.buffer_mut(),
+            &result.path,
+            selected_step,
+            current_branches.len(),
+            colors,
+        );
 
-    render_text_panel(
-        top_chunks[2],
-        frame.buffer_mut(),
-        "Output",
-        output_text,
-        colors,
-        true,
-    );
+        // Render branch list section
+        render_branch_list(
+            path_chunks[1],
+            frame.buffer_mut(),
+            current_branches,
+            highlighted_branch,
+            branch_scroll_offset,
+            selected_step,
+            colors,
+        );
+    }
 
     // Render visual separator line
     let separator_line = Line::from(Span::styled(
@@ -478,6 +559,171 @@ fn draw_results_screen(
 
     // Render status bar
     draw_status_bar(frame, chunks[3], colors);
+}
+
+/// Renders the branch list section below the path viewer.
+///
+/// Shows a header line with branch count, then a scrollable list of branches.
+/// Each branch shows: decoder name, final text preview, and indicators for
+/// success (checkmark) and sub-branches count.
+///
+/// # Arguments
+///
+/// * `area` - The area to render the branch list
+/// * `buf` - The buffer to render into
+/// * `branches` - List of branches to display
+/// * `highlighted` - Index of the currently highlighted branch (if any)
+/// * `scroll_offset` - Number of branches scrolled past
+/// * `parent_step` - The step index these branches originate from
+/// * `colors` - The color scheme to use
+fn render_branch_list(
+    area: Rect,
+    buf: &mut Buffer,
+    branches: &[BranchSummary],
+    highlighted: Option<usize>,
+    scroll_offset: usize,
+    parent_step: usize,
+    colors: &TuiColors,
+) {
+    if area.height < 2 || area.width < 10 {
+        return;
+    }
+
+    // Get decoder name for the parent step (for header)
+    let header_text = format!(
+        "─── Branches from step {} ({} total) ───",
+        parent_step,
+        branches.len()
+    );
+
+    // Render header
+    let header_style = colors.text_dimmed;
+    let header_line = Line::from(Span::styled(&header_text, header_style));
+    let header_para = Paragraph::new(header_line).alignment(Alignment::Center);
+
+    let header_area = Rect::new(area.x, area.y, area.width, 1);
+    header_para.render(header_area, buf);
+
+    // Calculate visible branches
+    let list_area = Rect::new(
+        area.x,
+        area.y + 1,
+        area.width,
+        area.height.saturating_sub(1),
+    );
+    let visible_count = list_area.height as usize;
+
+    // Calculate scroll indicators
+    let branches_above = scroll_offset;
+    let branches_below = branches.len().saturating_sub(scroll_offset + visible_count);
+
+    // Render each visible branch
+    for (display_idx, branch_idx) in (scroll_offset..)
+        .take(visible_count)
+        .enumerate()
+        .filter(|(_, idx)| *idx < branches.len())
+    {
+        let branch = &branches[branch_idx];
+        let is_highlighted = highlighted == Some(branch_idx);
+
+        let y = list_area.y + display_idx as u16;
+        if y >= list_area.y + list_area.height {
+            break;
+        }
+
+        render_branch_row(
+            Rect::new(list_area.x, y, list_area.width, 1),
+            buf,
+            branch,
+            is_highlighted,
+            colors,
+        );
+    }
+
+    // Render scroll indicator in the right margin if needed
+    if branches_above > 0 || branches_below > 0 {
+        let indicator = format!("[^{} v{}]", branches_above, branches_below);
+        let indicator_width = indicator.chars().count() as u16;
+        let indicator_x = area.x + area.width.saturating_sub(indicator_width + 1);
+        buf.set_string(indicator_x, area.y, &indicator, colors.text_dimmed);
+    }
+}
+
+/// Renders a single branch row.
+///
+/// Format: "> [Decoder] --> \"preview...\" ✓ (N sub)"
+fn render_branch_row(
+    area: Rect,
+    buf: &mut Buffer,
+    branch: &BranchSummary,
+    is_highlighted: bool,
+    colors: &TuiColors,
+) {
+    if area.width < 5 {
+        return;
+    }
+
+    // Build the row content
+    let prefix = if is_highlighted { " > " } else { "   " };
+    let success_indicator = if branch.successful { " ✓" } else { "" };
+    let sub_count = if branch.sub_branch_count > 0 {
+        format!(" ({} sub)", branch.sub_branch_count)
+    } else {
+        String::new()
+    };
+
+    // Truncate preview to fit
+    let fixed_parts_len =
+        prefix.len() + branch.first_decoder.len() + 8 + success_indicator.len() + sub_count.len();
+    let available_preview = (area.width as usize).saturating_sub(fixed_parts_len);
+    let preview = if branch.final_text_preview.len() > available_preview {
+        format!(
+            "{}...",
+            branch
+                .final_text_preview
+                .chars()
+                .take(available_preview.saturating_sub(3))
+                .collect::<String>()
+        )
+    } else {
+        branch.final_text_preview.clone()
+    };
+
+    // Choose style based on highlight state
+    let style = if is_highlighted {
+        colors
+            .accent
+            .add_modifier(Modifier::BOLD)
+            .add_modifier(Modifier::REVERSED)
+    } else {
+        colors.text
+    };
+
+    let success_style = if is_highlighted {
+        style
+    } else {
+        colors.success
+    };
+
+    // Build spans
+    let mut spans = vec![
+        Span::styled(prefix, style),
+        Span::styled(format!("[{}]", branch.first_decoder), style),
+        Span::styled(" --> ", colors.text_dimmed),
+        Span::styled(format!("\"{}\"", preview), style),
+    ];
+
+    if branch.successful {
+        spans.push(Span::styled(success_indicator, success_style));
+    }
+
+    if !sub_count.is_empty() {
+        spans.push(Span::styled(sub_count, colors.text_dimmed));
+    }
+
+    let line = Line::from(spans);
+    let para = Paragraph::new(line);
+    para.render(area, buf);
 }
 
 /// Renders the failure screen with tips.
@@ -515,9 +761,9 @@ fn draw_failure_screen(
     // Create inner area for content
     let inner_area = centered_rect(area, LOADING_WIDTH_PERCENT, LOADING_HEIGHT_PERCENT);
 
-    // Truncate input if too long
-    let display_input = if input_text.len() > 50 {
-        format!("{}...", &input_text[..50])
+    // Truncate input if too long (UTF-8 safe)
+    let display_input = if input_text.chars().count() > 50 {
+        format!("{}...", input_text.chars().take(50).collect::<String>())
     } else {
         input_text.to_string()
     };
@@ -741,9 +987,10 @@ fn draw_history_panel(
 
             // Add time on a new conceptual "line" but we'll truncate to fit
             // For simplicity, append time with dimmed style
-            let remaining_width = area
-                .width
-                .saturating_sub(4 + status.len() as u16 + entry.encoded_text_preview.len() as u16);
+            // Note: Use chars().count() for proper Unicode width calculation
+            let status_width = 2u16; // "✓ " or "✗ " is 2 display cells
+            let preview_width = entry.encoded_text_preview.chars().count() as u16;
+            let remaining_width = area.width.saturating_sub(4 + status_width + preview_width);
             if remaining_width > 6 {
                 spans.push(Span::styled(" ", colors.text));
                 spans.push(Span::styled(
@@ -974,12 +1221,12 @@ fn draw_main_input_area(
 /// * `colors` - The color scheme to use
 fn draw_status_bar(frame: &mut Frame, area: Rect, colors: &TuiColors) {
     let keybindings = [
-        ("[b]", "Home"),
-        ("[q]", "Quit"),
-        ("[←/→]", "Navigate"),
+        ("[h/l]", "Step"),
+        ("[j/k]", "Branch"),
+        ("[/]", "Search"),
         ("[y]", "Yank"),
-        ("[Enter]", "Rerun"),
-        ("[Ctrl+S]", "Settings"),
+        ("[b]", "Home"),
+        ("[Enter]", "Select"),
         ("[?]", "Help"),
     ];
 
@@ -1022,17 +1269,28 @@ fn draw_help_overlay(frame: &mut Frame, area: Rect, colors: &TuiColors) {
     let inner_area = block.inner(popup_area);
     frame.render_widget(block, popup_area);
 
-    // Build help content
+    // Build help content - Results screen keybindings
     let keybindings = vec![
-        ("q / Esc", "Quit the application"),
+        ("Navigation", ""),
         ("← / h", "Select previous step"),
         ("→ / l", "Select next step"),
-        ("y", "Yank (copy) selected step to clipboard"),
-        ("Enter", "Rerun Ciphey from selected step"),
+        ("↑ / k", "Select previous branch"),
+        ("↓ / j", "Select next branch"),
+        ("gg", "Go to first step"),
+        ("G / End", "Go to last step"),
+        ("Home", "Go to first step"),
+        ("", ""),
+        ("Actions", ""),
+        ("y / c", "Yank (copy) output to clipboard"),
+        ("Enter", "Select branch or create new branch"),
+        ("Backspace", "Return to parent branch"),
+        ("/", "Search and run specific decoder"),
+        ("b", "Return to home screen"),
+        ("", ""),
+        ("General", ""),
         ("Ctrl+S", "Open settings panel"),
         ("?", "Toggle this help overlay"),
-        ("Home", "Go to first step"),
-        ("End", "Go to last step"),
+        ("q / Esc", "Quit the application"),
     ];
 
     let mut lines = vec![
@@ -1044,10 +1302,22 @@ fn draw_help_overlay(frame: &mut Frame, area: Rect, colors: &TuiColors) {
     ];
 
     for (key, description) in keybindings {
-        lines.push(Line::from(vec![
-            Span::styled(format!("{:12}", key), colors.accent),
-            Span::styled(description, colors.text),
-        ]));
+        if key.is_empty() && description.is_empty() {
+            // Empty line separator
+            lines.push(Line::from(""));
+        } else if description.is_empty() {
+            // Section header
+            lines.push(Line::from(Span::styled(
+                key,
+                colors.label.add_modifier(Modifier::BOLD),
+            )));
+        } else {
+            // Regular keybinding
+            lines.push(Line::from(vec![
+                Span::styled(format!("{:12}", key), colors.accent),
+                Span::styled(description, colors.text),
+            ]));
+        }
     }
 
     let paragraph = Paragraph::new(lines).wrap(Wrap { trim: false });
@@ -1554,4 +1824,179 @@ fn draw_save_confirmation_modal(area: &Rect, buf: &mut Buffer, colors: &TuiColor
         .wrap(Wrap { trim: false });
 
     paragraph.render(inner, buf);
+}
+
+/// Renders the branch mode prompt modal.
+///
+/// Displays a centered modal for choosing between full A* search and single-layer decoding.
+fn draw_branch_mode_prompt(
+    frame: &mut Frame,
+    area: Rect,
+    selected_mode: super::app::BranchMode,
+    colors: &TuiColors,
+) {
+    use super::app::BranchMode;
+
+    let modal_width: u16 = 50;
+    let modal_height: u16 = 12;
+
+    let x = (area.width.saturating_sub(modal_width)) / 2;
+    let y = (area.height.saturating_sub(modal_height)) / 2;
+
+    let modal_area = Rect {
+        x: area.x + x,
+        y: area.y + y,
+        width: modal_width.min(area.width),
+        height: modal_height.min(area.height),
+    };
+
+    // Clear the modal area
+    frame.render_widget(Clear, modal_area);
+
+    // Create modal block
+    let block = Block::default()
+        .title(" How do you want to branch? ")
+        .title_style(colors.accent.add_modifier(Modifier::BOLD))
+        .borders(Borders::ALL)
+        .border_type(BorderType::Double)
+        .border_style(colors.accent)
+        .padding(Padding::new(2, 2, 1, 1));
+
+    let inner = block.inner(modal_area);
+    frame.render_widget(block, modal_area);
+
+    let is_full_search = selected_mode == BranchMode::FullSearch;
+
+    let full_search_style = if is_full_search {
+        colors
+            .accent
+            .add_modifier(Modifier::BOLD)
+            .add_modifier(Modifier::REVERSED)
+    } else {
+        colors.text
+    };
+
+    let single_layer_style = if !is_full_search {
+        colors
+            .accent
+            .add_modifier(Modifier::BOLD)
+            .add_modifier(Modifier::REVERSED)
+    } else {
+        colors.text
+    };
+
+    let lines = vec![
+        Line::from(""),
+        Line::from(Span::styled(
+            if is_full_search {
+                "> Full A* Search"
+            } else {
+                "  Full A* Search"
+            },
+            full_search_style,
+        )),
+        Line::from(Span::styled(
+            "    Run complete search to find plaintext",
+            colors.muted,
+        )),
+        Line::from(""),
+        Line::from(Span::styled(
+            if !is_full_search {
+                "> Single Layer"
+            } else {
+                "  Single Layer"
+            },
+            single_layer_style,
+        )),
+        Line::from(Span::styled(
+            "    Run all decoders once and show results",
+            colors.muted,
+        )),
+        Line::from(""),
+        Line::from(Span::styled("[Enter] Select  [Esc] Cancel", colors.muted)),
+    ];
+
+    let paragraph = Paragraph::new(lines);
+    frame.render_widget(paragraph, inner);
+}
+
+/// Renders the decoder search modal (vim-style).
+///
+/// Displays a search input at the bottom-left of the screen with filtered decoder list.
+fn draw_decoder_search(
+    frame: &mut Frame,
+    area: Rect,
+    search_text: &str,
+    filtered_decoders: &[&str],
+    selected_index: usize,
+    colors: &TuiColors,
+) {
+    let modal_width: u16 = 35;
+    let modal_height: u16 = 12.min(filtered_decoders.len() as u16 + 4);
+
+    // Position at bottom-left
+    let modal_area = Rect {
+        x: area.x + 2,
+        y: area.y + area.height.saturating_sub(modal_height + 2),
+        width: modal_width.min(area.width.saturating_sub(4)),
+        height: modal_height.min(area.height.saturating_sub(4)),
+    };
+
+    // Clear the modal area
+    frame.render_widget(Clear, modal_area);
+
+    // Create modal block with search prompt
+    let title = format!(" /{} ", search_text);
+    let block = Block::default()
+        .title(title)
+        .title_style(colors.accent)
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(colors.border);
+
+    let inner = block.inner(modal_area);
+    frame.render_widget(block, modal_area);
+
+    // Render filtered decoder list
+    let visible_count = inner.height.saturating_sub(1) as usize;
+    let start = if selected_index >= visible_count {
+        selected_index - visible_count + 1
+    } else {
+        0
+    };
+
+    let lines: Vec<Line> = filtered_decoders
+        .iter()
+        .enumerate()
+        .skip(start)
+        .take(visible_count)
+        .map(|(idx, name)| {
+            let is_selected = idx == selected_index;
+            let style = if is_selected {
+                colors
+                    .accent
+                    .add_modifier(Modifier::BOLD)
+                    .add_modifier(Modifier::REVERSED)
+            } else {
+                colors.text
+            };
+            Line::from(Span::styled(
+                if is_selected {
+                    format!("> {}", name)
+                } else {
+                    format!("  {}", name)
+                },
+                style,
+            ))
+        })
+        .collect();
+
+    let mut all_lines = lines;
+    all_lines.push(Line::from(Span::styled(
+        "[Enter] Run  [Esc] Cancel",
+        colors.muted,
+    )));
+
+    let paragraph = Paragraph::new(all_lines);
+    frame.render_widget(paragraph, inner);
 }

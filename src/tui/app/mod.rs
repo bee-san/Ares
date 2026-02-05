@@ -15,8 +15,9 @@ pub mod wordlist;
 
 // Re-export commonly used types
 pub use state::{
-    AppState, HistoryEntry, HumanConfirmationRequest, PreviousState, SettingsStateSnapshot,
-    WordlistFileInfo, WordlistManagerFocus,
+    AppState, BranchContext, BranchMode, BranchPath, DecoderSearchOverlay, HistoryEntry,
+    HumanConfirmationRequest, PreviousState, SettingsStateSnapshot, WordlistFileInfo,
+    WordlistManagerFocus,
 };
 
 use crate::DecoderResult;
@@ -36,6 +37,10 @@ pub struct App {
     pub show_help: bool,
     /// Optional status message for user feedback (e.g., clipboard operations).
     pub status_message: Option<String>,
+    /// Pending 'g' key for vim-style gg command.
+    pub pending_g: bool,
+    /// Decoder search overlay (floats over Results screen when Some).
+    pub decoder_search: Option<DecoderSearchOverlay>,
 }
 
 impl App {
@@ -59,6 +64,8 @@ impl App {
             should_quit: false,
             show_help: false,
             status_message: None,
+            pending_g: false,
+            decoder_search: None,
         }
     }
 
@@ -88,6 +95,8 @@ impl App {
             should_quit: false,
             show_help: false,
             status_message: None,
+            pending_g: false,
+            decoder_search: None,
         }
     }
 
@@ -203,6 +212,34 @@ impl App {
             result,
             selected_step: last_step,
             scroll_offset: 0,
+            cache_id: None,
+            branch_path: state::BranchPath::new(),
+            current_branches: Vec::new(),
+            highlighted_branch: None,
+            branch_scroll_offset: 0,
+        };
+    }
+
+    /// Transitions the application to the Results state with a cache ID.
+    ///
+    /// This variant is used when showing results from the database (e.g., history)
+    /// where we have a cache_id for branch linking.
+    ///
+    /// # Arguments
+    ///
+    /// * `result` - The successful decoding result to display
+    /// * `cache_id` - The database cache ID for this result
+    pub fn set_result_with_cache_id(&mut self, result: DecoderResult, cache_id: i64) {
+        let last_step = result.path.len().saturating_sub(1);
+        self.state = AppState::Results {
+            result,
+            selected_step: last_step,
+            scroll_offset: 0,
+            cache_id: Some(cache_id),
+            branch_path: state::BranchPath::new(),
+            current_branches: Vec::new(),
+            highlighted_branch: None,
+            branch_scroll_offset: 0,
         };
     }
 
@@ -318,5 +355,103 @@ impl App {
         };
         self.input_text.clear();
         self.clear_status();
+    }
+
+    // ============================================================================
+    // Branch Modal Methods
+    // ============================================================================
+
+    /// Opens the branch mode prompt modal.
+    ///
+    /// Called when the user presses Enter on a step that has no branches.
+    /// Allows choosing between full A* search or single-layer decoding.
+    pub fn open_branch_prompt(&mut self) {
+        if let Some(context) = self.get_branch_context() {
+            self.state = AppState::BranchModePrompt {
+                selected_mode: BranchMode::FullSearch,
+                branch_context: context,
+            };
+        }
+    }
+
+    /// Closes the branch mode prompt and returns to Results state.
+    ///
+    /// Restores the Results state by loading from the database using
+    /// the parent_cache_id stored in the branch context.
+    pub fn close_branch_mode_prompt(&mut self) {
+        use crate::decoders::crack_results::CrackResult;
+        use crate::storage::database::get_cache_by_id;
+
+        if let AppState::BranchModePrompt { branch_context, .. } = &self.state {
+            if let Some(parent_id) = branch_context.parent_cache_id {
+                let branch_step = branch_context.branch_step;
+
+                // Load the parent result from the database
+                if let Ok(Some(cache_row)) = get_cache_by_id(parent_id) {
+                    let crack_results: Vec<CrackResult> = cache_row
+                        .path
+                        .iter()
+                        .filter_map(|json_str| serde_json::from_str(json_str).ok())
+                        .collect();
+
+                    let result = DecoderResult {
+                        text: vec![cache_row.decoded_text.clone()],
+                        path: crack_results,
+                    };
+
+                    self.input_text = cache_row.encoded_text;
+
+                    // Restore to Results state
+                    self.state = AppState::Results {
+                        result,
+                        selected_step: branch_step,
+                        scroll_offset: 0,
+                        cache_id: Some(parent_id),
+                        branch_path: state::BranchPath::new(),
+                        current_branches: Vec::new(),
+                        highlighted_branch: None,
+                        branch_scroll_offset: 0,
+                    };
+
+                    // Load branches for this step
+                    self.load_branches_for_step();
+                }
+            }
+        }
+    }
+
+    /// Opens the decoder search overlay.
+    ///
+    /// Called when the user presses '/' in Results state.
+    /// The overlay floats on top of the Results screen without replacing it.
+    pub fn open_decoder_search(&mut self) {
+        use super::text_input::TextInput;
+        use crate::decoders::get_all_decoder_names;
+
+        // Only open if we're in Results state and have a branch context
+        if let Some(context) = self.get_branch_context() {
+            let all_decoders = get_all_decoder_names();
+            let filtered_decoders = all_decoders.clone();
+
+            self.decoder_search = Some(DecoderSearchOverlay {
+                text_input: TextInput::new(),
+                all_decoders,
+                filtered_decoders,
+                selected_index: 0,
+                branch_context: context,
+            });
+        }
+    }
+
+    /// Closes the decoder search overlay.
+    ///
+    /// Simply clears the overlay, leaving the Results state unchanged.
+    pub fn close_decoder_search(&mut self) {
+        self.decoder_search = None;
+    }
+
+    /// Checks if the decoder search overlay is active.
+    pub fn is_decoder_search_active(&self) -> bool {
+        self.decoder_search.is_some()
     }
 }

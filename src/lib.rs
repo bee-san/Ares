@@ -65,6 +65,8 @@ use crate::{
 
 use self::decoders::crack_results::CrackResult;
 
+use crate::checkers::CheckerTypes;
+
 /// The main function to call which performs the cracking.
 /// ```rust
 /// use ciphey::perform_cracking;
@@ -347,6 +349,105 @@ fn failure_result_to_cache(
         key_used: None,
     };
     storage::database::insert_cache(&cache_entry)
+}
+
+/// Runs all decoders once on the input text, returning successful decodes.
+///
+/// This function does NOT recurse - it only runs one layer of decoding.
+/// Unlike `perform_cracking`, this doesn't use A* search. It's useful for
+/// exploring alternative decoding paths from a specific point.
+///
+/// # Arguments
+///
+/// * `text` - The text to decode
+/// * `checker` - The checker to use for validating results
+///
+/// # Returns
+///
+/// A vector of `CrackResult` for all decoders that successfully produced output.
+/// Note: These may or may not be confirmed as plaintext by the checker.
+///
+/// # Examples
+///
+/// ```ignore
+/// use ciphey::run_single_layer;
+/// use ciphey::checkers::{athena::Athena, checker_type::Checker, CheckerTypes};
+///
+/// let checker = CheckerTypes::CheckAthena(Checker::<Athena>::new());
+/// let results = run_single_layer("SGVsbG8=", &checker);
+/// // results contains all decoders that could decode "SGVsbG8="
+/// ```
+pub fn run_single_layer(text: &str, checker: &CheckerTypes) -> Vec<CrackResult> {
+    use crate::decoders::DECODER_MAP;
+
+    let mut results = Vec::new();
+
+    for (name, decoder_box) in DECODER_MAP.iter() {
+        // Skip the default decoder
+        if *name == "Default decoder" {
+            continue;
+        }
+
+        let decoder = decoder_box.get::<()>();
+        let crack_result = decoder.crack(text, checker);
+
+        // Only include results that produced output
+        if let Some(ref outputs) = crack_result.unencrypted_text {
+            if !outputs.is_empty() {
+                results.push(crack_result);
+            }
+        }
+    }
+
+    results
+}
+
+/// Runs a specific decoder on the input text.
+///
+/// Returns the `CrackResult` regardless of whether a checker confirmed it as plaintext.
+/// This is useful for manually exploring what a specific decoder produces.
+///
+/// # Arguments
+///
+/// * `text` - The text to decode
+/// * `decoder_name` - The name of the decoder to use (e.g., "Base64", "caesar")
+/// * `checker` - The checker to use for validation
+///
+/// # Returns
+///
+/// `Some(CrackResult)` if the decoder exists and produced output, `None` otherwise.
+///
+/// # Examples
+///
+/// ```ignore
+/// use ciphey::run_specific_decoder;
+/// use ciphey::checkers::{athena::Athena, checker_type::Checker, CheckerTypes};
+///
+/// let checker = CheckerTypes::CheckAthena(Checker::<Athena>::new());
+/// let result = run_specific_decoder("SGVsbG8=", "Base64", &checker);
+/// if let Some(crack_result) = result {
+///     println!("Decoded: {:?}", crack_result.unencrypted_text);
+/// }
+/// ```
+pub fn run_specific_decoder(
+    text: &str,
+    decoder_name: &str,
+    checker: &CheckerTypes,
+) -> Option<CrackResult> {
+    use crate::decoders::get_decoder_by_name;
+
+    let decoder_box = get_decoder_by_name(decoder_name)?;
+    let decoder = decoder_box.get::<()>();
+    let crack_result = decoder.crack(text, checker);
+
+    // Only return if the decoder produced output
+    if let Some(ref outputs) = crack_result.unencrypted_text {
+        if !outputs.is_empty() {
+            return Some(crack_result);
+        }
+    }
+
+    None
 }
 
 /// DecoderResult is the result of decoders

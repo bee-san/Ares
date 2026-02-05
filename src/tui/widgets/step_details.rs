@@ -15,20 +15,22 @@ use crate::decoders::crack_results::CrackResult;
 const MAX_TEXT_LENGTH: usize = 200;
 
 /// Truncates text to a maximum length, adding ellipsis if truncated.
+/// Uses char count for UTF-8 safe truncation.
 ///
 /// # Arguments
 ///
 /// * `text` - The text to potentially truncate
-/// * `max_len` - Maximum allowed length before truncation
+/// * `max_len` - Maximum allowed character count before truncation
 ///
 /// # Returns
 ///
 /// The original text if within limit, or truncated text with "..." appended.
 fn truncate_text(text: &str, max_len: usize) -> String {
-    if text.len() <= max_len {
+    let char_count = text.chars().count();
+    if char_count <= max_len {
         text.to_string()
     } else {
-        format!("{}...", &text[..max_len])
+        format!("{}...", text.chars().take(max_len).collect::<String>())
     }
 }
 
@@ -283,7 +285,8 @@ mod tests {
     fn test_truncate_text_long() {
         let text = "a".repeat(250);
         let result = truncate_text(&text, 200);
-        assert_eq!(result.len(), 203); // 200 + "..."
+        // 200 chars + "..." = 203 chars
+        assert_eq!(result.chars().count(), 203);
         assert!(result.ends_with("..."));
     }
 
@@ -291,8 +294,17 @@ mod tests {
     fn test_truncate_text_exact_limit() {
         let text = "a".repeat(200);
         let result = truncate_text(&text, 200);
-        assert_eq!(result.len(), 200);
+        assert_eq!(result.chars().count(), 200);
         assert!(!result.ends_with("..."));
+    }
+
+    #[test]
+    fn test_truncate_text_unicode_safe() {
+        // Test that multi-byte characters don't cause panic
+        let text = "世界".repeat(100); // 200 chars, but many more bytes
+        let result = truncate_text(&text, 50);
+        assert_eq!(result.chars().count(), 53); // 50 chars + "..."
+        assert!(result.ends_with("..."));
     }
 
     #[test]

@@ -267,3 +267,19 @@ pub fn get_all_decoder_names() -> Vec<&'static str> {
     names.sort();
     names
 }
+
+/// Gets a decoder by its name from DECODER_MAP.
+///
+/// Returns a reference to the boxed decoder if found, None otherwise.
+/// This is useful for running a specific decoder on text.
+///
+/// # Arguments
+///
+/// * `name` - The name of the decoder (e.g., "Base64", "caesar")
+///
+/// # Returns
+///
+/// `Some(&DecoderBox)` if found, `None` otherwise.
+pub fn get_decoder_by_name(name: &str) -> Option<&'static DecoderBox> {
+    DECODER_MAP.get(name)
+}

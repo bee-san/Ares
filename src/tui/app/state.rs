@@ -8,6 +8,8 @@ use std::sync::mpsc;
 use std::time::{Duration, Instant};
 
 use crate::checkers::checker_result::CheckResult;
+use crate::decoders::crack_results::CrackResult;
+use crate::storage::database::BranchSummary;
 use crate::DecoderResult;
 
 use super::super::multiline_text_input::MultilineTextInput;
@@ -33,6 +35,97 @@ impl From<&CheckResult> for HumanConfirmationRequest {
             checker_name: check_result.checker_name.to_string(),
         }
     }
+}
+
+// ============================================================================
+// Branch-Related Data Structures
+// ============================================================================
+
+/// Context for creating a branch from a node
+#[derive(Debug, Clone)]
+pub struct BranchContext {
+    /// Text to decode (output from the branch point)
+    pub text_to_decode: String,
+    /// Path prefix up to (and including) the branch point
+    pub prefix_path: Vec<CrackResult>,
+    /// Parent cache ID for database linking
+    pub parent_cache_id: Option<i64>,
+    /// Step index in parent's path where we're branching
+    pub branch_step: usize,
+}
+
+/// Tracks current position in branch hierarchy
+#[derive(Debug, Clone, Default)]
+pub struct BranchPath {
+    /// Stack of (cache_id, branch_step) representing path from root
+    pub stack: Vec<(i64, usize)>,
+}
+
+impl BranchPath {
+    /// Creates a new empty branch path (at main/root level)
+    pub fn new() -> Self {
+        Self { stack: Vec::new() }
+    }
+
+    /// Get compact display string: "Main > B2 > B1"
+    pub fn display(&self) -> String {
+        if self.stack.is_empty() {
+            "Main".to_string()
+        } else {
+            let mut parts = vec!["Main".to_string()];
+            for (i, _) in self.stack.iter().enumerate() {
+                parts.push(format!("B{}", i + 1));
+            }
+            parts.join(" > ")
+        }
+    }
+
+    /// Check if currently viewing a branch (not main)
+    pub fn is_branch(&self) -> bool {
+        !self.stack.is_empty()
+    }
+
+    /// Push a new branch onto the stack
+    pub fn push(&mut self, cache_id: i64, branch_step: usize) {
+        self.stack.push((cache_id, branch_step));
+    }
+
+    /// Pop the most recent branch from the stack
+    pub fn pop(&mut self) -> Option<(i64, usize)> {
+        self.stack.pop()
+    }
+
+    /// Get the current cache_id (top of stack) if viewing a branch
+    pub fn current_cache_id(&self) -> Option<i64> {
+        self.stack.last().map(|(id, _)| *id)
+    }
+}
+
+/// Branch mode options (for creating new branches)
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum BranchMode {
+    /// Run full A* search to find plaintext
+    FullSearch,
+    /// Run all decoders once and show results
+    SingleLayer,
+}
+
+/// Overlay for vim-style decoder search (floats over Results screen).
+///
+/// This is implemented as an overlay rather than a state variant so that
+/// the Results screen remains visible underneath.
+#[derive(Debug)]
+pub struct DecoderSearchOverlay {
+    /// Text input for search query.
+    pub text_input: TextInput,
+    /// All available decoder names.
+    pub all_decoders: Vec<&'static str>,
+    /// Filtered decoder names based on search.
+    pub filtered_decoders: Vec<&'static str>,
+    /// Currently selected index in the filtered list.
+    pub selected_index: usize,
+    /// Context for creating the branch.
+    pub branch_context: BranchContext,
 }
 
 /// A simplified history entry for display in the history panel.
@@ -127,6 +220,16 @@ pub enum AppState {
         selected_step: usize,
         /// Vertical scroll offset for long content.
         scroll_offset: usize,
+        /// Cache ID for this result (for branch linking).
+        cache_id: Option<i64>,
+        /// Current position in branch hierarchy.
+        branch_path: BranchPath,
+        /// Branches for the currently selected step (loaded on demand).
+        current_branches: Vec<BranchSummary>,
+        /// Index of highlighted branch in list (None = no branch highlighted).
+        highlighted_branch: Option<usize>,
+        /// Scroll offset for branch list.
+        branch_scroll_offset: usize,
     },
     /// Decoding failed to find a solution.
     Failure {
@@ -222,6 +325,13 @@ pub enum AppState {
         /// The settings state to return to if user cancels.
         parent_settings: Box<SettingsStateSnapshot>,
     },
+    /// Modal for selecting branch mode (when creating new branch).
+    BranchModePrompt {
+        /// Currently selected mode.
+        selected_mode: BranchMode,
+        /// Context for creating the branch.
+        branch_context: BranchContext,
+    },
 }
 
 /// Represents the state we came from before entering settings.
@@ -255,6 +365,14 @@ pub enum PreviousState {
         selected_step: usize,
         /// Scroll offset.
         scroll_offset: usize,
+        /// Cache ID for this result.
+        cache_id: Option<i64>,
+        /// Current position in branch hierarchy.
+        branch_path: BranchPath,
+        /// Highlighted branch index.
+        highlighted_branch: Option<usize>,
+        /// Branch scroll offset.
+        branch_scroll_offset: usize,
     },
     /// Was in the failure state.
     Failure {

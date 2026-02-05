@@ -15,7 +15,10 @@ use crossterm::{
 };
 use ratatui::prelude::*;
 
+use crate::checkers::checker_type::Check;
 use crate::config::Config;
+use crate::decoders::crack_results::CrackResult;
+use crate::storage::database::{get_cache_by_id, insert_branch, BranchType, CacheEntry};
 use crate::DecoderResult;
 
 use super::app::App;
@@ -298,6 +301,385 @@ fn run_event_loop(
                             // Set the result state
                             app.set_result(result);
                             app.set_status("Showing saved result from history.".to_string());
+                        }
+                        Action::SwitchToBranch(cache_id) => {
+                            // Extract current cache_id and selected_step from Results state
+                            // before we modify it
+                            let current_context = if let super::app::AppState::Results {
+                                cache_id: current_cache_id,
+                                selected_step,
+                                branch_path,
+                                ..
+                            } = &app.state
+                            {
+                                Some((
+                                    current_cache_id.clone(),
+                                    *selected_step,
+                                    branch_path.clone(),
+                                ))
+                            } else {
+                                None
+                            };
+
+                            // Load the branch's cached result from the database
+                            match get_cache_by_id(cache_id) {
+                                Ok(Some(cache_row)) => {
+                                    // Parse the path JSON strings back into CrackResults
+                                    let crack_results: Vec<CrackResult> = cache_row
+                                        .path
+                                        .iter()
+                                        .filter_map(|json_str| serde_json::from_str(json_str).ok())
+                                        .collect();
+
+                                    // Reconstruct the DecoderResult
+                                    let result = DecoderResult {
+                                        text: vec![cache_row.decoded_text.clone()],
+                                        path: crack_results,
+                                    };
+
+                                    // Update input_text for display purposes
+                                    app.input_text = cache_row.encoded_text;
+
+                                    // Set the result state with the branch's cache_id
+                                    app.set_result_with_cache_id(result, cache_id);
+
+                                    // Now push the previous (cache_id, step) onto branch_path
+                                    if let (
+                                        Some((
+                                            Some(prev_cache_id),
+                                            prev_step,
+                                            mut prev_branch_path,
+                                        )),
+                                        super::app::AppState::Results { branch_path, .. },
+                                    ) = (current_context, &mut app.state)
+                                    {
+                                        // Push the previous location onto the branch path
+                                        prev_branch_path.push(prev_cache_id, prev_step);
+                                        *branch_path = prev_branch_path;
+                                    }
+
+                                    app.set_status(format!(
+                                        "Switched to branch (cache_id: {})",
+                                        cache_id
+                                    ));
+                                }
+                                Ok(None) => {
+                                    app.set_status(format!(
+                                        "Branch not found (cache_id: {})",
+                                        cache_id
+                                    ));
+                                }
+                                Err(e) => {
+                                    app.set_status(format!("Error loading branch: {}", e));
+                                }
+                            }
+                        }
+                        Action::OpenBranchPrompt => {
+                            app.open_branch_prompt();
+                        }
+                        Action::OpenDecoderSearch => {
+                            app.open_decoder_search();
+                        }
+                        Action::ReturnToParent => {
+                            // Return to parent branch in the branch hierarchy
+                            if let super::app::AppState::Results { branch_path, .. } =
+                                &mut app.state
+                            {
+                                if !branch_path.is_branch() {
+                                    app.set_status("Already at main path.".to_string());
+                                } else if let Some((parent_cache_id, parent_step)) =
+                                    branch_path.pop()
+                                {
+                                    // Clone the remaining branch path before we replace app.state
+                                    let remaining_branch_path = branch_path.clone();
+
+                                    // Load the parent result from the database
+                                    match get_cache_by_id(parent_cache_id) {
+                                        Ok(Some(cache_row)) => {
+                                            // Reconstruct CrackResults from the path JSON
+                                            let crack_results: Vec<CrackResult> = cache_row
+                                                .path
+                                                .iter()
+                                                .filter_map(|json_str| {
+                                                    serde_json::from_str(json_str).ok()
+                                                })
+                                                .collect();
+
+                                            let result = DecoderResult {
+                                                text: vec![cache_row.decoded_text.clone()],
+                                                path: crack_results,
+                                            };
+
+                                            // Update the app input_text for display
+                                            app.input_text = cache_row.encoded_text.clone();
+
+                                            // Load branches for the parent step
+                                            let branches =
+                                                crate::storage::database::get_branches_for_step(
+                                                    parent_cache_id,
+                                                    parent_step,
+                                                )
+                                                .unwrap_or_default();
+
+                                            // Update the app state with the parent result
+                                            app.state = super::app::AppState::Results {
+                                                result,
+                                                selected_step: parent_step,
+                                                scroll_offset: 0,
+                                                cache_id: Some(parent_cache_id),
+                                                branch_path: remaining_branch_path,
+                                                current_branches: branches,
+                                                highlighted_branch: None,
+                                                branch_scroll_offset: 0,
+                                            };
+
+                                            app.set_status(
+                                                "Returned to parent branch.".to_string(),
+                                            );
+                                        }
+                                        Ok(None) => {
+                                            app.set_status(format!(
+                                                "Parent branch (ID {}) not found in database.",
+                                                parent_cache_id
+                                            ));
+                                        }
+                                        Err(e) => {
+                                            app.set_status(format!(
+                                                "Error loading parent branch: {}",
+                                                e
+                                            ));
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        Action::RunBranchFullSearch(text) => {
+                            // Run a full A* search as a branch
+                            // Reset state for a fresh run
+                            crate::checkers::reset_human_checker_state();
+                            crate::timer::resume();
+                            crate::storage::wait_athena_storage::clear_plaintext_results();
+
+                            // Transition to loading state
+                            app.state = super::app::AppState::Loading {
+                                start_time: Instant::now(),
+                                current_quote: 0,
+                                spinner_frame: 0,
+                            };
+                            app.clear_status();
+
+                            // Reset timing
+                            start_time = Instant::now();
+                            tick_count = 0;
+
+                            // Reinitialize confirmation channel
+                            confirmation_receiver = reinit_tui_confirmation_channel();
+
+                            // Spawn decode thread
+                            let (tx, rx) = mpsc::channel::<Option<DecoderResult>>();
+                            result_receiver = Some(rx);
+
+                            let config_clone = config.clone();
+                            thread::spawn(move || {
+                                crate::config::set_global_config(config_clone.clone());
+                                let result = crate::perform_cracking(&text, config_clone);
+                                let _ = tx.send(result);
+                            });
+
+                            app.set_status("Running full search on branch...".to_string());
+                        }
+                        Action::RunBranchSingleLayer(text) => {
+                            // Run single layer decoding (all decoders once)
+                            // This is a quick exploration that doesn't recurse
+
+                            // Get branch context from the BranchModePrompt state before transitioning
+                            let branch_context = if let super::app::AppState::BranchModePrompt {
+                                branch_context,
+                                ..
+                            } = &app.state
+                            {
+                                Some(branch_context.clone())
+                            } else {
+                                // Fallback: try to get from Results state
+                                app.get_branch_context()
+                            };
+
+                            // Restore to Results state by getting context and going back
+                            // We need to restore the Results state since we're coming from BranchModePrompt
+                            if let Some(context) = &branch_context {
+                                if let Some(parent_id) = context.parent_cache_id {
+                                    // Restore the Results state from the parent cache entry
+                                    if let Ok(Some(cache_row)) = get_cache_by_id(parent_id) {
+                                        let crack_results: Vec<CrackResult> = cache_row
+                                            .path
+                                            .iter()
+                                            .filter_map(|json_str| {
+                                                serde_json::from_str(json_str).ok()
+                                            })
+                                            .collect();
+
+                                        let result = DecoderResult {
+                                            text: vec![cache_row.decoded_text.clone()],
+                                            path: crack_results,
+                                        };
+
+                                        app.set_result_with_cache_id(result, parent_id);
+                                    }
+                                }
+                            }
+
+                            let config_clone = config.clone();
+                            crate::config::set_global_config(config_clone.clone());
+
+                            // Create checker for single layer run
+                            let checker = crate::checkers::CheckerTypes::CheckAthena(
+                                crate::checkers::checker_type::Checker::<
+                                    crate::checkers::athena::Athena,
+                                >::new(),
+                            );
+
+                            let results = crate::run_single_layer(&text, &checker);
+
+                            if results.is_empty() {
+                                app.set_status(
+                                    "No decoders produced output for this text.".to_string(),
+                                );
+                            } else {
+                                // Store results as branches in the database
+                                let mut branches_created = 0;
+
+                                if let Some(context) = branch_context {
+                                    if let Some(parent_cache_id) = context.parent_cache_id {
+                                        for result in &results {
+                                            // Only store results that have unencrypted_text
+                                            if let Some(outputs) = &result.unencrypted_text {
+                                                if let Some(decoded) = outputs.first() {
+                                                    let cache_entry = CacheEntry {
+                                                        encoded_text: text.clone(),
+                                                        decoded_text: decoded.clone(),
+                                                        path: vec![result.clone()],
+                                                        execution_time_ms: 0,
+                                                        input_length: text.len() as i64,
+                                                        decoder_count: 1,
+                                                        checker_name: None,
+                                                        key_used: result.key.clone(),
+                                                    };
+
+                                                    if insert_branch(
+                                                        &cache_entry,
+                                                        parent_cache_id,
+                                                        context.branch_step,
+                                                        &BranchType::SingleLayer,
+                                                    )
+                                                    .is_ok()
+                                                    {
+                                                        branches_created += 1;
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Refresh the branch list for the current step
+                                        app.load_branches_for_step();
+
+                                        app.set_status(format!(
+                                            "Created {} branches from single-layer decoding.",
+                                            branches_created
+                                        ));
+                                    } else {
+                                        app.set_status(
+                                            "Cannot create branches: no parent cache ID."
+                                                .to_string(),
+                                        );
+                                    }
+                                } else {
+                                    app.set_status(format!(
+                                        "Found {} decoder outputs but no branch context.",
+                                        results.len()
+                                    ));
+                                }
+                            }
+                        }
+                        Action::RunBranchDecoder(text, decoder_name) => {
+                            // Run a specific decoder on the text
+                            let config_clone = config.clone();
+                            crate::config::set_global_config(config_clone.clone());
+
+                            // Get branch context before running the decoder
+                            let branch_ctx = app.get_branch_context();
+
+                            // Create checker
+                            let checker = crate::checkers::CheckerTypes::CheckAthena(
+                                crate::checkers::checker_type::Checker::<
+                                    crate::checkers::athena::Athena,
+                                >::new(),
+                            );
+
+                            if let Some(result) =
+                                crate::run_specific_decoder(&text, &decoder_name, &checker)
+                            {
+                                if let Some(outputs) = &result.unencrypted_text {
+                                    if let Some(first_output) = outputs.first() {
+                                        // Try to store as a branch if we have context
+                                        let mut saved_branch_id: Option<i64> = None;
+
+                                        if let Some(ref ctx) = branch_ctx {
+                                            if let Some(parent_id) = ctx.parent_cache_id {
+                                                // Create cache entry for the branch
+                                                let cache_entry = CacheEntry {
+                                                    encoded_text: text.clone(),
+                                                    decoded_text: first_output.clone(),
+                                                    path: vec![result.clone()],
+                                                    execution_time_ms: 0,
+                                                    input_length: text.len() as i64,
+                                                    decoder_count: 1,
+                                                    checker_name: None,
+                                                    key_used: result.key.clone(),
+                                                };
+
+                                                // Insert branch into database
+                                                if let Ok(new_id) = insert_branch(
+                                                    &cache_entry,
+                                                    parent_id,
+                                                    ctx.branch_step,
+                                                    &BranchType::Manual,
+                                                ) {
+                                                    saved_branch_id = Some(new_id);
+                                                    // Refresh the branch list for current step
+                                                    app.load_branches_for_step();
+                                                }
+                                            }
+                                        }
+
+                                        // Set status message
+                                        let preview = if first_output.len() > 50 {
+                                            format!(
+                                                "{}...",
+                                                first_output.chars().take(50).collect::<String>()
+                                            )
+                                        } else {
+                                            first_output.clone()
+                                        };
+
+                                        if let Some(branch_id) = saved_branch_id {
+                                            app.set_status(format!(
+                                                "{} decoded to: {} (saved as branch #{})",
+                                                decoder_name, preview, branch_id
+                                            ));
+                                        } else {
+                                            app.set_status(format!(
+                                                "{} decoded to: {}",
+                                                decoder_name, preview
+                                            ));
+                                        }
+                                    }
+                                }
+                            } else {
+                                app.set_status(format!(
+                                    "{} could not decode this text.",
+                                    decoder_name
+                                ));
+                            }
                         }
                         Action::None => {}
                     }

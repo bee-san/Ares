@@ -179,6 +179,66 @@ impl PartialEq for CacheRow {
     }
 }
 
+/// Type of branch (how it was created)
+#[derive(Debug, Clone, PartialEq)]
+pub enum BranchType {
+    /// Created automatically during A* search
+    Auto,
+    /// Created by running all decoders once
+    SingleLayer,
+    /// Created by manually selecting a specific decoder
+    Manual,
+}
+
+impl BranchType {
+    /// Converts to database string representation
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            BranchType::Auto => "auto",
+            BranchType::SingleLayer => "single_layer",
+            BranchType::Manual => "manual",
+        }
+    }
+
+    /// Parses from database string representation
+    pub fn from_str(s: &str) -> Option<Self> {
+        match s {
+            "auto" => Some(BranchType::Auto),
+            "single_layer" => Some(BranchType::SingleLayer),
+            "manual" => Some(BranchType::Manual),
+            _ => None,
+        }
+    }
+}
+
+/// Summary information about a branch for display in the UI
+#[derive(Debug, Clone)]
+pub struct BranchSummary {
+    /// Database row ID for this branch
+    pub cache_id: i64,
+    /// How the branch was created
+    pub branch_type: BranchType,
+    /// Name of the first decoder in this branch's path
+    pub first_decoder: String,
+    /// Preview of the final text (truncated)
+    pub final_text_preview: String,
+    /// Whether this branch successfully found plaintext
+    pub successful: bool,
+    /// Number of decoders in the path
+    pub path_length: usize,
+    /// Number of sub-branches from this branch
+    pub sub_branch_count: usize,
+}
+
+/// Information about a branch's parent relationship
+#[derive(Debug, Clone)]
+pub struct ParentBranchInfo {
+    /// Parent cache entry ID
+    pub parent_cache_id: i64,
+    /// Step index in parent's path where branch occurred
+    pub branch_step: usize,
+}
+
 #[derive(Debug)]
 /// Represents an entry into the cache table
 pub struct CacheEntry {
@@ -271,10 +331,16 @@ pub(crate) fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
             decoder_count INTEGER NOT NULL,
             checker_name TEXT,
             key_used TEXT,
-            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+            parent_cache_id INTEGER REFERENCES cache(id) ON DELETE CASCADE,
+            branch_step INTEGER,
+            branch_type TEXT
     );",
         (),
     )?;
+
+    // Run migration to add branch columns if they don't exist (for existing databases)
+    run_branch_migration(&conn)?;
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_cache_successful
             ON cache(successful);",
@@ -356,6 +422,377 @@ pub(crate) fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
     )?;
 
     Ok(conn)
+}
+
+/// Runs migration to add branch columns to existing databases
+///
+/// This migration adds parent_cache_id, branch_step, and branch_type columns
+/// to the cache table if they don't already exist. Existing entries will have
+/// NULL values for these columns (indicating they are root entries).
+fn run_branch_migration(conn: &rusqlite::Connection) -> Result<(), rusqlite::Error> {
+    // Check if the branch columns already exist
+    let mut stmt = conn.prepare("PRAGMA table_info(cache)")?;
+    let columns: Vec<String> = stmt
+        .query_map([], |row| row.get::<usize, String>(1))?
+        .filter_map(|r| r.ok())
+        .collect();
+
+    // Add parent_cache_id column if it doesn't exist
+    if !columns.contains(&"parent_cache_id".to_string()) {
+        conn.execute(
+            "ALTER TABLE cache ADD COLUMN parent_cache_id INTEGER REFERENCES cache(id) ON DELETE CASCADE",
+            (),
+        )?;
+    }
+
+    // Add branch_step column if it doesn't exist
+    if !columns.contains(&"branch_step".to_string()) {
+        conn.execute("ALTER TABLE cache ADD COLUMN branch_step INTEGER", ())?;
+    }
+
+    // Add branch_type column if it doesn't exist
+    if !columns.contains(&"branch_type".to_string()) {
+        conn.execute("ALTER TABLE cache ADD COLUMN branch_type TEXT", ())?;
+    }
+
+    // Create index for efficient branch lookups
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_cache_parent_id ON cache(parent_cache_id);",
+        (),
+    )?;
+
+    Ok(())
+}
+
+// ============================================================================
+// Branch-Related Functions
+// ============================================================================
+
+/// Gets all branches from a specific step of a cache entry
+///
+/// Returns branches where `parent_cache_id = cache_id` and `branch_step = step`.
+///
+/// # Arguments
+///
+/// * `cache_id` - The parent cache entry ID
+/// * `step` - The step index in the parent's path
+///
+/// # Returns
+///
+/// A vector of `BranchSummary` for branches at the specified step.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error.
+pub fn get_branches_for_step(
+    cache_id: i64,
+    step: usize,
+) -> Result<Vec<BranchSummary>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+
+    let mut stmt = conn.prepare(
+        "SELECT id, branch_type, path, decoded_text, successful, decoder_count
+         FROM cache 
+         WHERE parent_cache_id = ?1 AND branch_step = ?2
+         ORDER BY timestamp DESC",
+    )?;
+
+    let results = stmt.query_map([cache_id, step as i64], |row| {
+        let cache_id: i64 = row.get(0)?;
+        let branch_type_str: Option<String> = row.get(1)?;
+        let path_json: String = row.get(2)?;
+        let decoded_text: String = row.get(3)?;
+        let successful: bool = row.get(4)?;
+        let decoder_count: i64 = row.get(5)?;
+
+        // Parse the path to get the first decoder
+        let path_vec: Vec<String> = serde_json::from_str(&path_json).unwrap_or_default();
+        let first_decoder = if let Some(first_json) = path_vec.first() {
+            // Try to extract decoder name from JSON
+            serde_json::from_str::<serde_json::Value>(first_json)
+                .ok()
+                .and_then(|v| {
+                    v.get("decoder")
+                        .and_then(|d| d.as_str().map(|s| s.to_string()))
+                })
+                .unwrap_or_else(|| "Unknown".to_string())
+        } else {
+            "Unknown".to_string()
+        };
+
+        // Truncate final text preview
+        let final_text_preview = if decoded_text.len() > 30 {
+            format!("{}...", decoded_text.chars().take(27).collect::<String>())
+        } else {
+            decoded_text
+        };
+
+        Ok(BranchSummary {
+            cache_id,
+            branch_type: branch_type_str
+                .and_then(|s| BranchType::from_str(&s))
+                .unwrap_or(BranchType::Auto),
+            first_decoder,
+            final_text_preview,
+            successful,
+            path_length: decoder_count as usize,
+            sub_branch_count: 0, // Will be populated separately if needed
+        })
+    })?;
+
+    results.collect()
+}
+
+/// Gets all branches from a cache entry (all steps)
+///
+/// Returns all branches where `parent_cache_id = cache_id`.
+///
+/// # Arguments
+///
+/// * `cache_id` - The parent cache entry ID
+///
+/// # Returns
+///
+/// A vector of `BranchSummary` for all branches from this cache entry.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error.
+pub fn get_branches_for_cache(cache_id: i64) -> Result<Vec<BranchSummary>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+
+    let mut stmt = conn.prepare(
+        "SELECT id, branch_type, path, decoded_text, successful, decoder_count, branch_step
+         FROM cache 
+         WHERE parent_cache_id = ?1
+         ORDER BY branch_step ASC, timestamp DESC",
+    )?;
+
+    let results = stmt.query_map([cache_id], |row| {
+        let cache_id: i64 = row.get(0)?;
+        let branch_type_str: Option<String> = row.get(1)?;
+        let path_json: String = row.get(2)?;
+        let decoded_text: String = row.get(3)?;
+        let successful: bool = row.get(4)?;
+        let decoder_count: i64 = row.get(5)?;
+
+        // Parse the path to get the first decoder
+        let path_vec: Vec<String> = serde_json::from_str(&path_json).unwrap_or_default();
+        let first_decoder = if let Some(first_json) = path_vec.first() {
+            serde_json::from_str::<serde_json::Value>(first_json)
+                .ok()
+                .and_then(|v| {
+                    v.get("decoder")
+                        .and_then(|d| d.as_str().map(|s| s.to_string()))
+                })
+                .unwrap_or_else(|| "Unknown".to_string())
+        } else {
+            "Unknown".to_string()
+        };
+
+        let final_text_preview = if decoded_text.len() > 30 {
+            format!("{}...", decoded_text.chars().take(27).collect::<String>())
+        } else {
+            decoded_text
+        };
+
+        Ok(BranchSummary {
+            cache_id,
+            branch_type: branch_type_str
+                .and_then(|s| BranchType::from_str(&s))
+                .unwrap_or(BranchType::Auto),
+            first_decoder,
+            final_text_preview,
+            successful,
+            path_length: decoder_count as usize,
+            sub_branch_count: 0,
+        })
+    })?;
+
+    results.collect()
+}
+
+/// Inserts a cache entry as a branch of another cache entry
+///
+/// # Arguments
+///
+/// * `cache_entry` - The cache entry to insert
+/// * `parent_cache_id` - The parent cache entry ID
+/// * `branch_step` - The step index in the parent's path where branching occurred
+/// * `branch_type` - How the branch was created (auto, single_layer, manual)
+///
+/// # Returns
+///
+/// The row ID of the newly inserted branch entry.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error.
+pub fn insert_branch(
+    cache_entry: &CacheEntry,
+    parent_cache_id: i64,
+    branch_step: usize,
+    branch_type: &BranchType,
+) -> Result<i64, rusqlite::Error> {
+    let path: Vec<String> = cache_entry
+        .path
+        .iter()
+        .map(|crack_result| crack_result.get_json().unwrap_or_default())
+        .collect();
+
+    let last_crack_result = cache_entry.path.last();
+    let successful: bool = match last_crack_result {
+        Some(crack_result) => crack_result.success,
+        None => false,
+    };
+
+    let path_json = serde_json::to_string(&path).unwrap_or_default();
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+
+    transaction.execute(
+        "INSERT INTO cache (
+            encoded_text,
+            decoded_text,
+            path,
+            successful,
+            execution_time_ms,
+            input_length,
+            decoder_count,
+            checker_name,
+            key_used,
+            timestamp,
+            parent_cache_id,
+            branch_step,
+            branch_type)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)",
+        (
+            cache_entry.encoded_text.clone(),
+            cache_entry.decoded_text.clone(),
+            path_json,
+            successful,
+            cache_entry.execution_time_ms,
+            cache_entry.input_length,
+            cache_entry.decoder_count,
+            cache_entry.checker_name.clone(),
+            cache_entry.key_used.clone(),
+            get_timestamp(),
+            parent_cache_id,
+            branch_step as i64,
+            branch_type.as_str(),
+        ),
+    )?;
+
+    let row_id = transaction.last_insert_rowid();
+    transaction.commit()?;
+    Ok(row_id)
+}
+
+/// Gets parent info for a branch
+///
+/// # Arguments
+///
+/// * `cache_id` - The cache entry ID to check
+///
+/// # Returns
+///
+/// `Some(ParentBranchInfo)` if this is a branch, `None` if it's a root entry.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error.
+pub fn get_parent_info(cache_id: i64) -> Result<Option<ParentBranchInfo>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+
+    let mut stmt = conn.prepare("SELECT parent_cache_id, branch_step FROM cache WHERE id = ?1")?;
+
+    let result = stmt.query_row([cache_id], |row| {
+        let parent_id: Option<i64> = row.get(0)?;
+        let branch_step: Option<i64> = row.get(1)?;
+
+        Ok((parent_id, branch_step))
+    });
+
+    match result {
+        Ok((Some(parent_id), Some(step))) => Ok(Some(ParentBranchInfo {
+            parent_cache_id: parent_id,
+            branch_step: step as usize,
+        })),
+        Ok(_) => Ok(None),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+/// Gets a cache entry by its ID
+///
+/// # Arguments
+///
+/// * `cache_id` - The cache entry ID to retrieve
+///
+/// # Returns
+///
+/// `Some(CacheRow)` if found, `None` otherwise.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error.
+pub fn get_cache_by_id(cache_id: i64) -> Result<Option<CacheRow>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+
+    let mut stmt = conn.prepare(
+        "SELECT id, encoded_text, decoded_text, path, successful, execution_time_ms,
+                input_length, decoder_count, checker_name, key_used, timestamp
+         FROM cache WHERE id = ?1",
+    )?;
+
+    let result = stmt.query_row([cache_id], |row| {
+        let path_str: String = row.get(3)?;
+        let crack_json_vec: Vec<String> = serde_json::from_str(&path_str).unwrap_or_default();
+
+        Ok(CacheRow {
+            id: row.get(0)?,
+            encoded_text: row.get(1)?,
+            decoded_text: row.get(2)?,
+            path: crack_json_vec,
+            successful: row.get(4)?,
+            execution_time_ms: row.get(5)?,
+            input_length: row.get(6)?,
+            decoder_count: row.get(7)?,
+            checker_name: row.get(8).ok(),
+            key_used: row.get(9).ok(),
+            timestamp: row.get(10)?,
+        })
+    });
+
+    match result {
+        Ok(row) => Ok(Some(row)),
+        Err(rusqlite::Error::QueryReturnedNoRows) => Ok(None),
+        Err(e) => Err(e),
+    }
+}
+
+/// Counts the number of sub-branches for a given cache entry
+///
+/// # Arguments
+///
+/// * `cache_id` - The cache entry ID
+///
+/// # Returns
+///
+/// The count of branches that have this entry as their parent.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error.
+pub fn count_sub_branches(cache_id: i64) -> Result<i64, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM cache WHERE parent_cache_id = ?1",
+        [cache_id],
+        |row| row.get(0),
+    )?;
+    Ok(count)
 }
 
 /// Adds a new cache record to the cache table

@@ -73,6 +73,31 @@ impl PathViewer {
         selected: usize,
         colors: &TuiColors,
     ) {
+        self.render_with_branch_count(area, buf, path, selected, 0, colors);
+    }
+
+    /// Renders the decoder path chain with an optional branch count indicator.
+    ///
+    /// This is the full version that shows a branch indicator below the selected
+    /// decoder box when `branch_count > 0`.
+    ///
+    /// # Arguments
+    ///
+    /// * `area` - The rectangular area to render into
+    /// * `buf` - The buffer to render into
+    /// * `path` - A slice of `CrackResult` representing the decoder path
+    /// * `selected` - The index of the currently selected step
+    /// * `branch_count` - Number of branches from the selected step (0 = no indicator)
+    /// * `colors` - The TUI color scheme to use
+    pub fn render_with_branch_count(
+        &self,
+        area: Rect,
+        buf: &mut Buffer,
+        path: &[CrackResult],
+        selected: usize,
+        branch_count: usize,
+        colors: &TuiColors,
+    ) {
         // Handle empty path case
         if path.is_empty() {
             let msg = Paragraph::new("No decoders used")
@@ -105,6 +130,9 @@ impl PathViewer {
         let mut current_x = start_x;
         let box_y = area.y + (area.height.saturating_sub(BOX_HEIGHT + KEY_LINE_HEIGHT + 1)) / 2;
 
+        // Track selected box position for branch indicator
+        let mut selected_box_x: Option<u16> = None;
+
         // Draw left ellipsis if needed
         if show_left_ellipsis {
             self.render_ellipsis(current_x, box_y, buf, colors);
@@ -115,6 +143,11 @@ impl PathViewer {
         for (display_idx, path_idx) in (start_idx..end_idx).enumerate() {
             let crack_result = &path[path_idx];
             let is_selected = path_idx == selected;
+
+            // Track selected box position
+            if is_selected {
+                selected_box_x = Some(current_x);
+            }
 
             // Draw the decoder box
             self.render_decoder_box(current_x, box_y, buf, crack_result, is_selected, colors);
@@ -136,6 +169,19 @@ impl PathViewer {
         // Draw right ellipsis if needed
         if show_right_ellipsis {
             self.render_ellipsis(current_x, box_y, buf, colors);
+        }
+
+        // Draw branch indicator below selected box if branches exist
+        if branch_count > 0 {
+            if let Some(sel_x) = selected_box_x {
+                self.render_branch_indicator(
+                    sel_x,
+                    box_y + BOX_HEIGHT + 1,
+                    buf,
+                    branch_count,
+                    colors,
+                );
+            }
         }
     }
 
@@ -213,6 +259,30 @@ impl PathViewer {
     fn render_ellipsis(&self, x: u16, y: u16, buf: &mut Buffer, colors: &TuiColors) {
         buf.set_string(x, y + 1, "...", colors.text_dimmed);
     }
+
+    /// Renders a branch indicator below the selected decoder box.
+    ///
+    /// Shows the number of branches in a compact format, e.g., "[3 branches]" or "[1 branch]".
+    fn render_branch_indicator(
+        &self,
+        x: u16,
+        y: u16,
+        buf: &mut Buffer,
+        branch_count: usize,
+        colors: &TuiColors,
+    ) {
+        let indicator = if branch_count == 1 {
+            "[1 branch]".to_string()
+        } else {
+            format!("[{} branches]", branch_count)
+        };
+
+        // Center the indicator under the box
+        let padding = (BOX_WIDTH as usize).saturating_sub(indicator.len()) / 2;
+        let display_x = x + padding as u16;
+
+        buf.set_string(display_x, y, &indicator, colors.info);
+    }
 }
 
 impl Default for PathViewer {
@@ -279,15 +349,17 @@ fn calculate_chain_width(visible_count: usize, left_ellipsis: bool, right_ellips
 }
 
 /// Truncates a string to fit within the given length.
+/// Uses char count for UTF-8 safe truncation.
 ///
 /// If the string is longer than `max_len`, it's truncated and "..." is appended.
 fn truncate_string(s: &str, max_len: usize) -> String {
-    if s.len() <= max_len {
+    let char_count = s.chars().count();
+    if char_count <= max_len {
         s.to_string()
     } else if max_len <= 3 {
         ".".repeat(max_len)
     } else {
-        format!("{}...", &s[..max_len - 3])
+        format!("{}...", s.chars().take(max_len - 3).collect::<String>())
     }
 }
 
@@ -320,6 +392,13 @@ mod tests {
     #[test]
     fn test_truncate_string_tiny() {
         assert_eq!(truncate_string("Test", 2), "..");
+    }
+
+    #[test]
+    fn test_truncate_string_unicode() {
+        // Test UTF-8 safe truncation with multi-byte characters
+        let text = "世界Hello"; // 7 chars: 2 CJK + 5 ASCII
+        assert_eq!(truncate_string(text, 5), "世界...");
     }
 
     #[test]
