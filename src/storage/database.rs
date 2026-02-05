@@ -90,6 +90,8 @@ pub struct WordlistRow {
     pub enabled: bool,
     /// When the word was added to the database
     pub added_date: String,
+    /// Foreign key to wordlist_files table (NULL for legacy imports)
+    pub file_id: Option<i64>,
 }
 
 impl PartialEq for WordlistRow {
@@ -99,13 +101,47 @@ impl PartialEq for WordlistRow {
             && self.source == other.source
             && self.enabled == other.enabled
             && self.added_date == other.added_date
+            && self.file_id == other.file_id
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
+/// Struct representing a row in the wordlist_files table
+pub struct WordlistFileRow {
+    /// Auto-incrementing ID for the wordlist file entry
+    pub id: i64,
+    /// Display filename (e.g., "rockyou.txt")
+    pub filename: String,
+    /// Full file path used for deduplication
+    pub file_path: String,
+    /// Source identifier (e.g., "user_import", "first_run")
+    pub source: String,
+    /// Number of words imported from this file
+    pub word_count: i64,
+    /// Whether this wordlist file is enabled
+    pub enabled: bool,
+    /// When the wordlist file was added
+    pub added_date: String,
+}
+
+impl PartialEq for WordlistFileRow {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.filename == other.filename
+            && self.file_path == other.file_path
+            && self.source == other.source
+            && self.word_count == other.word_count
+            && self.enabled == other.enabled
+            && self.added_date == other.added_date
+    }
+}
+
+#[derive(Debug, Clone)]
 /// Struct representing a row in the cache table
 pub struct CacheRow {
-    /// Text before it is decoded (primary key)
+    /// Unique row identifier
+    pub id: i64,
+    /// Text before it is decoded
     pub encoded_text: String,
     /// Text after it is decoded
     pub decoded_text: String,
@@ -129,7 +165,8 @@ pub struct CacheRow {
 
 impl PartialEq for CacheRow {
     fn eq(&self, other: &Self) -> bool {
-        self.encoded_text == other.encoded_text
+        self.id == other.id
+            && self.encoded_text == other.encoded_text
             && self.decoded_text == other.decoded_text
             && self.path == other.path
             && self.successful == other.successful
@@ -224,10 +261,11 @@ pub(crate) fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
     // Initializing cache table
     conn.execute(
         "CREATE TABLE IF NOT EXISTS cache (
-            encoded_text TEXT PRIMARY KEY NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            encoded_text TEXT NOT NULL,
             decoded_text TEXT NOT NULL,
             path JSON NOT NULL,
-            successful BOOLEAN NOT NULL DEFAULT true,
+            successful BOOLEAN NOT NULL DEFAULT false,
             execution_time_ms INTEGER NOT NULL,
             input_length INTEGER NOT NULL,
             decoder_count INTEGER NOT NULL,
@@ -240,6 +278,11 @@ pub(crate) fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_cache_successful
             ON cache(successful);",
+        (),
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_cache_timestamp
+            ON cache(timestamp DESC);",
         (),
     )?;
 
@@ -269,6 +312,24 @@ pub(crate) fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
         (),
     )?;
 
+    // Initializing wordlist_files table for tracking imported wordlist files
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS wordlist_files (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            filename TEXT NOT NULL,
+            file_path TEXT NOT NULL UNIQUE,
+            source TEXT NOT NULL,
+            word_count INTEGER NOT NULL,
+            enabled BOOLEAN NOT NULL DEFAULT true,
+            added_date DATETIME DEFAULT CURRENT_TIMESTAMP
+    );",
+        (),
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_wordlist_files_enabled ON wordlist_files(enabled);",
+        (),
+    )?;
+
     // Initializing wordlist table for bloom filter-backed word lookups
     conn.execute(
         "CREATE TABLE IF NOT EXISTS wordlist (
@@ -276,7 +337,8 @@ pub(crate) fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
             word TEXT NOT NULL UNIQUE,
             source TEXT NOT NULL,
             enabled BOOLEAN NOT NULL DEFAULT true,
-            added_date DATETIME DEFAULT CURRENT_TIMESTAMP
+            added_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+            file_id INTEGER REFERENCES wordlist_files(id) ON DELETE CASCADE
     );",
         (),
     )?;
@@ -286,6 +348,10 @@ pub(crate) fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
     )?;
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_wordlist_enabled ON wordlist(enabled);",
+        (),
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_wordlist_file_id ON wordlist(file_id);",
         (),
     )?;
 
@@ -354,35 +420,136 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
 ///
 /// On cache hit, returns a CacheRow
 /// On cache miss, returns None
+/// Handles both old schema (without id) and new schema (with id) gracefully.
 ///
 /// # Errors
 ///
 /// Returns a ``rusqlite::Error``
 pub fn read_cache(encoded_text: &String) -> Result<Option<CacheRow>, rusqlite::Error> {
     let conn = get_db_connection()?;
-    let mut stmt = conn.prepare("SELECT * FROM cache WHERE encoded_text IS $1")?;
-    let mut query = stmt.query_map([encoded_text], |row| {
-        let path_str = row.get_unwrap::<usize, String>(2).to_owned();
-        let crack_json_vec: Vec<String> =
-            serde_json::from_str(&path_str.clone()).unwrap_or_default();
 
-        Ok(CacheRow {
-            encoded_text: row.get_unwrap(0),
-            decoded_text: row.get_unwrap(1),
-            path: crack_json_vec,
-            successful: row.get_unwrap(3),
-            execution_time_ms: row.get_unwrap(4),
-            input_length: row.get_unwrap(5),
-            decoder_count: row.get_unwrap(6),
-            checker_name: row.get(7).ok(),
-            key_used: row.get(8).ok(),
-            timestamp: row.get_unwrap(9),
-        })
-    })?;
-    let row = query.next();
-    match row {
-        Some(cache_row) => Ok(Some(cache_row?)),
-        None => Ok(None),
+    // Check if the new schema (with id column) exists
+    let has_id_column = {
+        let mut stmt = conn.prepare("PRAGMA table_info(cache)")?;
+        let columns: Vec<String> = stmt
+            .query_map([], |row| row.get::<usize, String>(1))?
+            .filter_map(|r| r.ok())
+            .collect();
+        columns.first().map(|s| s == "id").unwrap_or(false)
+    };
+
+    if has_id_column {
+        // New schema with id column
+        let mut stmt = conn.prepare(
+            "SELECT * FROM cache WHERE encoded_text IS $1 ORDER BY timestamp DESC LIMIT 1",
+        )?;
+        let mut query = stmt.query_map([encoded_text], |row| {
+            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+            let crack_json_vec: Vec<String> =
+                serde_json::from_str(&path_str.clone()).unwrap_or_default();
+
+            Ok(CacheRow {
+                id: row.get_unwrap(0),
+                encoded_text: row.get_unwrap(1),
+                decoded_text: row.get_unwrap(2),
+                path: crack_json_vec,
+                successful: row.get_unwrap(4),
+                execution_time_ms: row.get_unwrap(5),
+                input_length: row.get_unwrap(6),
+                decoder_count: row.get_unwrap(7),
+                checker_name: row.get(8).ok(),
+                key_used: row.get(9).ok(),
+                timestamp: row.get_unwrap(10),
+            })
+        })?;
+        let row = query.next();
+        match row {
+            Some(cache_row) => Ok(Some(cache_row?)),
+            None => Ok(None),
+        }
+    } else {
+        // Old schema without id column
+        let mut stmt = conn.prepare("SELECT * FROM cache WHERE encoded_text IS $1 LIMIT 1")?;
+        let mut query = stmt.query_map([encoded_text], |row| {
+            let path_str = row.get_unwrap::<usize, String>(2).to_owned();
+            let crack_json_vec: Vec<String> =
+                serde_json::from_str(&path_str.clone()).unwrap_or_default();
+
+            Ok(CacheRow {
+                id: 0, // No id in old schema
+                encoded_text: row.get_unwrap(0),
+                decoded_text: row.get_unwrap(1),
+                path: crack_json_vec,
+                successful: row.get_unwrap(3),
+                execution_time_ms: row.get_unwrap(4),
+                input_length: row.get_unwrap(5),
+                decoder_count: row.get_unwrap(6),
+                checker_name: row.get(7).ok(),
+                key_used: row.get(8).ok(),
+                timestamp: row.get_unwrap(9),
+            })
+        })?;
+        let row = query.next();
+        match row {
+            Some(cache_row) => Ok(Some(cache_row?)),
+            None => Ok(None),
+        }
+    }
+}
+
+/// Reads all cache entries ordered by timestamp (most recent first)
+///
+/// Returns all history entries for display in the TUI history panel.
+/// Handles both old schema (without id) and new schema (with id) gracefully.
+///
+/// # Errors
+///
+/// Returns a `rusqlite::Error` on database errors.
+pub fn read_cache_history() -> Result<Vec<CacheRow>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+
+    // Check if the new schema (with id column) exists
+    let has_id_column = {
+        let mut stmt = conn.prepare("PRAGMA table_info(cache)")?;
+        let columns: Vec<String> = stmt
+            .query_map([], |row| row.get::<usize, String>(1))?
+            .filter_map(|r| r.ok())
+            .collect();
+        columns.first().map(|s| s == "id").unwrap_or(false)
+    };
+
+    if has_id_column {
+        // New schema with id column
+        let mut stmt = conn.prepare("SELECT * FROM cache ORDER BY timestamp DESC")?;
+        let query = stmt.query_map([], |row| {
+            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
+            let crack_json_vec: Vec<String> =
+                serde_json::from_str(&path_str.clone()).unwrap_or_default();
+
+            Ok(CacheRow {
+                id: row.get_unwrap(0),
+                encoded_text: row.get_unwrap(1),
+                decoded_text: row.get_unwrap(2),
+                path: crack_json_vec,
+                successful: row.get_unwrap(4),
+                execution_time_ms: row.get_unwrap(5),
+                input_length: row.get_unwrap(6),
+                decoder_count: row.get_unwrap(7),
+                checker_name: row.get(8).ok(),
+                key_used: row.get(9).ok(),
+                timestamp: row.get_unwrap(10),
+            })
+        })?;
+
+        let mut results = Vec::new();
+        for row in query {
+            results.push(row?);
+        }
+        Ok(results)
+    } else {
+        // Old schema without id column - return empty history
+        // User needs to delete ~/.ciphey/database.sqlite to use new schema
+        Ok(Vec::new())
     }
 }
 
@@ -772,7 +939,7 @@ pub fn set_words_enabled_batch(words: &[&str], enabled: bool) -> Result<usize, r
 pub fn get_disabled_words() -> Result<Vec<WordlistRow>, rusqlite::Error> {
     let conn = get_db_connection()?;
     let mut stmt = conn.prepare(
-        "SELECT id, word, source, enabled, added_date FROM wordlist WHERE enabled = false",
+        "SELECT id, word, source, enabled, added_date, file_id FROM wordlist WHERE enabled = false",
     )?;
     let rows = stmt
         .query_map([], |row| {
@@ -782,6 +949,7 @@ pub fn get_disabled_words() -> Result<Vec<WordlistRow>, rusqlite::Error> {
                 source: row.get_unwrap(2),
                 enabled: row.get_unwrap(3),
                 added_date: row.get_unwrap(4),
+                file_id: row.get(5).ok(),
             })
         })?
         .filter_map(|r| r.ok())
@@ -846,8 +1014,9 @@ pub fn import_wordlist(
 /// Returns rusqlite::Error on error
 pub fn read_word(word: &str) -> Result<Option<WordlistRow>, rusqlite::Error> {
     let conn = get_db_connection()?;
-    let mut stmt =
-        conn.prepare("SELECT id, word, source, enabled, added_date FROM wordlist WHERE word = $1")?;
+    let mut stmt = conn.prepare(
+        "SELECT id, word, source, enabled, added_date, file_id FROM wordlist WHERE word = $1",
+    )?;
     let mut query = stmt.query_map([word], |row| {
         Ok(WordlistRow {
             id: row.get_unwrap(0),
@@ -855,12 +1024,362 @@ pub fn read_word(word: &str) -> Result<Option<WordlistRow>, rusqlite::Error> {
             source: row.get_unwrap(2),
             enabled: row.get_unwrap(3),
             added_date: row.get_unwrap(4),
+            file_id: row.get(5).ok(),
         })
     })?;
     match query.next() {
         Some(row) => Ok(Some(row?)),
         None => Ok(None),
     }
+}
+
+// ============================================================================
+// Wordlist Files Table Functions
+// ============================================================================
+
+/// Inserts a new wordlist file record into the wordlist_files table
+///
+/// Returns the ID of the inserted row on success.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error (e.g., duplicate file_path)
+pub fn insert_wordlist_file(
+    filename: &str,
+    file_path: &str,
+    source: &str,
+    word_count: i64,
+) -> Result<i64, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    transaction.execute(
+        "INSERT INTO wordlist_files (filename, file_path, source, word_count, enabled, added_date) 
+         VALUES ($1, $2, $3, $4, true, $5)",
+        (
+            filename.to_owned(),
+            file_path.to_owned(),
+            source.to_owned(),
+            word_count,
+            get_timestamp(),
+        ),
+    )?;
+    let id = transaction.last_insert_rowid();
+    transaction.commit()?;
+    Ok(id)
+}
+
+/// Returns all wordlist files from the database (for TUI display)
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn read_all_wordlist_files() -> Result<Vec<WordlistFileRow>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, filename, file_path, source, word_count, enabled, added_date 
+         FROM wordlist_files ORDER BY added_date DESC",
+    )?;
+    let rows = stmt
+        .query_map([], |row| {
+            Ok(WordlistFileRow {
+                id: row.get_unwrap(0),
+                filename: row.get_unwrap(1),
+                file_path: row.get_unwrap(2),
+                source: row.get_unwrap(3),
+                word_count: row.get_unwrap(4),
+                enabled: row.get_unwrap(5),
+                added_date: row.get_unwrap(6),
+            })
+        })?
+        .filter_map(|r| r.ok())
+        .collect();
+    Ok(rows)
+}
+
+/// Returns a single wordlist file by ID
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn read_wordlist_file(id: i64) -> Result<Option<WordlistFileRow>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, filename, file_path, source, word_count, enabled, added_date 
+         FROM wordlist_files WHERE id = $1",
+    )?;
+    let mut query = stmt.query_map([id], |row| {
+        Ok(WordlistFileRow {
+            id: row.get_unwrap(0),
+            filename: row.get_unwrap(1),
+            file_path: row.get_unwrap(2),
+            source: row.get_unwrap(3),
+            word_count: row.get_unwrap(4),
+            enabled: row.get_unwrap(5),
+            added_date: row.get_unwrap(6),
+        })
+    })?;
+    match query.next() {
+        Some(row) => Ok(Some(row?)),
+        None => Ok(None),
+    }
+}
+
+/// Checks if a wordlist file with the given path already exists
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn wordlist_file_exists(file_path: &str) -> Result<bool, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let mut stmt = conn.prepare("SELECT 1 FROM wordlist_files WHERE file_path = $1 LIMIT 1")?;
+    let exists = stmt.exists([file_path])?;
+    Ok(exists)
+}
+
+/// Sets the enabled status of a wordlist file
+///
+/// This does NOT cascade to words - use set_words_enabled_by_file_id for that.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn set_wordlist_file_enabled(id: i64, enabled: bool) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute(
+        "UPDATE wordlist_files SET enabled = $1 WHERE id = $2",
+        (enabled, id),
+    );
+    transaction.commit()?;
+    conn_result
+}
+
+/// Deletes a wordlist file record
+///
+/// Due to ON DELETE CASCADE, this will also delete all associated words.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn delete_wordlist_file(id: i64) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    // First delete words (explicit for databases that don't support CASCADE)
+    transaction.execute("DELETE FROM wordlist WHERE file_id = $1", (id,))?;
+    // Then delete the file record
+    let conn_result = transaction.execute("DELETE FROM wordlist_files WHERE id = $1", (id,));
+    transaction.commit()?;
+    conn_result
+}
+
+/// Sets the enabled status for all words associated with a wordlist file
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn set_words_enabled_by_file_id(file_id: i64, enabled: bool) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute(
+        "UPDATE wordlist SET enabled = $1 WHERE file_id = $2",
+        (enabled, file_id),
+    );
+    transaction.commit()?;
+    conn_result
+}
+
+/// Deletes all words associated with a wordlist file
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn delete_words_by_file_id(file_id: i64) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let conn_result = transaction.execute("DELETE FROM wordlist WHERE file_id = $1", (file_id,));
+    transaction.commit()?;
+    conn_result
+}
+
+/// Bulk inserts words with a file_id reference (for importing from files)
+///
+/// Each word is associated with the given file_id.
+/// Uses INSERT OR IGNORE to skip duplicates.
+///
+/// Returns the number of successfully inserted rows.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn insert_words_with_file_id(
+    words: &[String],
+    source: &str,
+    file_id: i64,
+) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let timestamp = get_timestamp();
+
+    let mut total_inserted = 0;
+    for word in words {
+        let result = transaction.execute(
+            "INSERT OR IGNORE INTO wordlist (word, source, enabled, added_date, file_id) 
+             VALUES ($1, $2, true, $3, $4)",
+            (word.clone(), source.to_owned(), timestamp.clone(), file_id),
+        )?;
+        total_inserted += result;
+    }
+
+    transaction.commit()?;
+    Ok(total_inserted)
+}
+
+/// Imports a wordlist from a file path with progress callback
+///
+/// Reads the file line by line, counts total lines, then inserts words
+/// while calling the progress callback periodically.
+///
+/// Returns the WordlistFileRow for the imported file on success.
+///
+/// # Arguments
+///
+/// * `file_path` - Path to the wordlist file
+/// * `source` - Source identifier (e.g., "user_import")
+/// * `progress_callback` - Callback function called with (current_line, total_lines)
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error, or std::io::Error wrapped in rusqlite::Error
+pub fn import_wordlist_from_file<F>(
+    file_path: &str,
+    source: &str,
+    mut progress_callback: F,
+) -> Result<WordlistFileRow, String>
+where
+    F: FnMut(usize, usize),
+{
+    use std::fs::File;
+    use std::io::{BufRead, BufReader};
+    use std::path::Path;
+
+    // Check if file exists
+    let path = Path::new(file_path);
+    if !path.exists() {
+        return Err(format!("File not found: {}", file_path));
+    }
+
+    // Extract filename for display
+    let filename = path
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown")
+        .to_string();
+
+    // Check if already imported
+    if wordlist_file_exists(file_path).map_err(|e| e.to_string())? {
+        return Err(format!("Wordlist already imported: {}", file_path));
+    }
+
+    // Count total lines first
+    let file = File::open(file_path).map_err(|e| format!("Failed to open file: {}", e))?;
+    let reader = BufReader::new(file);
+    let total_lines = reader.lines().count();
+
+    if total_lines == 0 {
+        return Err("File is empty".to_string());
+    }
+
+    // Insert the file record first
+    let file_id = insert_wordlist_file(&filename, file_path, source, total_lines as i64)
+        .map_err(|e| format!("Failed to insert wordlist file record: {}", e))?;
+
+    // Re-open file and import words in batches
+    let file = File::open(file_path).map_err(|e| format!("Failed to reopen file: {}", e))?;
+    let reader = BufReader::new(file);
+
+    let mut conn = get_db_connection().map_err(|e| e.to_string())?;
+    let transaction = conn.transaction().map_err(|e| e.to_string())?;
+    let timestamp = get_timestamp();
+
+    let mut current_line = 0;
+    let mut total_inserted = 0;
+    let batch_size = 1000; // Report progress every 1000 lines
+
+    for line_result in reader.lines() {
+        current_line += 1;
+
+        if let Ok(word) = line_result {
+            let word = word.trim();
+            if !word.is_empty() {
+                let result = transaction.execute(
+                    "INSERT OR IGNORE INTO wordlist (word, source, enabled, added_date, file_id) 
+                     VALUES ($1, $2, true, $3, $4)",
+                    (
+                        word.to_owned(),
+                        source.to_owned(),
+                        timestamp.clone(),
+                        file_id,
+                    ),
+                );
+                if let Ok(n) = result {
+                    total_inserted += n;
+                }
+            }
+        }
+
+        // Report progress periodically
+        if current_line % batch_size == 0 {
+            progress_callback(current_line, total_lines);
+        }
+    }
+
+    // Final progress update
+    progress_callback(total_lines, total_lines);
+
+    transaction.commit().map_err(|e| e.to_string())?;
+
+    // Update word count with actual inserted count (may differ due to duplicates)
+    let conn = get_db_connection().map_err(|e| e.to_string())?;
+    conn.execute(
+        "UPDATE wordlist_files SET word_count = $1 WHERE id = $2",
+        (total_inserted as i64, file_id),
+    )
+    .map_err(|e| e.to_string())?;
+
+    // Return the file row
+    read_wordlist_file(file_id)
+        .map_err(|e| e.to_string())?
+        .ok_or_else(|| "Failed to read inserted file record".to_string())
+}
+
+/// Returns the count of enabled wordlist files
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn get_wordlist_file_count() -> Result<i64, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let count: i64 = conn.query_row(
+        "SELECT COUNT(*) FROM wordlist_files WHERE enabled = true",
+        [],
+        |row| row.get(0),
+    )?;
+    Ok(count)
+}
+
+/// Returns the total word count across all enabled wordlist files
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn get_total_word_count_from_files() -> Result<i64, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let count: i64 = conn.query_row(
+        "SELECT COALESCE(SUM(word_count), 0) FROM wordlist_files WHERE enabled = true",
+        [],
+        |row| row.get(0),
+    )?;
+    Ok(count)
 }
 
 #[cfg(test)]
@@ -931,6 +1450,7 @@ mod tests {
         mock_crack_result.unencrypted_text = Some(vec![decoded_text.to_owned()]);
 
         let expected_cache_row = CacheRow {
+            id: 1, // Will be auto-assigned
             encoded_text: encoded_text.to_owned(),
             decoded_text: decoded_text.to_owned(),
             path: match serde_json::to_string(&mock_crack_result) {
@@ -1023,31 +1543,33 @@ mod tests {
         assert!(name_result.is_ok());
         let name_query = name_result.unwrap();
         let name_list: Vec<String> = name_query.map(|row| row.unwrap()).collect();
-        assert_eq!(name_list[0], "encoded_text");
-        assert_eq!(name_list[1], "decoded_text");
-        assert_eq!(name_list[2], "path");
-        assert_eq!(name_list[3], "successful");
-        assert_eq!(name_list[4], "execution_time_ms");
-        assert_eq!(name_list[5], "input_length");
-        assert_eq!(name_list[6], "decoder_count");
-        assert_eq!(name_list[7], "checker_name");
-        assert_eq!(name_list[8], "key_used");
-        assert_eq!(name_list[9], "timestamp");
+        assert_eq!(name_list[0], "id");
+        assert_eq!(name_list[1], "encoded_text");
+        assert_eq!(name_list[2], "decoded_text");
+        assert_eq!(name_list[3], "path");
+        assert_eq!(name_list[4], "successful");
+        assert_eq!(name_list[5], "execution_time_ms");
+        assert_eq!(name_list[6], "input_length");
+        assert_eq!(name_list[7], "decoder_count");
+        assert_eq!(name_list[8], "checker_name");
+        assert_eq!(name_list[9], "key_used");
+        assert_eq!(name_list[10], "timestamp");
 
         let type_result = stmt.query_map([], |row| row.get::<usize, String>(2));
         assert!(type_result.is_ok());
         let type_query = type_result.unwrap();
         let type_list: Vec<String> = type_query.map(|row| row.unwrap()).collect();
-        assert_eq!(type_list[0], "TEXT");
+        assert_eq!(type_list[0], "INTEGER");
         assert_eq!(type_list[1], "TEXT");
-        assert_eq!(type_list[2], "JSON");
-        assert_eq!(type_list[3], "BOOLEAN");
-        assert_eq!(type_list[4], "INTEGER");
+        assert_eq!(type_list[2], "TEXT");
+        assert_eq!(type_list[3], "JSON");
+        assert_eq!(type_list[4], "BOOLEAN");
         assert_eq!(type_list[5], "INTEGER");
         assert_eq!(type_list[6], "INTEGER");
-        assert_eq!(type_list[7], "TEXT");
+        assert_eq!(type_list[7], "INTEGER");
         assert_eq!(type_list[8], "TEXT");
-        assert_eq!(type_list[9], "DATETIME");
+        assert_eq!(type_list[9], "TEXT");
+        assert_eq!(type_list[10], "DATETIME");
     }
 
     #[test]
@@ -1099,19 +1621,20 @@ mod tests {
         assert!(stmt_result.is_ok());
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
-            let path_str = row.get_unwrap::<usize, String>(2).to_owned();
+            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
 
             Ok(CacheRow {
-                encoded_text: row.get_unwrap(0),
-                decoded_text: row.get_unwrap(1),
+                id: row.get_unwrap(0),
+                encoded_text: row.get_unwrap(1),
+                decoded_text: row.get_unwrap(2),
                 path: serde_json::from_str(&path_str).unwrap_or_default(),
-                successful: row.get_unwrap(3),
-                execution_time_ms: row.get_unwrap(4),
-                input_length: row.get_unwrap(5),
-                decoder_count: row.get_unwrap(6),
-                checker_name: row.get(7).ok(),
-                key_used: row.get(8).ok(),
-                timestamp: row.get_unwrap(9),
+                successful: row.get_unwrap(4),
+                execution_time_ms: row.get_unwrap(5),
+                input_length: row.get_unwrap(6),
+                decoder_count: row.get_unwrap(7),
+                checker_name: row.get(8).ok(),
+                key_used: row.get(9).ok(),
+                timestamp: row.get_unwrap(10),
             })
         });
         assert!(query_result.is_ok());
@@ -1136,24 +1659,26 @@ mod tests {
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
-            let path_str = row.get_unwrap::<usize, String>(2).to_owned();
+            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
 
             Ok(CacheRow {
-                encoded_text: row.get_unwrap(0),
-                decoded_text: row.get_unwrap(1),
+                id: row.get_unwrap(0),
+                encoded_text: row.get_unwrap(1),
+                decoded_text: row.get_unwrap(2),
                 path: serde_json::from_str(&path_str).unwrap_or_default(),
-                successful: row.get_unwrap(3),
-                execution_time_ms: row.get_unwrap(4),
-                input_length: row.get_unwrap(5),
-                decoder_count: row.get_unwrap(6),
-                checker_name: row.get(7).ok(),
-                key_used: row.get(8).ok(),
-                timestamp: row.get_unwrap(9),
+                successful: row.get_unwrap(4),
+                execution_time_ms: row.get_unwrap(5),
+                input_length: row.get_unwrap(6),
+                decoder_count: row.get_unwrap(7),
+                checker_name: row.get(8).ok(),
+                key_used: row.get(9).ok(),
+                timestamp: row.get_unwrap(10),
             })
         });
         assert!(query_result.is_ok());
         let cache_row: CacheRow = query_result.unwrap().next().unwrap().unwrap();
         expected_cache_row.timestamp = cache_row.timestamp.clone();
+        expected_cache_row.id = cache_row.id; // Id is auto-assigned
         assert_eq!(cache_row, expected_cache_row);
     }
 
@@ -1183,27 +1708,30 @@ mod tests {
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         let mut stmt = stmt_result.unwrap();
         let query_result = stmt.query_map([], |row| {
-            let path_str = row.get_unwrap::<usize, String>(2).to_owned();
+            let path_str = row.get_unwrap::<usize, String>(3).to_owned();
 
             Ok(CacheRow {
-                encoded_text: row.get_unwrap(0),
-                decoded_text: row.get_unwrap(1),
+                id: row.get_unwrap(0),
+                encoded_text: row.get_unwrap(1),
+                decoded_text: row.get_unwrap(2),
                 path: serde_json::from_str(&path_str).unwrap_or_default(),
-                successful: row.get_unwrap(3),
-                execution_time_ms: row.get_unwrap(4),
-                input_length: row.get_unwrap(5),
-                decoder_count: row.get_unwrap(6),
-                checker_name: row.get(7).ok(),
-                key_used: row.get(8).ok(),
-                timestamp: row.get_unwrap(9),
+                successful: row.get_unwrap(4),
+                execution_time_ms: row.get_unwrap(5),
+                input_length: row.get_unwrap(6),
+                decoder_count: row.get_unwrap(7),
+                checker_name: row.get(8).ok(),
+                key_used: row.get(9).ok(),
+                timestamp: row.get_unwrap(10),
             })
         });
         let mut query = query_result.unwrap();
         let cache_row: CacheRow = query.next().unwrap().unwrap();
         expected_cache_row_1.timestamp = cache_row.timestamp.clone();
+        expected_cache_row_1.id = cache_row.id;
         assert_eq!(cache_row, expected_cache_row_1);
         let cache_row: CacheRow = query.next().unwrap().unwrap();
         expected_cache_row_2.timestamp = cache_row.timestamp.clone();
+        expected_cache_row_2.id = cache_row.id;
         assert_eq!(cache_row, expected_cache_row_2);
     }
 
@@ -1225,6 +1753,7 @@ mod tests {
         assert!(cache_row_result.is_some());
         let cache_row = cache_row_result.unwrap();
         expected_cache_row.timestamp = cache_row.timestamp.clone();
+        expected_cache_row.id = cache_row.id;
         assert_eq!(cache_row, expected_cache_row);
     }
 
@@ -1253,6 +1782,7 @@ mod tests {
         assert!(cache_row_result.is_some());
         let cache_row = cache_row_result.unwrap();
         expected_cache_row_1.timestamp = cache_row.timestamp.clone();
+        expected_cache_row_1.id = cache_row.id;
         assert_eq!(cache_row, expected_cache_row_1);
 
         let cache_result = read_cache(&encoded_text_2);
@@ -1261,6 +1791,7 @@ mod tests {
         assert!(cache_row_result.is_some());
         let cache_row = cache_row_result.unwrap();
         expected_cache_row_2.timestamp = cache_row.timestamp.clone();
+        expected_cache_row_2.id = cache_row.id;
         assert_eq!(cache_row, expected_cache_row_2);
     }
 
@@ -1347,12 +1878,14 @@ mod tests {
         assert!(read_result.is_some());
         let row: CacheRow = read_result.unwrap();
         expected_cache_row_1.timestamp = row.timestamp.clone();
+        expected_cache_row_1.id = row.id;
         assert_eq!(row, expected_cache_row_1);
 
         let read_result = read_cache(&encoded_text_2).unwrap();
         assert!(read_result.is_some());
         let row: CacheRow = read_result.unwrap();
         expected_cache_row_2.timestamp = row.timestamp.clone();
+        expected_cache_row_2.id = row.id;
         assert_eq!(row, expected_cache_row_2);
 
         let delete_result = delete_cache(&encoded_text_1);
@@ -1426,7 +1959,9 @@ mod tests {
         assert!(row_result.is_some());
         let row = row_result.unwrap();
         expected_cache_row_new.timestamp = row.timestamp.clone();
+        expected_cache_row_new.id = row.id;
         expected_cache_row.timestamp = row.timestamp.clone();
+        expected_cache_row.id = row.id;
         assert_eq!(row, expected_cache_row_new);
         assert_ne!(row, expected_cache_row);
     }
@@ -1463,7 +1998,9 @@ mod tests {
         assert!(row_result.is_some());
         let row = row_result.unwrap();
         expected_cache_row_new.timestamp = row.timestamp.clone();
+        expected_cache_row_new.id = row.id;
         expected_cache_row_1.timestamp = row.timestamp.clone();
+        expected_cache_row_1.id = row.id;
         assert_eq!(row, expected_cache_row_new);
         assert_ne!(row, expected_cache_row_1);
     }
@@ -1503,7 +2040,9 @@ mod tests {
         assert!(row_result.is_some());
         let row = row_result.unwrap();
         expected_cache_row_new.timestamp = row.timestamp.clone();
+        expected_cache_row_new.id = row.id;
         expected_cache_row_1.timestamp = row.timestamp.clone();
+        expected_cache_row_1.id = row.id;
         assert_ne!(row, expected_cache_row_new);
         assert_eq!(row, expected_cache_row_1);
 
@@ -1513,6 +2052,7 @@ mod tests {
         assert!(row_result.is_some());
         let row = row_result.unwrap();
         expected_cache_row_2.timestamp = row.timestamp.clone();
+        expected_cache_row_2.id = row.id;
         assert_eq!(row, expected_cache_row_2);
     }
 

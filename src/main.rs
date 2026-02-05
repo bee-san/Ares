@@ -10,6 +10,7 @@ use ciphey::cli::parse_cli_args;
 use ciphey::cli_pretty_printing::{failed_to_decode, program_exiting_successful_decoding};
 use ciphey::config::{config_exists, create_config_from_setup, set_global_config};
 use ciphey::perform_cracking;
+use ciphey::storage::database::setup_database;
 use ciphey::tui::{run_setup_wizard, run_tui};
 
 fn main() {
@@ -54,13 +55,29 @@ fn main() {
     let should_use_tui = use_tui && is_terminal && !config.api_mode && !config.top_results;
 
     if should_use_tui {
-        // Run TUI mode
-        if let Err(e) = run_tui(&text, config) {
+        // Initialize database before TUI so history loads correctly
+        if let Err(e) = setup_database() {
+            eprintln!("Warning: Failed to initialize database: {}", e);
+        }
+
+        // Run TUI mode - text can be None (homescreen) or Some (direct decode)
+        if let Err(e) = run_tui(text.as_deref(), config) {
             eprintln!("TUI error: {}", e);
             std::process::exit(1);
         }
     } else {
-        // Classic CLI mode
+        // Classic CLI mode - requires input text
+        let text = match text {
+            Some(t) => t,
+            None => {
+                eprintln!("Error: No input was provided. Please use ciphey --help");
+                eprintln!(
+                    "Hint: Run 'ciphey' without --no-tui to use the interactive TUI homescreen."
+                );
+                std::process::exit(1);
+            }
+        };
+
         set_global_config(config);
         let config = ciphey::config::get_config();
         let result = perform_cracking(&text, config.clone());

@@ -2,7 +2,9 @@
 
 use std::collections::HashMap;
 
+use crate::checkers::get_all_checker_names;
 use crate::config::Config;
+use crate::decoders::get_all_decoder_names;
 
 /// Complete settings model containing all editable fields
 #[derive(Debug, Clone)]
@@ -76,6 +78,12 @@ pub enum FieldType {
     WordlistManager,
     /// Special type for theme picker (opens sub-modal)
     ThemePicker,
+    /// Toggle list for selecting items from a fixed set (opens sub-modal)
+    /// Used for decoder/checker selection
+    ToggleList {
+        /// All available items that can be toggled
+        all_items: Vec<String>,
+    },
 }
 
 /// Value types for settings
@@ -384,6 +392,72 @@ impl SettingsModel {
                         },
                     ],
                 },
+                // Section 6: Decoders to Run
+                SettingsSection {
+                    name: "Decoders to Run",
+                    description: "Select which decoders are enabled",
+                    fields: vec![SettingField {
+                        id: "decoders_to_run",
+                        label: "Decoders",
+                        description: "Select which decoders to use",
+                        field_type: FieldType::ToggleList {
+                            all_items: get_all_decoder_names()
+                                .iter()
+                                .map(|s| s.to_string())
+                                .collect(),
+                        },
+                        // If config has empty list, default to all enabled for backwards compat
+                        value: SettingValue::List(if config.decoders_to_run.is_empty() {
+                            get_all_decoder_names()
+                                .iter()
+                                .map(|s| s.to_string())
+                                .collect()
+                        } else {
+                            config.decoders_to_run.clone()
+                        }),
+                        original_value: SettingValue::List(if config.decoders_to_run.is_empty() {
+                            get_all_decoder_names()
+                                .iter()
+                                .map(|s| s.to_string())
+                                .collect()
+                        } else {
+                            config.decoders_to_run.clone()
+                        }),
+                    }],
+                },
+                // Section 7: Checkers to Run
+                SettingsSection {
+                    name: "Checkers to Run",
+                    description: "Select which checkers are enabled",
+                    fields: vec![SettingField {
+                        id: "checkers_to_run",
+                        label: "Checkers",
+                        description: "Select which checkers to use",
+                        field_type: FieldType::ToggleList {
+                            all_items: get_all_checker_names()
+                                .iter()
+                                .map(|s| s.to_string())
+                                .collect(),
+                        },
+                        // If config has empty list, default to all enabled for backwards compat
+                        value: SettingValue::List(if config.checkers_to_run.is_empty() {
+                            get_all_checker_names()
+                                .iter()
+                                .map(|s| s.to_string())
+                                .collect()
+                        } else {
+                            config.checkers_to_run.clone()
+                        }),
+                        original_value: SettingValue::List(if config.checkers_to_run.is_empty() {
+                            get_all_checker_names()
+                                .iter()
+                                .map(|s| s.to_string())
+                                .collect()
+                        } else {
+                            config.checkers_to_run.clone()
+                        }),
+                    }],
+                },
             ],
         }
     }
@@ -498,6 +572,16 @@ impl SettingsModel {
                                 .insert("question".to_string(), v.clone());
                         }
                     }
+                    "decoders_to_run" => {
+                        if let SettingValue::List(v) = &field.value {
+                            config.decoders_to_run = v.clone();
+                        }
+                    }
+                    "checkers_to_run" => {
+                        if let SettingValue::List(v) = &field.value {
+                            config.checkers_to_run = v.clone();
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -582,7 +666,10 @@ impl SettingField {
     pub fn opens_modal(&self) -> bool {
         matches!(
             self.field_type,
-            FieldType::StringList | FieldType::WordlistManager | FieldType::ThemePicker
+            FieldType::StringList
+                | FieldType::WordlistManager
+                | FieldType::ThemePicker
+                | FieldType::ToggleList { .. }
         )
     }
 
@@ -607,7 +694,16 @@ impl SettingField {
             }
             SettingValue::OptionalText(v) => v.clone().unwrap_or_else(|| "(not set)".to_string()),
             SettingValue::List(v) => {
-                if v.is_empty() {
+                // Check if this is a ToggleList field
+                if let FieldType::ToggleList { all_items } = &self.field_type {
+                    if v.is_empty() {
+                        "0 enabled (nothing will run)".to_string()
+                    } else if v.len() == all_items.len() {
+                        format!("All {} enabled", all_items.len())
+                    } else {
+                        format!("{} of {} enabled", v.len(), all_items.len())
+                    }
+                } else if v.is_empty() {
                     "(empty)".to_string()
                 } else if v.len() <= 3 {
                     v.join(", ")
@@ -629,7 +725,7 @@ mod tests {
         let config = Config::default();
         let model = SettingsModel::from_config(&config);
 
-        assert_eq!(model.section_count(), 5);
+        assert_eq!(model.section_count(), 7);
         assert!(!model.has_changes());
     }
 

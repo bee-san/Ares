@@ -3,17 +3,41 @@
 use super::super::text_input::TextInput;
 use super::state::{AppState, WordlistManagerFocus};
 use super::App;
+use crate::storage::bloom::{build_bloom_filter_from_db, save_bloom_filter};
+use crate::storage::database::{set_wordlist_file_enabled, set_words_enabled_by_file_id};
 
 impl App {
     /// Returns from wordlist manager back to settings.
+    ///
+    /// Applies pending changes to the database and rebuilds the bloom filter
+    /// if any changes were made.
     pub fn finish_wordlist_manager(&mut self) {
         if let AppState::WordlistManager {
-            parent_settings, ..
+            parent_settings,
+            pending_changes,
+            ..
         } = &self.state
         {
             let snapshot = parent_settings.as_ref().clone();
+            let changes = pending_changes.clone();
 
-            // TODO: Apply pending changes to database and rebuild bloom filter
+            // Apply pending changes to database
+            let mut changes_applied = false;
+            for (file_id, enabled) in changes.iter() {
+                // Update the wordlist file's enabled status
+                if set_wordlist_file_enabled(*file_id, *enabled).is_ok() {
+                    // Also update all words from that file
+                    let _ = set_words_enabled_by_file_id(*file_id, *enabled);
+                    changes_applied = true;
+                }
+            }
+
+            // Rebuild bloom filter if changes were made
+            if changes_applied {
+                if let Ok(bloom) = build_bloom_filter_from_db() {
+                    let _ = save_bloom_filter(&bloom);
+                }
+            }
 
             self.state = AppState::Settings {
                 settings: snapshot.settings,

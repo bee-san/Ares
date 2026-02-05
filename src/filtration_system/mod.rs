@@ -33,6 +33,7 @@ use crate::decoders::z85_decoder::Z85Decoder;
 
 use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
 
+use crate::config::get_config;
 use log::trace;
 use rayon::prelude::*;
 
@@ -214,34 +215,46 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
 
     let brainfuck = Decoder::<BrainfuckInterpreter>::new();
 
-    Decoders {
-        components: vec![
-            Box::new(vigenere),
-            Box::new(reversedecoder),
-            Box::new(base64),
-            Box::new(base58_bitcoin),
-            Box::new(base58_monero),
-            Box::new(base58_ripple),
-            Box::new(base58_flickr),
-            Box::new(base91),
-            Box::new(base65536),
-            Box::new(binary),
-            Box::new(hexadecimal),
-            Box::new(base32),
-            Box::new(morsecodedecoder),
-            Box::new(atbashdecoder),
-            Box::new(caesardecoder),
-            Box::new(railfencedecoder),
-            Box::new(citrix_ctx1),
-            Box::new(url),
-            Box::new(rot47decoder),
-            Box::new(z85),
-            Box::new(a1z26decoder),
-            Box::new(brailledecoder),
-            Box::new(substitution_generic),
-            Box::new(brainfuck),
-        ],
+    let mut components: Vec<Box<dyn Crack + Sync>> = vec![
+        Box::new(vigenere),
+        Box::new(reversedecoder),
+        Box::new(base64),
+        Box::new(base58_bitcoin),
+        Box::new(base58_monero),
+        Box::new(base58_ripple),
+        Box::new(base58_flickr),
+        Box::new(base91),
+        Box::new(base65536),
+        Box::new(binary),
+        Box::new(hexadecimal),
+        Box::new(base32),
+        Box::new(morsecodedecoder),
+        Box::new(atbashdecoder),
+        Box::new(caesardecoder),
+        Box::new(railfencedecoder),
+        Box::new(citrix_ctx1),
+        Box::new(url),
+        Box::new(rot47decoder),
+        Box::new(z85),
+        Box::new(a1z26decoder),
+        Box::new(brailledecoder),
+        Box::new(substitution_generic),
+        Box::new(brainfuck),
+    ];
+
+    // Filter based on config.decoders_to_run if it's not empty
+    let config = get_config();
+    if !config.decoders_to_run.is_empty() {
+        trace!("Filtering decoders to run: {:?}", config.decoders_to_run);
+        components.retain(|decoder| {
+            config
+                .decoders_to_run
+                .contains(&decoder.get_name().to_string())
+        });
+        trace!("After filtering: {} decoders remaining", components.len());
     }
+
+    Decoders { components }
 }
 
 /// Get a specific decoder by name

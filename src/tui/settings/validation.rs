@@ -134,6 +134,9 @@ pub fn validate_field(field: &SettingField) -> Result<(), ValidationError> {
         // String list validation - always valid (individual items could be validated)
         (FieldType::StringList, SettingValue::List(_)) => Ok(()),
 
+        // Toggle list validation - always valid (items are from a fixed set)
+        (FieldType::ToggleList { .. }, SettingValue::List(_)) => Ok(()),
+
         // Wordlist manager placeholder - always valid
         (FieldType::WordlistManager, SettingValue::WordlistPlaceholder) => Ok(()),
 
@@ -265,6 +268,17 @@ pub fn parse_input(input: &str, field_type: &FieldType) -> Result<SettingValue, 
         FieldType::ThemePicker => {
             // This shouldn't be called for ThemePicker
             Ok(SettingValue::Text("Custom".to_string()))
+        }
+
+        FieldType::ToggleList { .. } => {
+            // Toggle list is handled by the modal, this shouldn't be called
+            // But return the input parsed as a comma-separated list for safety
+            let items: Vec<String> = input
+                .split(',')
+                .map(|s| s.trim().to_string())
+                .filter(|s| !s.is_empty())
+                .collect();
+            Ok(SettingValue::List(items))
         }
     }
 }

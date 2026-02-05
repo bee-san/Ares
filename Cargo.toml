@@ -5,6 +5,7 @@ version = "0.12.0"
 edition = "2021"
 description = "Automated decoding tool, Ciphey but in Rust"
 license = "MIT"
+default-run = "ciphey"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -15,6 +16,11 @@ bench = false
 
 [[bin]]
 name = "ciphey"
+path = "src/main.rs"
+bench = false
+
+[[bin]]
+name = "what"
 path = "src/main.rs"
 bench = false
 

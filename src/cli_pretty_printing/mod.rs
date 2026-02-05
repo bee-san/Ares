@@ -452,6 +452,12 @@ pub fn return_early_because_input_text_is_plaintext() {
     if config.api_mode {
         return;
     }
+
+    // Skip printing in TUI mode - the TUI handles its own display
+    if crate::tui::human_checker_bridge::is_tui_confirmation_active() {
+        return;
+    }
+
     println!("{}", success("Your input text is the plaintext 🥳"));
 }
 

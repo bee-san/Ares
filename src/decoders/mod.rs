@@ -253,3 +253,17 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         ),
     ])
 });
+
+/// Returns a sorted list of all user-facing decoder names.
+///
+/// This excludes internal decoders like "Default decoder" that users shouldn't toggle.
+/// The list is sorted alphabetically for consistent display in the UI.
+pub fn get_all_decoder_names() -> Vec<&'static str> {
+    let mut names: Vec<&'static str> = DECODER_MAP
+        .keys()
+        .copied()
+        .filter(|name| *name != "Default decoder")
+        .collect();
+    names.sort();
+    names
+}

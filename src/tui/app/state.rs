@@ -1,7 +1,7 @@
 //! State definitions for the TUI application.
 //!
 //! This module defines the state machine types used by the TUI,
-//! including all possible application states and related types.
+//! handling transitions between loading, results, settings, and failure states.
 
 use std::collections::HashMap;
 use std::sync::mpsc;
@@ -10,6 +10,7 @@ use std::time::{Duration, Instant};
 use crate::checkers::checker_result::CheckResult;
 use crate::DecoderResult;
 
+use super::super::multiline_text_input::MultilineTextInput;
 use super::super::settings::SettingsModel;
 use super::super::text_input::TextInput;
 
@@ -34,9 +35,68 @@ impl From<&CheckResult> for HumanConfirmationRequest {
     }
 }
 
+/// A simplified history entry for display in the history panel.
+#[derive(Debug, Clone)]
+pub struct HistoryEntry {
+    /// Database row ID.
+    pub id: i64,
+    /// Preview of the encoded text (~20 chars).
+    pub encoded_text_preview: String,
+    /// Full encoded text (for populating input on failed entries).
+    pub encoded_text_full: String,
+    /// Full decoded text (for successful entries).
+    pub decoded_text: String,
+    /// Full decoder path as JSON strings (for reconstructing DecoderResult).
+    pub path: Vec<String>,
+    /// Whether the decode was successful.
+    pub successful: bool,
+    /// Human-readable timestamp.
+    pub timestamp: String,
+}
+
+impl HistoryEntry {
+    /// Creates a HistoryEntry from a CacheRow.
+    ///
+    /// # Arguments
+    ///
+    /// * `cache_row` - The database cache row to convert
+    pub fn from_cache_row(cache_row: &crate::storage::database::CacheRow) -> Self {
+        // Create preview: first ~20 chars with ellipsis if needed
+        let preview = if cache_row.encoded_text.chars().count() > 20 {
+            format!(
+                "{}...",
+                cache_row.encoded_text.chars().take(17).collect::<String>()
+            )
+        } else {
+            cache_row.encoded_text.clone()
+        };
+
+        Self {
+            id: cache_row.id,
+            encoded_text_preview: preview,
+            encoded_text_full: cache_row.encoded_text.clone(),
+            decoded_text: cache_row.decoded_text.clone(),
+            path: cache_row.path.clone(),
+            successful: cache_row.successful,
+            timestamp: cache_row.timestamp.clone(),
+        }
+    }
+}
+
 /// Represents the current state of the TUI application.
 #[derive(Debug)]
 pub enum AppState {
+    /// Home screen where users can paste ciphertext to decode.
+    Home {
+        /// Multi-line text input for entering ciphertext.
+        text_input: MultilineTextInput,
+        /// History of previous decode attempts.
+        history: Vec<HistoryEntry>,
+        /// Currently selected history entry index (None = input focused).
+        selected_history: Option<usize>,
+        /// Scroll offset for the history panel.
+        history_scroll_offset: usize,
+    },
     /// The application is processing input and waiting for results.
     Loading {
         /// When the loading started, used to calculate elapsed time.
@@ -139,6 +199,24 @@ pub enum AppState {
         /// Parent settings state snapshot to return to.
         parent_settings: Box<SettingsStateSnapshot>,
     },
+    /// Toggle list editor for selecting items from a fixed set.
+    /// Used for decoder/checker selection.
+    ToggleListEditor {
+        /// Field being edited.
+        field_id: String,
+        /// Field label for display.
+        field_label: String,
+        /// All available items that can be toggled.
+        all_items: Vec<String>,
+        /// Currently selected/enabled items.
+        selected_items: Vec<String>,
+        /// Currently highlighted item index in the list.
+        cursor_index: usize,
+        /// Scroll offset for long lists.
+        scroll_offset: usize,
+        /// Parent settings state snapshot to return to.
+        parent_settings: Box<SettingsStateSnapshot>,
+    },
     /// Confirmation modal asking if user wants to save settings.
     SaveConfirmation {
         /// The settings state to return to if user cancels.
@@ -149,6 +227,17 @@ pub enum AppState {
 /// Represents the state we came from before entering settings.
 #[derive(Debug, Clone)]
 pub enum PreviousState {
+    /// Was in the home state.
+    Home {
+        /// Multi-line text input for entering ciphertext.
+        text_input: super::super::multiline_text_input::MultilineTextInput,
+        /// History of previous decode attempts.
+        history: Vec<HistoryEntry>,
+        /// Currently selected history entry index (None = input focused).
+        selected_history: Option<usize>,
+        /// Scroll offset for the history panel.
+        history_scroll_offset: usize,
+    },
     /// Was in the loading state.
     Loading {
         /// When loading started.

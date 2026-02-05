@@ -3,6 +3,7 @@
 use std::collections::HashMap;
 
 use crate::config::Config;
+use crate::storage::database::read_all_wordlist_files;
 
 use super::super::{
     settings::{FieldType, SettingValue, SettingsModel},
@@ -26,6 +27,17 @@ impl App {
 
         // Capture previous state
         let previous_state = match &self.state {
+            AppState::Home {
+                text_input,
+                history,
+                selected_history,
+                history_scroll_offset,
+            } => PreviousState::Home {
+                text_input: text_input.clone(),
+                history: history.clone(),
+                selected_history: *selected_history,
+                history_scroll_offset: *history_scroll_offset,
+            },
             AppState::Loading {
                 start_time,
                 current_quote,
@@ -74,6 +86,17 @@ impl App {
     pub fn close_settings(&mut self) {
         if let AppState::Settings { previous_state, .. } = &self.state {
             self.state = match previous_state.clone() {
+                PreviousState::Home {
+                    text_input,
+                    history,
+                    selected_history,
+                    history_scroll_offset,
+                } => AppState::Home {
+                    text_input,
+                    history,
+                    selected_history,
+                    history_scroll_offset,
+                },
                 PreviousState::Loading {
                     start_time,
                     current_quote,
@@ -257,9 +280,25 @@ impl App {
                         validation_errors: validation_errors.clone(),
                     };
 
-                    // TODO: Load wordlist files from database
+                    // Load wordlist files from database
+                    let wordlist_files = match read_all_wordlist_files() {
+                        Ok(rows) => rows
+                            .into_iter()
+                            .map(|r| super::state::WordlistFileInfo {
+                                id: r.id,
+                                filename: r.filename,
+                                file_path: r.file_path,
+                                source: r.source,
+                                word_count: r.word_count,
+                                enabled: r.enabled,
+                                added_date: r.added_date,
+                            })
+                            .collect(),
+                        Err(_) => vec![],
+                    };
+
                     self.state = AppState::WordlistManager {
-                        wordlist_files: vec![],
+                        wordlist_files,
                         selected_row: 0,
                         scroll_offset: 0,
                         parent_settings: Box::new(snapshot),
@@ -271,6 +310,33 @@ impl App {
                 // Theme picker opens its own modal
                 FieldType::ThemePicker => {
                     self.open_theme_picker();
+                }
+                // Toggle list opens its own modal
+                FieldType::ToggleList { all_items } => {
+                    let selected_items = if let SettingValue::List(list) = &field.value {
+                        list.clone()
+                    } else {
+                        vec![]
+                    };
+
+                    let snapshot = SettingsStateSnapshot {
+                        settings: settings.clone(),
+                        selected_section: *selected_section,
+                        selected_field: *selected_field,
+                        scroll_offset: *scroll_offset,
+                        previous_state: previous_state.clone(),
+                        validation_errors: validation_errors.clone(),
+                    };
+
+                    self.state = AppState::ToggleListEditor {
+                        field_id: field.id.to_string(),
+                        field_label: field.label.to_string(),
+                        all_items: all_items.clone(),
+                        selected_items,
+                        cursor_index: 0,
+                        scroll_offset: 0,
+                        parent_settings: Box::new(snapshot),
+                    };
                 }
                 // Other fields enter text editing mode
                 _ => {
@@ -550,6 +616,17 @@ impl App {
             } else {
                 // Discard changes and close settings
                 self.state = match snapshot.previous_state {
+                    PreviousState::Home {
+                        text_input,
+                        history,
+                        selected_history,
+                        history_scroll_offset,
+                    } => AppState::Home {
+                        text_input,
+                        history,
+                        selected_history,
+                        history_scroll_offset,
+                    },
                     PreviousState::Loading {
                         start_time,
                         current_quote,
@@ -590,6 +667,115 @@ impl App {
 
             self.state = AppState::Settings {
                 settings: snapshot.settings,
+                selected_section: snapshot.selected_section,
+                selected_field: snapshot.selected_field,
+                editing_mode: false,
+                text_input: TextInput::new(),
+                scroll_offset: snapshot.scroll_offset,
+                previous_state: snapshot.previous_state,
+                validation_errors: snapshot.validation_errors,
+            };
+        }
+    }
+
+    // ==================== Toggle List Editor Methods ====================
+
+    /// Moves the cursor up in the toggle list editor.
+    pub fn toggle_list_cursor_up(&mut self) {
+        if let AppState::ToggleListEditor {
+            cursor_index,
+            scroll_offset,
+            ..
+        } = &mut self.state
+        {
+            if *cursor_index > 0 {
+                *cursor_index -= 1;
+                // Adjust scroll if needed
+                if *cursor_index < *scroll_offset {
+                    *scroll_offset = *cursor_index;
+                }
+            }
+        }
+    }
+
+    /// Moves the cursor down in the toggle list editor.
+    pub fn toggle_list_cursor_down(&mut self) {
+        if let AppState::ToggleListEditor {
+            all_items,
+            cursor_index,
+            scroll_offset,
+            ..
+        } = &mut self.state
+        {
+            if *cursor_index < all_items.len().saturating_sub(1) {
+                *cursor_index += 1;
+                // Adjust scroll if needed (assuming visible height of ~15 items)
+                const VISIBLE_HEIGHT: usize = 15;
+                if *cursor_index >= *scroll_offset + VISIBLE_HEIGHT {
+                    *scroll_offset = cursor_index.saturating_sub(VISIBLE_HEIGHT - 1);
+                }
+            }
+        }
+    }
+
+    /// Toggles the currently selected item in the toggle list editor.
+    pub fn toggle_list_toggle_item(&mut self) {
+        if let AppState::ToggleListEditor {
+            all_items,
+            selected_items,
+            cursor_index,
+            ..
+        } = &mut self.state
+        {
+            if let Some(item) = all_items.get(*cursor_index) {
+                if selected_items.contains(item) {
+                    selected_items.retain(|x| x != item);
+                } else {
+                    selected_items.push(item.clone());
+                }
+            }
+        }
+    }
+
+    /// Selects all items in the toggle list editor.
+    pub fn toggle_list_select_all(&mut self) {
+        if let AppState::ToggleListEditor {
+            all_items,
+            selected_items,
+            ..
+        } = &mut self.state
+        {
+            *selected_items = all_items.clone();
+        }
+    }
+
+    /// Deselects all items in the toggle list editor.
+    pub fn toggle_list_select_none(&mut self) {
+        if let AppState::ToggleListEditor { selected_items, .. } = &mut self.state {
+            selected_items.clear();
+        }
+    }
+
+    /// Closes the toggle list editor and applies changes to the settings.
+    pub fn close_toggle_list_editor(&mut self) {
+        if let AppState::ToggleListEditor {
+            field_id,
+            selected_items,
+            parent_settings,
+            ..
+        } = &self.state
+        {
+            let snapshot = parent_settings.as_ref().clone();
+            let mut settings = snapshot.settings;
+
+            // Update the field value
+            if let Some(field) = settings.get_field_mut(field_id) {
+                field.value = SettingValue::List(selected_items.clone());
+            }
+
+            // Return to settings state
+            self.state = AppState::Settings {
+                settings,
                 selected_section: snapshot.selected_section,
                 selected_field: snapshot.selected_field,
                 editing_mode: false,

@@ -270,18 +270,36 @@ fn run_setup_event_loop(
                     }
                 }
                 Ok(WordlistDownloadMessage::AllComplete) => {
-                    // Save wordlist selections before moving to next step
+                    // Mark downloads as complete but don't auto-transition if there are failures
                     if let SetupState::WordlistConfig {
+                        download_progress,
                         custom_paths,
                         selected_predefined,
                         ..
-                    } = &app.state
+                    } = &mut app.state
                     {
-                        app.wordlist_paths = custom_paths.clone();
-                        app.selected_predefined_wordlists = selected_predefined.clone();
+                        if let Some(progress) = download_progress {
+                            // Mark as complete by setting current == total
+                            progress.current = progress.total;
+                            progress.status = if progress.failed.is_empty() {
+                                "All downloads complete!".to_string()
+                            } else {
+                                format!(
+                                    "Downloads complete with {} error(s). Press Enter to continue.",
+                                    progress.failed.len()
+                                )
+                            };
+
+                            // If no failures, save and auto-advance
+                            if progress.failed.is_empty() {
+                                app.wordlist_paths = custom_paths.clone();
+                                app.selected_predefined_wordlists = selected_predefined.clone();
+                                app.state = SetupState::EnhancedDetection { selected: 0 };
+                            }
+                            // If there are failures, keep showing download_progress
+                            // User must press Enter to acknowledge and continue
+                        }
                     }
-                    // All downloads complete, move to next step
-                    app.state = SetupState::EnhancedDetection { selected: 0 };
                     wordlist_download_rx = None;
                 }
                 Err(mpsc::TryRecvError::Empty) => {

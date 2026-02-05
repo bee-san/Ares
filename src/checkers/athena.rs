@@ -19,6 +19,16 @@ use super::{
 /// Athena checker runs all other checkers
 pub struct Athena;
 
+/// Helper function to check if a checker should run based on config.checkers_to_run
+///
+/// Returns true if:
+/// - checkers_to_run is empty (all checkers enabled)
+/// - checkers_to_run contains the checker name
+fn should_run_checker(checker_name: &str) -> bool {
+    let config = get_config();
+    config.checkers_to_run.is_empty() || config.checkers_to_run.contains(&checker_name.to_string())
+}
+
 impl Check for Checker<Athena> {
     fn new() -> Self {
         Checker {
@@ -40,8 +50,8 @@ impl Check for Checker<Athena> {
         trace!("Athena checker running on text: {}", text);
         let config = get_config();
 
-        // If regex is specified, only run the regex checker
-        if config.regex.is_some() {
+        // If regex is specified, only run the regex checker (if enabled)
+        if config.regex.is_some() && should_run_checker("Regex Checker") {
             trace!("running regex");
             let regex_checker = Checker::<RegexChecker>::new().with_sensitivity(self.sensitivity);
             let regex_result = regex_checker.check(text);
@@ -58,9 +68,9 @@ impl Check for Checker<Athena> {
                 check_res.description = regex_result.description;
                 return check_res;
             }
-        } else {
-            // Run wordlist checker first if a wordlist is provided
-            if config.wordlist.is_some() {
+        } else if config.regex.is_none() {
+            // Run wordlist checker first if a wordlist is provided (and enabled)
+            if config.wordlist.is_some() && should_run_checker("Wordlist Checker") {
                 trace!("running wordlist checker");
                 let wordlist_checker =
                     Checker::<WordlistChecker>::new().with_sensitivity(self.sensitivity);
@@ -86,56 +96,63 @@ impl Check for Checker<Athena> {
             // In Ciphey if the user uses the regex checker all the other checkers turn off
             // This is because they are looking for one specific bit of information so will not want the other checkers
             // TODO: wrap all checkers in oncecell so we only create them once!
-            let lemmeknow = Checker::<LemmeKnow>::new().with_sensitivity(self.sensitivity);
-            let lemmeknow_result = lemmeknow.check(text);
-            //println!("Text is {}", text);
-            if lemmeknow_result.is_identified {
-                let mut check_res = CheckResult::new(&lemmeknow);
-                let human_result = human_checker::human_checker(&lemmeknow_result);
-                trace!(
-                    "Human checker called from lemmeknow checker with result: {}",
-                    human_result
-                );
-                check_res.is_identified = human_result;
-                check_res.text = lemmeknow_result.text;
-                check_res.description = lemmeknow_result.description;
-                cli_pretty_printing::success(&format!("DEBUG: Athena lemmeknow checker - human_result: {}, check_res.is_identified: {}", human_result, check_res.is_identified));
-                return check_res;
+            if should_run_checker("LemmeKnow Checker") {
+                let lemmeknow = Checker::<LemmeKnow>::new().with_sensitivity(self.sensitivity);
+                let lemmeknow_result = lemmeknow.check(text);
+                //println!("Text is {}", text);
+                if lemmeknow_result.is_identified {
+                    let mut check_res = CheckResult::new(&lemmeknow);
+                    let human_result = human_checker::human_checker(&lemmeknow_result);
+                    trace!(
+                        "Human checker called from lemmeknow checker with result: {}",
+                        human_result
+                    );
+                    check_res.is_identified = human_result;
+                    check_res.text = lemmeknow_result.text;
+                    check_res.description = lemmeknow_result.description;
+                    cli_pretty_printing::success(&format!("DEBUG: Athena lemmeknow checker - human_result: {}, check_res.is_identified: {}", human_result, check_res.is_identified));
+                    return check_res;
+                }
             }
 
-            let password = Checker::<PasswordChecker>::new().with_sensitivity(self.sensitivity);
-            let password_result = password.check(text);
-            if password_result.is_identified {
-                let mut check_res = CheckResult::new(&password);
-                let human_result = human_checker::human_checker(&password_result);
-                trace!(
-                    "Human checker called from password checker with result: {}",
-                    human_result
-                );
-                check_res.is_identified = human_result;
-                check_res.text = password_result.text;
-                check_res.description = password_result.description;
-                cli_pretty_printing::success(&format!("DEBUG: Athena password checker - human_result: {}, check_res.is_identified: {}", human_result, check_res.is_identified));
-                return check_res;
+            // Password checker - note: hidden from UI but still runs if in checkers_to_run
+            if should_run_checker("Password Checker") {
+                let password = Checker::<PasswordChecker>::new().with_sensitivity(self.sensitivity);
+                let password_result = password.check(text);
+                if password_result.is_identified {
+                    let mut check_res = CheckResult::new(&password);
+                    let human_result = human_checker::human_checker(&password_result);
+                    trace!(
+                        "Human checker called from password checker with result: {}",
+                        human_result
+                    );
+                    check_res.is_identified = human_result;
+                    check_res.text = password_result.text;
+                    check_res.description = password_result.description;
+                    cli_pretty_printing::success(&format!("DEBUG: Athena password checker - human_result: {}, check_res.is_identified: {}", human_result, check_res.is_identified));
+                    return check_res;
+                }
             }
 
-            let english = Checker::<EnglishChecker>::new().with_sensitivity(self.sensitivity);
-            let english_result = english.check(text);
-            if english_result.is_identified {
-                let mut check_res = CheckResult::new(&english);
-                let human_result = human_checker::human_checker(&english_result);
-                trace!(
-                    "Human checker called from english checker with result: {}",
-                    human_result
-                );
-                check_res.is_identified = human_result;
-                check_res.text = english_result.text;
-                check_res.description = english_result.description;
-                cli_pretty_printing::success(&format!(
-                    "DEBUG: Athena english checker - human_result: {}, check_res.is_identified: {}",
-                    human_result, check_res.is_identified
-                ));
-                return check_res;
+            if should_run_checker("English Checker") {
+                let english = Checker::<EnglishChecker>::new().with_sensitivity(self.sensitivity);
+                let english_result = english.check(text);
+                if english_result.is_identified {
+                    let mut check_res = CheckResult::new(&english);
+                    let human_result = human_checker::human_checker(&english_result);
+                    trace!(
+                        "Human checker called from english checker with result: {}",
+                        human_result
+                    );
+                    check_res.is_identified = human_result;
+                    check_res.text = english_result.text;
+                    check_res.description = english_result.description;
+                    cli_pretty_printing::success(&format!(
+                        "DEBUG: Athena english checker - human_result: {}, check_res.is_identified: {}",
+                        human_result, check_res.is_identified
+                    ));
+                    return check_res;
+                }
             }
         }
 

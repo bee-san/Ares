@@ -185,6 +185,31 @@ pub static CHECKER_MAP: Lazy<HashMap<&str, CheckerBox>> = Lazy::new(|| {
     ])
 });
 
+/// Returns a sorted list of all user-facing checker names.
+///
+/// This excludes internal checkers that users shouldn't toggle:
+/// - "Athena Checker" - internal meta-checker that orchestrates other checkers
+/// - "WaitAthena Checker" - internal variant of Athena
+/// - "Template checker" - internal placeholder
+/// - "Password Checker" - hidden from UI (possibly buggy)
+///
+/// The list is sorted alphabetically for consistent display in the UI.
+pub fn get_all_checker_names() -> Vec<&'static str> {
+    let hidden_checkers = [
+        "Athena Checker",
+        "WaitAthena Checker",
+        "Template checker",
+        "Password Checker",
+    ];
+    let mut names: Vec<&'static str> = CHECKER_MAP
+        .keys()
+        .copied()
+        .filter(|name| !hidden_checkers.contains(name))
+        .collect();
+    names.sort();
+    names
+}
+
 // test
 #[cfg(test)]
 mod tests {

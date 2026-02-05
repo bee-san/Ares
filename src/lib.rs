@@ -242,6 +242,18 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
                 ));
             }
         };
+    } else {
+        // Log failed attempt to cache
+        let cache_result = failure_result_to_cache(&text, start_time);
+        match cache_result {
+            Ok(_) => (),
+            Err(e) => {
+                cli_pretty_printing::warning(&format!(
+                    "DEBUG: lib.rs - Error inserting failed attempt into cache table: {}",
+                    e
+                ));
+            }
+        };
     }
 
     result
@@ -304,6 +316,35 @@ fn success_result_to_cache(
         decoder_count: result.path.len() as i64,
         checker_name,
         key_used,
+    };
+    storage::database::insert_cache(&cache_entry)
+}
+
+/// Stores a failed decoding attempt into the cache table
+fn failure_result_to_cache(
+    text: &String,
+    start_time: SystemTime,
+) -> Result<usize, rusqlite::Error> {
+    let stop_time = SystemTime::now();
+    let execution_time_ms: i64 = match stop_time.duration_since(start_time) {
+        Ok(duration) => duration.as_millis().try_into().unwrap_or(-2),
+        Err(_) => {
+            cli_pretty_printing::warning(
+                "Stop time is less than start time. Clock may have gone backwards.",
+            );
+            -1
+        }
+    };
+
+    let cache_entry = storage::database::CacheEntry {
+        encoded_text: String::from(text),
+        decoded_text: String::new(),
+        path: vec![],
+        execution_time_ms,
+        input_length: text.len() as i64,
+        decoder_count: 0,
+        checker_name: None,
+        key_used: None,
     };
     storage::database::insert_cache(&cache_entry)
 }

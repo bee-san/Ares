@@ -207,14 +207,21 @@ fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
         download_progress,
     } = &mut app.state
     {
-        // Don't allow input during downloads
-        if download_progress.is_some() {
+        // Handle input during downloads
+        if let Some(progress) = download_progress {
+            // Check if download is complete (current == total)
+            let download_complete = progress.current == progress.total;
+
             match key.code {
                 KeyCode::Esc => {
                     // Cancel download (not implemented fully, just mark as failed)
-                    if let Some(progress) = download_progress {
-                        progress.failed.push("Cancelled by user".to_string());
-                    }
+                    progress.failed.push("Cancelled by user".to_string());
+                }
+                KeyCode::Enter if download_complete => {
+                    // Downloads are done, user acknowledged - proceed to next step
+                    app.wordlist_paths = custom_paths.clone();
+                    app.selected_predefined_wordlists = selected_predefined.clone();
+                    app.state = SetupState::EnhancedDetection { selected: 0 };
                 }
                 _ => {}
             }

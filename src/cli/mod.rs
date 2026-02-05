@@ -16,7 +16,11 @@ use log::trace;
 #[derive(Parser)]
 #[command(author = "Bee <bee@skerritt.blog>", about, long_about = None)]
 pub struct Opts {
-    /// Some input. Because this isn't an Option<T> it's required to be used
+    /// Text to decrypt/decode (can also use -t/--text flag)
+    #[arg(index = 1)]
+    text_positional: Option<String>,
+
+    /// Text to decrypt/decode (alternative to positional argument)
     #[arg(short, long)]
     text: Option<String>,
 
@@ -74,12 +78,14 @@ pub struct Opts {
 ///
 /// # Returns
 ///
-/// A tuple of (input_text, config, use_tui) where use_tui indicates whether
-/// to use the TUI or classic CLI output.
+/// A tuple of (input_text, config, use_tui) where:
+/// - input_text is `None` if no input was provided (user wants homescreen TUI)
+/// - config is the parsed configuration
+/// - use_tui indicates whether to use the TUI or classic CLI output
 ///
 /// # Panics
 /// This function can panic when it gets both a file and text input at the same time.
-pub fn parse_cli_args() -> (String, Config, bool) {
+pub fn parse_cli_args() -> (Option<String>, Config, bool) {
     let mut opts: Opts = Opts::parse();
     let min_log_level = match opts.verbose {
         0 => "Error",
@@ -97,20 +103,26 @@ pub fn parse_cli_args() -> (String, Config, bool) {
         panic_failure_both_input_and_fail_provided();
     }
 
-    let input_text: String = if opts.file.is_some() {
-        read_and_parse_file(opts.file.unwrap())
+    // Input is now optional - if not provided, TUI will show homescreen
+    let input_text: Option<String> = if opts.file.is_some() {
+        Some(read_and_parse_file(opts.file.clone().unwrap()))
     } else {
-        opts.text
-            .expect("Error. No input was provided. Please use ciphey --help")
+        // Prioritize --text flag, fall back to positional argument
+        opts.text.clone().or(opts.text_positional.clone())
     };
 
     // Fixes bug where opts.text and opts.file are partially borrowed
     opts.text = None;
+    opts.text_positional = None;
     opts.file = None;
 
     trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
-    trace!("The inputted text is {}", &input_text);
+    if let Some(ref text) = input_text {
+        trace!("The inputted text is {}", text);
+    } else {
+        trace!("No input text provided - will show homescreen");
+    }
 
     // Determine if TUI should be used
     let use_tui = !opts.no_tui;
@@ -145,7 +157,7 @@ pub fn read_and_parse_file(file_path: String) -> String {
 }
 
 /// Turns our CLI arguments into a config stuct
-fn cli_args_into_config_struct(opts: Opts, text: String) -> (String, Config) {
+fn cli_args_into_config_struct(opts: Opts, text: Option<String>) -> (Option<String>, Config) {
     // Get configuration from file first
     let mut config = get_config_file_into_struct();
 

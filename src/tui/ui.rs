@@ -7,13 +7,15 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph, Wrap};
 
-use super::app::{App, AppState, HumanConfirmationRequest, WordlistManagerFocus};
+use super::app::{App, AppState, HistoryEntry, HumanConfirmationRequest, WordlistManagerFocus};
 use super::colors::TuiColors;
+use super::multiline_text_input::MultilineTextInput;
 use super::settings::SettingsModel;
 use super::spinner::{Spinner, ENHANCED_SPINNER_FRAMES};
 use super::widgets::{
     render_list_editor, render_settings_screen as render_settings_panel, render_step_details,
-    render_text_panel, render_wordlist_manager, PathViewer, WordlistFocus,
+    render_text_panel, render_toggle_list_editor, render_wordlist_manager, PathViewer,
+    WordlistFocus,
 };
 
 /// Modal width as percentage of screen width.
@@ -39,6 +41,7 @@ const DECORATED_TITLE: &str = " ══ Ciphey ══ ";
 /// This function is called on each frame to render the appropriate screen based
 /// on the current [`AppState`]. It handles:
 ///
+/// - [`AppState::Home`]: Homescreen with text input for pasting ciphertext
 /// - [`AppState::Loading`]: Centered spinner with rotating quotes
 /// - [`AppState::Results`]: Three-column layout with input, path, and output
 /// - [`AppState::Failure`]: Failure message with tips
@@ -55,6 +58,22 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
 
     // Render the appropriate screen based on state
     match &app.state {
+        AppState::Home {
+            text_input,
+            history,
+            selected_history,
+            history_scroll_offset,
+        } => {
+            draw_home_screen(
+                frame,
+                area,
+                text_input,
+                history,
+                *selected_history,
+                *history_scroll_offset,
+                colors,
+            );
+        }
         AppState::Loading {
             start_time,
             current_quote,
@@ -184,6 +203,25 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
             // Render the settings screen in the background (dimmed)
             // Then render the confirmation modal on top
             draw_save_confirmation_modal(&area, &mut frame.buffer_mut(), colors);
+        }
+        AppState::ToggleListEditor {
+            field_label,
+            all_items,
+            selected_items,
+            cursor_index,
+            scroll_offset,
+            ..
+        } => {
+            draw_toggle_list_editor_screen(
+                frame,
+                area,
+                field_label,
+                all_items,
+                selected_items,
+                *cursor_index,
+                *scroll_offset,
+                colors,
+            );
         }
     }
 
@@ -514,7 +552,10 @@ fn draw_failure_screen(
             colors.text,
         )),
         Line::from(""),
-        Line::from(Span::styled("Press 'q' to exit", colors.muted)),
+        Line::from(Span::styled(
+            "Press 'b' for home  |  'q' to exit",
+            colors.muted,
+        )),
     ];
 
     let paragraph = Paragraph::new(lines)
@@ -522,6 +563,406 @@ fn draw_failure_screen(
         .wrap(Wrap { trim: false });
 
     frame.render_widget(paragraph, inner_area);
+}
+
+/// Renders the home screen with history panel and text input for pasting ciphertext.
+///
+/// Displays a 30/70 split layout with:
+/// - Left (30%): History panel showing previous decode attempts
+/// - Right (70%): Main content with welcome message and text input
+///
+/// # Arguments
+///
+/// * `frame` - The Ratatui frame to render into
+/// * `area` - The area to render within
+/// * `text_input` - The multi-line text input component
+/// * `history` - The list of previous decode attempts
+/// * `selected_history` - Currently selected history entry index (None = input focused)
+/// * `history_scroll_offset` - Scroll offset for the history panel
+/// * `colors` - The color scheme to use
+fn draw_home_screen(
+    frame: &mut Frame,
+    area: Rect,
+    text_input: &MultilineTextInput,
+    history: &[HistoryEntry],
+    selected_history: Option<usize>,
+    history_scroll_offset: usize,
+    colors: &TuiColors,
+) {
+    // Create outer block with decorated title
+    let outer_block = Block::default()
+        .title(DECORATED_TITLE)
+        .title_style(colors.title)
+        .borders(Borders::ALL)
+        .border_style(colors.border);
+
+    frame.render_widget(outer_block, area);
+
+    // Create inner content area
+    let inner_area = Rect {
+        x: area.x + 2,
+        y: area.y + 2,
+        width: area.width.saturating_sub(4),
+        height: area.height.saturating_sub(4),
+    };
+
+    // 30/70 horizontal split
+    let main_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(30), // History panel
+            Constraint::Percentage(70), // Main content
+        ])
+        .split(inner_area);
+
+    // Draw history panel (left side)
+    draw_history_panel(
+        frame,
+        main_chunks[0],
+        history,
+        selected_history,
+        history_scroll_offset,
+        colors,
+    );
+
+    // Draw main content (right side)
+    draw_main_input_area(
+        frame,
+        main_chunks[1],
+        text_input,
+        selected_history.is_none(),
+        colors,
+    );
+}
+
+/// Renders the history panel showing previous decode attempts.
+///
+/// # Arguments
+///
+/// * `frame` - The Ratatui frame to render into
+/// * `area` - The area to render within
+/// * `history` - The list of previous decode attempts
+/// * `selected_history` - Currently selected history entry index
+/// * `scroll_offset` - Scroll offset for the list
+/// * `colors` - The color scheme to use
+fn draw_history_panel(
+    frame: &mut Frame,
+    area: Rect,
+    history: &[HistoryEntry],
+    selected_history: Option<usize>,
+    scroll_offset: usize,
+    colors: &TuiColors,
+) {
+    let is_focused = selected_history.is_some();
+
+    // Create the history block with appropriate styling based on focus
+    let history_block = Block::default()
+        .title(" History ")
+        .title_style(if is_focused {
+            colors.accent.add_modifier(Modifier::BOLD)
+        } else {
+            colors.label
+        })
+        .borders(Borders::ALL)
+        .border_type(if is_focused {
+            BorderType::Double
+        } else {
+            BorderType::Rounded
+        })
+        .border_style(if is_focused {
+            colors.accent
+        } else {
+            colors.border
+        })
+        .padding(Padding::horizontal(1));
+
+    let history_inner = history_block.inner(area);
+    frame.render_widget(history_block, area);
+
+    if history.is_empty() {
+        // Show placeholder when no history
+        let placeholder = Paragraph::new(Line::from(Span::styled("No history yet", colors.muted)))
+            .alignment(Alignment::Center);
+        frame.render_widget(placeholder, history_inner);
+        return;
+    }
+
+    // Calculate visible lines
+    let visible_lines = history_inner.height as usize;
+
+    // Auto-scroll to keep selected item visible
+    let effective_scroll = if let Some(idx) = selected_history {
+        if idx >= scroll_offset + visible_lines {
+            idx.saturating_sub(visible_lines - 1)
+        } else if idx < scroll_offset {
+            idx
+        } else {
+            scroll_offset
+        }
+    } else {
+        scroll_offset
+    };
+
+    // Build history lines
+    let lines: Vec<Line> = history
+        .iter()
+        .enumerate()
+        .skip(effective_scroll)
+        .take(visible_lines)
+        .map(|(idx, entry)| {
+            let is_selected = selected_history == Some(idx);
+
+            // Status emoji
+            let status = if entry.successful { "✓ " } else { "✗ " };
+            let status_style = if entry.successful {
+                colors.success
+            } else {
+                colors.error
+            };
+
+            // Format the relative time
+            let time_str = format_relative_time(&entry.timestamp);
+
+            // Build the line
+            let mut spans = vec![
+                Span::styled(status, status_style),
+                Span::styled(
+                    entry.encoded_text_preview.clone(),
+                    if is_selected {
+                        colors
+                            .accent
+                            .add_modifier(Modifier::BOLD)
+                            .add_modifier(Modifier::REVERSED)
+                    } else {
+                        colors.text
+                    },
+                ),
+            ];
+
+            // Add time on a new conceptual "line" but we'll truncate to fit
+            // For simplicity, append time with dimmed style
+            let remaining_width = area
+                .width
+                .saturating_sub(4 + status.len() as u16 + entry.encoded_text_preview.len() as u16);
+            if remaining_width > 6 {
+                spans.push(Span::styled(" ", colors.text));
+                spans.push(Span::styled(
+                    time_str
+                        .chars()
+                        .take(remaining_width as usize - 1)
+                        .collect::<String>(),
+                    colors.muted,
+                ));
+            }
+
+            Line::from(spans)
+        })
+        .collect();
+
+    let history_paragraph = Paragraph::new(lines);
+    frame.render_widget(history_paragraph, history_inner);
+
+    // Show scroll indicator if needed
+    if history.len() > visible_lines {
+        let scroll_info = format!("{}/{}", effective_scroll + 1, history.len());
+        let scroll_indicator = Paragraph::new(Line::from(Span::styled(scroll_info, colors.muted)))
+            .alignment(Alignment::Right);
+        // Render at bottom of area
+        let indicator_area = Rect {
+            x: area.x,
+            y: area.y + area.height.saturating_sub(1),
+            width: area.width,
+            height: 1,
+        };
+        frame.render_widget(scroll_indicator, indicator_area);
+    }
+}
+
+/// Formats a timestamp into a relative time string.
+///
+/// # Arguments
+///
+/// * `timestamp` - The timestamp string in "YYYY-MM-DD HH:MM:SS" format
+///
+/// # Returns
+///
+/// A human-readable relative time string like "2m ago", "1h ago", "Yesterday"
+fn format_relative_time(timestamp: &str) -> String {
+    // Parse the timestamp (format: "YYYY-MM-DD HH:MM:SS")
+    let parsed = chrono::NaiveDateTime::parse_from_str(timestamp, "%Y-%m-%d %H:%M:%S");
+
+    match parsed {
+        Ok(dt) => {
+            let now = chrono::Local::now().naive_local();
+            let duration = now.signed_duration_since(dt);
+
+            if duration.num_seconds() < 60 {
+                "just now".to_string()
+            } else if duration.num_minutes() < 60 {
+                format!("{}m ago", duration.num_minutes())
+            } else if duration.num_hours() < 24 {
+                format!("{}h ago", duration.num_hours())
+            } else if duration.num_days() == 1 {
+                "Yesterday".to_string()
+            } else if duration.num_days() < 7 {
+                format!("{}d ago", duration.num_days())
+            } else {
+                // Show date for older entries
+                dt.format("%b %d").to_string()
+            }
+        }
+        Err(_) => timestamp.to_string(), // Fallback to raw timestamp
+    }
+}
+
+/// Renders the main input area with welcome message and text input.
+///
+/// # Arguments
+///
+/// * `frame` - The Ratatui frame to render into
+/// * `area` - The area to render within
+/// * `text_input` - The multi-line text input component
+/// * `is_focused` - Whether the input area is currently focused
+/// * `colors` - The color scheme to use
+fn draw_main_input_area(
+    frame: &mut Frame,
+    area: Rect,
+    text_input: &MultilineTextInput,
+    is_focused: bool,
+    colors: &TuiColors,
+) {
+    // Layout the main area
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(4), // Welcome message and instructions
+            Constraint::Length(1), // Spacing
+            Constraint::Min(8),    // Text input area
+            Constraint::Length(1), // Spacing
+            Constraint::Length(1), // Status bar with keybindings
+        ])
+        .split(area);
+
+    // Render welcome message and instructions
+    let welcome_lines = vec![
+        Line::from(Span::styled(
+            "Welcome to Ciphey",
+            colors.highlight.add_modifier(Modifier::BOLD),
+        )),
+        Line::from(""),
+        Line::from(Span::styled(
+            "Paste your ciphertext below and press Enter to decode",
+            colors.text,
+        )),
+        Line::from(Span::styled(
+            "(Use Ctrl+Enter to insert newlines for multi-line input)",
+            colors.muted,
+        )),
+    ];
+
+    let welcome_paragraph = Paragraph::new(welcome_lines).alignment(Alignment::Center);
+    frame.render_widget(welcome_paragraph, chunks[0]);
+
+    // Create the text input box with focus styling
+    let input_block = Block::default()
+        .title(" Ciphertext ")
+        .title_style(if is_focused {
+            colors.accent.add_modifier(Modifier::BOLD)
+        } else {
+            colors.label
+        })
+        .borders(Borders::ALL)
+        .border_type(if is_focused {
+            BorderType::Double
+        } else {
+            BorderType::Rounded
+        })
+        .border_style(if is_focused {
+            colors.accent
+        } else {
+            colors.border
+        })
+        .padding(Padding::horizontal(1));
+
+    let input_inner = input_block.inner(chunks[2]);
+    frame.render_widget(input_block, chunks[2]);
+
+    // Render the text input content with cursor
+    let (cursor_line, cursor_col) = text_input.cursor_pos();
+    let scroll_offset = text_input.scroll_offset();
+    let visible_lines = input_inner.height as usize;
+
+    let lines: Vec<Line> = text_input
+        .lines()
+        .iter()
+        .enumerate()
+        .skip(scroll_offset)
+        .take(visible_lines)
+        .map(|(line_idx, line_text)| {
+            let is_cursor_line = line_idx == cursor_line;
+
+            if is_cursor_line && line_idx >= scroll_offset && is_focused {
+                // Build line with cursor (only show cursor when focused)
+                let display_line_idx = line_idx - scroll_offset;
+                if display_line_idx < visible_lines {
+                    // Insert cursor character at the right position
+                    let chars: Vec<char> = line_text.chars().collect();
+                    let before: String = chars.iter().take(cursor_col).collect();
+                    let after: String = chars.iter().skip(cursor_col).collect();
+
+                    Line::from(vec![
+                        Span::styled(before, colors.text),
+                        Span::styled("█", colors.accent.add_modifier(Modifier::SLOW_BLINK)),
+                        Span::styled(after, colors.text),
+                    ])
+                } else {
+                    Line::from(Span::styled(line_text.clone(), colors.text))
+                }
+            } else {
+                Line::from(Span::styled(line_text.clone(), colors.text))
+            }
+        })
+        .collect();
+
+    // If input is empty, show placeholder
+    let display_lines = if text_input.is_empty() {
+        if is_focused {
+            vec![Line::from(vec![
+                Span::styled("█", colors.accent.add_modifier(Modifier::SLOW_BLINK)),
+                Span::styled(" Type or paste ciphertext here...", colors.muted),
+            ])]
+        } else {
+            vec![Line::from(Span::styled(
+                "Type or paste ciphertext here...",
+                colors.muted,
+            ))]
+        }
+    } else {
+        lines
+    };
+
+    let input_paragraph = Paragraph::new(display_lines).wrap(Wrap { trim: false });
+    frame.render_widget(input_paragraph, input_inner);
+
+    // Render status bar with keybindings
+    let keybindings = [
+        ("[Tab]", "Switch"),
+        ("[Enter]", "Decode"),
+        ("[Ctrl+S]", "Settings"),
+        ("[Esc]", "Quit"),
+    ];
+
+    let mut spans = Vec::new();
+    for (i, (key, desc)) in keybindings.iter().enumerate() {
+        if i > 0 {
+            spans.push(Span::styled("  ", colors.text));
+        }
+        spans.push(Span::styled(*key, colors.accent));
+        spans.push(Span::styled(format!(" {}", desc), colors.muted));
+    }
+
+    let status = Paragraph::new(Line::from(spans)).alignment(Alignment::Center);
+    frame.render_widget(status, chunks[4]);
 }
 
 /// Renders the status bar with keybinding hints.
@@ -533,6 +974,7 @@ fn draw_failure_screen(
 /// * `colors` - The color scheme to use
 fn draw_status_bar(frame: &mut Frame, area: Rect, colors: &TuiColors) {
     let keybindings = [
+        ("[b]", "Home"),
         ("[q]", "Quit"),
         ("[←/→]", "Navigate"),
         ("[y]", "Yank"),
@@ -868,6 +1310,41 @@ fn draw_list_editor_screen(
         selected_item,
         input_buffer,
         cursor_pos,
+        colors,
+    );
+}
+
+/// Renders the toggle list editor screen.
+///
+/// # Arguments
+///
+/// * `frame` - The Ratatui frame to render into
+/// * `area` - The area to render within
+/// * `field_label` - Name of the field being edited
+/// * `all_items` - All available items
+/// * `selected_items` - Currently selected/enabled items
+/// * `cursor_index` - Currently highlighted item
+/// * `scroll_offset` - Scroll offset for long lists
+/// * `colors` - The color scheme to use
+#[allow(clippy::too_many_arguments)]
+fn draw_toggle_list_editor_screen(
+    frame: &mut Frame,
+    area: Rect,
+    field_label: &str,
+    all_items: &[String],
+    selected_items: &[String],
+    cursor_index: usize,
+    scroll_offset: usize,
+    colors: &TuiColors,
+) {
+    render_toggle_list_editor(
+        area,
+        frame.buffer_mut(),
+        field_label,
+        all_items,
+        selected_items,
+        cursor_index,
+        scroll_offset,
         colors,
     );
 }

@@ -15,11 +15,13 @@ pub mod wordlist;
 
 // Re-export commonly used types
 pub use state::{
-    AppState, HumanConfirmationRequest, PreviousState, SettingsStateSnapshot, WordlistFileInfo,
-    WordlistManagerFocus,
+    AppState, HistoryEntry, HumanConfirmationRequest, PreviousState, SettingsStateSnapshot,
+    WordlistFileInfo, WordlistManagerFocus,
 };
 
 use crate::DecoderResult;
+
+use super::multiline_text_input::MultilineTextInput;
 
 /// Main application struct managing TUI state and user interactions.
 #[derive(Debug)]
@@ -57,6 +59,102 @@ impl App {
             should_quit: false,
             show_help: false,
             status_message: None,
+        }
+    }
+
+    /// Creates a new App instance in the Home state (homescreen for input).
+    ///
+    /// This is used when the user runs Ciphey without providing input text,
+    /// allowing them to paste ciphertext directly in the TUI.
+    ///
+    /// # Returns
+    ///
+    /// A new `App` instance initialized in the `Home` state.
+    pub fn new_home() -> Self {
+        // Load history from database
+        let history = match crate::storage::database::read_cache_history() {
+            Ok(rows) => rows.iter().map(HistoryEntry::from_cache_row).collect(),
+            Err(_) => Vec::new(),
+        };
+
+        Self {
+            state: AppState::Home {
+                text_input: MultilineTextInput::new(),
+                history,
+                selected_history: None,
+                history_scroll_offset: 0,
+            },
+            input_text: String::new(),
+            should_quit: false,
+            show_help: false,
+            status_message: None,
+        }
+    }
+
+    /// Refreshes the history list from the database.
+    ///
+    /// Call this after returning from a decode attempt to update the history panel.
+    pub fn refresh_history(&mut self) {
+        if let AppState::Home {
+            history,
+            selected_history,
+            history_scroll_offset,
+            ..
+        } = &mut self.state
+        {
+            *history = match crate::storage::database::read_cache_history() {
+                Ok(rows) => rows.iter().map(HistoryEntry::from_cache_row).collect(),
+                Err(_) => Vec::new(),
+            };
+            // Reset selection and scroll when refreshing
+            *selected_history = None;
+            *history_scroll_offset = 0;
+        }
+    }
+
+    /// Checks if the app is currently in the Home state.
+    ///
+    /// # Returns
+    ///
+    /// `true` if in Home state, `false` otherwise.
+    pub fn is_home(&self) -> bool {
+        matches!(self.state, AppState::Home { .. })
+    }
+
+    /// Gets the text from the Home state text input.
+    ///
+    /// # Returns
+    ///
+    /// The text entered by the user, or an empty string if not in Home state.
+    pub fn get_home_input(&self) -> String {
+        match &self.state {
+            AppState::Home { text_input, .. } => text_input.get_text(),
+            _ => String::new(),
+        }
+    }
+
+    /// Transitions from Home state to Loading state with the entered text.
+    ///
+    /// # Returns
+    ///
+    /// `Some(input_text)` if transition was successful, `None` if not in Home state
+    /// or input is empty.
+    pub fn submit_home_input(&mut self) -> Option<String> {
+        if let AppState::Home { text_input, .. } = &self.state {
+            let input = text_input.get_text();
+            if input.trim().is_empty() {
+                return None;
+            }
+
+            self.input_text = input.clone();
+            self.state = AppState::Loading {
+                start_time: Instant::now(),
+                current_quote: 0,
+                spinner_frame: 0,
+            };
+            Some(input)
+        } else {
+            None
         }
     }
 
@@ -199,5 +297,26 @@ impl App {
     /// Clears the current status message.
     pub fn clear_status(&mut self) {
         self.status_message = None;
+    }
+
+    /// Returns to the Home state from Results or Failure state.
+    ///
+    /// Clears the input text and refreshes history from the database.
+    /// This allows users to decode another message without restarting the app.
+    pub fn return_to_home(&mut self) {
+        // Load fresh history from database
+        let history = match crate::storage::database::read_cache_history() {
+            Ok(rows) => rows.iter().map(HistoryEntry::from_cache_row).collect(),
+            Err(_) => Vec::new(),
+        };
+
+        self.state = AppState::Home {
+            text_input: MultilineTextInput::new(),
+            history,
+            selected_history: None,
+            history_scroll_offset: 0,
+        };
+        self.input_text.clear();
+        self.clear_status();
     }
 }

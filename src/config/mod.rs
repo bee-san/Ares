@@ -78,6 +78,18 @@ pub struct Config {
     /// Higher values = more thorough but slower.
     /// Default: 5 (covers Base64, Base32, Hex, Binary, URL - the most common encodings)
     pub decoder_batch_size: usize,
+    /// List of decoders to run. Empty list means no decoders run.
+    /// Use `get_all_decoder_names()` from `crate::decoders` to get the full list.
+    /// Note: If not present in config file (None after deserialization), all decoders run.
+    /// This allows backwards compatibility with existing configs.
+    #[serde(default)]
+    pub decoders_to_run: Vec<String>,
+    /// List of checkers to run. Empty list means no checkers run.
+    /// Use `get_all_checker_names()` from `crate::checkers` to get the full list.
+    /// Note: If not present in config file (None after deserialization), all checkers run.
+    /// This allows backwards compatibility with existing configs.
+    #[serde(default)]
+    pub checkers_to_run: Vec<String>,
 }
 
 /// Cell for storing global Config
@@ -143,6 +155,8 @@ impl Clone for Config {
             model_path: self.model_path.clone(),
             depth_penalty: self.depth_penalty,
             decoder_batch_size: self.decoder_batch_size,
+            decoders_to_run: self.decoders_to_run.clone(),
+            checkers_to_run: self.checkers_to_run.clone(),
         }
     }
 }
@@ -169,6 +183,9 @@ impl Default for Config {
             colourscheme: HashMap::new(),
             depth_penalty: 0.5,
             decoder_batch_size: 5,
+            // Default to all decoders and checkers enabled (empty means all)
+            decoders_to_run: vec![],
+            checkers_to_run: vec![],
         };
 
         // Set default colors
@@ -271,6 +288,8 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "colourscheme",
             "depth_penalty",
             "decoder_batch_size",
+            "decoders_to_run",
+            "checkers_to_run",
         ];
         for key in table.keys() {
             if !known_keys.contains(&key.as_str()) {

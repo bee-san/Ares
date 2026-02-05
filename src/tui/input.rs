@@ -21,10 +21,22 @@ pub enum Action {
     /// Rerun Ciphey with the given text as the new input.
     /// This is used when the user wants to continue decoding from a selected step.
     RerunFromSelected(String),
+    /// Submit text from the Home screen to start decoding.
+    SubmitHomeInput(String),
     /// Open settings panel.
     OpenSettings,
     /// Save settings and return to previous state.
     SaveSettings,
+    /// Show results from a successful history entry.
+    /// Contains (encoded_text, decoded_text, path as JSON strings).
+    ShowHistoryResult {
+        /// The original encoded text.
+        encoded_text: String,
+        /// The decoded plaintext.
+        decoded_text: String,
+        /// The decoder path as JSON strings.
+        path: Vec<String>,
+    },
     /// No action required.
     None,
 }
@@ -34,6 +46,7 @@ pub enum Action {
 /// This function processes key events based on the current `AppState`:
 ///
 /// - **All states**: `?` toggles help overlay, `Ctrl+C` quits
+/// - **Home**: Text input for ciphertext, `Enter` submits, `Ctrl+Enter` inserts newline, `Ctrl+S` opens settings
 /// - **Loading**: `q` or `Esc` quits, `Ctrl+S` opens settings
 /// - **HumanConfirmation**: `Y`/`y`/`Enter` accepts, `N`/`n`/`Escape` rejects (`q` does NOT quit)
 /// - **Results**: Navigation with arrow keys/vim bindings, `c` copies selected step, `Enter` reruns from selected, `q`/`Esc` quits
@@ -63,19 +76,23 @@ pub enum Action {
 /// ```
 pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
     // Check if we're in a state that has its own key handling
+    let in_home = matches!(app.state, AppState::Home { .. });
     let in_confirmation = matches!(app.state, AppState::HumanConfirmation { .. });
     let in_settings = app.is_in_settings();
 
-    // Handle Ctrl+C to quit in all states (except settings editing mode)
+    // Handle Ctrl+C to quit in all states (except settings editing mode and home input)
     if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
-        if !in_settings {
+        if !in_settings && !in_home {
             app.should_quit = true;
             return Action::None;
         }
     }
 
-    // Handle settings-specific states first (they have their own key handling)
+    // Handle special states first (they have their own key handling)
     match &app.state {
+        AppState::Home { .. } => {
+            return handle_home_keys(app, key);
+        }
         AppState::Settings { editing_mode, .. } => {
             return handle_settings_keys(app, key, *editing_mode);
         }
@@ -91,14 +108,17 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
         AppState::SaveConfirmation { .. } => {
             return handle_save_confirmation_keys(app, key);
         }
+        AppState::ToggleListEditor { .. } => {
+            return handle_toggle_list_editor_keys(app, key);
+        }
         _ => {}
     }
 
     // Handle global key bindings for non-settings states
     match key.code {
         KeyCode::Char('q') => {
-            // q should NOT quit during confirmation - user must make a choice
-            if !in_confirmation {
+            // q should NOT quit during confirmation or home (where it's text input)
+            if !in_confirmation && !in_home {
                 app.should_quit = true;
                 return Action::None;
             }
@@ -113,14 +133,14 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
             return Action::None;
         }
         KeyCode::Char('?') => {
-            if !in_confirmation {
+            if !in_confirmation && !in_home {
                 app.show_help = !app.show_help;
             }
             return Action::None;
         }
-        // Ctrl+S opens settings (except during confirmation)
+        // Ctrl+S opens settings (except during confirmation and home - home handles it separately)
         KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-            if !in_confirmation {
+            if !in_confirmation && !in_home {
                 return Action::OpenSettings;
             }
         }
@@ -164,8 +184,14 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
             handle_results_keys(app, key, selected_step_text, path_len)
         }
         AppState::Failure { .. } => {
-            // Only quit, help, and settings work in failure state
-            Action::None
+            // b/Backspace returns to home, otherwise nothing else works
+            match key.code {
+                KeyCode::Char('b') | KeyCode::Backspace => {
+                    app.return_to_home();
+                    Action::None
+                }
+                _ => Action::None,
+            }
         }
         // Settings states are handled above
         _ => Action::None,
@@ -191,6 +217,11 @@ fn handle_results_keys(
     path_len: usize,
 ) -> Action {
     match key.code {
+        // Return to home screen
+        KeyCode::Char('b') => {
+            app.return_to_home();
+            Action::None
+        }
         // Navigation: previous step
         KeyCode::Left | KeyCode::Char('h') => {
             app.prev_step();
@@ -234,6 +265,233 @@ fn handle_results_keys(
             Action::None
         }
         _ => Action::None,
+    }
+}
+
+/// Handles key events in the Home state.
+///
+/// The Home state allows users to input ciphertext:
+/// - Regular characters are inserted at the cursor position
+/// - Enter submits the text for decoding (or selects history entry)
+/// - Ctrl+Enter inserts a newline
+/// - Arrow keys move the cursor (or navigate history when history is focused)
+/// - Backspace/Delete remove characters
+/// - Ctrl+S opens settings
+/// - Tab cycles between history panel and input
+/// - Esc/q quits (or deselects history)
+fn handle_home_keys(app: &mut App, key: KeyEvent) -> Action {
+    if let AppState::Home {
+        text_input,
+        history,
+        selected_history,
+        history_scroll_offset,
+    } = &mut app.state
+    {
+        // Check if history is focused (selected_history is Some)
+        let history_focused = selected_history.is_some();
+
+        match key.code {
+            // Escape: deselect history if focused, otherwise quit
+            KeyCode::Esc => {
+                if history_focused {
+                    *selected_history = None;
+                    Action::None
+                } else {
+                    app.should_quit = true;
+                    Action::None
+                }
+            }
+            // Tab: cycle between input and history
+            KeyCode::Tab => {
+                if history.is_empty() {
+                    // No history, stay on input
+                    Action::None
+                } else if history_focused {
+                    // Switch to input
+                    *selected_history = None;
+                    Action::None
+                } else {
+                    // Switch to history
+                    *selected_history = Some(0);
+                    *history_scroll_offset = 0;
+                    Action::None
+                }
+            }
+            // Enter: submit text or select history entry
+            KeyCode::Enter => {
+                if key.modifiers.contains(KeyModifiers::CONTROL) {
+                    // Ctrl+Enter inserts newline (only when input focused)
+                    if !history_focused {
+                        text_input.insert_newline();
+                    }
+                    Action::None
+                } else if history_focused {
+                    // Select history entry
+                    if let Some(idx) = *selected_history {
+                        if let Some(entry) = history.get(idx) {
+                            if entry.successful {
+                                // Successful entry: show results
+                                return Action::ShowHistoryResult {
+                                    encoded_text: entry.encoded_text_full.clone(),
+                                    decoded_text: entry.decoded_text.clone(),
+                                    path: entry.path.clone(),
+                                };
+                            } else {
+                                // Failed entry: populate input and focus it
+                                text_input.clear();
+                                for c in entry.encoded_text_full.chars() {
+                                    text_input.insert_char(c);
+                                }
+                                *selected_history = None;
+                                return Action::None;
+                            }
+                        }
+                    }
+                    Action::None
+                } else {
+                    // Regular Enter submits
+                    let text = text_input.get_text();
+                    if text.trim().is_empty() {
+                        // Show error if empty
+                        app.set_status("Please enter some ciphertext first.".to_string());
+                        Action::None
+                    } else {
+                        Action::SubmitHomeInput(text)
+                    }
+                }
+            }
+            // Ctrl+S opens settings
+            KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                Action::OpenSettings
+            }
+            // Navigation
+            KeyCode::Left => {
+                if history_focused {
+                    // When in history, Left does nothing (or could switch to input)
+                    Action::None
+                } else if text_input.is_cursor_at_start() && !history.is_empty() {
+                    // At start of input with history available, switch to history
+                    *selected_history = Some(0);
+                    *history_scroll_offset = 0;
+                    Action::None
+                } else {
+                    text_input.move_cursor_left();
+                    Action::None
+                }
+            }
+            KeyCode::Right => {
+                if history_focused {
+                    // When in history, Right switches to input
+                    *selected_history = None;
+                    Action::None
+                } else {
+                    text_input.move_cursor_right();
+                    Action::None
+                }
+            }
+            KeyCode::Up => {
+                if history_focused {
+                    // Navigate history up
+                    if let Some(idx) = selected_history {
+                        if *idx > 0 {
+                            *idx -= 1;
+                            // Adjust scroll if needed
+                            if *idx < *history_scroll_offset {
+                                *history_scroll_offset = *idx;
+                            }
+                        }
+                    }
+                } else {
+                    text_input.move_cursor_up();
+                }
+                Action::None
+            }
+            KeyCode::Down => {
+                if history_focused {
+                    // Navigate history down
+                    if let Some(idx) = selected_history {
+                        if *idx < history.len().saturating_sub(1) {
+                            *idx += 1;
+                            // Note: scroll adjustment happens in render
+                        }
+                    }
+                } else {
+                    text_input.move_cursor_down();
+                }
+                Action::None
+            }
+            // Vim-style navigation for history
+            KeyCode::Char('j') if history_focused => {
+                if let Some(idx) = selected_history {
+                    if *idx < history.len().saturating_sub(1) {
+                        *idx += 1;
+                    }
+                }
+                Action::None
+            }
+            KeyCode::Char('k') if history_focused => {
+                if let Some(idx) = selected_history {
+                    if *idx > 0 {
+                        *idx -= 1;
+                        if *idx < *history_scroll_offset {
+                            *history_scroll_offset = *idx;
+                        }
+                    }
+                }
+                Action::None
+            }
+            KeyCode::Home => {
+                if history_focused {
+                    *selected_history = Some(0);
+                    *history_scroll_offset = 0;
+                } else if key.modifiers.contains(KeyModifiers::CONTROL) {
+                    text_input.move_cursor_to_start();
+                } else {
+                    text_input.move_cursor_home();
+                }
+                Action::None
+            }
+            KeyCode::End => {
+                if history_focused {
+                    if !history.is_empty() {
+                        *selected_history = Some(history.len() - 1);
+                    }
+                } else if key.modifiers.contains(KeyModifiers::CONTROL) {
+                    text_input.move_cursor_to_end();
+                } else {
+                    text_input.move_cursor_end();
+                }
+                Action::None
+            }
+            // Deletion (only when input focused)
+            KeyCode::Backspace => {
+                if !history_focused {
+                    text_input.backspace();
+                }
+                Action::None
+            }
+            KeyCode::Delete => {
+                if !history_focused {
+                    text_input.delete();
+                }
+                Action::None
+            }
+            // Character input (only when input focused)
+            KeyCode::Char(c) => {
+                if !history_focused {
+                    // Don't insert if Ctrl is held (except for Ctrl+Enter handled above)
+                    if !key.modifiers.contains(KeyModifiers::CONTROL)
+                        && !key.modifiers.contains(KeyModifiers::ALT)
+                    {
+                        text_input.insert_char(c);
+                    }
+                }
+                Action::None
+            }
+            _ => Action::None,
+        }
+    } else {
+        Action::None
     }
 }
 
@@ -367,6 +625,9 @@ fn handle_wordlist_manager_keys(
     key: KeyEvent,
     focus: WordlistManagerFocus,
 ) -> Action {
+    use crate::storage::bloom::{build_bloom_filter_from_db, save_bloom_filter};
+    use crate::storage::database::{delete_wordlist_file, import_wordlist_from_file};
+
     match focus {
         WordlistManagerFocus::Table => {
             match key.code {
@@ -431,18 +692,27 @@ fn handle_wordlist_manager_keys(
                     Action::None
                 }
                 KeyCode::Delete => {
-                    // Remove selected wordlist
-                    // TODO: Actually remove from database
+                    // Remove selected wordlist from database
                     if let AppState::WordlistManager {
                         selected_row,
                         wordlist_files,
                         ..
                     } = &mut app.state
                     {
-                        if *selected_row < wordlist_files.len() {
-                            wordlist_files.remove(*selected_row);
-                            if *selected_row >= wordlist_files.len() && !wordlist_files.is_empty() {
-                                *selected_row = wordlist_files.len() - 1;
+                        if let Some(wl) = wordlist_files.get(*selected_row) {
+                            let file_id = wl.id;
+                            // Delete from database (CASCADE deletes associated words)
+                            if delete_wordlist_file(file_id).is_ok() {
+                                wordlist_files.remove(*selected_row);
+                                if *selected_row >= wordlist_files.len()
+                                    && !wordlist_files.is_empty()
+                                {
+                                    *selected_row = wordlist_files.len() - 1;
+                                }
+                                // Rebuild bloom filter after deletion
+                                if let Ok(bloom) = build_bloom_filter_from_db() {
+                                    let _ = save_bloom_filter(&bloom);
+                                }
                             }
                         }
                     }
@@ -469,26 +739,42 @@ fn handle_wordlist_manager_keys(
                     Action::None
                 }
                 KeyCode::Enter => {
-                    // Add the wordlist file
-                    // TODO: Actually import the file
-                    let status_msg = if let AppState::WordlistManager {
-                        text_input, focus, ..
+                    // Import the wordlist file
+                    if let AppState::WordlistManager {
+                        text_input,
+                        focus,
+                        wordlist_files,
+                        ..
                     } = &mut app.state
                     {
-                        let msg = if !text_input.is_empty() {
-                            // TODO: Import wordlist file here
-                            Some(format!("Would import: {}", text_input.get_text()))
-                        } else {
-                            None
-                        };
+                        let path = text_input.get_text().to_string();
+                        if !path.is_empty() {
+                            // Import wordlist file from path
+                            match import_wordlist_from_file(&path, "user_import", |_, _| {}) {
+                                Ok(file_row) => {
+                                    // Add to display list
+                                    wordlist_files.push(super::app::state::WordlistFileInfo {
+                                        id: file_row.id,
+                                        filename: file_row.filename,
+                                        file_path: file_row.file_path,
+                                        source: file_row.source,
+                                        word_count: file_row.word_count,
+                                        enabled: file_row.enabled,
+                                        added_date: file_row.added_date,
+                                    });
+                                    // Rebuild bloom filter after import
+                                    if let Ok(bloom) = build_bloom_filter_from_db() {
+                                        let _ = save_bloom_filter(&bloom);
+                                    }
+                                }
+                                Err(_e) => {
+                                    // Import failed - could set a status message here
+                                    // but the App doesn't have a status field currently
+                                }
+                            }
+                        }
                         text_input.clear();
                         *focus = WordlistManagerFocus::Table;
-                        msg
-                    } else {
-                        None
-                    };
-                    if let Some(msg) = status_msg {
-                        app.set_status(msg);
                     }
                     Action::None
                 }
@@ -612,6 +898,42 @@ fn handle_theme_picker_keys(app: &mut App, key: KeyEvent) -> Action {
         }
     } else {
         Action::None
+    }
+}
+
+/// Handles key events in the ToggleListEditor state.
+fn handle_toggle_list_editor_keys(app: &mut App, key: KeyEvent) -> Action {
+    match key.code {
+        // Escape or Enter closes and saves
+        KeyCode::Esc | KeyCode::Enter => {
+            app.close_toggle_list_editor();
+            Action::None
+        }
+        // Navigation
+        KeyCode::Up | KeyCode::Char('k') => {
+            app.toggle_list_cursor_up();
+            Action::None
+        }
+        KeyCode::Down | KeyCode::Char('j') => {
+            app.toggle_list_cursor_down();
+            Action::None
+        }
+        // Space toggles the current item
+        KeyCode::Char(' ') => {
+            app.toggle_list_toggle_item();
+            Action::None
+        }
+        // 'a' selects all
+        KeyCode::Char('a') | KeyCode::Char('A') => {
+            app.toggle_list_select_all();
+            Action::None
+        }
+        // 'n' selects none (clears all)
+        KeyCode::Char('n') | KeyCode::Char('N') => {
+            app.toggle_list_select_none();
+            Action::None
+        }
+        _ => Action::None,
     }
 }
 

@@ -329,12 +329,18 @@ impl Default for WordlistManagerWidget {
     }
 }
 
-/// Truncates a string to the specified maximum length.
+/// Truncates a string to the specified maximum length (UTF-8 safe).
 fn truncate_string(s: &str, max_len: usize) -> String {
-    if s.len() <= max_len {
+    let char_count = s.chars().count();
+    if char_count <= max_len {
         s.to_string()
     } else {
-        format!("{}...", &s[..max_len.saturating_sub(3)])
+        format!(
+            "{}...",
+            s.chars()
+                .take(max_len.saturating_sub(3))
+                .collect::<String>()
+        )
     }
 }
 
@@ -401,6 +407,27 @@ mod tests {
     #[test]
     fn test_truncate_string_long() {
         assert_eq!(truncate_string("hello world", 8), "hello...");
+    }
+
+    #[test]
+    fn test_truncate_string_utf8_safe() {
+        // Test with multi-byte UTF-8 characters (CJK characters are 3 bytes each)
+        let cjk_text = "你好世界测试"; // 6 CJK characters
+        let result = truncate_string(cjk_text, 5);
+        // Should truncate to 2 chars + "..." = "你好..."
+        assert_eq!(result, "你好...");
+
+        // Test with emoji (4 bytes each)
+        let emoji_text = "😀😁😂🤣😃";
+        let result = truncate_string(emoji_text, 4);
+        // Should truncate to 1 char + "..." = "😀..."
+        assert_eq!(result, "😀...");
+    }
+
+    #[test]
+    fn test_truncate_string_exact_length() {
+        assert_eq!(truncate_string("hello", 5), "hello");
+        assert_eq!(truncate_string("hello", 6), "hello");
     }
 
     #[test]
