@@ -797,7 +797,7 @@ pub fn count_sub_branches(cache_id: i64) -> Result<i64, rusqlite::Error> {
 
 /// Adds a new cache record to the cache table
 ///
-/// Returns the number of successfully inserted rows on success
+/// Returns the row ID of the inserted cache entry on success.
 ///
 /// # Errors
 ///
@@ -806,7 +806,7 @@ pub fn count_sub_branches(cache_id: i64) -> Result<i64, rusqlite::Error> {
 /// # Panics
 ///
 /// Panics if the decoding path could not be serialized
-pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> {
+pub fn insert_cache(cache_entry: &CacheEntry) -> Result<i64, rusqlite::Error> {
     let path: Vec<String> = cache_entry
         .path
         .iter()
@@ -822,7 +822,7 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
     let path_json = serde_json::to_string(&path).unwrap();
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
-    let conn_result = transaction.execute(
+    transaction.execute(
         "INSERT INTO cache (
             encoded_text,
             decoded_text,
@@ -847,9 +847,10 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<usize, rusqlite::Error> 
             cache_entry.key_used.clone(),
             get_timestamp(),
         ),
-    );
+    )?;
+    let row_id = transaction.last_insert_rowid();
     transaction.commit()?;
-    conn_result
+    Ok(row_id)
 }
 
 /// Searches the database for a cache table row that matches the given encoded

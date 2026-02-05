@@ -261,6 +261,179 @@ pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {
     result
 }
 
+/// Enhanced version of `perform_cracking()` that also returns the cache_id.
+///
+/// This function performs the same decoding as `perform_cracking()`, but returns
+/// a `CrackingResult` which includes both the `DecoderResult` and the database cache_id.
+/// The cache_id is required for TUI branching support, where users can explore
+/// alternative decoding paths from any step.
+///
+/// # Arguments
+///
+/// * `text` - The text to decode
+/// * `config` - The Ciphey configuration
+///
+/// # Returns
+///
+/// A `CrackingResult` containing:
+/// - `result`: `Some(DecoderResult)` on success, `None` on failure
+/// - `cache_id`: `Some(i64)` if the result was cached, `None` otherwise
+///
+/// # Examples
+///
+/// ```ignore
+/// use ciphey::{perform_cracking_with_cache_id, config::Config};
+///
+/// let config = Config::default();
+/// let result = perform_cracking_with_cache_id("SGVsbG8=", config);
+/// if let Some(decoder_result) = result.result {
+///     println!("Decoded: {}", decoder_result.text[0]);
+///     if let Some(cache_id) = result.cache_id {
+///         println!("Cached with ID: {}", cache_id);
+///     }
+/// }
+/// ```
+pub fn perform_cracking_with_cache_id(text: &str, config: Config) -> CrackingResult {
+    let start_time = SystemTime::now();
+
+    // If top_results is enabled, ensure human_checker_on is disabled
+    let mut modified_config = config;
+    if modified_config.top_results {
+        modified_config.human_checker_on = false;
+        storage::wait_athena_storage::clear_plaintext_results();
+    }
+
+    config::set_global_config(modified_config);
+    let text = text.to_string();
+
+    /* Initializing database */
+    let db_result = storage::database::setup_database();
+    if let Err(e) = db_result {
+        cli_pretty_printing::warning(&format!(
+            "DEBUG: lib.rs - SQLite database failed to initialize. Encountered error: {}",
+            e
+        ));
+    }
+
+    /*  Checks to see if the encoded text already exists in the cache
+     *  returns cached result if so
+     */
+    let cache_result = storage::database::read_cache(&text);
+    match cache_result {
+        Ok(Some(row)) => {
+            log::debug!("Cache hit for text: {}", text);
+            cli_pretty_printing::success(&format!(
+                "DEBUG: lib.rs - Cache hit for text: {}",
+                text
+            ));
+            let path_result: Result<Vec<CrackResult>, serde_json::Error> = row
+                .path
+                .iter()
+                .map(|crack_json| serde_json::from_str(crack_json))
+                .collect();
+            if let Ok(path) = path_result {
+                let decoder_result = DecoderResult {
+                    text: vec![row.decoded_text],
+                    path,
+                };
+                return CrackingResult::success(decoder_result, row.id);
+            }
+        }
+        Ok(None) => {
+            cli_pretty_printing::success(&format!(
+                "DEBUG: lib.rs - Did not find text \"{}\" in cache",
+                text
+            ));
+        }
+        Err(e) => {
+            cli_pretty_printing::warning(&format!(
+                "DEBUG: lib.rs - Error trying to read from cache: {}",
+                e
+            ));
+        }
+    }
+
+    let initial_check_for_plaintext = check_if_input_text_is_plaintext(&text);
+    if initial_check_for_plaintext.is_identified {
+        debug!(
+            "The input text provided to the program {} is the plaintext. Returning early.",
+            text
+        );
+        cli_pretty_printing::return_early_because_input_text_is_plaintext();
+
+        let mut crack_result = CrackResult::new(&Decoder::default(), text.to_string());
+        crack_result.checker_name = initial_check_for_plaintext.checker_name;
+
+        let output = DecoderResult {
+            text: vec![text.clone()],
+            path: vec![crack_result],
+        };
+
+        let cache_id = match success_result_to_cache(&text, start_time, &output) {
+            Ok(id) => Some(id),
+            Err(e) => {
+                cli_pretty_printing::warning(&format!(
+                    "DEBUG: lib.rs - Error inserting decoder result into cache table: {}",
+                    e
+                ));
+                None
+            }
+        };
+
+        return CrackingResult {
+            result: Some(output),
+            cache_id,
+        };
+    }
+
+    cli_pretty_printing::success(&format!(
+        "DEBUG: lib.rs - Calling search_for_plaintext with text: {}",
+        text
+    ));
+    let result = searchers::search_for_plaintext(text.clone());
+    cli_pretty_printing::success(&format!(
+        "DEBUG: lib.rs - Result from search_for_plaintext: {:?}",
+        result.is_some()
+    ));
+    if let Some(ref res) = result {
+        cli_pretty_printing::success(&format!(
+            "DEBUG: lib.rs - Result has {} decoders in path",
+            res.path.len()
+        ));
+    }
+
+    if let Some(output) = result {
+        let cache_id = match success_result_to_cache(&text, start_time, &output) {
+            Ok(id) => Some(id),
+            Err(e) => {
+                cli_pretty_printing::warning(&format!(
+                    "DEBUG: lib.rs - Error inserting decoder result into cache table: {}",
+                    e
+                ));
+                None
+            }
+        };
+
+        CrackingResult {
+            result: Some(output),
+            cache_id,
+        }
+    } else {
+        let cache_id = match failure_result_to_cache(&text, start_time) {
+            Ok(id) => Some(id),
+            Err(e) => {
+                cli_pretty_printing::warning(&format!(
+                    "DEBUG: lib.rs - Error inserting failed attempt into cache table: {}",
+                    e
+                ));
+                None
+            }
+        };
+
+        CrackingResult::failure(cache_id)
+    }
+}
+
 /// Checks if the given input is plaintext or not
 /// Used at the start of the program to not waste CPU cycles
 fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
@@ -276,11 +449,12 @@ fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
 }
 
 /// Stores a successful DecoderResult into the cache table
+/// Returns the cache_id of the inserted row on success.
 fn success_result_to_cache(
     text: &String,
     start_time: SystemTime,
     result: &DecoderResult,
-) -> Result<usize, rusqlite::Error> {
+) -> Result<i64, rusqlite::Error> {
     let stop_time = SystemTime::now();
     let execution_time_ms: i64 = match stop_time.duration_since(start_time) {
         Ok(duration) => duration.as_millis().try_into().unwrap_or(-2),
@@ -323,10 +497,11 @@ fn success_result_to_cache(
 }
 
 /// Stores a failed decoding attempt into the cache table
+/// Returns the cache_id of the inserted row on success.
 fn failure_result_to_cache(
     text: &String,
     start_time: SystemTime,
-) -> Result<usize, rusqlite::Error> {
+) -> Result<i64, rusqlite::Error> {
     let stop_time = SystemTime::now();
     let execution_time_ms: i64 = match stop_time.duration_since(start_time) {
         Ok(duration) => duration.as_millis().try_into().unwrap_or(-2),
@@ -460,6 +635,36 @@ pub struct DecoderResult {
     /// The CrackResult contains more than just each decoder, such as the keys used
     /// or the checkers used.
     pub path: Vec<CrackResult>,
+}
+
+/// Result from `perform_cracking()` including the cache_id for TUI branching support.
+///
+/// This struct wraps the DecoderResult along with the database cache_id,
+/// which is required for the TUI to create and navigate branches.
+#[derive(Debug, Clone)]
+pub struct CrackingResult {
+    /// The decoding result, if successful
+    pub result: Option<DecoderResult>,
+    /// The cache_id from the database, used for branching in the TUI
+    pub cache_id: Option<i64>,
+}
+
+impl CrackingResult {
+    /// Creates a new CrackingResult with a successful result and cache_id
+    pub fn success(result: DecoderResult, cache_id: i64) -> Self {
+        Self {
+            result: Some(result),
+            cache_id: Some(cache_id),
+        }
+    }
+
+    /// Creates a new CrackingResult for a failure with cache_id
+    pub fn failure(cache_id: Option<i64>) -> Self {
+        Self {
+            result: None,
+            cache_id,
+        }
+    }
 }
 
 /// Creates a default DecoderResult with Default as the text / path

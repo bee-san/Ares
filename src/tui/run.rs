@@ -19,7 +19,7 @@ use crate::checkers::checker_type::Check;
 use crate::config::Config;
 use crate::decoders::crack_results::CrackResult;
 use crate::storage::database::{get_cache_by_id, insert_branch, BranchType, CacheEntry};
-use crate::DecoderResult;
+use crate::{CrackingResult, DecoderResult};
 
 use super::app::App;
 use super::colors::TuiColors;
@@ -89,8 +89,8 @@ pub fn run_tui(input_text: Option<&str>, config: Config) -> TuiResult<()> {
     // Only spawn decode thread if we have input text
     // Otherwise, we're in homescreen mode and will spawn later
     let (result_receiver, confirmation_receiver) = if let Some(text) = input_text {
-        // Channel for receiving decode result
-        let (tx, rx) = mpsc::channel::<Option<DecoderResult>>();
+        // Channel for receiving decode result with cache_id
+        let (tx, rx) = mpsc::channel::<CrackingResult>();
 
         // Spawn background thread for decoding
         let input_for_thread = text.to_string();
@@ -99,8 +99,8 @@ pub fn run_tui(input_text: Option<&str>, config: Config) -> TuiResult<()> {
             // Set the global config for the worker thread
             crate::config::set_global_config(config_for_thread.clone());
 
-            // Perform the cracking
-            let result = crate::perform_cracking(&input_for_thread, config_for_thread);
+            // Perform the cracking with cache_id support for TUI branching
+            let result = crate::perform_cracking_with_cache_id(&input_for_thread, config_for_thread);
 
             // Send result back (ignore error if receiver dropped)
             let _ = tx.send(result);
@@ -144,7 +144,7 @@ fn run_event_loop(
     app: &mut App,
     colors: &TuiColors,
     config: &Config,
-    initial_result_receiver: Option<mpsc::Receiver<Option<DecoderResult>>>,
+    initial_result_receiver: Option<mpsc::Receiver<CrackingResult>>,
     initial_confirmation_receiver: Option<Receiver<TuiConfirmationRequest>>,
 ) -> TuiResult<()> {
     let tick_rate = Duration::from_millis(TICK_RATE_MS);
@@ -205,14 +205,14 @@ fn run_event_loop(
                             // Initialize confirmation channel for the decode thread
                             confirmation_receiver = reinit_tui_confirmation_channel();
 
-                            // Spawn decode thread
-                            let (tx, rx) = mpsc::channel::<Option<DecoderResult>>();
+                            // Spawn decode thread with cache_id support for branching
+                            let (tx, rx) = mpsc::channel::<CrackingResult>();
                             result_receiver = Some(rx);
 
                             let config_clone = config.clone();
                             thread::spawn(move || {
                                 crate::config::set_global_config(config_clone.clone());
-                                let result = crate::perform_cracking(&new_input, config_clone);
+                                let result = crate::perform_cracking_with_cache_id(&new_input, config_clone);
                                 let _ = tx.send(result);
                             });
 
@@ -242,14 +242,14 @@ fn run_event_loop(
                             // This creates a fresh channel so the new decode thread can communicate
                             confirmation_receiver = reinit_tui_confirmation_channel();
 
-                            // Create new channel and spawn new decode thread
-                            let (tx, rx) = mpsc::channel::<Option<DecoderResult>>();
+                            // Create new channel and spawn new decode thread with cache_id support
+                            let (tx, rx) = mpsc::channel::<CrackingResult>();
                             result_receiver = Some(rx);
 
                             let config_clone = config.clone();
                             thread::spawn(move || {
                                 crate::config::set_global_config(config_clone.clone());
-                                let result = crate::perform_cracking(&new_input, config_clone);
+                                let result = crate::perform_cracking_with_cache_id(&new_input, config_clone);
                                 let _ = tx.send(result);
                             });
 
@@ -475,14 +475,14 @@ fn run_event_loop(
                             // Reinitialize confirmation channel
                             confirmation_receiver = reinit_tui_confirmation_channel();
 
-                            // Spawn decode thread
-                            let (tx, rx) = mpsc::channel::<Option<DecoderResult>>();
+                            // Spawn decode thread with cache_id support for branching
+                            let (tx, rx) = mpsc::channel::<CrackingResult>();
                             result_receiver = Some(rx);
 
                             let config_clone = config.clone();
                             thread::spawn(move || {
                                 crate::config::set_global_config(config_clone.clone());
-                                let result = crate::perform_cracking(&text, config_clone);
+                                let result = crate::perform_cracking_with_cache_id(&text, config_clone);
                                 let _ = tx.send(result);
                             });
 
@@ -720,10 +720,15 @@ fn run_event_loop(
 
         // Check for decode result (non-blocking)
         if let Some(ref rx) = result_receiver {
-            if let Ok(result) = rx.try_recv() {
-                match result {
+            if let Ok(cracking_result) = rx.try_recv() {
+                match cracking_result.result {
                     Some(decoder_result) => {
-                        app.set_result(decoder_result);
+                        // Use set_result_with_cache_id if we have a cache_id for branching support
+                        if let Some(cache_id) = cracking_result.cache_id {
+                            app.set_result_with_cache_id(decoder_result, cache_id);
+                        } else {
+                            app.set_result(decoder_result);
+                        }
                     }
                     None => {
                         let elapsed = start_time.elapsed();

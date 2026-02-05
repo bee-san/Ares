@@ -246,54 +246,18 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
         } => {
             draw_branch_mode_prompt(frame, area, *selected_mode, colors);
         }
-        AppState::DecoderSearch {
-            text_input,
-            all_decoders: _,
-            filtered_decoders,
-            selected_index,
-            branch_context,
-        } => {
-            // First, render the underlying Results screen from the branch context
-            // Load the parent result from the database to show underneath
-            if let Some(parent_id) = branch_context.parent_cache_id {
-                if let Ok(Some(cache_row)) = crate::storage::database::get_cache_by_id(parent_id) {
-                    let crack_results: Vec<crate::decoders::crack_results::CrackResult> = cache_row
-                        .path
-                        .iter()
-                        .filter_map(|json_str| serde_json::from_str(json_str).ok())
-                        .collect();
+    }
 
-                    let result = crate::DecoderResult {
-                        text: vec![cache_row.decoded_text.clone()],
-                        path: crack_results,
-                    };
-
-                    // Draw the Results screen as background
-                    draw_results_screen(
-                        frame,
-                        area,
-                        &cache_row.encoded_text,
-                        &result,
-                        branch_context.branch_step,
-                        &BranchPath::new(),
-                        &[], // No branches shown
-                        None,
-                        0,
-                        colors,
-                    );
-                }
-            }
-
-            // Then overlay the decoder search modal
-            draw_decoder_search(
-                frame,
-                area,
-                text_input.get_text(),
-                filtered_decoders,
-                *selected_index,
-                colors,
-            );
-        }
+    // Render decoder search overlay if active (floats on top of Results screen)
+    if let Some(ref overlay) = app.decoder_search {
+        draw_decoder_search(
+            frame,
+            area,
+            overlay.text_input.get_text(),
+            &overlay.filtered_decoders,
+            overlay.selected_index,
+            colors,
+        );
     }
 
     // Render help overlay if visible
