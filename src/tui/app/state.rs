@@ -110,6 +110,22 @@ pub enum BranchMode {
     SingleLayer,
 }
 
+/// Context for showing appropriate help keybindings.
+///
+/// Different screens have different keybindings, so the help overlay
+/// adapts its content based on the current context.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum HelpContext {
+    /// Home screen keybindings.
+    Home,
+    /// Results screen keybindings.
+    Results,
+    /// Settings screen keybindings.
+    Settings,
+    /// Loading screen (minimal keybindings).
+    Loading,
+}
+
 /// Overlay for vim-style decoder search (floats over Results screen).
 ///
 /// This is implemented as an overlay rather than a state variant so that

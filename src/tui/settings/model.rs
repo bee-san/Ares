@@ -157,6 +157,16 @@ impl SettingsModel {
                             value: SettingValue::OptionalText(config.regex.clone()),
                             original_value: SettingValue::OptionalText(config.regex.clone()),
                         },
+                        SettingField {
+                            id: "status_message_timeout",
+                            label: "Status Timeout",
+                            description: "Seconds before status messages auto-clear (0 = never)",
+                            field_type: FieldType::Integer { min: 0, max: 300 },
+                            value: SettingValue::Int(config.status_message_timeout as i64),
+                            original_value: SettingValue::Int(
+                                config.status_message_timeout as i64,
+                            ),
+                        },
                     ],
                 },
                 // Section 2: Checkers
@@ -580,6 +590,11 @@ impl SettingsModel {
                     "checkers_to_run" => {
                         if let SettingValue::List(v) = &field.value {
                             config.checkers_to_run = v.clone();
+                        }
+                    }
+                    "status_message_timeout" => {
+                        if let SettingValue::Int(v) = &field.value {
+                            config.status_message_timeout = *v as u64;
                         }
                     }
                     _ => {}

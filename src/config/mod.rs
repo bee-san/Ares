@@ -90,6 +90,15 @@ pub struct Config {
     /// This allows backwards compatibility with existing configs.
     #[serde(default)]
     pub checkers_to_run: Vec<String>,
+    /// How long status messages display before auto-clearing (in seconds).
+    /// Default: 10 seconds. Set to 0 to never auto-clear.
+    #[serde(default = "default_status_message_timeout")]
+    pub status_message_timeout: u64,
+}
+
+/// Default status message timeout in seconds.
+fn default_status_message_timeout() -> u64 {
+    10
 }
 
 /// Cell for storing global Config
@@ -157,6 +166,7 @@ impl Clone for Config {
             decoder_batch_size: self.decoder_batch_size,
             decoders_to_run: self.decoders_to_run.clone(),
             checkers_to_run: self.checkers_to_run.clone(),
+            status_message_timeout: self.status_message_timeout,
         }
     }
 }
@@ -186,6 +196,7 @@ impl Default for Config {
             // Default to all decoders and checkers enabled (empty means all)
             decoders_to_run: vec![],
             checkers_to_run: vec![],
+            status_message_timeout: default_status_message_timeout(),
         };
 
         // Set default colors
@@ -290,6 +301,7 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "decoder_batch_size",
             "decoders_to_run",
             "checkers_to_run",
+            "status_message_timeout",
         ];
         for key in table.keys() {
             if !known_keys.contains(&key.as_str()) {

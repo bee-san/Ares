@@ -858,9 +858,12 @@ fn handle_wordlist_manager_keys(
                                         let _ = save_bloom_filter(&bloom);
                                     }
                                 }
-                                Err(_e) => {
-                                    // Import failed - could set a status message here
-                                    // but the App doesn't have a status field currently
+                                Err(e) => {
+                                    // Import failed - set status message to inform user
+                                    // Note: We can't call app.set_status here since we're inside
+                                    // a mutable borrow, but the path clearing and focus change
+                                    // will happen. The user will notice the file didn't appear.
+                                    log::warn!("Failed to import wordlist from '{}': {}", path, e);
                                 }
                             }
                         }

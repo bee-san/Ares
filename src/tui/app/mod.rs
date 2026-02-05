@@ -15,9 +15,9 @@ pub mod wordlist;
 
 // Re-export commonly used types
 pub use state::{
-    AppState, BranchContext, BranchMode, BranchPath, DecoderSearchOverlay, HistoryEntry,
-    HumanConfirmationRequest, PreviousState, SettingsStateSnapshot, WordlistFileInfo,
-    WordlistManagerFocus,
+    AppState, BranchContext, BranchMode, BranchPath, DecoderSearchOverlay, HelpContext,
+    HistoryEntry, HumanConfirmationRequest, PreviousState, SettingsStateSnapshot,
+    WordlistFileInfo, WordlistManagerFocus,
 };
 
 use crate::DecoderResult;
@@ -453,5 +453,25 @@ impl App {
     /// Checks if the decoder search overlay is active.
     pub fn is_decoder_search_active(&self) -> bool {
         self.decoder_search.is_some()
+    }
+
+    /// Gets the appropriate help context based on current state.
+    ///
+    /// This determines which set of keybindings should be shown in the help overlay.
+    pub fn help_context(&self) -> HelpContext {
+        match &self.state {
+            AppState::Home { .. } => HelpContext::Home,
+            AppState::Results { .. } => HelpContext::Results,
+            AppState::Settings { .. }
+            | AppState::ListEditor { .. }
+            | AppState::WordlistManager { .. }
+            | AppState::ThemePicker { .. }
+            | AppState::ToggleListEditor { .. }
+            | AppState::SaveConfirmation { .. } => HelpContext::Settings,
+            AppState::Loading { .. }
+            | AppState::HumanConfirmation { .. }
+            | AppState::Failure { .. }
+            | AppState::BranchModePrompt { .. } => HelpContext::Loading,
+        }
     }
 }

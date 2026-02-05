@@ -43,9 +43,9 @@ const DECORATED_TITLE: &str = " ══ Ciphey ══ ";
 /// This function is called on each frame to render the appropriate screen based
 /// on the current [`AppState`]. It handles:
 ///
-/// - [`AppState::Home`]: Homescreen with text input for pasting ciphertext
+/// - [`AppState::Home`]: Two-panel homescreen (30% history, 70% input)
 /// - [`AppState::Loading`]: Centered spinner with rotating quotes
-/// - [`AppState::Results`]: Three-column layout with input, path, and output
+/// - [`AppState::Results`]: Path viewer with step details (full-width layout)
 /// - [`AppState::Failure`]: Failure message with tips
 ///
 /// Additionally, it renders overlays such as the help popup and status messages.
@@ -216,8 +216,22 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
                 colors,
             );
         }
-        AppState::SaveConfirmation { .. } => {
-            // Render the settings screen in the background (dimmed)
+        AppState::SaveConfirmation { parent_settings } => {
+            // Render the settings screen in the background first
+            draw_settings_screen(
+                frame,
+                area,
+                &parent_settings.settings,
+                parent_settings.selected_section,
+                parent_settings.selected_field,
+                false, // not editing
+                "",    // empty input buffer
+                0,     // cursor at 0
+                parent_settings.scroll_offset,
+                &parent_settings.validation_errors,
+                parent_settings.settings.has_changes(),
+                colors,
+            );
             // Then render the confirmation modal on top
             draw_save_confirmation_modal(&area, &mut frame.buffer_mut(), colors);
         }
@@ -262,7 +276,7 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
 
     // Render help overlay if visible
     if app.show_help {
-        draw_help_overlay(frame, area, colors);
+        draw_help_overlay(frame, area, app.help_context(), colors);
     }
 
     // Render status message if present
@@ -1209,14 +1223,23 @@ fn draw_status_bar(frame: &mut Frame, area: Rect, colors: &TuiColors) {
 
 /// Renders the help overlay popup.
 ///
-/// Shows all available keybindings in a centered popup on top of the current screen.
+/// Shows context-aware keybindings in a centered popup on top of the current screen.
+/// The keybindings displayed depend on the current application state.
 ///
 /// # Arguments
 ///
 /// * `frame` - The Ratatui frame to render into
 /// * `area` - The full screen area
+/// * `context` - The help context determining which keybindings to show
 /// * `colors` - The color scheme to use
-fn draw_help_overlay(frame: &mut Frame, area: Rect, colors: &TuiColors) {
+fn draw_help_overlay(
+    frame: &mut Frame,
+    area: Rect,
+    context: super::app::HelpContext,
+    colors: &TuiColors,
+) {
+    use super::app::HelpContext;
+
     // Calculate popup size and position
     let popup_area = centered_rect(area, HELP_WIDTH_PERCENT, HELP_HEIGHT_PERCENT);
 
@@ -1233,29 +1256,63 @@ fn draw_help_overlay(frame: &mut Frame, area: Rect, colors: &TuiColors) {
     let inner_area = block.inner(popup_area);
     frame.render_widget(block, popup_area);
 
-    // Build help content - Results screen keybindings
-    let keybindings = vec![
-        ("Navigation", ""),
-        ("← / h", "Select previous step"),
-        ("→ / l", "Select next step"),
-        ("↑ / k", "Select previous branch"),
-        ("↓ / j", "Select next branch"),
-        ("gg", "Go to first step"),
-        ("G / End", "Go to last step"),
-        ("Home", "Go to first step"),
-        ("", ""),
-        ("Actions", ""),
-        ("y / c", "Yank (copy) output to clipboard"),
-        ("Enter", "Select branch or create new branch"),
-        ("Backspace", "Return to parent branch"),
-        ("/", "Search and run specific decoder"),
-        ("b", "Return to home screen"),
-        ("", ""),
-        ("General", ""),
-        ("Ctrl+S", "Open settings panel"),
-        ("?", "Toggle this help overlay"),
-        ("q / Esc", "Quit the application"),
-    ];
+    // Build keybindings based on context
+    let keybindings: Vec<(&str, &str)> = match context {
+        HelpContext::Home => vec![
+            ("Navigation", ""),
+            ("Tab", "Switch between history and input"),
+            ("↑ / k", "Navigate history up"),
+            ("↓ / j", "Navigate history down"),
+            ("← / →", "Move cursor / switch panels"),
+            ("", ""),
+            ("Actions", ""),
+            ("Enter", "Submit input / Select history entry"),
+            ("Ctrl+Enter", "Insert newline in input"),
+            ("Ctrl+S", "Open settings panel"),
+            ("Esc", "Quit / Deselect history"),
+        ],
+        HelpContext::Results => vec![
+            ("Navigation", ""),
+            ("← / h", "Select previous step"),
+            ("→ / l", "Select next step"),
+            ("↑ / k", "Select previous branch"),
+            ("↓ / j", "Select next branch"),
+            ("gg", "Go to first step"),
+            ("G / End", "Go to last step"),
+            ("Home", "Go to first step"),
+            ("", ""),
+            ("Actions", ""),
+            ("y / c", "Yank (copy) output to clipboard"),
+            ("Enter", "Select branch or create new branch"),
+            ("Backspace", "Return to parent branch"),
+            ("/", "Search and run specific decoder"),
+            ("b", "Return to home screen"),
+            ("", ""),
+            ("General", ""),
+            ("Ctrl+S", "Open settings panel"),
+            ("?", "Toggle this help overlay"),
+            ("q / Esc", "Quit the application"),
+        ],
+        HelpContext::Settings => vec![
+            ("Navigation", ""),
+            ("Tab / Shift+Tab", "Cycle through sections"),
+            ("↑ / k", "Previous field"),
+            ("↓ / j", "Next field"),
+            ("← / h", "Previous section"),
+            ("→ / l", "Next section"),
+            ("", ""),
+            ("Actions", ""),
+            ("Enter", "Edit selected field"),
+            ("Space", "Toggle boolean field"),
+            ("Ctrl+S", "Save settings and close"),
+            ("Esc", "Show save confirmation / Cancel edit"),
+        ],
+        HelpContext::Loading => vec![
+            ("General", ""),
+            ("Ctrl+S", "Open settings panel"),
+            ("q / Esc", "Quit the application"),
+        ],
+    };
 
     let mut lines = vec![
         Line::from(Span::styled(
@@ -1278,7 +1335,7 @@ fn draw_help_overlay(frame: &mut Frame, area: Rect, colors: &TuiColors) {
         } else {
             // Regular keybinding
             lines.push(Line::from(vec![
-                Span::styled(format!("{:12}", key), colors.accent),
+                Span::styled(format!("{:16}", key), colors.accent),
                 Span::styled(description, colors.text),
             ]));
         }

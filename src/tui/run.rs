@@ -697,9 +697,13 @@ fn run_event_loop(
                 app.tick(); // Extra tick to ensure quote rotation
             }
 
-            // Clear status message after a few seconds
-            if tick_count % 30 == 0 {
-                app.clear_status();
+            // Clear status message after configured timeout (0 = never auto-clear)
+            if config.status_message_timeout > 0 {
+                let status_clear_ticks =
+                    (config.status_message_timeout * 1000 / TICK_RATE_MS) as usize;
+                if status_clear_ticks > 0 && tick_count % status_clear_ticks == 0 {
+                    app.clear_status();
+                }
             }
 
             last_tick = Instant::now();
