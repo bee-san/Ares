@@ -136,7 +136,7 @@ impl SettingsPanel {
         _cursor_pos: usize,
         scroll_offset: usize,
         validation_errors: &std::collections::HashMap<String, String>,
-        has_changes: bool,
+        _has_changes: bool,
         colors: &TuiColors,
     ) {
         let section = match settings.sections.get(selected_section) {
@@ -369,7 +369,15 @@ mod tests {
     #[test]
     fn test_settings_panel_creation() {
         let panel = SettingsPanel::new();
-        assert!(std::mem::size_of_val(&panel) >= 0);
+        // Verify panel was created successfully by using it
+        let _ = panel.format_field_value(&SettingField {
+            id: "test",
+            label: "Test",
+            description: "Test field",
+            field_type: FieldType::Boolean,
+            value: SettingValue::Bool(true),
+            original_value: SettingValue::Bool(true),
+        });
     }
 
     #[test]

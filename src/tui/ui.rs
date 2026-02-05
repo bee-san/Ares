@@ -106,8 +106,7 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
             selected_section,
             selected_field,
             editing_mode,
-            input_buffer,
-            cursor_pos,
+            text_input,
             scroll_offset,
             validation_errors,
             ..
@@ -119,8 +118,8 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
                 *selected_section,
                 *selected_field,
                 *editing_mode,
-                input_buffer,
-                *cursor_pos,
+                text_input.get_text(),
+                text_input.cursor_pos(),
                 *scroll_offset,
                 validation_errors,
                 settings.has_changes(),
@@ -131,8 +130,7 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
             field_label,
             items,
             selected_item,
-            input_buffer,
-            cursor_pos,
+            text_input,
             ..
         } => {
             draw_list_editor_screen(
@@ -141,8 +139,8 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
                 field_label,
                 items,
                 *selected_item,
-                input_buffer,
-                *cursor_pos,
+                text_input.get_text(),
+                text_input.cursor_pos(),
                 colors,
             );
         }
@@ -150,7 +148,7 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
             wordlist_files,
             selected_row,
             focus,
-            new_path_input,
+            text_input,
             pending_changes,
             ..
         } => {
@@ -160,7 +158,7 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
                 wordlist_files,
                 *selected_row,
                 focus,
-                new_path_input,
+                text_input.get_text(),
                 !pending_changes.is_empty(),
                 colors,
             );
@@ -1011,7 +1009,7 @@ fn draw_theme_picker_screen(
 
     // Render theme picker widget
     let picker = ThemePicker::new();
-    let mut buf = frame.buffer_mut();
+    let buf = frame.buffer_mut();
     picker.render(
         inner,
         buf,

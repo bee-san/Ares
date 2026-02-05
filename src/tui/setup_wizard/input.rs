@@ -225,7 +225,7 @@ fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
             WordlistFocus::PredefinedList => {
                 // Navigating predefined wordlist checkboxes
                 let predefined_wordlists = crate::storage::download::get_predefined_wordlists();
-                let max_index = if predefined_wordlists.is_empty() {
+                let _max_index = if predefined_wordlists.is_empty() {
                     0
                 } else {
                     predefined_wordlists.len() - 1

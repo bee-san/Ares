@@ -32,8 +32,6 @@ pub struct RankedDecoder {
     pub name: String,
     /// Estimated cost for trying this decoder (lower = better)
     pub estimated_cost: f32,
-    /// Whether this decoder is an encoder (vs cipher)
-    pub is_encoder: bool,
 }
 
 /// Rank decoders by their estimated cost for a given input text and current path
@@ -67,30 +65,28 @@ pub fn rank_decoders(
             // 2. Repeated same-encoder bonus: if last decoder was same encoder, very cheap (0.2)
             // 3. Cipher penalty: escalating penalty for multiple ciphers in path
 
-            let mut estimated_path_cost = 0.0;
-
             // Count existing ciphers in path
             let existing_cipher_count = path.iter().filter(|p| !is_encoder(p.decoder)).count();
 
             // Get last decoder name for repeat-encoder bonus
             let last_decoder_name = path.last().map(|p| p.decoder);
 
-            if is_enc {
+            let estimated_path_cost = if is_enc {
                 // Encoder cost
                 if last_decoder_name == Some(name.as_str()) {
                     // Repeated same encoder - very cheap
-                    estimated_path_cost = 0.2;
+                    0.2
                 } else {
                     // Different encoder
-                    estimated_path_cost = 0.7;
+                    0.7
                 }
             } else {
                 // Cipher cost - escalating penalty
                 let cipher_position = existing_cipher_count + 1;
                 let popularity = get_decoder_popularity(name);
                 let popularity_multiplier = 2.0 - popularity; // Range: 1.0 to 2.0
-                estimated_path_cost = 2.0 * cipher_position as f32 * popularity_multiplier;
-            }
+                2.0 * cipher_position as f32 * popularity_multiplier
+            };
 
             // Add success rate modifier (historical learning)
             let success_rate = get_decoder_success_rate(name);
@@ -110,7 +106,6 @@ pub fn rank_decoders(
             RankedDecoder {
                 name: name.clone(),
                 estimated_cost,
-                is_encoder: is_enc,
             }
         })
         .collect();
@@ -315,44 +310,6 @@ pub fn get_decoder_success_rate(decoder: &str) -> f32 {
 
     // Default for unknown decoders
     0.5
-}
-
-/// Check if a decoder and cipher form a common sequence
-///
-/// # Arguments
-///
-/// * `prev_decoder` - The name of the previous decoder
-/// * `current_cipher` - The name of the current cipher
-///
-/// # Returns
-///
-/// * `true` if the sequence is common, `false` otherwise
-pub fn is_common_sequence(prev_decoder: &str, current_cipher: &str) -> bool {
-    // Define common sequences focusing on base decoders
-    match (prev_decoder, current_cipher) {
-        // Base64 commonly followed by other encodings
-        ("Base64Decoder", "Base32Decoder") => true,
-        ("Base64Decoder", "Base58Decoder") => true,
-        ("Base64Decoder", "Base85Decoder") => true,
-        ("Base64Decoder", "Base64Decoder") => true,
-
-        // Base32 sequences
-        ("Base32Decoder", "Base64Decoder") => true,
-        ("Base32Decoder", "Base85Decoder") => true,
-        ("Base32Decoder", "Base32Decoder") => true,
-
-        // Base58 sequences
-        ("Base58Decoder", "Base64Decoder") => true,
-        ("Base58Decoder", "Base32Decoder") => true,
-        ("Base58Decoder", "Base58Decoder") => true,
-
-        // Base85 sequences
-        ("Base85Decoder", "Base64Decoder") => true,
-        ("Base85Decoder", "Base32Decoder") => true,
-        ("Base85Decoder", "Base85Decoder") => true,
-        // No match found
-        _ => false,
-    }
 }
 
 /// Calculate the quality of a string for pruning

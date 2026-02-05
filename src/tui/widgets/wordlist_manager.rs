@@ -366,11 +366,31 @@ pub fn render_wordlist_manager(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Config;
+
+    /// Creates test colors for rendering tests
+    fn create_test_colors() -> TuiColors {
+        let config = Config::default();
+        TuiColors::from_config(&config)
+    }
+
+    /// Creates test wordlist file info
+    fn create_test_wordlist(id: i64, filename: &str, enabled: bool) -> WordlistFileInfo {
+        WordlistFileInfo {
+            id,
+            filename: filename.to_string(),
+            file_path: format!("/path/to/{}", filename),
+            source: "test".to_string(),
+            word_count: 1000,
+            enabled,
+            added_date: "2024-01-01".to_string(),
+        }
+    }
 
     #[test]
     fn test_wordlist_manager_creation() {
-        let widget = WordlistManagerWidget::new();
-        assert!(std::mem::size_of_val(&widget) >= 0);
+        let _widget = WordlistManagerWidget::new();
+        // Widget created successfully if we get here
     }
 
     #[test]
@@ -387,5 +407,361 @@ mod tests {
     fn test_wordlist_focus_equality() {
         assert_eq!(WordlistFocus::Table, WordlistFocus::Table);
         assert_ne!(WordlistFocus::Table, WordlistFocus::AddPath);
+    }
+
+    #[test]
+    fn test_render_empty_wordlist() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &[],
+            0,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render empty message
+        let content = buf.content();
+        let has_empty_msg = content.iter().any(|cell| cell.symbol() == "N");
+        assert!(has_empty_msg, "Should render empty list message");
+    }
+
+    #[test]
+    fn test_render_with_wordlists() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+        let wordlists = vec![
+            create_test_wordlist(1, "words.txt", true),
+            create_test_wordlist(2, "more_words.txt", false),
+        ];
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &wordlists,
+            0,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render wordlist filenames
+        let content = buf.content();
+        let has_words = content.iter().any(|cell| cell.symbol() == "w");
+        assert!(has_words, "Should render wordlist names");
+    }
+
+    #[test]
+    fn test_render_table_focus() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+        let wordlists = vec![create_test_wordlist(1, "words.txt", true)];
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &wordlists,
+            0,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render with table focused
+        let content = buf.content();
+        assert!(!content.is_empty(), "Should render table");
+    }
+
+    #[test]
+    fn test_render_add_path_focus() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &[],
+            0,
+            WordlistFocus::AddPath,
+            "/path/to/new.txt",
+            false,
+            &colors,
+        );
+
+        // Should render input path
+        let content = buf.content();
+        let has_path = content.iter().any(|cell| cell.symbol() == "/");
+        assert!(has_path, "Should render path input");
+    }
+
+    #[test]
+    fn test_render_done_focus() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &[],
+            0,
+            WordlistFocus::Done,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render Done button
+        let content = buf.content();
+        let has_done = content.iter().any(|cell| cell.symbol() == "D");
+        assert!(has_done, "Should render Done button");
+    }
+
+    #[test]
+    fn test_render_modified_title() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &[],
+            0,
+            WordlistFocus::Table,
+            "",
+            true,
+            &colors,
+        );
+
+        // Should show "modified" in title
+        let content = buf.content();
+        let has_modified = content.iter().any(|cell| cell.symbol() == "m");
+        assert!(has_modified, "Should show modified in title");
+    }
+
+    #[test]
+    fn test_render_enabled_checkbox() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+        let wordlists = vec![create_test_wordlist(1, "words.txt", true)];
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &wordlists,
+            0,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render enabled checkbox [x]
+        let content = buf.content();
+        let has_checkbox = content
+            .iter()
+            .any(|cell| cell.symbol() == "[" || cell.symbol() == "x");
+        assert!(has_checkbox, "Should render checkbox");
+    }
+
+    #[test]
+    fn test_render_disabled_checkbox() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+        let wordlists = vec![create_test_wordlist(1, "words.txt", false)];
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &wordlists,
+            0,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render disabled checkbox [ ]
+        let content = buf.content();
+        let has_checkbox = content
+            .iter()
+            .any(|cell| cell.symbol() == "[" || cell.symbol() == "]");
+        assert!(has_checkbox, "Should render empty checkbox");
+    }
+
+    #[test]
+    fn test_render_word_count() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+        let wordlists = vec![create_test_wordlist(1, "words.txt", true)];
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &wordlists,
+            0,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render word count
+        let content = buf.content();
+        let has_count = content
+            .iter()
+            .any(|cell| cell.symbol() == "1" || cell.symbol() == "0");
+        assert!(has_count, "Should render word count");
+    }
+
+    #[test]
+    fn test_render_table_headers() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+        let wordlists = vec![create_test_wordlist(1, "words.txt", true)];
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &wordlists,
+            0,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render "Filename" header
+        let content = buf.content();
+        let has_header = content.iter().any(|cell| cell.symbol() == "F");
+        assert!(has_header, "Should render table headers");
+    }
+
+    #[test]
+    fn test_render_input_placeholder() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &[],
+            0,
+            WordlistFocus::AddPath,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render placeholder text
+        let content = buf.content();
+        let has_placeholder = content.iter().any(|cell| cell.symbol() == "E");
+        assert!(has_placeholder, "Should render placeholder");
+    }
+
+    #[test]
+    fn test_render_wordlist_manager_function() {
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+        let wordlists = vec![create_test_wordlist(1, "test.txt", true)];
+
+        render_wordlist_manager(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &wordlists,
+            0,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render successfully
+        let content = buf.content();
+        assert!(!content.is_empty(), "Should render via wrapper function");
+    }
+
+    #[test]
+    fn test_render_selection_highlighting() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf1 = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let mut buf2 = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+        let wordlists = vec![
+            create_test_wordlist(1, "words1.txt", true),
+            create_test_wordlist(2, "words2.txt", true),
+        ];
+
+        // Render with first row selected
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf1,
+            &wordlists,
+            0,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Render with second row selected
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf2,
+            &wordlists,
+            1,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Buffers should differ due to selection
+        assert_ne!(
+            buf1.content(),
+            buf2.content(),
+            "Selection should affect rendering"
+        );
+    }
+
+    #[test]
+    fn test_truncate_long_filename() {
+        let widget = WordlistManagerWidget::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 100, 40));
+        let colors = create_test_colors();
+        let long_name = "a".repeat(100);
+        let wordlists = vec![create_test_wordlist(1, &long_name, true)];
+
+        widget.render(
+            Rect::new(0, 0, 100, 40),
+            &mut buf,
+            &wordlists,
+            0,
+            WordlistFocus::Table,
+            "",
+            false,
+            &colors,
+        );
+
+        // Should render without panicking (truncation should occur)
+        let content = buf.content();
+        assert!(!content.is_empty(), "Should render truncated filename");
     }
 }

@@ -332,8 +332,8 @@ fn handle_list_editor_keys(app: &mut App, key: KeyEvent) -> Action {
         }
         KeyCode::Backspace => {
             // Check if input buffer is empty - if so, delete selected item
-            if let AppState::ListEditor { input_buffer, .. } = &app.state {
-                if input_buffer.is_empty() {
+            if let AppState::ListEditor { text_input, .. } = &app.state {
+                if text_input.is_empty() {
                     app.list_editor_remove_item();
                 } else {
                     app.input_backspace();
@@ -456,14 +456,10 @@ fn handle_wordlist_manager_keys(
                 KeyCode::Esc => {
                     // Clear input and go back to table
                     if let AppState::WordlistManager {
-                        focus,
-                        new_path_input,
-                        cursor_pos,
-                        ..
+                        focus, text_input, ..
                     } = &mut app.state
                     {
-                        *new_path_input = String::new();
-                        *cursor_pos = 0;
+                        text_input.clear();
                         *focus = WordlistManagerFocus::Table;
                     }
                     Action::None
@@ -476,20 +472,16 @@ fn handle_wordlist_manager_keys(
                     // Add the wordlist file
                     // TODO: Actually import the file
                     let status_msg = if let AppState::WordlistManager {
-                        new_path_input,
-                        cursor_pos,
-                        focus,
-                        ..
+                        text_input, focus, ..
                     } = &mut app.state
                     {
-                        let msg = if !new_path_input.is_empty() {
+                        let msg = if !text_input.is_empty() {
                             // TODO: Import wordlist file here
-                            Some(format!("Would import: {}", new_path_input))
+                            Some(format!("Would import: {}", text_input.get_text()))
                         } else {
                             None
                         };
-                        *new_path_input = String::new();
-                        *cursor_pos = 0;
+                        text_input.clear();
                         *focus = WordlistManagerFocus::Table;
                         msg
                     } else {

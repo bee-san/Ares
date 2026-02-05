@@ -11,8 +11,6 @@ pub struct EnglishChecker;
 /// given an input, check every item in the array and return true if any of them match
 impl Check for Checker<EnglishChecker> {
     fn new() -> Self {
-        let config = get_config();
-
         Checker {
             name: "English Checker",
             description: "Uses gibberish detection to check if text is meaningful English",
@@ -47,7 +45,7 @@ impl Check for Checker<EnglishChecker> {
             text: text.to_string(),
             checker_name: self.name,
             checker_description: self.description,
-            description: "Words".to_string(),
+            description: String::new(),
             link: self.link,
         };
 

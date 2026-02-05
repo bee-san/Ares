@@ -158,7 +158,7 @@ fn run_setup_event_loop(
                     thread::spawn(move || {
                         let predefined = crate::storage::download::get_predefined_wordlists();
                         let mut current_index = 0;
-                        let total = selected_indices.len() + custom_path_list.len();
+                        let _total = selected_indices.len() + custom_path_list.len();
 
                         // Download predefined wordlists
                         for &idx in &selected_indices {

@@ -1,5 +1,4 @@
 use crate::cli_pretty_printing::decoded_how_many_times;
-use crate::filtration_system::MyResults;
 use crossbeam::channel::Sender;
 
 use super::helper_functions::check_if_string_cant_be_decoded;
@@ -37,12 +36,10 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
 
             // Get all results using the new all_results() method
             let all_results = res.all_results();
-            let mut found_success = false;
 
             for r in all_results {
-                if r.success && !found_success {
+                if r.success {
                     // First successful result - return it
-                    found_success = true;
                     let mut decoders_used = current_string.path.clone();
                     let text = r.unencrypted_text.clone().unwrap_or_default();
                     decoders_used.push(r);
@@ -69,7 +66,7 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
                     });
 
                     if !text.is_empty() {
-                        let mut r_clone = r;
+                        let r_clone = r;
                         decoders_used.push(r_clone);
                         new_strings.push(DecoderResult {
                             text,

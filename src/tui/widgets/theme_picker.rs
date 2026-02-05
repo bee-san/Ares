@@ -322,11 +322,18 @@ fn parse_rgb(s: &str) -> Option<(u8, u8, u8)> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Config;
+
+    /// Creates test colors for rendering tests
+    fn create_test_colors() -> TuiColors {
+        let config = Config::default();
+        TuiColors::from_config(&config)
+    }
 
     #[test]
     fn test_theme_picker_creation() {
-        let picker = ThemePicker::new();
-        assert!(std::mem::size_of_val(&picker) >= 0);
+        let _picker = ThemePicker::new();
+        // Picker created successfully if we get here
     }
 
     #[test]
@@ -370,5 +377,284 @@ mod tests {
         assert_eq!(parse_rgb("255,0"), None);
         assert_eq!(parse_rgb("invalid"), None);
         assert_eq!(parse_rgb("256,0,0"), None);
+    }
+
+    #[test]
+    fn test_custom_colors_field_mut() {
+        let mut colors = ThemePickerCustomColors::default();
+        *colors.get_field_mut(0) = "100,200,50".to_string();
+        assert_eq!(colors.informational, "100,200,50");
+    }
+
+    #[test]
+    fn test_custom_colors_all_field_names() {
+        assert_eq!(ThemePickerCustomColors::field_name(0), "Informational");
+        assert_eq!(ThemePickerCustomColors::field_name(1), "Warning");
+        assert_eq!(ThemePickerCustomColors::field_name(2), "Success");
+        assert_eq!(ThemePickerCustomColors::field_name(3), "Error");
+        assert_eq!(ThemePickerCustomColors::field_name(4), "Question");
+    }
+
+    #[test]
+    fn test_render_theme_list() {
+        let picker = ThemePicker::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let custom_colors = ThemePickerCustomColors::default();
+
+        picker.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            0,
+            false,
+            &custom_colors,
+            0,
+            &colors,
+        );
+
+        // Should render theme names
+        let content = buf.content();
+        let has_theme = content.iter().any(|cell| cell.symbol() != " ");
+        assert!(has_theme, "Should render theme list");
+    }
+
+    #[test]
+    fn test_render_custom_mode() {
+        let picker = ThemePicker::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let custom_colors = ThemePickerCustomColors::default();
+
+        picker.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            0,
+            true,
+            &custom_colors,
+            0,
+            &colors,
+        );
+
+        // Should render custom form
+        let content = buf.content();
+        let has_custom = content.iter().any(|cell| cell.symbol() == "R");
+        assert!(has_custom, "Should render custom mode");
+    }
+
+    #[test]
+    fn test_render_with_selection() {
+        let picker = ThemePicker::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let custom_colors = ThemePickerCustomColors::default();
+
+        picker.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            1,
+            false,
+            &custom_colors,
+            0,
+            &colors,
+        );
+
+        // Should render selection indicator
+        let content = buf.content();
+        let has_indicator = content.iter().any(|cell| cell.symbol() == ">");
+        assert!(has_indicator, "Should render selection indicator");
+    }
+
+    #[test]
+    fn test_render_preview_panel() {
+        let picker = ThemePicker::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let custom_colors = ThemePickerCustomColors::default();
+
+        picker.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            0,
+            false,
+            &custom_colors,
+            0,
+            &colors,
+        );
+
+        // Should render live preview panel
+        let content = buf.content();
+        let has_preview = content.iter().any(|cell| cell.symbol() == "L");
+        assert!(has_preview, "Should render preview panel");
+    }
+
+    #[test]
+    fn test_render_custom_field_selection() {
+        let picker = ThemePicker::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let custom_colors = ThemePickerCustomColors::default();
+
+        picker.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            0,
+            true,
+            &custom_colors,
+            1,
+            &colors,
+        );
+
+        // Should render with field 1 selected
+        let content = buf.content();
+        assert!(!content.is_empty(), "Should render custom field selection");
+    }
+
+    #[test]
+    fn test_render_custom_with_values() {
+        let picker = ThemePicker::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let mut custom_colors = ThemePickerCustomColors::default();
+        custom_colors.informational = "255,128,64".to_string();
+        custom_colors.warning = "200,100,50".to_string();
+
+        picker.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            0,
+            true,
+            &custom_colors,
+            0,
+            &colors,
+        );
+
+        // Should render custom color values
+        let content = buf.content();
+        let has_values = content.iter().any(|cell| cell.symbol() == "2");
+        assert!(has_values, "Should render custom color values");
+    }
+
+    #[test]
+    fn test_custom_colors_to_scheme_invalid() {
+        let mut colors = ThemePickerCustomColors::default();
+        colors.informational = "invalid".to_string();
+
+        let scheme = colors.to_scheme();
+        assert!(scheme.is_none(), "Should return None for invalid RGB");
+    }
+
+    #[test]
+    fn test_parse_rgb_with_spaces() {
+        assert_eq!(parse_rgb(" 255 , 128 , 64 "), Some((255, 128, 64)));
+    }
+
+    #[test]
+    fn test_parse_rgb_edge_cases() {
+        assert_eq!(parse_rgb("0,0,0"), Some((0, 0, 0)));
+        assert_eq!(parse_rgb("255,255,255"), Some((255, 255, 255)));
+    }
+
+    #[test]
+    fn test_render_different_theme_selections() {
+        let picker = ThemePicker::new();
+        let mut buf1 = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let mut buf2 = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let custom_colors = ThemePickerCustomColors::default();
+
+        // Render with first theme selected
+        picker.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf1,
+            0,
+            false,
+            &custom_colors,
+            0,
+            &colors,
+        );
+
+        // Render with second theme selected
+        picker.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf2,
+            1,
+            false,
+            &custom_colors,
+            0,
+            &colors,
+        );
+
+        // Buffers should differ due to selection
+        assert_ne!(
+            buf1.content(),
+            buf2.content(),
+            "Theme selection should affect rendering"
+        );
+    }
+
+    #[test]
+    fn test_render_preview_with_custom_colors() {
+        let picker = ThemePicker::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let mut custom_colors = ThemePickerCustomColors::default();
+        custom_colors.informational = "255,0,0".to_string();
+        custom_colors.warning = "0,255,0".to_string();
+        custom_colors.success = "0,0,255".to_string();
+        custom_colors.error = "255,255,0".to_string();
+        custom_colors.question = "255,0,255".to_string();
+
+        picker.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            0,
+            true,
+            &custom_colors,
+            0,
+            &colors,
+        );
+
+        // Should render preview with custom colors
+        let content = buf.content();
+        assert!(!content.is_empty(), "Should render custom preview");
+    }
+
+    #[test]
+    fn test_custom_colors_default() {
+        let colors = ThemePickerCustomColors::default();
+        assert!(colors.informational.is_empty());
+        assert!(colors.warning.is_empty());
+        assert!(colors.success.is_empty());
+        assert!(colors.error.is_empty());
+        assert!(colors.question.is_empty());
+    }
+
+    #[test]
+    fn test_theme_picker_default() {
+        let picker = ThemePicker::default();
+        let _ = picker;
+    }
+
+    #[test]
+    fn test_render_custom_instructions() {
+        let picker = ThemePicker::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let custom_colors = ThemePickerCustomColors::default();
+
+        picker.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            0,
+            true,
+            &custom_colors,
+            0,
+            &colors,
+        );
+
+        // Should render instructions in custom mode
+        let content = buf.content();
+        let has_instructions = content.iter().any(|cell| cell.symbol() == "[");
+        assert!(has_instructions, "Should render custom mode instructions");
     }
 }

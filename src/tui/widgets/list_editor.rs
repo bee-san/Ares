@@ -250,16 +250,324 @@ pub fn render_list_editor(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::Config;
+
+    /// Creates test colors for rendering tests
+    fn create_test_colors() -> TuiColors {
+        let config = Config::default();
+        TuiColors::from_config(&config)
+    }
 
     #[test]
     fn test_list_editor_creation() {
-        let editor = ListEditor::new();
-        assert!(std::mem::size_of_val(&editor) >= 0);
+        let _editor = ListEditor::new();
+        // Editor created successfully if we get here
     }
 
     #[test]
     fn test_list_editor_default() {
-        let editor = ListEditor::default();
-        assert!(std::mem::size_of_val(&editor) >= 0);
+        let _editor = ListEditor::default();
+        // Editor created successfully if we get here
+    }
+
+    #[test]
+    fn test_render_empty_list() {
+        let editor = ListEditor::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            "Test Field",
+            &[],
+            None,
+            "",
+            0,
+            &colors,
+        );
+
+        // Should render "No items" message
+        let content = buf.content();
+        let has_empty_msg = content.iter().any(|cell| cell.symbol() == "N");
+        assert!(has_empty_msg, "Should render empty list message");
+    }
+
+    #[test]
+    fn test_render_with_items() {
+        let editor = ListEditor::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let items = vec![
+            "item1".to_string(),
+            "item2".to_string(),
+            "item3".to_string(),
+        ];
+
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            "Test Field",
+            &items,
+            Some(0),
+            "",
+            0,
+            &colors,
+        );
+
+        // Should render item names
+        let content = buf.content();
+        let has_item = content.iter().any(|cell| cell.symbol() == "i");
+        assert!(has_item, "Should render item names");
+    }
+
+    #[test]
+    fn test_render_with_selection() {
+        let editor = ListEditor::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let items = vec!["item1".to_string(), "item2".to_string()];
+
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            "Test Field",
+            &items,
+            Some(0),
+            "",
+            0,
+            &colors,
+        );
+
+        // Should render selection indicator
+        let content = buf.content();
+        let has_indicator = content.iter().any(|cell| cell.symbol() == ">");
+        assert!(has_indicator, "Should render selection indicator");
+    }
+
+    #[test]
+    fn test_render_without_selection() {
+        let editor = ListEditor::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let items = vec!["item1".to_string()];
+
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            "Test Field",
+            &items,
+            None,
+            "",
+            0,
+            &colors,
+        );
+
+        // Should still render items without selection indicator
+        let content = buf.content();
+        let has_item = content.iter().any(|cell| cell.symbol() == "i");
+        assert!(has_item, "Should render items");
+    }
+
+    #[test]
+    fn test_render_with_input_buffer() {
+        let editor = ListEditor::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            "Test Field",
+            &[],
+            None,
+            "new_item",
+            8,
+            &colors,
+        );
+
+        // Should render input buffer
+        let content = buf.content();
+        let has_input = content.iter().any(|cell| cell.symbol() == "n");
+        assert!(has_input, "Should render input buffer");
+    }
+
+    #[test]
+    fn test_render_empty_input_placeholder() {
+        let editor = ListEditor::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            "Test Field",
+            &[],
+            None,
+            "",
+            0,
+            &colors,
+        );
+
+        // Should render placeholder text
+        let content = buf.content();
+        let has_placeholder = content.iter().any(|cell| cell.symbol() == "T");
+        assert!(has_placeholder, "Should render placeholder text");
+    }
+
+    #[test]
+    fn test_render_delete_hint() {
+        let editor = ListEditor::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let items = vec!["item1".to_string()];
+
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            "Test Field",
+            &items,
+            Some(0),
+            "",
+            0,
+            &colors,
+        );
+
+        // Should render delete hint for selected item
+        let content = buf.content();
+        let has_delete = content.iter().any(|cell| cell.symbol() == "D");
+        assert!(has_delete, "Should render delete hint");
+    }
+
+    #[test]
+    fn test_render_instructions() {
+        let editor = ListEditor::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            "Test Field",
+            &[],
+            None,
+            "",
+            0,
+            &colors,
+        );
+
+        // Should render instruction keybindings
+        let content = buf.content();
+        let has_instructions = content.iter().any(|cell| cell.symbol() == "[");
+        assert!(has_instructions, "Should render instructions");
+    }
+
+    #[test]
+    fn test_render_with_different_field_label() {
+        let editor = ListEditor::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            "Custom Label",
+            &[],
+            None,
+            "",
+            0,
+            &colors,
+        );
+
+        // Should render custom label in title
+        let content = buf.content();
+        let has_custom = content.iter().any(|cell| cell.symbol() == "C");
+        assert!(has_custom, "Should render custom field label");
+    }
+
+    #[test]
+    fn test_render_truncated_long_items() {
+        let editor = ListEditor::new();
+        let mut buf = Buffer::empty(Rect::new(0, 0, 40, 30)); // Narrow width
+        let colors = create_test_colors();
+        let long_item = "a".repeat(100);
+        let items = vec![long_item];
+
+        editor.render(
+            Rect::new(0, 0, 40, 30),
+            &mut buf,
+            "Test",
+            &items,
+            None,
+            "",
+            0,
+            &colors,
+        );
+
+        // Should render without panicking (truncation should occur)
+        let content = buf.content();
+        assert!(!content.is_empty(), "Should render truncated items");
+    }
+
+    #[test]
+    fn test_render_list_editor_function() {
+        let mut buf = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let items = vec!["test".to_string()];
+
+        render_list_editor(
+            Rect::new(0, 0, 80, 30),
+            &mut buf,
+            "Test",
+            &items,
+            Some(0),
+            "input",
+            5,
+            &colors,
+        );
+
+        // Should render successfully
+        let content = buf.content();
+        assert!(!content.is_empty(), "Should render via wrapper function");
+    }
+
+    #[test]
+    fn test_render_different_selections() {
+        let editor = ListEditor::new();
+        let mut buf1 = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let mut buf2 = Buffer::empty(Rect::new(0, 0, 80, 30));
+        let colors = create_test_colors();
+        let items = vec!["item1".to_string(), "item2".to_string()];
+
+        // Render with first item selected
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf1,
+            "Test",
+            &items,
+            Some(0),
+            "",
+            0,
+            &colors,
+        );
+
+        // Render with second item selected
+        editor.render(
+            Rect::new(0, 0, 80, 30),
+            &mut buf2,
+            "Test",
+            &items,
+            Some(1),
+            "",
+            0,
+            &colors,
+        );
+
+        // Buffers should differ due to selection
+        assert_ne!(
+            buf1.content(),
+            buf2.content(),
+            "Selection should affect rendering"
+        );
     }
 }

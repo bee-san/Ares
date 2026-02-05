@@ -254,10 +254,10 @@ fn test_english_checker_returns_input_text_not_description() {
         "CheckResult.text should be the input text"
     );
 
-    // The description field should be the checker's description (e.g., "Words")
-    assert_eq!(
-        result.description, "Words",
-        "CheckResult.description should be 'Words'"
+    // The description field should be empty for the English checker
+    assert!(
+        result.description.is_empty(),
+        "CheckResult.description should be empty"
     );
 
     // These should NOT be equal - this is the core of the bug
@@ -392,10 +392,10 @@ fn test_checker_text_matches_decoder_output() {
         "CheckResult.text should be the plaintext that was checked"
     );
 
-    // The description is metadata, NOT the plaintext
-    assert_eq!(
-        check_result.description, "Words",
-        "CheckResult.description is the checker's description"
+    // The description should be empty for the English checker
+    assert!(
+        check_result.description.is_empty(),
+        "CheckResult.description should be empty for English checker"
     );
 
     // These must be different - if they're the same, we have a data flow problem

@@ -9,6 +9,7 @@ pub mod input;
 pub mod settings;
 pub mod setup_wizard;
 pub mod spinner;
+pub mod text_input;
 pub mod ui;
 pub mod widgets;
 
