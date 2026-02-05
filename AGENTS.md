@@ -433,6 +433,9 @@ pub enum AppState {
     HumanConfirmation { ... }, // Waiting for user to confirm plaintext
     Results { ... },           // Successful decode, showing results
     Failure { ... },           // Decode failed
+    Settings { ... },          // Runtime settings configuration
+    ListEditor { ... },        // String list editor modal
+    WordlistManager { ... },   // Wordlist file management
 }
 ```
 
@@ -470,12 +473,301 @@ if is_tui_confirmation_active() {
 
 ### TUI Color Scheme
 
+Ciphey uses a **consistent 5-color scheme** throughout the entire application (CLI, TUI, and setup wizard):
+
+| Color | Purpose | Default RGB | Used For |
+|-------|---------|-------------|----------|
+| `informational` | Primary/neutral color | 255,215,0 (Gold) | Status messages, neutral text, primary accent |
+| `warning` | Warning messages | 255,0,0 (Red) | Cautions, alerts, potential issues |
+| `success` | Success indicators | 0,255,0 (Green) | Successful operations, confirmations |
+| `error` | Error messages | 255,0,0 (Red) | Error messages, failures (same as warning by default) |
+| `question` | Interactive prompts | 255,215,0 (Gold) | Questions, prompts, user input requests |
+
+**Color Storage:**
+
+Colors are stored in the config file (`~/.ciphey/config.toml`) in the `colourscheme` HashMap:
+
+```toml
+[colourscheme]
+informational = "255,215,0"
+warning = "255,0,0"
+success = "0,255,0"
+error = "255,0,0"
+question = "255,215,0"
+```
+
+**Predefined Themes:**
+
+Ciphey includes 6 predefined themes (available in setup wizard and TUI settings):
+
+1. **Cappuccino** - Warm, cozy colors
+2. **Darcula** - Dark theme with vibrant accents
+3. **GirlyPop** - Pink and pastel theme
+4. **Autumnal Vibes** - Earth tones and autumn colors
+5. **Skeletal** - High contrast black and white
+6. **Default** - Classic terminal colors
+
+All themes are defined in `src/tui/setup_wizard/themes.rs` (exported as `pub mod`).
+
+**Theme Picker in TUI Settings:**
+
+Users can change their color theme at runtime via the TUI Settings panel:
+
+1. Press `Ctrl+S` to open settings
+2. Navigate to "Colors" section
+3. Select "Theme Preset" field (first field in Colors section)
+4. Press `Enter` to open theme picker modal
+5. Navigate themes with `Up/Down` or `j/k`
+6. Press `Enter` to apply selected theme
+7. Individual color fields can be manually tweaked after applying a theme
+8. Press `Ctrl+S` to save changes to config
+
+**Custom Themes:**
+
+- Select "Custom..." option in theme picker (last option)
+- Enter RGB values for each color (format: `255,128,64`)
+- Use `Tab` to cycle between fields
+- Press `Enter` to apply
+- Custom colors are not saved unless applied and config saved with `Ctrl+S`
+
+**Color Usage Guidelines for Developers:**
+
+When adding new UI elements:
+
+- **TUI**: Use `TuiColors` struct from `src/tui/colors.rs` - colors are loaded from config
+- **CLI**: Use functions from `src/cli_pretty_printing/mod.rs` (e.g., `statement()`, `success()`)
+- **Setup Wizard**: Uses `ColorScheme` from `src/tui/setup_wizard/themes.rs`
+
+**Do NOT:**
+- Hardcode RGB colors in UI code
+- Add new color categories without updating this document
+- Use `statement` color (removed - use `informational` instead)
+
+**Example TUI usage:**
+```rust
+let colors = TuiColors::from_config(&config);
+let text_style = colors.success;  // Use success color
+let title_style = colors.title;   // Uses informational with bold
+```
+
+**Example CLI usage:**
+```rust
+use crate::cli_pretty_printing::{statement, success, warning};
+
+println!("{}", statement("Processing...", Some("informational")));
+println!("{}", success("Done!"));
+println!("{}", warning("Low disk space"));
+```
+
 Colors are derived from the config's `colourscheme` hashmap in `src/tui/colors.rs`:
 
 ```rust
 let colors = TuiColors::from_config(&config);
 // Available styles: colors.primary, colors.success, colors.error,
 // colors.text, colors.muted, colors.highlight, colors.accent, etc.
+```
+
+## TUI Settings Panel
+
+The TUI includes a comprehensive **Settings Panel** that allows users to modify their configuration at runtime without editing files or restarting the application.
+
+### Accessing Settings
+
+- **Global Keybinding**: Press `Ctrl+S` from any state (except HumanConfirmation) to open settings
+- The settings panel opens as a full-screen overlay
+
+### Settings Architecture
+
+| File | Purpose |
+|------|---------|
+| `src/tui/settings/mod.rs` | Module exports and validation functions |
+| `src/tui/settings/model.rs` | `SettingsModel`, `SettingsSection`, `SettingField` data structures |
+| `src/tui/settings/validation.rs` | Field validation with `parse_input()` function |
+| `src/tui/widgets/settings_panel.rs` | Main settings form renderer |
+| `src/tui/widgets/list_editor.rs` | String list editor modal |
+| `src/tui/widgets/wordlist_manager.rs` | Wordlist management modal |
+
+### Settings Organization
+
+Settings are organized into **5 sections**:
+
+#### 1. General
+- `verbose` - Enable verbose logging (Boolean)
+- `timeout` - Search timeout in seconds (Integer)
+- `top_results` - Number of results to show (Integer)
+- `api_mode` - Enable API mode (Boolean)
+- `regex` - Custom regex pattern (String, optional)
+
+#### 2. Checkers
+- `human_checker_on` - Enable human checker (Boolean)
+- `enhanced_detection` - Enable enhanced detection (Boolean)
+- `model_path` - Path to language model (String, optional)
+- `wordlist_manager` - Open wordlist manager (ActionButton)
+
+#### 3. LemmeKnow
+- `min_rarity` - Minimum rarity (Float, 0.0-1.0)
+- `max_rarity` - Maximum rarity (Float, 0.0-1.0)
+- `boundaryless` - Enable boundaryless mode (Boolean)
+- `tags` - Include tags (StringList)
+- `exclude_tags` - Exclude tags (StringList)
+
+#### 4. Search Tuning
+- `depth_penalty` - Depth penalty factor (Float)
+- `decoder_batch_size` - Decoders per batch (Integer)
+
+#### 5. Colors
+- `informational` - Informational color (Color)
+- `warning` - Warning color (Color)
+- `success` - Success color (Color)
+- `error` - Error color (Color)
+- `question` - Question color (Color)
+
+### Settings Keybindings
+
+| Key | Action |
+|-----|--------|
+| `Tab` | Cycle through sections |
+| `↑/↓` | Navigate fields within section |
+| `Enter` | Edit selected field |
+| `Space` | Toggle boolean fields |
+| `Esc` | Cancel edit or close settings |
+| `Ctrl+S` | Save settings and return |
+
+### Field Types
+
+#### Boolean
+- Toggle with `Space` key
+- Display: `[✓]` for true, `[ ]` for false
+
+#### Integer/Float
+- Press `Enter` to edit
+- Type new value
+- Validation enforced (range checks, type checks)
+
+#### String
+- Press `Enter` to edit
+- Type new value or leave empty for `None`
+
+#### StringList (e.g., tags, exclude_tags)
+- Press `Enter` to open **List Editor Modal**
+- Navigate items with arrow keys
+- Add new items by typing and pressing `Enter`
+- Delete items with `Delete` or `Backspace`
+- Press `Esc` to return to settings
+
+#### ActionButton (e.g., wordlist_manager)
+- Press `Enter` to trigger action
+- Opens the **Wordlist Manager Modal**
+
+### List Editor Modal
+
+Appears when editing `StringList` fields like `tags` or `exclude_tags`.
+
+**Layout:**
+- Top: Current items list with selection
+- Bottom: Input field for new items
+
+**Keybindings:**
+| Key | Action |
+|-----|--------|
+| `↑/↓` | Navigate current items |
+| `Delete` | Remove selected item |
+| `Enter` | Add new item from input field |
+| `Esc` | Save and return to settings |
+
+### Wordlist Manager Modal
+
+Manages wordlist files used by the wordlist checker.
+
+**Layout:**
+- Table view showing: Path, Enabled status
+- Input field at bottom for adding new wordlists
+- Pending changes indicator
+
+**Keybindings:**
+| Key | Action |
+|-----|--------|
+| `↑/↓` | Navigate wordlist rows |
+| `Space` | Toggle enabled/disabled |
+| `Tab` | Cycle focus (Table → AddPath → Done) |
+| `Enter` | Add new wordlist (when focused on input) or confirm (when focused on Done) |
+| `Esc` | Discard changes and return |
+
+**Future work**: Database integration for persisting wordlist files and bloom filter rebuild on save.
+
+### Validation System
+
+The validation system (`src/tui/settings/validation.rs`) provides real-time feedback:
+
+1. **Type checking**: Ensures integers, floats, colors are valid
+2. **Range checking**: Min/max values (e.g., timeout > 0, rarity 0.0-1.0)
+3. **Inline errors**: Validation errors display below the field in red
+
+**Example validation errors:**
+- "Must be a positive integer"
+- "Must be between 0.0 and 1.0"
+- "Invalid color format (use red, blue, #RRGGBB, etc.)"
+
+### Change Tracking
+
+- **Modified fields** are highlighted with `*` indicator
+- **Unsaved changes** show a warning message in the header
+- **Save action** (`Ctrl+S`) writes changes to `Config` and returns to previous state
+- **Cancel action** (`Esc`) discards changes
+
+### Adding a New Settings Field
+
+1. **Add field to `SettingsModel`** (`src/tui/settings/model.rs`):
+   ```rust
+   pub struct SettingsModel {
+       pub my_new_field: SettingField,
+       // ...
+   }
+   ```
+
+2. **Initialize field in `from_config()`**:
+   ```rust
+   my_new_field: SettingField {
+       id: "my_new_field".to_string(),
+       label: "My New Field".to_string(),
+       field_type: FieldType::Integer,
+       value: config.my_new_field.to_string(),
+       original_value: config.my_new_field.to_string(),
+       description: Some("Description here".to_string()),
+   },
+   ```
+
+3. **Add field to appropriate section** in `build_sections()`.
+
+4. **Add validation logic** in `validation.rs` if needed.
+
+5. **Add save logic** in `App::save_settings()` (`src/tui/app.rs`).
+
+### Testing Settings
+
+```bash
+cargo test settings  # Run all settings-related tests
+cargo test --lib settings_panel  # Test settings panel widget
+cargo test --lib list_editor  # Test list editor widget
+cargo test --lib wordlist_manager  # Test wordlist manager widget
+```
+
+### Settings State Transitions
+
+```
+Any State (except HumanConfirmation)
+    ↓ (Ctrl+S)
+Settings
+    ↓ (Enter on StringList field)
+ListEditor
+    ↓ (Esc)
+Settings
+    ↓ (Enter on wordlist_manager)
+WordlistManager
+    ↓ (Esc or Done)
+Settings
+    ↓ (Ctrl+S or Esc)
+Previous State
 ```
 
 ## Lessons Learned & Common Pitfalls
@@ -618,4 +910,218 @@ save_bloom_filter(&bloom);
 - A "definitely not in set" response is 100% reliable → fast rejection
 - A "maybe in set" response requires DB verification → accurate final answer
 - This gives O(1) rejection for most non-words while maintaining accuracy
+
+## TUI Widget Design & Best Practices
+
+### Widget Architecture
+
+The TUI uses a modular widget system in `src/tui/widgets/`:
+
+| Widget | File | Purpose |
+|--------|------|---------|
+| **PathViewer** | `path_viewer.rs` | Displays decoder chain as horizontal boxes with arrows |
+| **StepDetails** | `step_details.rs` | Shows detailed info about selected decoder step |
+| **TextPanel** | `text_panel.rs` | Reusable bordered text display with scrolling |
+
+### Selection Visualization Best Practices
+
+When highlighting selected items in the TUI, use **multiple visual cues** for maximum clarity:
+
+#### Recommended Approach (PathViewer Implementation)
+```rust
+// For selected decoder box in path viewer:
+let text_style = if is_selected {
+    colors
+        .accent                          // 1. Use accent color (from user's color scheme)
+        .add_modifier(Modifier::BOLD)    // 2. Bold text
+        .add_modifier(Modifier::REVERSED) // 3. Reversed background (colored fill)
+} else {
+    colors.text
+};
+
+let border_type = if is_selected {
+    symbols::border::DOUBLE  // 4. Double border (thicker)
+} else {
+    symbols::border::PLAIN
+};
+```
+
+**Why multiple cues?**
+- Some users may have limited color vision
+- Different terminal emulators render colors differently
+- Multiple cues ensure selection is **always obvious**
+
+#### Anti-pattern: Single Visual Cue
+```rust
+// BAD: Only using border style (hard to see!)
+let border_type = if is_selected {
+    symbols::border::DOUBLE
+} else {
+    symbols::border::PLAIN
+};
+```
+
+### Metadata Display in Widgets
+
+When showing text transformations (input/output), provide **rich metadata** to help users understand what's happening:
+
+#### Text Metadata Helper Function
+```rust
+/// Calculates metadata for a text string.
+fn calculate_text_metadata(text: &str) -> String {
+    let char_count = text.chars().count();
+    let byte_size = text.len();
+    let line_count = text.lines().count().max(1);
+    
+    let printable_count = text
+        .chars()
+        .filter(|c| !c.is_control() || *c == '\n' || *c == '\t' || *c == '\r')
+        .count();
+    
+    let printable_pct = if char_count > 0 {
+        (printable_count * 100) / char_count
+    } else {
+        100
+    };
+    
+    format!(
+        "{} chars, {} bytes, {} line{}, {}% printable",
+        char_count,
+        byte_size,
+        line_count,
+        if line_count == 1 { "" } else { "s" },
+        printable_pct
+    )
+}
+```
+
+**Why this metadata matters:**
+- **Character count** - Shows text length (Unicode-aware)
+- **Byte size** - Important for UTF-8 encoded text (can differ from char count)
+- **Line count** - Indicates multiline text
+- **Printable percentage** - Helps detect binary/control characters
+
+#### Usage Example (StepDetails Widget)
+```rust
+// Display with inline metadata
+let input_metadata = calculate_text_metadata(&result.encrypted_text);
+let input_label = format!("Input to this step ({})", input_metadata);
+
+Line::from(vec![Span::styled(
+    input_label,
+    colors.label.add_modifier(Modifier::BOLD),
+)]),
+Line::from(vec![
+    Span::styled("  ", colors.text), // Indent the actual text
+    Span::styled(before_text, colors.text_before),
+]),
+```
+
+**Result:**
+```
+Input to this step (42 chars, 42 bytes, 1 line, 100% printable)
+  SGVsbG8gV29ybGQ=
+
+Output from this step (11 chars, 11 bytes, 1 line, 100% printable)
+  hello world
+```
+
+### Widget Styling with User Color Scheme
+
+Always use colors from `TuiColors` (derived from user's config) rather than hardcoded colors:
+
+```rust
+// GOOD: Uses user's color scheme
+let text_style = colors.text_before;
+let label_style = colors.label.add_modifier(Modifier::BOLD);
+
+// BAD: Hardcoded colors (ignores user preferences)
+let text_style = Style::default().fg(Color::Yellow);
+```
+
+**Available color styles:**
+- `colors.accent` - Primary accent (from config's "informational")
+- `colors.success` - Success messages (from config's "success")
+- `colors.error` - Error messages (from config's "error")
+- `colors.text` - Normal text
+- `colors.muted` - Dimmed/secondary text
+- `colors.highlight` - Highlighted items (accent + bold)
+- `colors.label` - Field labels (cyan)
+- `colors.text_before` - Input text (yellow)
+- `colors.text_after` - Output text (success color)
+
+### String Borrowing in Widget Rendering
+
+When building widget content, **avoid temporary string borrows** that get dropped before rendering:
+
+```rust
+// BAD: Temporary format!() result gets dropped
+let lines = vec![
+    Line::from(vec![Span::styled(
+        &format!("Label: {}", value),  // ❌ Temporary dropped!
+        colors.label,
+    )]),
+];
+
+// GOOD: Store formatted string in a variable
+let label_text = format!("Label: {}", value);
+let lines = vec![
+    Line::from(vec![Span::styled(
+        label_text,  // ✅ Owned string lives long enough
+        colors.label,
+    )]),
+];
+```
+
+**Error you'll see:**
+```
+error[E0716]: temporary value dropped while borrowed
+```
+
+### Widget Testing
+
+Always add unit tests for widget helper functions:
+
+```rust
+#[cfg(test)]
+mod tests {
+    use super::*;
+    
+    #[test]
+    fn test_calculate_text_metadata_simple() {
+        let result = calculate_text_metadata("hello");
+        assert!(result.contains("5 chars"));
+        assert!(result.contains("5 bytes"));
+        assert!(result.contains("1 line"));
+        assert!(result.contains("100% printable"));
+    }
+    
+    #[test]
+    fn test_calculate_text_metadata_unicode() {
+        let result = calculate_text_metadata("hello 世界");
+        assert!(result.contains("8 chars"));  // 5 + space + 2 CJK
+        assert!(result.contains("12 bytes")); // ASCII + UTF-8 encoded CJK
+    }
+}
+```
+
+### TUI Widget Modification Checklist
+
+When modifying TUI widgets:
+
+1. ✅ **Test with different terminal sizes** - Use small and large terminals
+2. ✅ **Use user's color scheme** - Never hardcode colors
+3. ✅ **Add multiple selection cues** - Color + bold + reversed + border
+4. ✅ **Handle edge cases** - Empty text, very long text, special characters
+5. ✅ **Add unit tests** - Test helper functions and calculations
+6. ✅ **Document behavior** - Add doc comments explaining what the widget does
+7. ✅ **Run `cargo test --lib <widget_name>`** - Verify tests pass
+8. ✅ **Check string borrowing** - Ensure no temporary values get dropped
+
+### TUI Performance Considerations
+
+- **Avoid expensive calculations in render loops** - Cache metadata when possible
+- **Truncate long text** - Use `MAX_TEXT_LENGTH` constants (e.g., 200 chars)
+- **Use `chars().take(n)` not `[..n]`** - Safe for UTF-8 strings
+- **Wrap text properly** - Use `Wrap { trim: false }` to preserve formatting
 

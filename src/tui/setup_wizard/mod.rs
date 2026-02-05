@@ -11,7 +11,7 @@
 
 mod app;
 mod input;
-mod themes;
+pub mod themes;
 mod ui;
 
 use std::collections::HashMap;

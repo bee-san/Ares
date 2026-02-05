@@ -98,10 +98,10 @@ pub struct CustomColors {
     pub warning: String,
     /// Success color input
     pub success: String,
+    /// Error color input
+    pub error: String,
     /// Question color input
     pub question: String,
-    /// Statement color input
-    pub statement: String,
 }
 
 impl CustomColors {
@@ -111,8 +111,8 @@ impl CustomColors {
             0 => &self.informational,
             1 => &self.warning,
             2 => &self.success,
-            3 => &self.question,
-            4 => &self.statement,
+            3 => &self.error,
+            4 => &self.question,
             _ => "",
         }
     }
@@ -123,8 +123,8 @@ impl CustomColors {
             0 => &mut self.informational,
             1 => &mut self.warning,
             2 => &mut self.success,
-            3 => &mut self.question,
-            _ => &mut self.statement,
+            3 => &mut self.error,
+            _ => &mut self.question,
         }
     }
 
@@ -134,8 +134,8 @@ impl CustomColors {
             0 => "Informational",
             1 => "Warning",
             2 => "Success",
-            3 => "Question",
-            4 => "Statement",
+            3 => "Error",
+            4 => "Question",
             _ => "",
         }
     }
@@ -145,15 +145,15 @@ impl CustomColors {
         let info = parse_rgb(&self.informational)?;
         let warn = parse_rgb(&self.warning)?;
         let succ = parse_rgb(&self.success)?;
+        let err = parse_rgb(&self.error)?;
         let ques = parse_rgb(&self.question)?;
-        let stmt = parse_rgb(&self.statement)?;
 
         Some(ColorScheme {
             informational: info,
             warning: warn,
             success: succ,
+            error: err,
             question: ques,
-            statement: stmt,
         })
     }
 }

@@ -32,6 +32,52 @@ fn truncate_text(text: &str, max_len: usize) -> String {
     }
 }
 
+/// Calculates metadata for a text string including char count, byte size, line count, and printable percentage.
+///
+/// This provides useful information about the text being processed through each decoder step,
+/// helping users understand the transformation at each stage.
+///
+/// # Arguments
+///
+/// * `text` - The text to analyze
+///
+/// # Returns
+///
+/// A formatted string like "42 chars, 42 bytes, 1 line, 100% printable"
+///
+/// # Example
+///
+/// ```ignore
+/// let metadata = calculate_text_metadata("hello world");
+/// // Returns: "11 chars, 11 bytes, 1 line, 100% printable"
+/// ```
+fn calculate_text_metadata(text: &str) -> String {
+    let char_count = text.chars().count();
+    let byte_size = text.len();
+    let line_count = text.lines().count().max(1); // At least 1 line even if empty
+
+    // Count printable characters (excluding control chars except newline/tab/carriage return)
+    let printable_count = text
+        .chars()
+        .filter(|c| !c.is_control() || *c == '\n' || *c == '\t' || *c == '\r')
+        .count();
+
+    let printable_pct = if char_count > 0 {
+        (printable_count * 100) / char_count
+    } else {
+        100
+    };
+
+    format!(
+        "{} chars, {} bytes, {} line{}, {}% printable",
+        char_count,
+        byte_size,
+        line_count,
+        if line_count == 1 { "" } else { "s" },
+        printable_pct
+    )
+}
+
 /// Renders detailed information about a decoder step.
 ///
 /// Displays a box containing:
@@ -110,6 +156,24 @@ fn render_step_content(area: Rect, buf: &mut Buffer, result: &CrackResult, color
             }
         });
 
+    // Calculate metadata for input
+    let input_metadata = calculate_text_metadata(&result.encrypted_text);
+    let input_label = format!("Input to this step ({})", input_metadata);
+
+    // Calculate metadata for output (only if not "N/A")
+    let output_label = result
+        .unencrypted_text
+        .as_ref()
+        .filter(|texts| !texts.is_empty())
+        .map(|texts| {
+            let full_output = texts.join(", ");
+            format!(
+                "Output from this step ({})",
+                calculate_text_metadata(&full_output)
+            )
+        })
+        .unwrap_or_else(|| "Output from this step".to_string());
+
     // Build the content lines
     let mut lines = vec![
         Line::from(vec![
@@ -121,12 +185,21 @@ fn render_step_content(area: Rect, buf: &mut Buffer, result: &CrackResult, color
             Span::styled(key_display, colors.value),
         ]),
         Line::from(""),
+        Line::from(vec![Span::styled(
+            input_label,
+            colors.label.add_modifier(Modifier::BOLD),
+        )]),
         Line::from(vec![
-            Span::styled("Before: ", colors.label.add_modifier(Modifier::BOLD)),
+            Span::styled("  ", colors.text), // Indentation
             Span::styled(before_text, colors.text_before),
         ]),
+        Line::from(""),
+        Line::from(vec![Span::styled(
+            output_label,
+            colors.label.add_modifier(Modifier::BOLD),
+        )]),
         Line::from(vec![
-            Span::styled("After:  ", colors.label.add_modifier(Modifier::BOLD)),
+            Span::styled("  ", colors.text), // Indentation
             Span::styled(after_text, colors.text_after),
         ]),
         Line::from(""),
@@ -220,5 +293,59 @@ mod tests {
         let result = truncate_text(&text, 200);
         assert_eq!(result.len(), 200);
         assert!(!result.ends_with("..."));
+    }
+
+    #[test]
+    fn test_calculate_text_metadata_simple() {
+        let result = calculate_text_metadata("hello");
+        assert!(result.contains("5 chars"));
+        assert!(result.contains("5 bytes"));
+        assert!(result.contains("1 line"));
+        assert!(result.contains("100% printable"));
+    }
+
+    #[test]
+    fn test_calculate_text_metadata_multiline() {
+        let result = calculate_text_metadata("line1\nline2\nline3");
+        assert!(result.contains("17 chars"));
+        assert!(result.contains("17 bytes"));
+        assert!(result.contains("3 lines"));
+    }
+
+    #[test]
+    fn test_calculate_text_metadata_with_control_chars() {
+        let text = "hello\x00world";
+        let result = calculate_text_metadata(text);
+        // Should show less than 100% printable due to null byte
+        assert!(result.contains("11 chars"));
+        assert!(result.contains("11 bytes"));
+        // 10 printable chars out of 11 = 90%
+        assert!(result.contains("90% printable"));
+    }
+
+    #[test]
+    fn test_calculate_text_metadata_empty() {
+        let result = calculate_text_metadata("");
+        assert!(result.contains("0 chars"));
+        assert!(result.contains("0 bytes"));
+        assert!(result.contains("1 line")); // Empty text is still 1 line
+        assert!(result.contains("100% printable"));
+    }
+
+    #[test]
+    fn test_calculate_text_metadata_unicode() {
+        let result = calculate_text_metadata("hello 世界");
+        assert!(result.contains("8 chars")); // 5 + space + 2 CJK characters
+        assert!(result.contains("12 bytes")); // ASCII + UTF-8 encoded CJK
+        assert!(result.contains("100% printable"));
+    }
+
+    #[test]
+    fn test_calculate_text_metadata_tabs_and_newlines() {
+        let result = calculate_text_metadata("hello\tworld\n");
+        // Tab and newline should count as printable
+        assert!(result.contains("12 chars"));
+        assert!(result.contains("100% printable"));
+        assert!(result.contains("1 line")); // Trailing newline doesn't create a new line in lines()
     }
 }

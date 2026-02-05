@@ -477,9 +477,24 @@ pub fn create_config_from_setup(setup_config: std::collections::HashMap<String, 
 }
 
 /// Save a Config struct to a file
-fn save_config_to_file(config: &Config, path: &std::path::Path) {
+pub fn save_config_to_file(config: &Config, path: &std::path::Path) {
     let toml_string = toml::to_string_pretty(config).expect("Could not serialize config");
     let mut file = File::create(path).expect("Could not create config file");
     file.write_all(toml_string.as_bytes())
         .expect("Could not write to config file");
+}
+
+/// Saves the given config to the standard config file location.
+///
+/// # Arguments
+///
+/// * `config` - The configuration to save
+///
+/// # Errors
+///
+/// Returns an error if the config file cannot be written.
+pub fn save_config(config: &Config) -> Result<(), std::io::Error> {
+    let path = get_config_file_path();
+    save_config_to_file(config, &path);
+    Ok(())
 }

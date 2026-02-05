@@ -204,6 +204,29 @@ fn run_event_loop(
 
                             app.set_status("Rerunning Ciphey...".to_string());
                         }
+                        Action::OpenSettings => {
+                            app.open_settings(config);
+                            app.set_status("Settings opened. Press Esc to close.".to_string());
+                        }
+                        Action::SaveSettings => {
+                            // Apply settings to config and save
+                            if let super::app::AppState::Settings { settings, .. } = &app.state {
+                                // Clone the settings to apply
+                                let mut new_config = config.clone();
+                                settings.apply_to_config(&mut new_config);
+
+                                // Update the global config
+                                crate::config::set_global_config(new_config.clone());
+
+                                // Save config to disk
+                                if let Err(e) = crate::config::save_config(&new_config) {
+                                    app.set_status(format!("Error saving settings: {}", e));
+                                } else {
+                                    app.set_status("Settings saved!".to_string());
+                                }
+                            }
+                            app.close_settings();
+                        }
                         Action::None => {}
                     }
                 }

@@ -118,6 +118,12 @@ impl TuiColors {
             .and_then(|s| parse_color_string(s))
             .unwrap_or(Color::Rgb(255, 0, 0)); // Red fallback
 
+        let question = config
+            .colourscheme
+            .get("question")
+            .and_then(|s| parse_color_string(s))
+            .unwrap_or(Color::Rgb(255, 215, 0)); // Gold yellow fallback (same as informational)
+
         Self {
             primary: Style::default().fg(informational),
             success: Style::default().fg(success_color),
@@ -134,7 +140,7 @@ impl TuiColors {
             title: Style::default()
                 .fg(informational)
                 .add_modifier(Modifier::BOLD),
-            label: Style::default().fg(Color::Cyan),
+            label: Style::default().fg(question), // Use question color for labels
             value: Style::default().fg(Color::White),
             info: Style::default()
                 .fg(Color::Cyan)

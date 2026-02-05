@@ -14,10 +14,10 @@ pub struct ColorScheme {
     pub warning: (u8, u8, u8),
     /// RGB color value for success messages
     pub success: (u8, u8, u8),
+    /// RGB color value for error messages
+    pub error: (u8, u8, u8),
     /// RGB color value for question prompts
     pub question: (u8, u8, u8),
-    /// RGB color value for general statements
-    pub statement: (u8, u8, u8),
 }
 
 impl ColorScheme {
@@ -40,17 +40,14 @@ impl ColorScheme {
                 format!("{},{},{}", self.success.0, self.success.1, self.success.2),
             ),
             (
+                "error".to_string(),
+                format!("{},{},{}", self.error.0, self.error.1, self.error.2),
+            ),
+            (
                 "question".to_string(),
                 format!(
                     "{},{},{}",
                     self.question.0, self.question.1, self.question.2
-                ),
-            ),
-            (
-                "statement".to_string(),
-                format!(
-                    "{},{},{}",
-                    self.statement.0, self.statement.1, self.statement.2
                 ),
             ),
         ]
@@ -84,13 +81,9 @@ impl ColorScheme {
         ))
     }
 
-    /// Gets a Ratatui Style for the statement color.
-    pub fn statement_style(&self) -> Style {
-        Style::default().fg(Color::Rgb(
-            self.statement.0,
-            self.statement.1,
-            self.statement.2,
-        ))
+    /// Gets a Ratatui Style for the error color.
+    pub fn error_style(&self) -> Style {
+        Style::default().fg(Color::Rgb(self.error.0, self.error.1, self.error.2))
     }
 
     /// Gets the primary accent color as a Ratatui Color.
@@ -123,8 +116,8 @@ pub static THEMES: &[Theme] = &[
             informational: (238, 212, 159),
             warning: (237, 135, 150),
             success: (166, 218, 149),
+            error: (237, 135, 150),
             question: (202, 211, 245),
-            statement: (244, 219, 214),
         },
     },
     Theme {
@@ -134,8 +127,8 @@ pub static THEMES: &[Theme] = &[
             informational: (241, 250, 140),
             warning: (255, 85, 85),
             success: (80, 250, 123),
+            error: (255, 85, 85),
             question: (139, 233, 253),
-            statement: (248, 248, 242),
         },
     },
     Theme {
@@ -145,8 +138,8 @@ pub static THEMES: &[Theme] = &[
             informational: (237, 69, 146),
             warning: (241, 218, 165),
             success: (243, 214, 243),
+            error: (241, 218, 165),
             question: (255, 128, 177),
-            statement: (255, 148, 219),
         },
     },
     Theme {
@@ -156,8 +149,8 @@ pub static THEMES: &[Theme] = &[
             informational: (218, 165, 32),
             warning: (178, 34, 34),
             success: (189, 183, 107),
+            error: (178, 34, 34),
             question: (255, 140, 0),
-            statement: (210, 105, 30),
         },
     },
     Theme {
@@ -167,8 +160,8 @@ pub static THEMES: &[Theme] = &[
             informational: (248, 248, 240),
             warning: (255, 140, 0),
             success: (152, 251, 152),
+            error: (255, 140, 0),
             question: (138, 43, 226),
-            statement: (211, 211, 211),
         },
     },
     Theme {
@@ -178,8 +171,8 @@ pub static THEMES: &[Theme] = &[
             informational: (255, 215, 0),
             warning: (255, 0, 0),
             success: (0, 255, 0),
+            error: (255, 0, 0),
             question: (255, 215, 0),
-            statement: (255, 255, 255),
         },
     },
 ];
@@ -189,15 +182,15 @@ pub fn create_custom_scheme(
     informational: (u8, u8, u8),
     warning: (u8, u8, u8),
     success: (u8, u8, u8),
+    error: (u8, u8, u8),
     question: (u8, u8, u8),
-    statement: (u8, u8, u8),
 ) -> ColorScheme {
     ColorScheme {
         informational,
         warning,
         success,
+        error,
         question,
-        statement,
     }
 }
 

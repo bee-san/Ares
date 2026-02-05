@@ -9,11 +9,11 @@
 //!
 //! # Color Scheme
 //! The module uses a configurable color scheme with roles:
-//! - Informational: General information and status updates
+//! - Informational: General information and status updates (also used for neutral messages)
 //! - Warning: Non-critical warnings and cautions
 //! - Success: Successful operations and confirmations
+//! - Error: Error messages and failures
 //! - Question: Interactive prompts and user queries
-//! - Statement: Standard output and neutral messages
 //!
 //! # Usage
 //! ```rust
@@ -120,34 +120,35 @@ pub fn parse_rgb(rgb: &str) -> Option<(u8, u8, u8)> {
 /// * `String` - The text colored according to the role's RGB values
 ///
 /// # Role Colors
-/// - informational: Used for general information
+/// - informational: Used for general information and neutral statements
 /// - warning: Used for warnings and cautions
 /// - success: Used for success messages
+/// - error: Used for error messages
 /// - question: Used for interactive prompts
-/// - statement: Used for neutral messages
 fn color_string(text: &str, role: &str) -> String {
     let config = crate::config::get_config();
 
-    // Get the RGB color string, defaulting to statement color if not found
+    // Get the RGB color string, defaulting to informational color if not found
     let rgb = match config.colourscheme.get(role) {
         Some(color) => color.clone(),
         None => config
             .colourscheme
-            .get("statement")
+            .get("informational")
             .cloned()
-            .unwrap_or_else(|| "255,255,255".to_string()),
+            .unwrap_or_else(|| "255,215,0".to_string()),
     };
 
     if let Some((r, g, b)) = parse_rgb(&rgb) {
         apply_color_with_rgb(text, r, g, b)
     } else {
-        // Default to statement color if RGB parsing fails
-        if let Some(statement_rgb) = config.colourscheme.get("statement") {
-            if let Some((r, g, b)) = parse_rgb(statement_rgb) {
+        // Default to informational color if RGB parsing fails
+        if let Some(info_rgb) = config.colourscheme.get("informational") {
+            if let Some((r, g, b)) = parse_rgb(info_rgb) {
                 return apply_color_with_rgb(text, r, g, b);
             }
         }
-        apply_color_with_rgb(text, 255, 255, 255)
+        // Ultimate fallback to gold
+        apply_color_with_rgb(text, 255, 215, 0)
     }
 }
 
@@ -174,11 +175,11 @@ fn apply_color_with_rgb(text: &str, r: u8, g: u8, b: u8) -> String {
     String::from_utf8_lossy(buffer.as_slice()).to_string()
 }
 
-/// Colors text based on its role, defaulting to statement color if no role is specified.
+/// Colors text based on its role, defaulting to informational color if no role is specified.
 ///
 /// # Arguments
 /// * `text` - The text to be colored
-/// * `role` - Optional role to determine color choice. If None, uses statement color
+/// * `role` - Optional role to determine color choice. If None, uses informational color
 ///
 /// # Returns
 /// * `String` - The colored text string
@@ -195,7 +196,7 @@ fn apply_color_with_rgb(text: &str, r: u8, g: u8, b: u8) -> String {
 pub fn statement(text: &str, role: Option<&str>) -> String {
     match role {
         Some(r) => color_string(text, r),
-        None => color_string(text, "statement"),
+        None => color_string(text, "informational"),
     }
 }
 

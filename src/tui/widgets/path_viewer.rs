@@ -124,16 +124,6 @@ impl PathViewer {
                 self.render_key_label(current_x, box_y + BOX_HEIGHT, buf, key, colors);
             }
 
-            // Draw selection indicator
-            if is_selected {
-                self.render_selection_indicator(
-                    current_x,
-                    box_y + BOX_HEIGHT + KEY_LINE_HEIGHT,
-                    buf,
-                    colors,
-                );
-            }
-
             current_x += BOX_WIDTH;
 
             // Draw arrow if not the last visible box
@@ -186,7 +176,10 @@ impl PathViewer {
 
         // Create paragraph with decoder name
         let text_style = if is_selected {
-            colors.accent.add_modifier(Modifier::BOLD)
+            colors
+                .accent
+                .add_modifier(Modifier::BOLD)
+                .add_modifier(Modifier::REVERSED)
         } else {
             colors.text
         };
@@ -214,19 +207,6 @@ impl PathViewer {
         let padding = (BOX_WIDTH as usize).saturating_sub(display_str.len()) / 2;
 
         buf.set_string(x + padding as u16, y, &display_str, colors.info);
-    }
-
-    /// Renders the selection indicator below a decoder box.
-    fn render_selection_indicator(&self, x: u16, y: u16, buf: &mut Buffer, colors: &TuiColors) {
-        let indicator = "(selected)";
-        let padding = (BOX_WIDTH as usize).saturating_sub(indicator.len()) / 2;
-
-        buf.set_string(
-            x + padding as u16,
-            y,
-            indicator,
-            colors.accent.add_modifier(Modifier::BOLD),
-        );
     }
 
     /// Renders an ellipsis indicator for truncated paths.

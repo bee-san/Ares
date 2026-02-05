@@ -6,6 +6,7 @@ pub mod app;
 pub mod colors;
 pub mod human_checker_bridge;
 pub mod input;
+pub mod settings;
 pub mod setup_wizard;
 pub mod spinner;
 pub mod ui;

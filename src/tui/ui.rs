@@ -7,10 +7,14 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph, Wrap};
 
-use super::app::{App, AppState, HumanConfirmationRequest};
+use super::app::{App, AppState, HumanConfirmationRequest, WordlistManagerFocus};
 use super::colors::TuiColors;
+use super::settings::SettingsModel;
 use super::spinner::{Spinner, ENHANCED_SPINNER_FRAMES};
-use super::widgets::{render_step_details, render_text_panel, PathViewer};
+use super::widgets::{
+    render_list_editor, render_settings_screen as render_settings_panel, render_step_details,
+    render_text_panel, render_wordlist_manager, PathViewer, WordlistFocus,
+};
 
 /// Modal width as percentage of screen width.
 const MODAL_WIDTH_PERCENT: u16 = 65;
@@ -96,6 +100,92 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
             elapsed,
         } => {
             draw_failure_screen(frame, area, input_text, *elapsed, colors);
+        }
+        AppState::Settings {
+            settings,
+            selected_section,
+            selected_field,
+            editing_mode,
+            input_buffer,
+            cursor_pos,
+            scroll_offset,
+            validation_errors,
+            ..
+        } => {
+            draw_settings_screen(
+                frame,
+                area,
+                settings,
+                *selected_section,
+                *selected_field,
+                *editing_mode,
+                input_buffer,
+                *cursor_pos,
+                *scroll_offset,
+                validation_errors,
+                settings.has_changes(),
+                colors,
+            );
+        }
+        AppState::ListEditor {
+            field_label,
+            items,
+            selected_item,
+            input_buffer,
+            cursor_pos,
+            ..
+        } => {
+            draw_list_editor_screen(
+                frame,
+                area,
+                field_label,
+                items,
+                *selected_item,
+                input_buffer,
+                *cursor_pos,
+                colors,
+            );
+        }
+        AppState::WordlistManager {
+            wordlist_files,
+            selected_row,
+            focus,
+            new_path_input,
+            pending_changes,
+            ..
+        } => {
+            draw_wordlist_manager_screen(
+                frame,
+                area,
+                wordlist_files,
+                *selected_row,
+                focus,
+                new_path_input,
+                !pending_changes.is_empty(),
+                colors,
+            );
+        }
+        AppState::ThemePicker {
+            selected_theme,
+            custom_mode,
+            custom_colors,
+            custom_field,
+            ..
+        } => {
+            draw_theme_picker_screen(
+                frame,
+                area,
+                *selected_theme,
+                *custom_mode,
+                custom_colors,
+                *custom_field,
+                colors,
+            );
+        }
+        AppState::SaveConfirmation { .. } => {
+            // Render the settings screen in the background (dimmed)
+            // Then render the confirmation modal on top
+            draw_save_confirmation_modal(&area, &mut frame.buffer_mut(), colors);
         }
     }
 
@@ -447,8 +537,9 @@ fn draw_status_bar(frame: &mut Frame, area: Rect, colors: &TuiColors) {
     let keybindings = [
         ("[q]", "Quit"),
         ("[←/→]", "Navigate"),
-        ("[c]", "Copy"),
+        ("[y]", "Yank"),
         ("[Enter]", "Rerun"),
+        ("[Ctrl+S]", "Settings"),
         ("[?]", "Help"),
     ];
 
@@ -496,8 +587,9 @@ fn draw_help_overlay(frame: &mut Frame, area: Rect, colors: &TuiColors) {
         ("q / Esc", "Quit the application"),
         ("← / h", "Select previous step"),
         ("→ / l", "Select next step"),
-        ("c", "Copy selected step output to clipboard"),
+        ("y", "Yank (copy) selected step to clipboard"),
         ("Enter", "Rerun Ciphey from selected step"),
+        ("Ctrl+S", "Open settings panel"),
         ("?", "Toggle this help overlay"),
         ("Home", "Go to first step"),
         ("End", "Go to last step"),
@@ -700,6 +792,130 @@ fn parse_quote(quote_text: &str) -> (&str, &str) {
     }
 }
 
+/// Renders the settings screen.
+///
+/// # Arguments
+///
+/// * `frame` - The Ratatui frame to render into
+/// * `area` - The area to render within
+/// * `settings` - The settings model to display
+/// * `selected_section` - Index of selected section
+/// * `selected_field` - Index of selected field within section
+/// * `editing_mode` - Whether currently editing a field
+/// * `input_buffer` - Current input buffer contents
+/// * `cursor_pos` - Cursor position in input buffer
+/// * `scroll_offset` - Scroll offset for long lists
+/// * `validation_errors` - Map of field_id -> error message
+/// * `has_changes` - Whether settings have been modified
+/// * `colors` - The color scheme to use
+#[allow(clippy::too_many_arguments)]
+fn draw_settings_screen(
+    frame: &mut Frame,
+    area: Rect,
+    settings: &SettingsModel,
+    selected_section: usize,
+    selected_field: usize,
+    editing_mode: bool,
+    input_buffer: &str,
+    cursor_pos: usize,
+    scroll_offset: usize,
+    validation_errors: &std::collections::HashMap<String, String>,
+    has_changes: bool,
+    colors: &TuiColors,
+) {
+    render_settings_panel(
+        area,
+        frame.buffer_mut(),
+        settings,
+        selected_section,
+        selected_field,
+        editing_mode,
+        input_buffer,
+        cursor_pos,
+        scroll_offset,
+        validation_errors,
+        has_changes,
+        colors,
+    );
+}
+
+/// Renders the list editor screen.
+///
+/// # Arguments
+///
+/// * `frame` - The Ratatui frame to render into
+/// * `area` - The area to render within
+/// * `field_label` - Name of the field being edited
+/// * `items` - Current list items
+/// * `selected_item` - Currently selected item index
+/// * `input_buffer` - Input buffer for new items
+/// * `cursor_pos` - Cursor position in input buffer
+/// * `colors` - The color scheme to use
+#[allow(clippy::too_many_arguments)]
+fn draw_list_editor_screen(
+    frame: &mut Frame,
+    area: Rect,
+    field_label: &str,
+    items: &[String],
+    selected_item: Option<usize>,
+    input_buffer: &str,
+    cursor_pos: usize,
+    colors: &TuiColors,
+) {
+    render_list_editor(
+        area,
+        frame.buffer_mut(),
+        field_label,
+        items,
+        selected_item,
+        input_buffer,
+        cursor_pos,
+        colors,
+    );
+}
+
+/// Renders the wordlist manager screen.
+///
+/// # Arguments
+///
+/// * `frame` - The Ratatui frame to render into
+/// * `area` - The area to render within
+/// * `wordlist_files` - List of wordlist files
+/// * `selected_row` - Currently selected row
+/// * `focus` - Current focus state
+/// * `path_input` - Input buffer for new path
+/// * `has_pending_changes` - Whether there are unsaved changes
+/// * `colors` - The color scheme to use
+#[allow(clippy::too_many_arguments)]
+fn draw_wordlist_manager_screen(
+    frame: &mut Frame,
+    area: Rect,
+    wordlist_files: &[super::app::WordlistFileInfo],
+    selected_row: usize,
+    focus: &WordlistManagerFocus,
+    path_input: &str,
+    has_pending_changes: bool,
+    colors: &TuiColors,
+) {
+    // Convert app focus to widget focus
+    let widget_focus = match focus {
+        WordlistManagerFocus::Table => WordlistFocus::Table,
+        WordlistManagerFocus::AddPathInput => WordlistFocus::AddPath,
+        WordlistManagerFocus::DoneButton => WordlistFocus::Done,
+    };
+
+    render_wordlist_manager(
+        area,
+        frame.buffer_mut(),
+        wordlist_files,
+        selected_row,
+        widget_focus,
+        path_input,
+        has_pending_changes,
+        colors,
+    );
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -768,4 +984,99 @@ mod tests {
         assert_eq!(quote, "Quote with dash-in-middle");
         assert_eq!(attribution, "The Author");
     }
+}
+
+/// Renders the theme picker screen.
+fn draw_theme_picker_screen(
+    frame: &mut Frame,
+    area: Rect,
+    selected: usize,
+    custom_mode: bool,
+    custom_colors: &super::widgets::theme_picker::ThemePickerCustomColors,
+    custom_field: usize,
+    colors: &TuiColors,
+) {
+    use super::widgets::theme_picker::ThemePicker;
+
+    // Create outer block with title
+    let block = Block::default()
+        .title(" Choose Theme ")
+        .title_style(colors.title)
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(colors.accent);
+
+    let inner = block.inner(area);
+    frame.render_widget(block, area);
+
+    // Render theme picker widget
+    let picker = ThemePicker::new();
+    let mut buf = frame.buffer_mut();
+    picker.render(
+        inner,
+        buf,
+        selected,
+        custom_mode,
+        custom_colors,
+        custom_field,
+        colors,
+    );
+}
+
+/// Renders the save confirmation modal as an overlay.
+fn draw_save_confirmation_modal(area: &Rect, buf: &mut Buffer, colors: &TuiColors) {
+    use ratatui::layout::Alignment;
+    use ratatui::widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph, Wrap};
+
+    // Create a centered modal area
+    let modal_width = 50;
+    let modal_height = 7;
+
+    let x = (area.width.saturating_sub(modal_width)) / 2;
+    let y = (area.height.saturating_sub(modal_height)) / 2;
+
+    let modal_area = Rect {
+        x: area.x + x,
+        y: area.y + y,
+        width: modal_width.min(area.width),
+        height: modal_height.min(area.height),
+    };
+
+    // Clear the modal area (makes it stand out from background)
+    Clear.render(modal_area, buf);
+
+    // Create modal block
+    let block = Block::default()
+        .title(" Unsaved Changes ")
+        .title_style(colors.accent.add_modifier(Modifier::BOLD))
+        .borders(Borders::ALL)
+        .border_type(BorderType::Double)
+        .border_style(colors.accent)
+        .padding(Padding::new(2, 2, 1, 1));
+
+    let inner = block.inner(modal_area);
+    block.render(modal_area, buf);
+
+    // Create modal content
+    let lines = vec![
+        Line::from(Span::styled(
+            "Do you want to save your changes?",
+            colors.text.add_modifier(Modifier::BOLD),
+        )),
+        Line::from(""),
+        Line::from(vec![
+            Span::styled("[Y]", colors.accent.add_modifier(Modifier::BOLD)),
+            Span::styled("es  ", colors.text),
+            Span::styled("[N]", colors.accent.add_modifier(Modifier::BOLD)),
+            Span::styled("o  ", colors.text),
+            Span::styled("[C]", colors.accent.add_modifier(Modifier::BOLD)),
+            Span::styled("ancel", colors.text),
+        ]),
+    ];
+
+    let paragraph = Paragraph::new(lines)
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: false });
+
+    paragraph.render(inner, buf);
 }

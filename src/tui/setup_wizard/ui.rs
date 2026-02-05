@@ -550,15 +550,12 @@ fn draw_theme_preview(frame: &mut Frame, area: Rect, scheme: &ColorScheme) {
             Style::default().fg(MUTED),
         )),
         Line::from(""),
+        Line::from(Span::styled("Error", scheme.error_style())),
+        Line::from(Span::styled("  Error messages", Style::default().fg(MUTED))),
+        Line::from(""),
         Line::from(Span::styled("Questions", scheme.question_style())),
         Line::from(Span::styled(
             "  Interactive prompts",
-            Style::default().fg(MUTED),
-        )),
-        Line::from(""),
-        Line::from(Span::styled("Statements", scheme.statement_style())),
-        Line::from(Span::styled(
-            "  General output text",
             Style::default().fg(MUTED),
         )),
     ];
