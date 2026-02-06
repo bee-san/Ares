@@ -191,6 +191,8 @@ fn run_setup_event_loop(
                                         match crate::storage::download::import_wordlist_with_bloom_rebuild(
                                             &words,
                                             &wordlist.source_id,
+                                            &wordlist.name,
+                                            &wordlist.url,
                                         ) {
                                             Ok(_) => {
                                                 let _ = tx.send(

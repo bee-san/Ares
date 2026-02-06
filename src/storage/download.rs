@@ -9,7 +9,9 @@ use std::io::{BufRead, BufReader};
 use std::time::Duration;
 
 use super::bloom::{build_bloom_filter_from_db, save_bloom_filter};
-use super::database::{import_wordlist, setup_database};
+use super::database::{
+    import_wordlist, insert_wordlist_file, setup_database, update_words_file_id,
+};
 
 /// Represents a predefined wordlist available for download.
 #[derive(Debug, Clone)]
@@ -147,9 +149,10 @@ pub fn download_wordlist_from_url(url: &str) -> Result<HashSet<String>, String> 
 
 /// Imports a wordlist into the database and rebuilds the bloom filter.
 ///
-/// This function performs two operations:
-/// 1. Imports the provided words into the wordlist database table
-/// 2. Rebuilds the bloom filter from all words in the database
+/// This function performs three operations:
+/// 1. Registers the wordlist file in the `wordlist_files` table for the Wordlist Manager UI
+/// 2. Imports the provided words into the `wordlist` table
+/// 3. Rebuilds the bloom filter from all words in the database
 ///
 /// The bloom filter rebuild ensures that the fast lookup mechanism is updated
 /// to include the newly imported words.
@@ -158,6 +161,8 @@ pub fn download_wordlist_from_url(url: &str) -> Result<HashSet<String>, String> 
 ///
 /// * `words` - A HashSet containing the words to import
 /// * `source` - Source identifier for the wordlist (e.g., "2025-199_most_used_passwords")
+/// * `filename` - Display name for the wordlist file (e.g., "2025 Top 199 Passwords")
+/// * `file_path` - Path or URL identifier for the wordlist (must be unique per wordlist)
 ///
 /// # Returns
 ///
@@ -182,20 +187,29 @@ pub fn download_wordlist_from_url(url: &str) -> Result<HashSet<String>, String> 
 /// words.insert("password".to_string());
 /// words.insert("123456".to_string());
 ///
-/// let count = import_wordlist_with_bloom_rebuild(&words, "test_wordlist")?;
+/// let count = import_wordlist_with_bloom_rebuild(&words, "test_wordlist", "test.txt", "/path/to/test.txt")?;
 /// println!("Imported {} words", count);
 /// # Ok::<(), String>(())
 /// ```
 pub fn import_wordlist_with_bloom_rebuild(
     words: &HashSet<String>,
     source: &str,
+    filename: &str,
+    file_path: &str,
 ) -> Result<usize, String> {
     // Ensure database is set up (creates wordlist table if it doesn't exist)
     setup_database().map_err(|e| format!("Failed to setup database: {}", e))?;
 
+    // Register the wordlist file so it appears in the Wordlist Manager UI
+    let file_id = insert_wordlist_file(filename, file_path, source, words.len() as i64)
+        .map_err(|e| format!("Failed to register wordlist file: {}", e))?;
+
     // Import wordlist to database
     let count = import_wordlist(words, source)
         .map_err(|e| format!("Failed to import wordlist to database: {}", e))?;
+
+    // Link the imported words to their wordlist_files entry
+    let _ = update_words_file_id(source, file_id);
 
     // Rebuild bloom filter from database
     let bloom =
@@ -234,6 +248,13 @@ pub fn import_wordlist_from_file(path: &str, source: &str) -> Result<usize, Stri
     // Ensure database is set up (creates wordlist table if it doesn't exist)
     setup_database().map_err(|e| format!("Failed to setup database: {}", e))?;
 
+    // Extract filename for display in Wordlist Manager
+    let filename = std::path::Path::new(path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown")
+        .to_string();
+
     // Open and read the file
     let file = std::fs::File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;
     let reader = BufReader::new(file);
@@ -258,8 +279,8 @@ pub fn import_wordlist_from_file(path: &str, source: &str) -> Result<usize, Stri
         return Err("Wordlist file is empty".to_string());
     }
 
-    // Import with bloom filter rebuild
-    import_wordlist_with_bloom_rebuild(&words, source)
+    // Import with bloom filter rebuild (also registers in wordlist_files)
+    import_wordlist_with_bloom_rebuild(&words, source, &filename, path)
 }
 
 #[cfg(test)]
@@ -287,7 +308,7 @@ mod tests {
         let words = HashSet::new();
         // This should succeed with 0 imported (empty is valid for import_wordlist)
         // but our wrapper might handle it differently
-        let result = import_wordlist_with_bloom_rebuild(&words, "test");
+        let result = import_wordlist_with_bloom_rebuild(&words, "test", "test.txt", "test://empty");
         // We allow empty imports, so this should work
         assert!(result.is_ok() || result.is_err());
     }

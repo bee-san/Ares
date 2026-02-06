@@ -13,7 +13,7 @@ use super::app::{
 use super::colors::TuiColors;
 use super::multiline_text_input::MultilineTextInput;
 use super::settings::SettingsModel;
-use super::spinner::{Spinner, ENHANCED_SPINNER_FRAMES};
+use super::spinner::{ENHANCED_SPINNER_FRAMES, QUOTES};
 use super::widgets::{
     render_list_editor, render_settings_screen as render_settings_panel, render_step_details,
     render_toggle_list_editor, render_wordlist_manager, PathViewer, WordlistFocus,
@@ -321,14 +321,9 @@ fn draw_loading_screen(
     // Create a centered content area
     let inner_area = centered_rect(area, LOADING_WIDTH_PERCENT, LOADING_HEIGHT_PERCENT);
 
-    // Create spinner with current frame
-    let mut spinner = Spinner::new();
-    for _ in 0..spinner_frame {
-        spinner.tick();
-    }
-    for _ in 0..quote_index {
-        spinner.next_quote();
-    }
+    // Get quote directly by index (quote_index is randomized at state creation
+    // and advanced by app.tick(), so no need to create a Spinner each frame)
+    let quote_text = QUOTES[quote_index % QUOTES.len()];
 
     // Calculate elapsed time
     let elapsed = start_time.elapsed();
@@ -342,7 +337,6 @@ fn draw_loading_screen(
     );
 
     // Parse quote and attribution
-    let quote_text = spinner.current_quote();
     let (quote, attribution) = parse_quote(quote_text);
 
     // Layout the inner area into sections

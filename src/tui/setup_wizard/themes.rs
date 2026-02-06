@@ -182,11 +182,11 @@ pub static THEMES: &[Theme] = &[
         icon: Some("🌃"),
         scheme: ColorScheme {
             // Neon-soaked Night City aesthetic
-            informational: (252, 255, 82),  // Neon Yellow
-            warning: (236, 28, 219),        // Hot Pink
-            success: (0, 242, 234),         // Cyan
-            error: (255, 36, 99),           // Bright Red
-            question: (0, 194, 255),        // Electric Blue
+            informational: (252, 255, 82), // Neon Yellow
+            warning: (236, 28, 219),       // Hot Pink
+            success: (0, 242, 234),        // Cyan
+            error: (255, 36, 99),          // Bright Red
+            question: (0, 194, 255),       // Electric Blue
         },
     },
     Theme {
@@ -206,11 +206,11 @@ pub static THEMES: &[Theme] = &[
         icon: Some("💊"),
         scheme: ColorScheme {
             // Classic green terminal aesthetic
-            informational: (0, 255, 65),    // Bright Green
-            warning: (154, 255, 0),         // Yellow-Green
-            success: (0, 255, 0),           // Pure Green
-            error: (0, 200, 50),            // Dark Green
-            question: (50, 255, 50),        // Lime Green
+            informational: (0, 255, 65), // Bright Green
+            warning: (154, 255, 0),      // Yellow-Green
+            success: (0, 255, 0),        // Pure Green
+            error: (0, 200, 50),         // Dark Green
+            question: (50, 255, 50),     // Lime Green
         },
     },
     // === Popular Editor Themes ===
@@ -255,11 +255,11 @@ pub static THEMES: &[Theme] = &[
         icon: Some("📦"),
         scheme: ColorScheme {
             // Retro warm color palette
-            informational: (250, 189, 47),  // Yellow
-            warning: (251, 73, 52),         // Red
-            success: (184, 187, 38),        // Green
-            error: (251, 73, 52),           // Red
-            question: (254, 128, 25),       // Orange
+            informational: (250, 189, 47), // Yellow
+            warning: (251, 73, 52),        // Red
+            success: (184, 187, 38),       // Green
+            error: (251, 73, 52),          // Red
+            question: (254, 128, 25),      // Orange
         },
     },
     Theme {
@@ -280,11 +280,11 @@ pub static THEMES: &[Theme] = &[
         icon: Some("🌙"),
         scheme: ColorScheme {
             // Classic precision color theme
-            informational: (181, 137, 0),   // Yellow
-            warning: (203, 75, 22),         // Orange
-            success: (133, 153, 0),         // Green
-            error: (220, 50, 47),           // Red
-            question: (38, 139, 210),       // Blue
+            informational: (181, 137, 0), // Yellow
+            warning: (203, 75, 22),       // Orange
+            success: (133, 153, 0),       // Green
+            error: (220, 50, 47),         // Red
+            question: (38, 139, 210),     // Blue
         },
     },
     Theme {
@@ -292,11 +292,11 @@ pub static THEMES: &[Theme] = &[
         icon: Some("☀️"),
         scheme: ColorScheme {
             // Classic light precision theme
-            informational: (181, 137, 0),   // Yellow
-            warning: (203, 75, 22),         // Orange
-            success: (133, 153, 0),         // Green
-            error: (220, 50, 47),           // Red
-            question: (38, 139, 210),       // Blue
+            informational: (181, 137, 0), // Yellow
+            warning: (203, 75, 22),       // Orange
+            success: (133, 153, 0),       // Green
+            error: (220, 50, 47),         // Red
+            question: (38, 139, 210),     // Blue
         },
     },
     Theme {
@@ -340,11 +340,11 @@ pub static THEMES: &[Theme] = &[
         icon: Some("🔆"),
         scheme: ColorScheme {
             // Ayu color scheme
-            informational: (255, 180, 84),  // Yellow/Orange
-            warning: (255, 51, 51),         // Red
-            success: (186, 230, 126),       // Green
-            error: (255, 51, 51),           // Red
-            question: (115, 184, 255),      // Blue
+            informational: (255, 180, 84), // Yellow/Orange
+            warning: (255, 51, 51),        // Red
+            success: (186, 230, 126),      // Green
+            error: (255, 51, 51),          // Red
+            question: (115, 184, 255),     // Blue
         },
     },
     Theme {

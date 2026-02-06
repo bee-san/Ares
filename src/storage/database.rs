@@ -1812,6 +1812,24 @@ pub fn get_wordlist_file_count() -> Result<i64, rusqlite::Error> {
     Ok(count)
 }
 
+/// Updates the file_id for words that were imported with a given source
+/// but don't yet have a file_id set.
+///
+/// This is used to link words imported via `import_wordlist()` (which doesn't
+/// set file_id) to a `wordlist_files` entry that was created separately.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on error
+pub fn update_words_file_id(source: &str, file_id: i64) -> Result<usize, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let updated = conn.execute(
+        "UPDATE wordlist SET file_id = $1 WHERE source = $2 AND file_id IS NULL",
+        (file_id, source.to_owned()),
+    )?;
+    Ok(updated)
+}
+
 /// Returns the total word count across all enabled wordlist files
 ///
 /// # Errors

@@ -16,13 +16,14 @@ pub mod wordlist;
 // Re-export commonly used types
 pub use state::{
     AppState, BranchContext, BranchMode, BranchPath, DecoderSearchOverlay, HelpContext,
-    HistoryEntry, HumanConfirmationRequest, PreviousState, SettingsStateSnapshot,
-    WordlistFileInfo, WordlistManagerFocus,
+    HistoryEntry, HumanConfirmationRequest, PreviousState, SettingsStateSnapshot, WordlistFileInfo,
+    WordlistManagerFocus,
 };
 
 use crate::DecoderResult;
 
 use super::multiline_text_input::MultilineTextInput;
+use super::spinner::random_quote_index;
 
 /// Main application struct managing TUI state and user interactions.
 #[derive(Debug)]
@@ -57,7 +58,7 @@ impl App {
         Self {
             state: AppState::Loading {
                 start_time: Instant::now(),
-                current_quote: 0,
+                current_quote: random_quote_index(),
                 spinner_frame: 0,
             },
             input_text,
@@ -158,7 +159,7 @@ impl App {
             self.input_text = input.clone();
             self.state = AppState::Loading {
                 start_time: Instant::now(),
-                current_quote: 0,
+                current_quote: random_quote_index(),
                 spinner_frame: 0,
             };
             Some(input)
@@ -179,8 +180,8 @@ impl App {
                 ..
             } => {
                 *spinner_frame = spinner_frame.wrapping_add(1);
-                // Rotate quotes every ~20 ticks (assuming ~10 ticks/sec, change every 2 seconds)
-                if *spinner_frame % 20 == 0 {
+                // Rotate quotes every ~100 ticks (assuming ~10 ticks/sec, change every 10 seconds)
+                if *spinner_frame % 100 == 0 {
                     *current_quote = current_quote.wrapping_add(1);
                 }
             }
@@ -190,7 +191,8 @@ impl App {
                 ..
             } => {
                 *spinner_frame = spinner_frame.wrapping_add(1);
-                if *spinner_frame % 20 == 0 {
+                // Rotate quotes every ~100 ticks (assuming ~10 ticks/sec, change every 10 seconds)
+                if *spinner_frame % 100 == 0 {
                     *current_quote = current_quote.wrapping_add(1);
                 }
             }

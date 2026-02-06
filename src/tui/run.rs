@@ -28,6 +28,7 @@ use super::human_checker_bridge::{
     TuiConfirmationRequest,
 };
 use super::input::{copy_to_clipboard, handle_key_event, Action};
+use super::spinner::random_quote_index;
 use super::ui::draw;
 
 /// Result type for TUI operations.
@@ -35,9 +36,6 @@ type TuiResult<T> = Result<T, Box<dyn std::error::Error>>;
 
 /// Tick rate for UI updates (in milliseconds).
 const TICK_RATE_MS: u64 = 100;
-
-/// How often to rotate quotes (in ticks).
-const QUOTE_ROTATION_TICKS: usize = 30;
 
 /// Runs the TUI for Ciphey.
 ///
@@ -100,7 +98,8 @@ pub fn run_tui(input_text: Option<&str>, config: Config) -> TuiResult<()> {
             crate::config::set_global_config(config_for_thread.clone());
 
             // Perform the cracking with cache_id support for TUI branching
-            let result = crate::perform_cracking_with_cache_id(&input_for_thread, config_for_thread);
+            let result =
+                crate::perform_cracking_with_cache_id(&input_for_thread, config_for_thread);
 
             // Send result back (ignore error if receiver dropped)
             let _ = tx.send(result);
@@ -193,7 +192,7 @@ fn run_event_loop(
                             app.input_text = new_input.clone();
                             app.state = super::app::AppState::Loading {
                                 start_time: Instant::now(),
-                                current_quote: 0,
+                                current_quote: random_quote_index(),
                                 spinner_frame: 0,
                             };
                             app.clear_status();
@@ -212,7 +211,8 @@ fn run_event_loop(
                             let config_clone = config.clone();
                             thread::spawn(move || {
                                 crate::config::set_global_config(config_clone.clone());
-                                let result = crate::perform_cracking_with_cache_id(&new_input, config_clone);
+                                let result =
+                                    crate::perform_cracking_with_cache_id(&new_input, config_clone);
                                 let _ = tx.send(result);
                             });
 
@@ -229,7 +229,7 @@ fn run_event_loop(
                             app.input_text = new_input.clone();
                             app.state = super::app::AppState::Loading {
                                 start_time: Instant::now(),
-                                current_quote: 0,
+                                current_quote: random_quote_index(),
                                 spinner_frame: 0,
                             };
                             app.clear_status();
@@ -249,7 +249,8 @@ fn run_event_loop(
                             let config_clone = config.clone();
                             thread::spawn(move || {
                                 crate::config::set_global_config(config_clone.clone());
-                                let result = crate::perform_cracking_with_cache_id(&new_input, config_clone);
+                                let result =
+                                    crate::perform_cracking_with_cache_id(&new_input, config_clone);
                                 let _ = tx.send(result);
                             });
 
@@ -463,7 +464,7 @@ fn run_event_loop(
                             // Transition to loading state
                             app.state = super::app::AppState::Loading {
                                 start_time: Instant::now(),
-                                current_quote: 0,
+                                current_quote: random_quote_index(),
                                 spinner_frame: 0,
                             };
                             app.clear_status();
@@ -482,7 +483,8 @@ fn run_event_loop(
                             let config_clone = config.clone();
                             thread::spawn(move || {
                                 crate::config::set_global_config(config_clone.clone());
-                                let result = crate::perform_cracking_with_cache_id(&text, config_clone);
+                                let result =
+                                    crate::perform_cracking_with_cache_id(&text, config_clone);
                                 let _ = tx.send(result);
                             });
 
@@ -692,11 +694,6 @@ fn run_event_loop(
             app.tick();
             tick_count += 1;
 
-            // Rotate quote periodically
-            if tick_count % QUOTE_ROTATION_TICKS == 0 {
-                app.tick(); // Extra tick to ensure quote rotation
-            }
-
             // Clear status message after configured timeout (0 = never auto-clear)
             if config.status_message_timeout > 0 {
                 let status_clear_ticks =
@@ -754,11 +751,5 @@ mod tests {
     fn test_tick_rate_reasonable() {
         assert!(TICK_RATE_MS >= 50);
         assert!(TICK_RATE_MS <= 200);
-    }
-
-    #[test]
-    fn test_quote_rotation_ticks() {
-        assert!(QUOTE_ROTATION_TICKS >= 10);
-        assert!(QUOTE_ROTATION_TICKS <= 60);
     }
 }

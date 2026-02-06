@@ -6,6 +6,7 @@
 //! entertained with diverse cryptography facts.
 
 use rand::seq::SliceRandom;
+use rand::Rng;
 
 /// Braille/unicode spinner frames for smooth animation.
 const SPINNER_FRAMES: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
@@ -14,7 +15,7 @@ const SPINNER_FRAMES: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦
 pub const ENHANCED_SPINNER_FRAMES: &[&str] = &["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"];
 
 /// Collection of funny and interesting cryptography-related quotes.
-const QUOTES: &[&str] = &[
+pub const QUOTES: &[&str] = &[
     "The only truly secure system is one that is powered off. - Gene Spafford",
     "Cryptography is typically bypassed, not penetrated. - Adi Shamir",
     "Base64 isn't encryption, it's encoding. Now you know!",
@@ -56,6 +57,14 @@ const QUOTES: &[&str] = &[
     "Ransomware operators now earn billions annually. Crime is surprisingly profitable.",
     "Two-factor authentication can be bypassed through social engineering. Hackers just call and ask.",
 ];
+
+/// Returns a random starting index into the [`QUOTES`] array.
+///
+/// Used to pick a random starting quote when entering the loading state,
+/// so each decoding session begins with a different quote.
+pub fn random_quote_index() -> usize {
+    rand::thread_rng().gen_range(0..QUOTES.len())
+}
 
 /// A loading spinner with cryptography quotes.
 ///

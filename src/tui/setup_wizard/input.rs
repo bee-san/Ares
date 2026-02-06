@@ -230,7 +230,9 @@ fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
         }
 
         match focus {
-            WordlistFocus::PredefinedList { cursor: list_cursor } => {
+            WordlistFocus::PredefinedList {
+                cursor: list_cursor,
+            } => {
                 // Navigating predefined wordlist checkboxes
                 let predefined_wordlists = crate::storage::download::get_predefined_wordlists();
                 let max_index = if predefined_wordlists.is_empty() {
@@ -566,7 +568,7 @@ fn handle_cute_cat_keys(app: &mut SetupApp, key: KeyEvent) {
 }
 
 /// Handles keys on the showing cat screen.
-/// 
+///
 /// The cat screen auto-advances after 3 seconds, but we allow quitting early.
 fn handle_showing_cat_keys(app: &mut SetupApp, key: KeyEvent) {
     match key.code {

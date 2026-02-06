@@ -91,7 +91,7 @@ fn draw_predefined_wordlists(
     ];
 
     let predefined_wordlists = crate::storage::download::get_predefined_wordlists();
-    
+
     // Extract cursor position and focused state
     let (is_focused, cursor_pos) = match focus {
         WordlistFocus::PredefinedList { cursor } => (true, *cursor),
