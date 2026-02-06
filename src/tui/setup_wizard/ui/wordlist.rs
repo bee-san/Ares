@@ -91,15 +91,21 @@ fn draw_predefined_wordlists(
     ];
 
     let predefined_wordlists = crate::storage::download::get_predefined_wordlists();
-    let is_focused = matches!(focus, WordlistFocus::PredefinedList);
+    
+    // Extract cursor position and focused state
+    let (is_focused, cursor_pos) = match focus {
+        WordlistFocus::PredefinedList { cursor } => (true, *cursor),
+        _ => (false, 0),
+    };
 
     for (i, wordlist) in predefined_wordlists.iter().enumerate() {
         let is_selected = selected_predefined.contains(&i);
         let checkbox = if is_selected { "[✓]" } else { "[ ]" };
 
-        let prefix = if is_focused && i == 0 { "> " } else { "  " };
+        let is_cursor_here = is_focused && i == cursor_pos;
+        let prefix = if is_cursor_here { "> " } else { "  " };
 
-        let style = if is_focused && i == 0 {
+        let style = if is_cursor_here {
             Style::default().fg(ACCENT)
         } else {
             Style::default().fg(Color::White)

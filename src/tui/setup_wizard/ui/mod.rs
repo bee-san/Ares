@@ -19,7 +19,7 @@ pub mod wordlist;
 pub use colors::draw_theme_selection;
 pub use summary::{
     draw_complete, draw_cute_cat_question, draw_downloading, draw_enhanced_detection,
-    draw_results_mode, draw_timeout_config, draw_token_input,
+    draw_results_mode, draw_showing_cat, draw_timeout_config, draw_token_input,
 };
 pub use tutorial::draw_tutorial;
 pub use welcome::draw_welcome;
@@ -122,6 +122,7 @@ pub fn draw_setup(frame: &mut Frame, app: &SetupApp) {
             error.as_deref(),
         ),
         SetupState::CuteCat => draw_cute_cat_question(frame, main_chunks[1]),
+        SetupState::ShowingCat => draw_showing_cat(frame, main_chunks[1]),
         SetupState::Complete => draw_complete(frame, main_chunks[1], app),
     }
 
@@ -215,7 +216,7 @@ fn draw_controls(frame: &mut Frame, area: Rect, state: &SetupState) {
             ("[Backspace]", "Back"),
         ],
         SetupState::WordlistConfig { focus, .. } => match focus {
-            WordlistFocus::PredefinedList => vec![
+            WordlistFocus::PredefinedList { .. } => vec![
                 ("[Space]", "Toggle"),
                 ("[Tab]", "Next"),
                 ("[1-2]", "Quick"),
@@ -242,6 +243,7 @@ fn draw_controls(frame: &mut Frame, area: Rect, state: &SetupState) {
             }
         }
         SetupState::CuteCat => vec![("[Y]", "Yes!"), ("[N]", "No"), ("[Backspace]", "Back")],
+        SetupState::ShowingCat => vec![("", "Admiring cat...")],
         SetupState::Complete => vec![("[Enter]", "Finish")],
     };
 

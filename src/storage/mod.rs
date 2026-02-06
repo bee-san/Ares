@@ -12,6 +12,44 @@ pub mod download;
 /// Module for storing WaitAthena results
 pub mod wait_athena_storage;
 
+/// Returns the path to the Ciphey data directory (~/.ciphey/).
+///
+/// This is the central location for all Ciphey data files including:
+/// - config.toml
+/// - database.sqlite
+/// - wordlist_bloom.dat
+pub fn get_ciphey_dir() -> Option<std::path::PathBuf> {
+    dirs::home_dir().map(|p| p.join(".ciphey"))
+}
+
+/// Initializes the Ciphey storage directory and database.
+///
+/// This function should be called early in the application startup.
+/// It creates the `~/.ciphey/` directory if it doesn't exist and
+/// initializes the SQLite database with the required schema.
+///
+/// Both TUI and CLI modes should call this before performing any
+/// operations that require database access.
+///
+/// # Errors
+///
+/// Returns an error string if directory creation or database initialization fails.
+pub fn initialize_storage() -> Result<(), String> {
+    // Get the ciphey directory path
+    let ciphey_dir = get_ciphey_dir().ok_or("Could not find home directory")?;
+
+    // Create directory if it doesn't exist
+    if !ciphey_dir.exists() {
+        std::fs::create_dir_all(&ciphey_dir)
+            .map_err(|e| format!("Failed to create ~/.ciphey directory: {}", e))?;
+    }
+
+    // Initialize the database
+    database::setup_database().map_err(|e| format!("Failed to setup database: {}", e))?;
+
+    Ok(())
+}
+
 /// English letter frequency distribution (A-Z)
 /// Used for frequency analysis in various decoders
 pub const ENGLISH_FREQS: [f64; 26] = [

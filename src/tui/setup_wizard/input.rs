@@ -33,6 +33,7 @@ pub fn handle_setup_key_event(app: &mut SetupApp, key: KeyEvent) {
         SetupState::TokenInput { .. } => handle_token_input_keys(app, key),
         SetupState::Downloading { .. } => handle_downloading_keys(app, key),
         SetupState::CuteCat => handle_cute_cat_keys(app, key),
+        SetupState::ShowingCat => handle_showing_cat_keys(app, key),
         SetupState::Complete => handle_complete_keys(app, key),
     }
 }
@@ -229,10 +230,10 @@ fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
         }
 
         match focus {
-            WordlistFocus::PredefinedList => {
+            WordlistFocus::PredefinedList { cursor: list_cursor } => {
                 // Navigating predefined wordlist checkboxes
                 let predefined_wordlists = crate::storage::download::get_predefined_wordlists();
-                let _max_index = if predefined_wordlists.is_empty() {
+                let max_index = if predefined_wordlists.is_empty() {
                     0
                 } else {
                     predefined_wordlists.len() - 1
@@ -240,27 +241,32 @@ fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
 
                 match key.code {
                     KeyCode::Up | KeyCode::Char('k') | KeyCode::Char('K') => {
-                        // Navigate up (only if we have wordlists)
+                        // Navigate up with wrapping
                         if !predefined_wordlists.is_empty() {
-                            // For now, we'll just stay at the first item
-                            // In a full implementation, we'd track the cursor position
+                            if *list_cursor == 0 {
+                                *list_cursor = max_index;
+                            } else {
+                                *list_cursor -= 1;
+                            }
                         }
                     }
                     KeyCode::Down | KeyCode::Char('j') | KeyCode::Char('J') => {
-                        // Navigate down
+                        // Navigate down with wrapping
                         if !predefined_wordlists.is_empty() {
-                            // For now, we'll just stay at the first item
+                            if *list_cursor >= max_index {
+                                *list_cursor = 0;
+                            } else {
+                                *list_cursor += 1;
+                            }
                         }
                     }
                     KeyCode::Char(' ') | KeyCode::Enter => {
-                        // Toggle selection of first wordlist (simplified)
-                        // In a full implementation, we'd track which item is highlighted
-                        if selected_predefined.is_empty() {
-                            selected_predefined.push(0);
-                        } else if selected_predefined.contains(&0) {
-                            selected_predefined.retain(|&x| x != 0);
+                        // Toggle selection of the currently highlighted wordlist
+                        let current_idx = *list_cursor;
+                        if selected_predefined.contains(&current_idx) {
+                            selected_predefined.retain(|&x| x != current_idx);
                         } else {
-                            selected_predefined.push(0);
+                            selected_predefined.push(current_idx);
                         }
                     }
                     KeyCode::Char('1') => {
@@ -319,6 +325,14 @@ fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
                             *cursor += 1;
                         }
                     }
+                    KeyCode::Up => {
+                        // Navigate up to predefined list
+                        *focus = WordlistFocus::PredefinedList { cursor: 0 };
+                    }
+                    KeyCode::Down => {
+                        // Navigate down to custom URL input
+                        *focus = WordlistFocus::CustomUrlInput;
+                    }
                     KeyCode::Home => {
                         *cursor = 0;
                     }
@@ -354,8 +368,12 @@ fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
                             *cursor = 0;
                         } else {
                             // Go back to predefined list
-                            *focus = WordlistFocus::PredefinedList;
+                            *focus = WordlistFocus::PredefinedList { cursor: 0 };
                         }
+                    }
+                    KeyCode::BackTab => {
+                        // Move back to predefined list (Shift+Tab)
+                        *focus = WordlistFocus::PredefinedList { cursor: 0 };
                     }
                     _ => {}
                 }
@@ -368,6 +386,14 @@ fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
                     }
                     KeyCode::Backspace => {
                         custom_url.pop();
+                    }
+                    KeyCode::Up => {
+                        // Navigate up to custom file path input
+                        *focus = WordlistFocus::CustomInput;
+                    }
+                    KeyCode::Down => {
+                        // Navigate down to Done button
+                        *focus = WordlistFocus::Done;
                     }
                     KeyCode::Enter => {
                         // Move to source name input if URL is not empty
@@ -398,6 +424,14 @@ fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
                     KeyCode::Backspace => {
                         custom_url_source.pop();
                     }
+                    KeyCode::Up => {
+                        // Navigate up to custom URL input
+                        *focus = WordlistFocus::CustomUrlInput;
+                    }
+                    KeyCode::Down => {
+                        // Navigate down to Done button
+                        *focus = WordlistFocus::Done;
+                    }
                     KeyCode::Enter => {
                         // Add URL to a list (we'd need to add a field for this)
                         // For now, just go back to URL input
@@ -425,9 +459,13 @@ fn handle_wordlist_keys(app: &mut SetupApp, key: KeyEvent) {
                         // Start downloads and proceed
                         app.next_step();
                     }
-                    KeyCode::Up | KeyCode::Tab | KeyCode::BackTab => {
-                        // Move focus back to predefined list
-                        *focus = WordlistFocus::PredefinedList;
+                    KeyCode::BackTab | KeyCode::Left => {
+                        // Move focus back to custom URL input
+                        *focus = WordlistFocus::CustomUrlInput;
+                    }
+                    KeyCode::Up => {
+                        // Move focus back to custom URL input (logical up from Done)
+                        *focus = WordlistFocus::CustomUrlInput;
                     }
                     KeyCode::Esc => {
                         app.prev_step();
@@ -523,6 +561,19 @@ fn handle_cute_cat_keys(app: &mut SetupApp, key: KeyEvent) {
         }
         KeyCode::Backspace | KeyCode::Left | KeyCode::Char('p') => app.prev_step(),
         KeyCode::Char('q') | KeyCode::Esc => app.should_quit = true,
+        _ => {}
+    }
+}
+
+/// Handles keys on the showing cat screen.
+/// 
+/// The cat screen auto-advances after 3 seconds, but we allow quitting early.
+fn handle_showing_cat_keys(app: &mut SetupApp, key: KeyEvent) {
+    match key.code {
+        // Allow quitting, but otherwise ignore input (auto-advances via timer)
+        KeyCode::Char('q') | KeyCode::Esc => app.should_quit = true,
+        // Allow skipping ahead manually if user doesn't want to wait
+        KeyCode::Enter | KeyCode::Char(' ') => app.next_step(),
         _ => {}
     }
 }

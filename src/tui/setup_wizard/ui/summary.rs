@@ -381,7 +381,7 @@ pub fn draw_cute_cat_question(frame: &mut Frame, area: Rect) {
     let lines = vec![
         Line::from(""),
         Line::from(Span::styled(
-            "Do you want to see a cute cat?",
+            "Do you want to see my cute cat?",
             Style::default()
                 .fg(Color::White)
                 .add_modifier(Modifier::BOLD),
@@ -401,6 +401,39 @@ pub fn draw_cute_cat_question(frame: &mut Frame, area: Rect) {
             Span::styled(" No thanks", Style::default().fg(Color::White)),
         ]),
     ];
+
+    let content = Paragraph::new(lines).alignment(Alignment::Center);
+    frame.render_widget(content, inner);
+}
+
+/// Draws the cute cat display screen (shown for 3 seconds).
+pub fn draw_showing_cat(frame: &mut Frame, area: Rect) {
+    let content_area = centered_rect(area, 60, 60);
+
+    let block = Block::default()
+        .title(" Meow! ")
+        .title_style(Style::default().fg(ACCENT).add_modifier(Modifier::BOLD))
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(Style::default().fg(ACCENT))
+        .padding(Padding::new(2, 2, 1, 1));
+
+    let inner = block.inner(content_area);
+    frame.render_widget(block, content_area);
+
+    let mut lines = vec![];
+
+    // Show the cute cat!
+    for line in CAT_ART.lines() {
+        lines.push(Line::from(Span::styled(line, Style::default().fg(ACCENT))));
+    }
+    lines.push(Line::from(""));
+    lines.push(Line::from(Span::styled(
+        "Meet Ruhee!",
+        Style::default()
+            .fg(Color::White)
+            .add_modifier(Modifier::BOLD),
+    )));
 
     let content = Paragraph::new(lines).alignment(Alignment::Center);
     frame.render_widget(content, inner);

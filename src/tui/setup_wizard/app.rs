@@ -85,6 +85,8 @@ pub enum SetupState {
     },
     /// Easter egg: cute cat!
     CuteCat,
+    /// Showing the cute cat for 3 seconds
+    ShowingCat,
     /// Setup complete - ready to exit
     Complete,
 }
@@ -173,8 +175,12 @@ fn parse_rgb(s: &str) -> Option<(u8, u8, u8)> {
 /// Focus state for the wordlist configuration screen.
 #[derive(Debug, Clone, PartialEq)]
 pub enum WordlistFocus {
-    /// Navigating predefined wordlist checkboxes
-    PredefinedList,
+    /// Navigating predefined wordlist checkboxes.
+    /// The cursor field tracks which wordlist is currently highlighted.
+    PredefinedList {
+        /// Index of the currently highlighted wordlist in the list.
+        cursor: usize,
+    },
     /// Typing custom file path
     CustomInput,
     /// Typing custom URL
@@ -272,6 +278,7 @@ impl SetupApp {
             SetupState::TokenInput { .. } => 6,
             SetupState::Downloading { .. } => 6,
             SetupState::CuteCat => 7,
+            SetupState::ShowingCat => 7,
             SetupState::Complete => 7,
         }
     }
@@ -315,7 +322,7 @@ impl SetupApp {
                         current_input: String::new(),
                         cursor: 0,
                         selected_predefined: Vec::new(),
-                        focus: WordlistFocus::PredefinedList,
+                        focus: WordlistFocus::PredefinedList { cursor: 0 },
                         custom_url: String::new(),
                         custom_url_source: String::new(),
                         download_progress: None,
@@ -329,7 +336,7 @@ impl SetupApp {
                     current_input: String::new(),
                     cursor: 0,
                     selected_predefined: Vec::new(),
-                    focus: WordlistFocus::PredefinedList,
+                    focus: WordlistFocus::PredefinedList { cursor: 0 },
                     custom_url: String::new(),
                     custom_url_source: String::new(),
                     download_progress: None,
@@ -398,7 +405,15 @@ impl SetupApp {
                 }
                 SetupState::CuteCat
             }
-            SetupState::CuteCat => SetupState::Complete,
+            SetupState::CuteCat => {
+                // If user said yes to seeing cat, go to ShowingCat; otherwise skip to Complete
+                if self.show_cat {
+                    SetupState::ShowingCat
+                } else {
+                    SetupState::Complete
+                }
+            }
+            SetupState::ShowingCat => SetupState::Complete,
             SetupState::Complete => SetupState::Complete,
         };
     }
@@ -435,7 +450,7 @@ impl SetupApp {
                 current_input: String::new(),
                 cursor: 0,
                 selected_predefined: self.selected_predefined_wordlists.clone(),
-                focus: WordlistFocus::PredefinedList,
+                focus: WordlistFocus::PredefinedList { cursor: 0 },
                 custom_url: String::new(),
                 custom_url_source: String::new(),
                 download_progress: None,
@@ -448,6 +463,7 @@ impl SetupApp {
             SetupState::CuteCat => SetupState::EnhancedDetection {
                 selected: if self.enhanced_detection { 1 } else { 0 },
             },
+            SetupState::ShowingCat => SetupState::CuteCat,
             SetupState::Complete => SetupState::CuteCat,
         };
     }

@@ -8,14 +8,21 @@ use std::io::IsTerminal;
 
 use ciphey::cli::parse_cli_args;
 use ciphey::cli_pretty_printing::{failed_to_decode, program_exiting_successful_decoding};
-use ciphey::config::{config_exists, create_config_from_setup, set_global_config};
+use ciphey::config::{config_exists, create_config_from_setup, delete_config_directory, get_config_dir, set_global_config};
 use ciphey::perform_cracking;
-use ciphey::storage::database::setup_database;
+use ciphey::storage::initialize_storage;
 use ciphey::tui::{run_setup_wizard, run_tui};
 
 fn main() {
     // Set up human panic for better crash reports
     human_panic::setup_panic!();
+
+    // Handle --delete-config flag early, before any other initialization
+    // We check args directly to avoid initializing the config system
+    if std::env::args().any(|arg| arg == "--delete-config") {
+        handle_delete_config();
+        return;
+    }
 
     // Check if this is first run and we're in a terminal
     let is_first_run = !config_exists();
@@ -55,9 +62,9 @@ fn main() {
     let should_use_tui = use_tui && is_terminal && !config.api_mode && !config.top_results;
 
     if should_use_tui {
-        // Initialize database before TUI so history loads correctly
-        if let Err(e) = setup_database() {
-            eprintln!("Warning: Failed to initialize database: {}", e);
+        // Initialize storage directory and database before TUI
+        if let Err(e) = initialize_storage() {
+            eprintln!("Warning: Failed to initialize storage: {}", e);
         }
 
         // Run TUI mode - text can be None (homescreen) or Some (direct decode)
@@ -89,6 +96,47 @@ fn main() {
             None => {
                 failed_to_decode();
             }
+        }
+    }
+}
+
+/// Handle the --delete-config flag.
+///
+/// Deletes the entire Ciphey configuration directory and exits.
+/// Provides appropriate feedback to the user.
+fn handle_delete_config() {
+    // Get the config directory path for display
+    let config_dir_display = get_config_dir()
+        .map(|p| p.display().to_string())
+        .unwrap_or_else(|| "~/.ciphey".to_string());
+
+    match delete_config_directory() {
+        Ok(true) => {
+            // Successfully deleted
+            println!(
+                "\x1b[32m✓\x1b[0m Configuration directory deleted: {}",
+                config_dir_display
+            );
+            println!("  Removed: config.toml, database.sqlite, wordlist_bloom.dat, and any other files.");
+            std::process::exit(0);
+        }
+        Ok(false) => {
+            // Directory didn't exist
+            println!(
+                "\x1b[33m!\x1b[0m Configuration directory does not exist: {}",
+                config_dir_display
+            );
+            println!("  Nothing to delete.");
+            std::process::exit(0);
+        }
+        Err(e) => {
+            // Error during deletion
+            eprintln!(
+                "\x1b[31m✗\x1b[0m Failed to delete configuration directory: {}",
+                config_dir_display
+            );
+            eprintln!("  Error: {}", e);
+            std::process::exit(1);
         }
     }
 }

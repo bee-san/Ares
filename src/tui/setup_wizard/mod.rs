@@ -38,6 +38,9 @@ type SetupResult<T> = Result<T, Box<dyn std::error::Error>>;
 /// Tick rate for UI updates (in milliseconds).
 const TICK_RATE_MS: u64 = 50;
 
+/// Duration to show the cute cat (in seconds).
+const CAT_DISPLAY_DURATION_SECS: u64 = 3;
+
 /// Message from the download thread.
 enum DownloadMessage {
     /// Progress update (0.0 to 1.0)
@@ -78,6 +81,13 @@ enum WordlistDownloadMessage {
 /// - The alternate screen cannot be entered
 /// - Terminal initialization fails
 pub fn run_setup_wizard() -> SetupResult<Option<HashMap<String, String>>> {
+    // Initialize the database early, before any operations that might need it
+    // This ensures the database file and tables exist before wordlist operations
+    if let Err(e) = crate::storage::database::setup_database() {
+        // Log the error but continue - we'll try to handle this gracefully
+        log::warn!("Failed to initialize database during setup: {}", e);
+    }
+
     // Setup terminal
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -118,6 +128,9 @@ fn run_setup_event_loop(
 ) -> SetupResult<()> {
     let tick_rate = Duration::from_millis(TICK_RATE_MS);
     let mut last_tick = Instant::now();
+
+    // Timer for showing the cute cat (3 seconds)
+    let mut cat_display_start: Option<Instant> = None;
 
     // Channel for download progress (only created when downloading)
     let mut download_rx: Option<mpsc::Receiver<DownloadMessage>> = None;
@@ -464,6 +477,23 @@ fn run_setup_event_loop(
         if last_tick.elapsed() >= tick_rate {
             app.tick();
             last_tick = Instant::now();
+        }
+
+        // Handle ShowingCat timer - start timer when entering, auto-advance after 3 seconds
+        if matches!(app.state, SetupState::ShowingCat) {
+            if cat_display_start.is_none() {
+                // Just entered ShowingCat state, start the timer
+                cat_display_start = Some(Instant::now());
+            } else if let Some(start) = cat_display_start {
+                // Check if 3 seconds have passed
+                if start.elapsed() >= Duration::from_secs(CAT_DISPLAY_DURATION_SECS) {
+                    app.next_step();
+                    cat_display_start = None;
+                }
+            }
+        } else {
+            // Not in ShowingCat state, reset the timer
+            cat_display_start = None;
         }
 
         // Check if we should exit

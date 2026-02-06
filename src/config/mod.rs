@@ -220,6 +220,17 @@ impl Default for Config {
     }
 }
 
+/// Get the path to the ciphey config directory (~/.ciphey/)
+///
+/// # Returns
+///
+/// The path to the ciphey config directory, or None if the home directory cannot be found.
+pub fn get_config_dir() -> Option<std::path::PathBuf> {
+    let mut path = dirs::home_dir()?;
+    path.push(".ciphey");
+    Some(path)
+}
+
 /// Get the path to the ciphey config file
 ///
 /// # Panics
@@ -233,6 +244,33 @@ pub fn get_config_file_path() -> std::path::PathBuf {
     fs::create_dir_all(&path).expect("Could not create ciphey directory");
     path.push("config.toml");
     path
+}
+
+/// Delete the entire ciphey configuration directory (~/.ciphey/).
+///
+/// This removes:
+/// - config.toml (user configuration)
+/// - database.sqlite (cache and analytics)
+/// - wordlist_bloom.dat (bloom filter cache)
+/// - Any other files in the directory
+///
+/// # Returns
+///
+/// - `Ok(true)` if the directory was deleted successfully
+/// - `Ok(false)` if the directory did not exist
+/// - `Err(String)` if deletion failed
+pub fn delete_config_directory() -> Result<bool, String> {
+    let config_dir = match get_config_dir() {
+        Some(path) => path,
+        None => return Err("Could not find home directory".to_string()),
+    };
+
+    if !config_dir.exists() {
+        return Ok(false);
+    }
+
+    fs::remove_dir_all(&config_dir).map_err(|e| format!("Failed to delete config directory: {}", e))?;
+    Ok(true)
 }
 
 /// Checks if the config file exists (without loading it).

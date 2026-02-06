@@ -306,7 +306,14 @@ pub fn setup_database() -> Result<(), rusqlite::Error> {
         let db_path = DB_PATH.read().expect("DB_PATH RwLock poisoned");
         if db_path.is_none() {
             drop(db_path); // Release read lock before acquiring write lock
-            set_db_path(Some(get_database_path()));
+            let path = get_database_path();
+            // Create parent directory if it doesn't exist
+            if let Some(parent) = path.parent() {
+                if !parent.exists() {
+                    let _ = std::fs::create_dir_all(parent);
+                }
+            }
+            set_db_path(Some(path));
         }
     }
     init_database()?;

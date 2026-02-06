@@ -9,7 +9,7 @@ use std::io::{BufRead, BufReader};
 use std::time::Duration;
 
 use super::bloom::{build_bloom_filter_from_db, save_bloom_filter};
-use super::database::import_wordlist;
+use super::database::{import_wordlist, setup_database};
 
 /// Represents a predefined wordlist available for download.
 #[derive(Debug, Clone)]
@@ -190,6 +190,9 @@ pub fn import_wordlist_with_bloom_rebuild(
     words: &HashSet<String>,
     source: &str,
 ) -> Result<usize, String> {
+    // Ensure database is set up (creates wordlist table if it doesn't exist)
+    setup_database().map_err(|e| format!("Failed to setup database: {}", e))?;
+
     // Import wordlist to database
     let count = import_wordlist(words, source)
         .map_err(|e| format!("Failed to import wordlist to database: {}", e))?;
@@ -228,6 +231,9 @@ pub fn import_wordlist_with_bloom_rebuild(
 /// - Database import fails
 /// - Bloom filter rebuild fails
 pub fn import_wordlist_from_file(path: &str, source: &str) -> Result<usize, String> {
+    // Ensure database is set up (creates wordlist table if it doesn't exist)
+    setup_database().map_err(|e| format!("Failed to setup database: {}", e))?;
+
     // Open and read the file
     let file = std::fs::File::open(path).map_err(|e| format!("Failed to open file: {}", e))?;
     let reader = BufReader::new(file);

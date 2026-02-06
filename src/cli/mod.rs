@@ -20,6 +20,11 @@ pub struct Opts {
     #[arg(index = 1)]
     text_positional: Option<String>,
 
+    /// Delete the Ciphey configuration directory (~/.ciphey/) and exit.
+    /// This removes all config, cache, and database files.
+    #[arg(long)]
+    pub delete_config: bool,
+
     /// Text to decrypt/decode (alternative to positional argument)
     #[arg(short, long)]
     text: Option<String>,
@@ -70,6 +75,19 @@ pub struct Opts {
     /// By default, TUI is enabled when running interactively in a terminal
     #[arg(long)]
     no_tui: bool,
+}
+
+/// Check if the --delete-config flag was passed.
+///
+/// This performs minimal CLI parsing to check for the delete-config flag
+/// before any other initialization happens.
+///
+/// # Returns
+///
+/// `true` if --delete-config was passed, `false` otherwise
+pub fn should_delete_config() -> bool {
+    let opts: Opts = Opts::parse();
+    opts.delete_config
 }
 
 /// Parse CLI Arguments turns a Clap Opts struct, seen above
