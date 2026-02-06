@@ -168,22 +168,22 @@ impl WordlistManagerWidget {
 
                 Row::new(vec![
                     Cell::from(enabled_text),
-                    Cell::from(truncate_string(&wl.filename, 25)),
+                    Cell::from(truncate_string(&wl.filename, 32)),
                     Cell::from(format!("{}", wl.word_count)),
-                    Cell::from(truncate_string(&wl.source, 15)),
-                    Cell::from(truncate_string(&wl.added_date, 10)),
+                    Cell::from(truncate_string(&wl.source, 27)),
+                    Cell::from(wl.added_date.clone()),
                 ])
                 .style(row_style)
             })
             .collect();
 
-        // Calculate column widths
+        // Calculate column widths - fixed widths for balanced layout
         let widths = [
-            Constraint::Length(8),  // Enabled
-            Constraint::Min(20),    // Filename
-            Constraint::Length(10), // Words
-            Constraint::Length(15), // Source
-            Constraint::Length(12), // Added
+            Constraint::Length(9),  // Enabled - "[x]" checkbox
+            Constraint::Length(30), // Filename - fixed width (capped)
+            Constraint::Length(12), // Words - room for large counts
+            Constraint::Length(30), // Source - file paths, "user_import" etc
+            Constraint::Length(12), // Added - "2024-01-01"
         ];
 
         let table = Table::new(rows, widths)
