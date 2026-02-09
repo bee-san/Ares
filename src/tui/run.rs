@@ -409,6 +409,17 @@ fn run_event_loop(
                         Action::OpenDecoderSearch => {
                             app.open_decoder_search();
                         }
+                        Action::OpenQuickSearch => {
+                            app.open_quick_search(config);
+                        }
+                        Action::LaunchQuickSearch(url) => match open::that(&url) {
+                            Ok(()) => {
+                                app.set_status("Opened in browser.".to_string());
+                            }
+                            Err(e) => {
+                                app.set_status(format!("Failed to open browser: {}", e));
+                            }
+                        },
                         Action::ReturnToParent => {
                             // Return to parent branch in the branch hierarchy
                             if let super::app::AppState::Results { branch_path, .. } =

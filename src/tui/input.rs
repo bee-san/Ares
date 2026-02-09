@@ -43,6 +43,10 @@ pub enum Action {
     OpenBranchPrompt,
     /// Open the decoder search modal.
     OpenDecoderSearch,
+    /// Open the quick search overlay (browser search providers).
+    OpenQuickSearch,
+    /// Launch a quick search URL in the system browser.
+    LaunchQuickSearch(String),
     /// Return to parent branch (Backspace when viewing a branch).
     ReturnToParent,
     /// Run a full A* search as a branch, with branch context for database linkage.
@@ -104,6 +108,11 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
     // Handle decoder search overlay FIRST (it floats on top of Results)
     if app.is_decoder_search_active() {
         return handle_decoder_search_keys(app, key);
+    }
+
+    // Handle quick search overlay (floats on top of Results)
+    if app.is_quick_search_active() {
+        return handle_quick_search_keys(app, key);
     }
 
     // Check if we're in a state that has its own key handling
@@ -433,6 +442,15 @@ fn handle_results_keys(
             app.pending_g = false;
             if selected_step_text.is_some() {
                 Action::OpenDecoderSearch
+            } else {
+                Action::None
+            }
+        }
+        // Open: Open quick search overlay to search output in browser - always works
+        KeyCode::Char('o') => {
+            app.pending_g = false;
+            if selected_step_text.is_some() {
+                Action::OpenQuickSearch
             } else {
                 Action::None
             }
@@ -1272,6 +1290,47 @@ fn handle_decoder_search_keys(app: &mut App, key: KeyEvent) -> Action {
                         .collect();
                 }
                 overlay.selected_index = 0;
+                Action::None
+            }
+            _ => Action::None,
+        }
+    } else {
+        Action::None
+    }
+}
+
+/// Handles key events for the QuickSearch overlay.
+fn handle_quick_search_keys(app: &mut App, key: KeyEvent) -> Action {
+    if let Some(ref mut overlay) = app.quick_search {
+        match key.code {
+            // Navigate list
+            KeyCode::Up | KeyCode::Char('k') => {
+                if overlay.selected_index > 0 {
+                    overlay.selected_index -= 1;
+                }
+                Action::None
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                if !overlay.entries.is_empty() && overlay.selected_index < overlay.entries.len() - 1
+                {
+                    overlay.selected_index += 1;
+                }
+                Action::None
+            }
+            // Confirm selection - build URL and open in browser
+            KeyCode::Enter => {
+                if let Some((_name, url_template)) = overlay.entries.get(overlay.selected_index) {
+                    let encoded_text = urlencoding::encode(&overlay.output_text).to_string();
+                    let url = url_template.replace("{}", &encoded_text);
+                    app.close_quick_search();
+                    Action::LaunchQuickSearch(url)
+                } else {
+                    Action::None
+                }
+            }
+            // Cancel
+            KeyCode::Esc => {
+                app.close_quick_search();
                 Action::None
             }
             _ => Action::None,

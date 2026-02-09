@@ -11,6 +11,7 @@ use super::app::{SetupApp, SetupState, WordlistFocus, TOTAL_STEPS};
 // Submodules
 pub mod ai;
 pub mod colors;
+pub mod quick_searches;
 pub mod summary;
 pub mod tutorial;
 pub mod welcome;
@@ -19,6 +20,7 @@ pub mod wordlist;
 // Re-export commonly used functions
 pub use ai::draw_ai_config;
 pub use colors::draw_theme_selection;
+pub use quick_searches::draw_quick_searches;
 pub use summary::{
     draw_complete, draw_cute_cat_question, draw_downloading, draw_enhanced_detection,
     draw_results_mode, draw_showing_cat, draw_timeout_config, draw_token_input,
@@ -143,6 +145,19 @@ pub fn draw_setup(frame: &mut Frame, app: &SetupApp) {
             *cursor,
         ),
         SetupState::Complete => draw_complete(frame, main_chunks[1], app),
+        SetupState::QuickSearches {
+            entries,
+            selected,
+            current_input,
+            cursor,
+        } => draw_quick_searches(
+            frame,
+            main_chunks[1],
+            entries,
+            *selected,
+            current_input,
+            *cursor,
+        ),
     }
 
     // Draw controls at bottom
@@ -281,6 +296,12 @@ fn draw_controls(frame: &mut Frame, area: Rect, state: &SetupState) {
             }
         }
         SetupState::ShowingCat => vec![("", "Admiring cat...")],
+        SetupState::QuickSearches { .. } => vec![
+            ("[j/k]", "Navigate"),
+            ("[Del]", "Remove"),
+            ("[Enter]", "Add/Continue"),
+            ("[Esc]", "Back"),
+        ],
         SetupState::Complete => vec![("[Enter]", "Finish")],
     };
 

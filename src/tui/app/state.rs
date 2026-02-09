@@ -162,6 +162,20 @@ pub struct DecoderSearchOverlay {
     pub branch_context: BranchContext,
 }
 
+/// Overlay for quick search (floats over Results screen).
+///
+/// Displays a list of configured search providers (e.g., Google, ChatGPT)
+/// that open the selected step's output text in an external browser.
+#[derive(Debug)]
+pub struct QuickSearchOverlay {
+    /// Parsed entries as (name, url_template) pairs.
+    pub entries: Vec<(String, String)>,
+    /// Currently selected index in the entries list.
+    pub selected_index: usize,
+    /// The output text from the selected step to search for.
+    pub output_text: String,
+}
+
 /// A simplified history entry for display in the history panel.
 #[derive(Debug, Clone)]
 pub struct HistoryEntry {

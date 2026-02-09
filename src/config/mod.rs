@@ -106,11 +106,26 @@ pub struct Config {
     /// Model name to use for AI features (e.g., "gpt-4o-mini").
     #[serde(default)]
     pub ai_model: Option<String>,
+    /// Quick search URL templates for the "Open" shortcut in the TUI Results screen.
+    /// Each entry is in the format "Name=https://example.com/search?q={}" where {} is
+    /// replaced with URL-encoded output text.
+    #[serde(default = "default_quick_searches")]
+    pub quick_searches: Vec<String>,
 }
 
 /// Default status message timeout in seconds.
 fn default_status_message_timeout() -> u64 {
     10
+}
+
+/// Default quick search URL templates.
+pub fn default_quick_searches() -> Vec<String> {
+    vec![
+        "Google=https://www.google.com/search?q={}".to_string(),
+        "ChatGPT=https://chatgpt.com/?q={}".to_string(),
+        "DuckDuckGo=https://duckduckgo.com/?q={}".to_string(),
+        "CyberChef=https://gchq.github.io/CyberChef/#input={}".to_string(),
+    ]
 }
 
 /// Cell for storing global Config
@@ -183,6 +198,7 @@ impl Clone for Config {
             ai_api_url: self.ai_api_url.clone(),
             ai_api_key: self.ai_api_key.clone(),
             ai_model: self.ai_model.clone(),
+            quick_searches: self.quick_searches.clone(),
         }
     }
 }
@@ -217,6 +233,7 @@ impl Default for Config {
             ai_api_url: None,
             ai_api_key: None,
             ai_model: None,
+            quick_searches: default_quick_searches(),
         };
 
         // Set default colors
@@ -365,6 +382,7 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "ai_api_url",
             "ai_api_key",
             "ai_model",
+            "quick_searches",
         ];
         for key in table.keys() {
             if !known_keys.contains(&key.as_str()) {
@@ -582,6 +600,16 @@ pub fn create_config_from_setup(setup_config: std::collections::HashMap<String, 
     if let Some(ai_model) = setup_config.get("ai_model") {
         if !ai_model.is_empty() {
             config.ai_model = Some(ai_model.clone());
+        }
+    }
+
+    // Set quick searches if present (pipe-separated)
+    if let Some(quick_searches_str) = setup_config.get("quick_searches") {
+        if !quick_searches_str.is_empty() {
+            config.quick_searches = quick_searches_str
+                .split('|')
+                .map(|s| s.to_string())
+                .collect();
         }
     }
 

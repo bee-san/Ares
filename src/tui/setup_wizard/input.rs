@@ -36,6 +36,7 @@ pub fn handle_setup_key_event(app: &mut SetupApp, key: KeyEvent) {
         SetupState::CuteCat => handle_cute_cat_keys(app, key),
         SetupState::ShowingCat => handle_showing_cat_keys(app, key),
         SetupState::AiConfig { .. } => handle_ai_config_keys(app, key),
+        SetupState::QuickSearches { .. } => handle_quick_searches_keys(app, key),
         SetupState::Complete => handle_complete_keys(app, key),
     }
 }
@@ -756,6 +757,90 @@ fn handle_showing_cat_keys(app: &mut SetupApp, key: KeyEvent) {
         // Allow skipping ahead manually if user doesn't want to wait
         KeyCode::Enter | KeyCode::Char(' ') => app.next_step(),
         _ => {}
+    }
+}
+
+/// Handles keys on the quick searches configuration screen.
+fn handle_quick_searches_keys(app: &mut SetupApp, key: KeyEvent) {
+    if let SetupState::QuickSearches {
+        entries,
+        selected,
+        current_input,
+        cursor,
+    } = &mut app.state
+    {
+        match key.code {
+            // Navigate entries
+            KeyCode::Up | KeyCode::Char('k') if current_input.is_empty() => {
+                if *selected > 0 {
+                    *selected -= 1;
+                }
+            }
+            KeyCode::Down | KeyCode::Char('j') if current_input.is_empty() => {
+                if !entries.is_empty() && *selected < entries.len().saturating_sub(1) {
+                    *selected += 1;
+                }
+            }
+            // Delete selected entry
+            KeyCode::Delete => {
+                if !entries.is_empty() {
+                    entries.remove(*selected);
+                    if *selected >= entries.len() && !entries.is_empty() {
+                        *selected = entries.len() - 1;
+                    }
+                }
+            }
+            // Backspace: delete from input, or remove selected entry if input is empty
+            KeyCode::Backspace => {
+                if *cursor > 0 {
+                    *cursor -= 1;
+                    current_input.remove(*cursor);
+                } else if current_input.is_empty() && !entries.is_empty() {
+                    entries.remove(*selected);
+                    if *selected >= entries.len() && !entries.is_empty() {
+                        *selected = entries.len() - 1;
+                    }
+                }
+            }
+            // Enter: add new entry if input has text, otherwise proceed to next step
+            KeyCode::Enter => {
+                if !current_input.is_empty() {
+                    // Validate: must contain '=' and '{}'
+                    if current_input.contains('=') && current_input.contains("{}") {
+                        entries.push(current_input.clone());
+                        current_input.clear();
+                        *cursor = 0;
+                        *selected = entries.len().saturating_sub(1);
+                    }
+                    // Invalid format - just clear so user can retry
+                    else {
+                        current_input.clear();
+                        *cursor = 0;
+                    }
+                } else {
+                    app.next_step();
+                }
+            }
+            // Text input for new entry
+            KeyCode::Char(c) => {
+                current_input.insert(*cursor, c);
+                *cursor += 1;
+            }
+            KeyCode::Left => {
+                if *cursor > 0 {
+                    *cursor -= 1;
+                }
+            }
+            KeyCode::Right => {
+                if *cursor < current_input.len() {
+                    *cursor += 1;
+                }
+            }
+            KeyCode::Home => *cursor = 0,
+            KeyCode::End => *cursor = current_input.len(),
+            KeyCode::Esc => app.prev_step(),
+            _ => {}
+        }
     }
 }
 

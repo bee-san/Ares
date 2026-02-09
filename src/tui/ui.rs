@@ -283,6 +283,17 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
         );
     }
 
+    // Render quick search overlay if active (floats on top of Results screen)
+    if let Some(ref overlay) = app.quick_search {
+        draw_quick_search(
+            frame,
+            area,
+            &overlay.entries,
+            overlay.selected_index,
+            colors,
+        );
+    }
+
     // Render help overlay if visible
     if app.show_help {
         draw_help_overlay(frame, area, app.help_context(), colors);
@@ -1308,6 +1319,7 @@ fn draw_status_bar(
             ("[Tab]", "Focus"),
             ("[Enter]", "Branch"),
             ("[/]", "Search"),
+            ("[o]", "Open"),
             ("[y]", "Yank"),
             ("[b]", "Home"),
             ("[?]", "Help"),
@@ -1318,6 +1330,7 @@ fn draw_status_bar(
             ("[e]", "Explain"),
             ("[Tab]", "Focus"),
             ("[/]", "Search"),
+            ("[o]", "Open"),
             ("[y]", "Yank"),
             ("[b]", "Home"),
             ("[?]", "Help"),
@@ -1327,6 +1340,7 @@ fn draw_status_bar(
             ("[Tab]", "Focus"),
             ("[y]", "Yank"),
             ("[/]", "Search"),
+            ("[o]", "Open"),
             ("[b]", "Home"),
             ("[?]", "Help"),
         ],
@@ -1411,6 +1425,7 @@ fn draw_help_overlay(
             ("Actions", ""),
             ("y / c", "Yank (copy) output to clipboard"),
             ("e", "Explain step with AI"),
+            ("o", "Open output in browser"),
             ("Enter", "Select branch or create new branch"),
             ("Backspace", "Return to parent branch"),
             ("/", "Search and run specific decoder"),
@@ -2143,6 +2158,86 @@ fn draw_decoder_search(
     let mut all_lines = lines;
     all_lines.push(Line::from(Span::styled(
         "[Enter] Run  [Esc] Cancel",
+        colors.muted,
+    )));
+
+    let paragraph = Paragraph::new(all_lines);
+    frame.render_widget(paragraph, inner);
+}
+
+/// Renders the quick search overlay.
+///
+/// Displays a small floating modal at the bottom-left of the screen listing
+/// configured search providers (e.g., Google, ChatGPT, CyberChef).
+fn draw_quick_search(
+    frame: &mut Frame,
+    area: Rect,
+    entries: &[(String, String)],
+    selected_index: usize,
+    colors: &TuiColors,
+) {
+    let modal_width: u16 = 30;
+    let modal_height: u16 = (entries.len() as u16 + 4).min(14);
+
+    // Position at bottom-left (same style as decoder search)
+    let modal_area = Rect {
+        x: area.x + 2,
+        y: area.y + area.height.saturating_sub(modal_height + 2),
+        width: modal_width.min(area.width.saturating_sub(4)),
+        height: modal_height.min(area.height.saturating_sub(4)),
+    };
+
+    // Clear the modal area
+    frame.render_widget(Clear, modal_area);
+
+    // Create modal block
+    let block = Block::default()
+        .title(" Open in... ")
+        .title_style(colors.accent)
+        .borders(Borders::ALL)
+        .border_type(BorderType::Rounded)
+        .border_style(colors.border);
+
+    let inner = block.inner(modal_area);
+    frame.render_widget(block, modal_area);
+
+    // Render entry list
+    let visible_count = inner.height.saturating_sub(1) as usize;
+    let start = if selected_index >= visible_count {
+        selected_index - visible_count + 1
+    } else {
+        0
+    };
+
+    let lines: Vec<Line> = entries
+        .iter()
+        .enumerate()
+        .skip(start)
+        .take(visible_count)
+        .map(|(idx, (name, _url))| {
+            let is_selected = idx == selected_index;
+            let style = if is_selected {
+                colors
+                    .accent
+                    .add_modifier(Modifier::BOLD)
+                    .add_modifier(Modifier::REVERSED)
+            } else {
+                colors.text
+            };
+            Line::from(Span::styled(
+                if is_selected {
+                    format!("> {}", name)
+                } else {
+                    format!("  {}", name)
+                },
+                style,
+            ))
+        })
+        .collect();
+
+    let mut all_lines = lines;
+    all_lines.push(Line::from(Span::styled(
+        "[Enter] Open  [Esc] Cancel",
         colors.muted,
     )));
 

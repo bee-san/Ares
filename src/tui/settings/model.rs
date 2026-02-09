@@ -165,6 +165,15 @@ impl SettingsModel {
                             value: SettingValue::Int(config.status_message_timeout as i64),
                             original_value: SettingValue::Int(config.status_message_timeout as i64),
                         },
+                        SettingField {
+                            id: "quick_searches",
+                            label: "Quick Searches",
+                            description:
+                                "URL templates for [o] Open (format: Name=https://...?q={})",
+                            field_type: FieldType::StringList,
+                            value: SettingValue::List(config.quick_searches.clone()),
+                            original_value: SettingValue::List(config.quick_searches.clone()),
+                        },
                     ],
                 },
                 // Section 2: Checkers
@@ -640,6 +649,11 @@ impl SettingsModel {
                     "status_message_timeout" => {
                         if let SettingValue::Int(v) = &field.value {
                             config.status_message_timeout = *v as u64;
+                        }
+                    }
+                    "quick_searches" => {
+                        if let SettingValue::List(v) = &field.value {
+                            config.quick_searches = v.clone();
                         }
                     }
                     "ai_enabled" => {

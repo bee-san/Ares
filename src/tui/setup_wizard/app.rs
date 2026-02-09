@@ -10,7 +10,7 @@ use super::themes::{ColorScheme, Theme, THEMES};
 use super::ui::ai::AiConfigFocus;
 
 /// The total number of steps in the wizard (for progress display).
-pub const TOTAL_STEPS: usize = 8;
+pub const TOTAL_STEPS: usize = 9;
 
 /// Represents the current state of the setup wizard.
 #[derive(Debug, Clone)]
@@ -101,6 +101,17 @@ pub enum SetupState {
         /// Which field is currently focused
         focus: AiConfigFocus,
         /// Cursor position in the active text field
+        cursor: usize,
+    },
+    /// Quick Searches configuration (URL templates for the "Open" shortcut)
+    QuickSearches {
+        /// List of quick search entries (format: "Name=https://...?q={}")
+        entries: Vec<String>,
+        /// Currently selected entry index
+        selected: usize,
+        /// Text input for adding new entries
+        current_input: String,
+        /// Cursor position in the input field
         cursor: usize,
     },
     /// Setup complete - ready to exit
@@ -261,6 +272,8 @@ pub struct SetupApp {
     pub ai_api_key: String,
     /// AI model name
     pub ai_model: String,
+    /// Quick search URL templates
+    pub quick_searches: Vec<String>,
 }
 
 impl SetupApp {
@@ -285,6 +298,7 @@ impl SetupApp {
             ai_api_url: String::new(),
             ai_api_key: String::new(),
             ai_model: String::new(),
+            quick_searches: crate::config::default_quick_searches(),
         }
     }
 
@@ -306,9 +320,10 @@ impl SetupApp {
             SetupState::TokenInput { .. } => 6,
             SetupState::Downloading { .. } => 6,
             SetupState::AiConfig { .. } => 7,
-            SetupState::CuteCat => 8,
-            SetupState::ShowingCat => 8,
-            SetupState::Complete => 8,
+            SetupState::QuickSearches { .. } => 8,
+            SetupState::CuteCat => 9,
+            SetupState::ShowingCat => 9,
+            SetupState::Complete => 9,
         }
     }
 
@@ -470,6 +485,15 @@ impl SetupApp {
                         model.clone()
                     };
                 }
+                SetupState::QuickSearches {
+                    entries: self.quick_searches.clone(),
+                    selected: 0,
+                    current_input: String::new(),
+                    cursor: 0,
+                }
+            }
+            SetupState::QuickSearches { entries, .. } => {
+                self.quick_searches = entries.clone();
                 SetupState::CuteCat
             }
             SetupState::CuteCat => {
@@ -527,12 +551,10 @@ impl SetupApp {
                 token: self.hf_token.clone().unwrap_or_default(),
                 cursor: 0,
             },
-            SetupState::CuteCat => SetupState::AiConfig {
-                selected: if self.ai_enabled { 1 } else { 0 },
-                api_url: self.ai_api_url.clone(),
-                api_key: self.ai_api_key.clone(),
-                model: self.ai_model.clone(),
-                focus: AiConfigFocus::EnableToggle,
+            SetupState::CuteCat => SetupState::QuickSearches {
+                entries: self.quick_searches.clone(),
+                selected: 0,
+                current_input: String::new(),
                 cursor: 0,
             },
             SetupState::AiConfig { .. } => {
@@ -542,6 +564,14 @@ impl SetupApp {
                     SetupState::EnhancedDetection { selected: 0 }
                 }
             }
+            SetupState::QuickSearches { .. } => SetupState::AiConfig {
+                selected: if self.ai_enabled { 1 } else { 0 },
+                api_url: self.ai_api_url.clone(),
+                api_key: self.ai_api_key.clone(),
+                model: self.ai_model.clone(),
+                focus: AiConfigFocus::EnableToggle,
+                cursor: 0,
+            },
             SetupState::ShowingCat => SetupState::CuteCat,
             SetupState::Complete => SetupState::CuteCat,
         };
@@ -647,6 +677,11 @@ impl SetupApp {
             config.insert("ai_api_url".to_string(), self.ai_api_url.clone());
             config.insert("ai_api_key".to_string(), self.ai_api_key.clone());
             config.insert("ai_model".to_string(), self.ai_model.clone());
+        }
+
+        // Add quick searches (pipe-separated for HashMap transport)
+        if !self.quick_searches.is_empty() {
+            config.insert("quick_searches".to_string(), self.quick_searches.join("|"));
         }
 
         config

@@ -16,8 +16,8 @@ pub mod wordlist;
 // Re-export commonly used types
 pub use state::{
     AppState, BranchContext, BranchMode, BranchPath, DecoderSearchOverlay, HelpContext,
-    HistoryEntry, HumanConfirmationRequest, PreviousState, ResultsFocus, SettingsStateSnapshot,
-    WordlistFileInfo, WordlistManagerFocus,
+    HistoryEntry, HumanConfirmationRequest, PreviousState, QuickSearchOverlay, ResultsFocus,
+    SettingsStateSnapshot, WordlistFileInfo, WordlistManagerFocus,
 };
 
 use crate::DecoderResult;
@@ -42,6 +42,8 @@ pub struct App {
     pub pending_g: bool,
     /// Decoder search overlay (floats over Results screen when Some).
     pub decoder_search: Option<DecoderSearchOverlay>,
+    /// Quick search overlay (floats over Results screen when Some).
+    pub quick_search: Option<QuickSearchOverlay>,
 }
 
 impl App {
@@ -67,6 +69,7 @@ impl App {
             status_message: None,
             pending_g: false,
             decoder_search: None,
+            quick_search: None,
         }
     }
 
@@ -98,6 +101,7 @@ impl App {
             status_message: None,
             pending_g: false,
             decoder_search: None,
+            quick_search: None,
         }
     }
 
@@ -630,6 +634,68 @@ impl App {
     /// Checks if the decoder search overlay is active.
     pub fn is_decoder_search_active(&self) -> bool {
         self.decoder_search.is_some()
+    }
+
+    /// Opens the quick search overlay.
+    ///
+    /// Called when the user presses 'o' in Results state.
+    /// Parses the config's quick_searches entries into (name, url_template) pairs.
+    pub fn open_quick_search(&mut self, config: &crate::config::Config) {
+        // Only open if we're in Results state and have a selected step with output
+        if let AppState::Results {
+            result,
+            selected_step,
+            ..
+        } = &self.state
+        {
+            let output_text = result
+                .path
+                .get(*selected_step)
+                .and_then(|step| step.unencrypted_text.as_ref())
+                .and_then(|texts| texts.first().cloned())
+                .unwrap_or_default();
+
+            if output_text.is_empty() {
+                return;
+            }
+
+            // Parse "Name=URL" entries
+            let entries: Vec<(String, String)> = config
+                .quick_searches
+                .iter()
+                .filter_map(|entry| {
+                    let parts: Vec<&str> = entry.splitn(2, '=').collect();
+                    if parts.len() == 2 {
+                        Some((parts[0].to_string(), parts[1].to_string()))
+                    } else {
+                        None
+                    }
+                })
+                .collect();
+
+            if entries.is_empty() {
+                self.set_status(
+                    "No quick searches configured. Add them in Settings (Ctrl+S).".to_string(),
+                );
+                return;
+            }
+
+            self.quick_search = Some(QuickSearchOverlay {
+                entries,
+                selected_index: 0,
+                output_text,
+            });
+        }
+    }
+
+    /// Closes the quick search overlay.
+    pub fn close_quick_search(&mut self) {
+        self.quick_search = None;
+    }
+
+    /// Checks if the quick search overlay is active.
+    pub fn is_quick_search_active(&self) -> bool {
+        self.quick_search.is_some()
     }
 
     /// Gets the appropriate help context based on current state.
