@@ -74,6 +74,9 @@ pub mod z85_decoder;
 /// For the braille decoder
 pub mod braille_decoder;
 
+/// For the baconian cipher decoder
+pub mod baconian_decoder;
+
 /// The substitution_generic_decoder module handles generic substitution ciphers
 pub mod substitution_generic_decoder;
 
@@ -103,6 +106,7 @@ use ascii85_decoder::Ascii85Decoder;
 use base64_decoder::Base64Decoder;
 use base65536_decoder::Base65536Decoder;
 use base91_decoder::Base91Decoder;
+use baconian_decoder::BaconianDecoder;
 use braille_decoder::BrailleDecoder;
 use caesar_decoder::CaesarDecoder;
 use citrix_ctx1_decoder::CitrixCTX1Decoder;
@@ -174,6 +178,8 @@ pub enum DecoderType {
     Z85Decoder(z85_decoder::Z85Decoder),
     /// braille decoder
     BrailleDecoder(braille_decoder::BrailleDecoder),
+    /// baconian decoder
+    BaconianDecoder(baconian_decoder::BaconianDecoder),
     /// substitution decoder
     SubstitutionGenericDecoder(substitution_generic_decoder::SubstitutionGenericDecoder),
     /// brainfuck interpreter
@@ -278,6 +284,10 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         (
             "NATO Phonetic",
             DecoderBox::new(Decoder::<NATOPhoneticDecoder>::new()),
+        ),
+        (
+            "Baconian",
+            DecoderBox::new(Decoder::<BaconianDecoder>::new()),
         ),
     ])
 });

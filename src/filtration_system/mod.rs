@@ -34,6 +34,7 @@ use crate::decoders::url_decoder::URLDecoder;
 use crate::decoders::vigenere_decoder::VigenereDecoder;
 use crate::decoders::z85_decoder::Z85Decoder;
 
+use crate::decoders::baconian_decoder::BaconianDecoder;
 use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
 use crate::decoders::nato_phonetic_decoder::NATOPhoneticDecoder;
 
@@ -219,6 +220,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let brailledecoder = Decoder::<BrailleDecoder>::new();
     let substitution_generic = Decoder::<SubstitutionGenericDecoder>::new();
 
+    let baconian = Decoder::<BaconianDecoder>::new();
     let brainfuck = Decoder::<BrainfuckInterpreter>::new();
     let nato_phonetic = Decoder::<NATOPhoneticDecoder>::new();
     let octal = Decoder::<OctalDecoder>::new();
@@ -249,6 +251,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
         Box::new(ascii85),
         Box::new(brailledecoder),
         Box::new(substitution_generic),
+        Box::new(baconian),
         Box::new(brainfuck),
         Box::new(nato_phonetic),
         Box::new(octal),
