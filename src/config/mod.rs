@@ -107,8 +107,9 @@ pub struct Config {
     #[serde(default)]
     pub ai_model: Option<String>,
     /// Quick search URL templates for the "Open" shortcut in the TUI Results screen.
-    /// Each entry is in the format "Name=https://example.com/search?q={}" where {} is
-    /// replaced with URL-encoded output text.
+    /// Each entry is in the format "Name=https://example.com/search?q={}" where `{}` is
+    /// replaced with URL-encoded output text, or `{base64}` is replaced with
+    /// base64-encoded output text (useful for tools like CyberChef).
     #[serde(default = "default_quick_searches")]
     pub quick_searches: Vec<String>,
 }
@@ -124,7 +125,7 @@ pub fn default_quick_searches() -> Vec<String> {
         "Google=https://www.google.com/search?q={}".to_string(),
         "ChatGPT=https://chatgpt.com/?q={}".to_string(),
         "DuckDuckGo=https://duckduckgo.com/?q={}".to_string(),
-        "CyberChef=https://gchq.github.io/CyberChef/#input={}".to_string(),
+        "CyberChef=https://gchq.github.io/CyberChef/#input={base64}".to_string(),
     ]
 }
 

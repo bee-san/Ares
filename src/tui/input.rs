@@ -1320,8 +1320,15 @@ fn handle_quick_search_keys(app: &mut App, key: KeyEvent) -> Action {
             // Confirm selection - build URL and open in browser
             KeyCode::Enter => {
                 if let Some((_name, url_template)) = overlay.entries.get(overlay.selected_index) {
-                    let encoded_text = urlencoding::encode(&overlay.output_text).to_string();
-                    let url = url_template.replace("{}", &encoded_text);
+                    let url = if url_template.contains("{base64}") {
+                        use base64::Engine;
+                        let b64_text =
+                            base64::engine::general_purpose::STANDARD.encode(&overlay.output_text);
+                        url_template.replace("{base64}", &b64_text)
+                    } else {
+                        let encoded_text = urlencoding::encode(&overlay.output_text).to_string();
+                        url_template.replace("{}", &encoded_text)
+                    };
                     app.close_quick_search();
                     Action::LaunchQuickSearch(url)
                 } else {

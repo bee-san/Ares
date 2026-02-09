@@ -74,7 +74,7 @@ pub fn draw_quick_searches(
         ]),
         Line::from(""),
         Line::from(Span::styled(
-            "Format: Name=https://example.com/search?q={}",
+            "Format: Name=https://example.com/search?q={} (use {base64} for base64 encoding)",
             Style::default().fg(MUTED),
         )),
     ])
