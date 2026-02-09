@@ -322,10 +322,7 @@ pub fn perform_cracking_with_cache_id(text: &str, config: Config) -> CrackingRes
     match cache_result {
         Ok(Some(row)) => {
             log::debug!("Cache hit for text: {}", text);
-            cli_pretty_printing::success(&format!(
-                "DEBUG: lib.rs - Cache hit for text: {}",
-                text
-            ));
+            cli_pretty_printing::success(&format!("DEBUG: lib.rs - Cache hit for text: {}", text));
             let path_result: Result<Vec<CrackResult>, serde_json::Error> = row
                 .path
                 .iter()
@@ -498,10 +495,7 @@ fn success_result_to_cache(
 
 /// Stores a failed decoding attempt into the cache table
 /// Returns the cache_id of the inserted row on success.
-fn failure_result_to_cache(
-    text: &String,
-    start_time: SystemTime,
-) -> Result<i64, rusqlite::Error> {
+fn failure_result_to_cache(text: &String, start_time: SystemTime) -> Result<i64, rusqlite::Error> {
     let stop_time = SystemTime::now();
     let execution_time_ms: i64 = match stop_time.duration_since(start_time) {
         Ok(duration) => duration.as_millis().try_into().unwrap_or(-2),

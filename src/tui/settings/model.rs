@@ -163,9 +163,7 @@ impl SettingsModel {
                             description: "Seconds before status messages auto-clear (0 = never)",
                             field_type: FieldType::Integer { min: 0, max: 300 },
                             value: SettingValue::Int(config.status_message_timeout as i64),
-                            original_value: SettingValue::Int(
-                                config.status_message_timeout as i64,
-                            ),
+                            original_value: SettingValue::Int(config.status_message_timeout as i64),
                         },
                     ],
                 },

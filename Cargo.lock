@@ -136,6 +136,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ascii85"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1f7b2cc50ccfca05cc3e99a014901ae232948108082a2eecebc3ab6544ebd938"
+
+[[package]]
 name = "atomic-waker"
 version = "1.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -161,6 +167,12 @@ dependencies = [
  "rustc-demangle",
  "windows-link 0.2.1",
 ]
+
+[[package]]
+name = "base62"
+version = "2.2.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1adf9755786e27479693dedd3271691a92b5e242ab139cacb9fb8e7fb5381111"
 
 [[package]]
 name = "base64"
@@ -455,6 +467,8 @@ version = "0.12.0"
 dependencies = [
  "ansi_term",
  "arboard",
+ "ascii85",
+ "base62",
  "base64 0.22.1",
  "base65536",
  "base91",

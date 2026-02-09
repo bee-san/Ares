@@ -8,7 +8,10 @@ use std::io::IsTerminal;
 
 use ciphey::cli::parse_cli_args;
 use ciphey::cli_pretty_printing::{failed_to_decode, program_exiting_successful_decoding};
-use ciphey::config::{config_exists, create_config_from_setup, delete_config_directory, get_config_dir, set_global_config};
+use ciphey::config::{
+    config_exists, create_config_from_setup, delete_config_directory, get_config_dir,
+    set_global_config,
+};
 use ciphey::perform_cracking;
 use ciphey::storage::initialize_storage;
 use ciphey::tui::{run_setup_wizard, run_tui};
@@ -117,7 +120,9 @@ fn handle_delete_config() {
                 "\x1b[32m✓\x1b[0m Configuration directory deleted: {}",
                 config_dir_display
             );
-            println!("  Removed: config.toml, database.sqlite, wordlist_bloom.dat, and any other files.");
+            println!(
+                "  Removed: config.toml, database.sqlite, wordlist_bloom.dat, and any other files."
+            );
             std::process::exit(0);
         }
         Ok(false) => {

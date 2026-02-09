@@ -8,12 +8,15 @@ use crate::decoders::base58_bitcoin_decoder::Base58BitcoinDecoder;
 use crate::decoders::base58_monero_decoder::Base58MoneroDecoder;
 use crate::decoders::binary_decoder::BinaryDecoder;
 use crate::decoders::hexadecimal_decoder::HexadecimalDecoder;
+use crate::decoders::octal_decoder::OctalDecoder;
 use crate::DecoderResult;
 
 use crate::decoders::base58_flickr_decoder::Base58FlickrDecoder;
 use crate::decoders::base58_ripple_decoder::Base58RippleDecoder;
 
 use crate::decoders::a1z26_decoder::A1Z26Decoder;
+use crate::decoders::ascii85_decoder::Ascii85Decoder;
+use crate::decoders::base62_decoder::Base62Decoder;
 use crate::decoders::base64_decoder::Base64Decoder;
 use crate::decoders::base65536_decoder::Base65536Decoder;
 use crate::decoders::base91_decoder::Base91Decoder;
@@ -32,6 +35,7 @@ use crate::decoders::vigenere_decoder::VigenereDecoder;
 use crate::decoders::z85_decoder::Z85Decoder;
 
 use crate::decoders::brainfuck_interpreter::BrainfuckInterpreter;
+use crate::decoders::nato_phonetic_decoder::NATOPhoneticDecoder;
 
 use crate::config::get_config;
 use log::trace;
@@ -202,6 +206,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let citrix_ctx1 = Decoder::<CitrixCTX1Decoder>::new();
     let url = Decoder::<URLDecoder>::new();
     let base32 = Decoder::<Base32Decoder>::new();
+    let base62 = Decoder::<Base62Decoder>::new();
     let reversedecoder = Decoder::<ReverseDecoder>::new();
     let morsecodedecoder = Decoder::<MorseCodeDecoder>::new();
     let atbashdecoder = Decoder::<AtbashDecoder>::new();
@@ -210,10 +215,13 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
     let rot47decoder = Decoder::<ROT47Decoder>::new();
     let z85 = Decoder::<Z85Decoder>::new();
     let a1z26decoder = Decoder::<A1Z26Decoder>::new();
+    let ascii85 = Decoder::<Ascii85Decoder>::new();
     let brailledecoder = Decoder::<BrailleDecoder>::new();
     let substitution_generic = Decoder::<SubstitutionGenericDecoder>::new();
 
     let brainfuck = Decoder::<BrainfuckInterpreter>::new();
+    let nato_phonetic = Decoder::<NATOPhoneticDecoder>::new();
+    let octal = Decoder::<OctalDecoder>::new();
 
     let mut components: Vec<Box<dyn Crack + Sync>> = vec![
         Box::new(vigenere),
@@ -228,6 +236,7 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
         Box::new(binary),
         Box::new(hexadecimal),
         Box::new(base32),
+        Box::new(base62),
         Box::new(morsecodedecoder),
         Box::new(atbashdecoder),
         Box::new(caesardecoder),
@@ -237,9 +246,12 @@ pub fn filter_and_get_decoders(_text_struct: &DecoderResult) -> Decoders {
         Box::new(rot47decoder),
         Box::new(z85),
         Box::new(a1z26decoder),
+        Box::new(ascii85),
         Box::new(brailledecoder),
         Box::new(substitution_generic),
         Box::new(brainfuck),
+        Box::new(nato_phonetic),
+        Box::new(octal),
     ];
 
     // Filter based on config.decoders_to_run if it's not empty

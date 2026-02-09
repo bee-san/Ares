@@ -7,6 +7,8 @@
 
 /// The a1z26_decoder module decodes A1Z26
 pub mod a1z26_decoder;
+/// The ascii85_decoder module decodes ASCII85 (Base85/btoa)
+pub mod ascii85_decoder;
 /// The atbash_decoder module decodes atbash
 pub mod atbash_decoder;
 /// The base32_decoder module decodes base32
@@ -15,10 +17,14 @@ pub mod base32_decoder;
 pub mod base58_bitcoin_decoder;
 /// The base58_monero_decoder module decodes base58 monero
 pub mod base58_monero_decoder;
+/// The base62_decoder module decodes base62
+pub mod base62_decoder;
 /// The binary_decoder module decodes binary
 pub mod binary_decoder;
 /// The hexadecimal_decoder module decodes hexadecimal
 pub mod hexadecimal_decoder;
+/// The octal_decoder module decodes octal
+pub mod octal_decoder;
 
 /// The base58_ripple_decoder module decodes base58 ripple
 pub mod base58_ripple_decoder;
@@ -77,17 +83,23 @@ pub mod brainfuck_interpreter;
 /// The vigenere_decoder module decodes Vigenère cipher text
 pub mod vigenere_decoder;
 
+/// The nato_phonetic_decoder module decodes NATO phonetic alphabet
+pub mod nato_phonetic_decoder;
+
 use atbash_decoder::AtbashDecoder;
 use base32_decoder::Base32Decoder;
 use base58_bitcoin_decoder::Base58BitcoinDecoder;
 use base58_flickr_decoder::Base58FlickrDecoder;
 use base58_monero_decoder::Base58MoneroDecoder;
 use base58_ripple_decoder::Base58RippleDecoder;
+use base62_decoder::Base62Decoder;
 use binary_decoder::BinaryDecoder;
 use hexadecimal_decoder::HexadecimalDecoder;
+use octal_decoder::OctalDecoder;
 use interface::{Crack, Decoder};
 
 use a1z26_decoder::A1Z26Decoder;
+use ascii85_decoder::Ascii85Decoder;
 use base64_decoder::Base64Decoder;
 use base65536_decoder::Base65536Decoder;
 use base91_decoder::Base91Decoder;
@@ -95,6 +107,7 @@ use braille_decoder::BrailleDecoder;
 use caesar_decoder::CaesarDecoder;
 use citrix_ctx1_decoder::CitrixCTX1Decoder;
 use morse_code::MorseCodeDecoder;
+use nato_phonetic_decoder::NATOPhoneticDecoder;
 use railfence_decoder::RailfenceDecoder;
 use reverse_decoder::ReverseDecoder;
 use rot47_decoder::ROT47Decoder;
@@ -115,10 +128,14 @@ pub enum DecoderType {
     DefaultDecoder(interface::DefaultDecoder),
     /// a1z26 decoder
     A1z26Decoder(a1z26_decoder::A1Z26Decoder),
+    /// ascii85 decoder
+    Ascii85Decoder(ascii85_decoder::Ascii85Decoder),
     /// atbash decoder
     AtbashDecoder(atbash_decoder::AtbashDecoder),
     /// base32 decoder
     Base32Decoder(base32_decoder::Base32Decoder),
+    /// base62 decoder
+    Base62Decoder(base62_decoder::Base62Decoder),
     /// base58 bitcoin decoder
     Base58BitcoinDecoder(base58_bitcoin_decoder::Base58BitcoinDecoder),
     /// base58 monero decoder
@@ -127,6 +144,8 @@ pub enum DecoderType {
     BinaryDecoder(binary_decoder::BinaryDecoder),
     /// hexadecimal decoder
     HexadecimalDecoder(hexadecimal_decoder::HexadecimalDecoder),
+    /// octal decoder
+    OctalDecoder(octal_decoder::OctalDecoder),
     /// base58 ripple decoder
     Base58RippleDecoder(base58_ripple_decoder::Base58RippleDecoder),
     /// base58 flickr decoder
@@ -161,6 +180,8 @@ pub enum DecoderType {
     BrainfuckInterpreter(brainfuck_interpreter::BrainfuckInterpreter),
     /// vigenere decoder
     VigenereDecoder(vigenere_decoder::VigenereDecoder),
+    /// nato phonetic decoder
+    NATOPhoneticDecoder(nato_phonetic_decoder::NATOPhoneticDecoder),
 }
 
 /// Wrapper struct to hold Decoders for DECODER_MAP
@@ -200,6 +221,7 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
             "Hexadecimal",
             DecoderBox::new(Decoder::<HexadecimalDecoder>::new()),
         ),
+        ("Octal", DecoderBox::new(Decoder::<OctalDecoder>::new())),
         (
             "Base58 Bitcoin",
             DecoderBox::new(Decoder::<Base58BitcoinDecoder>::new()),
@@ -228,6 +250,7 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         ),
         ("URL", DecoderBox::new(Decoder::<URLDecoder>::new())),
         ("Base32", DecoderBox::new(Decoder::<Base32Decoder>::new())),
+        ("Base62", DecoderBox::new(Decoder::<Base62Decoder>::new())),
         ("Reverse", DecoderBox::new(Decoder::<ReverseDecoder>::new())),
         (
             "Morse Code",
@@ -242,6 +265,7 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         ("rot47", DecoderBox::new(Decoder::<ROT47Decoder>::new())),
         ("Z85", DecoderBox::new(Decoder::<Z85Decoder>::new())),
         ("a1z26", DecoderBox::new(Decoder::<A1Z26Decoder>::new())),
+        ("Ascii85", DecoderBox::new(Decoder::<Ascii85Decoder>::new())),
         ("Braille", DecoderBox::new(Decoder::<BrailleDecoder>::new())),
         (
             "simplesubstitution",
@@ -250,6 +274,10 @@ pub static DECODER_MAP: Lazy<HashMap<&str, DecoderBox>> = Lazy::new(|| {
         (
             "Brainfuck",
             DecoderBox::new(Decoder::<BrainfuckInterpreter>::new()),
+        ),
+        (
+            "NATO Phonetic",
+            DecoderBox::new(Decoder::<NATOPhoneticDecoder>::new()),
         ),
     ])
 });

@@ -64,6 +64,8 @@ rand = "0.8"  # For generating random values - v0.8 required for candle-core com
 half = "=2.4.1"  # Pinned for rand 0.8 compatibility with candle-core
 
 # Dependencies used for decoding
+ascii85 = "0.2.1"
+base62 = "2.0.3"
 base64 = "0.22.1"
 bloomfilter = { version = "1.0", features = ["serde"] }  # Probabilistic data structure for fast wordlist membership testing
 base65536 = "1.0.1"

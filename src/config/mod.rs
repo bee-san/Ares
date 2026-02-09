@@ -269,7 +269,8 @@ pub fn delete_config_directory() -> Result<bool, String> {
         return Ok(false);
     }
 
-    fs::remove_dir_all(&config_dir).map_err(|e| format!("Failed to delete config directory: {}", e))?;
+    fs::remove_dir_all(&config_dir)
+        .map_err(|e| format!("Failed to delete config directory: {}", e))?;
     Ok(true)
 }
 
