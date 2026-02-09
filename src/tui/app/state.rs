@@ -10,6 +10,7 @@ use std::time::{Duration, Instant};
 use crate::checkers::checker_result::CheckResult;
 use crate::decoders::crack_results::CrackResult;
 use crate::storage::database::BranchSummary;
+use crate::tui::widgets::tree_viewer::TreeNode;
 use crate::DecoderResult;
 
 use super::super::multiline_text_input::MultilineTextInput;
@@ -42,7 +43,7 @@ impl From<&CheckResult> for HumanConfirmationRequest {
 // ============================================================================
 
 /// Context for creating a branch from a node
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct BranchContext {
     /// Text to decode (output from the branch point)
     pub text_to_decode: String,
@@ -108,6 +109,23 @@ pub enum BranchMode {
     FullSearch,
     /// Run all decoders once and show results
     SingleLayer,
+}
+
+/// Which panel in the Results screen is currently focused.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ResultsFocus {
+    /// The birds-eye tree view panel (top right).
+    TreeView,
+    /// The level detail list panel (bottom right).
+    LevelDetail,
+    /// The step details panel (left).
+    StepDetails,
+}
+
+impl Default for ResultsFocus {
+    fn default() -> Self {
+        Self::TreeView
+    }
 }
 
 /// Context for showing appropriate help keybindings.
@@ -246,8 +264,19 @@ pub enum AppState {
         highlighted_branch: Option<usize>,
         /// Scroll offset for branch list.
         branch_scroll_offset: usize,
+        /// Which panel is currently focused (tree view or level detail).
+        focus: ResultsFocus,
+        /// Cached tree data: branches at each step index, keyed by step index.
+        /// This avoids re-querying the database on every render.
+        tree_branches: std::collections::HashMap<usize, Vec<TreeNode>>,
+        /// Number of visible rows in the level detail panel (updated during rendering).
+        /// Used by auto-scroll logic to keep highlighted branch visible.
+        level_visible_rows: usize,
+        /// AI-generated explanation of the currently selected step (if loaded).
+        ai_explanation: Option<String>,
+        /// Whether an AI explanation request is currently in progress.
+        ai_loading: bool,
     },
-    /// Decoding failed to find a solution.
     Failure {
         /// The original input text that could not be decoded.
         input_text: String,
@@ -389,8 +418,15 @@ pub enum PreviousState {
         highlighted_branch: Option<usize>,
         /// Branch scroll offset.
         branch_scroll_offset: usize,
+        /// Which panel is focused.
+        focus: ResultsFocus,
+        /// Cached tree branch data.
+        tree_branches: std::collections::HashMap<usize, Vec<TreeNode>>,
+        /// Number of visible rows in the level detail panel.
+        level_visible_rows: usize,
+        /// Cached AI explanation text.
+        ai_explanation: Option<String>,
     },
-    /// Was in the failure state.
     Failure {
         /// The input text.
         input_text: String,

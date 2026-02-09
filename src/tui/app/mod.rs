@@ -16,8 +16,8 @@ pub mod wordlist;
 // Re-export commonly used types
 pub use state::{
     AppState, BranchContext, BranchMode, BranchPath, DecoderSearchOverlay, HelpContext,
-    HistoryEntry, HumanConfirmationRequest, PreviousState, SettingsStateSnapshot, WordlistFileInfo,
-    WordlistManagerFocus,
+    HistoryEntry, HumanConfirmationRequest, PreviousState, ResultsFocus, SettingsStateSnapshot,
+    WordlistFileInfo, WordlistManagerFocus,
 };
 
 use crate::DecoderResult;
@@ -219,6 +219,11 @@ impl App {
             current_branches: Vec::new(),
             highlighted_branch: None,
             branch_scroll_offset: 0,
+            focus: state::ResultsFocus::default(),
+            tree_branches: std::collections::HashMap::new(),
+            level_visible_rows: 10,
+            ai_explanation: None,
+            ai_loading: false,
         };
     }
 
@@ -233,6 +238,8 @@ impl App {
     /// * `cache_id` - The database cache ID for this result
     pub fn set_result_with_cache_id(&mut self, result: DecoderResult, cache_id: i64) {
         let last_step = result.path.len().saturating_sub(1);
+        // Load all branches for the tree view
+        let tree_branches = Self::load_tree_branches(cache_id, result.path.len());
         self.state = AppState::Results {
             result,
             selected_step: last_step,
@@ -242,6 +249,11 @@ impl App {
             current_branches: Vec::new(),
             highlighted_branch: None,
             branch_scroll_offset: 0,
+            focus: state::ResultsFocus::default(),
+            tree_branches,
+            level_visible_rows: 10,
+            ai_explanation: None,
+            ai_loading: false,
         };
     }
 
@@ -360,6 +372,164 @@ impl App {
     }
 
     // ============================================================================
+    // Tree View Helper Methods
+    // ============================================================================
+
+    /// Loads all branches for the tree view, keyed by step index.
+    ///
+    /// Queries the database for all branches of the given cache entry and
+    /// converts them into `TreeNode` structs grouped by step.
+    fn load_tree_branches(
+        cache_id: i64,
+        _path_len: usize,
+    ) -> std::collections::HashMap<usize, Vec<crate::tui::widgets::tree_viewer::TreeNode>> {
+        Self::load_tree_branches_static(cache_id)
+    }
+
+    /// Static version of `load_tree_branches` that can be called without `&self`.
+    ///
+    /// This is used by `run.rs` when constructing `AppState::Results` directly.
+    pub fn load_tree_branches_static(
+        cache_id: i64,
+    ) -> std::collections::HashMap<usize, Vec<crate::tui::widgets::tree_viewer::TreeNode>> {
+        use crate::storage::database::count_sub_branches;
+        use crate::tui::widgets::tree_viewer::TreeNode;
+
+        let mut tree: std::collections::HashMap<usize, Vec<TreeNode>> =
+            std::collections::HashMap::new();
+
+        if let Ok(conn) = crate::storage::database::get_db_connection_pub() {
+            let mut stmt = conn
+                .prepare(
+                    "SELECT id, branch_step, path, decoded_text, successful
+                     FROM cache
+                     WHERE parent_cache_id = ?1
+                     ORDER BY branch_step ASC, timestamp DESC",
+                )
+                .ok();
+
+            if let Some(ref mut stmt) = stmt {
+                let rows: Vec<(usize, TreeNode)> = stmt
+                    .query_map([cache_id], |row| {
+                        let id: i64 = row.get(0)?;
+                        let step: i64 = row.get(1)?;
+                        let path_json: String = row.get(2)?;
+                        let decoded_text: String = row.get(3)?;
+                        let successful: bool = row.get(4)?;
+
+                        // Parse the first decoder name
+                        let path_vec: Vec<String> =
+                            serde_json::from_str(&path_json).unwrap_or_default();
+                        let first_decoder = if let Some(first_json) = path_vec.first() {
+                            serde_json::from_str::<serde_json::Value>(first_json)
+                                .ok()
+                                .and_then(|v| {
+                                    v.get("decoder")
+                                        .and_then(|d| d.as_str().map(|s| s.to_string()))
+                                })
+                                .unwrap_or_else(|| "Unknown".to_string())
+                        } else {
+                            "Unknown".to_string()
+                        };
+
+                        // Truncate preview
+                        let preview = if decoded_text.chars().count() > 20 {
+                            format!("{}...", decoded_text.chars().take(17).collect::<String>())
+                        } else {
+                            decoded_text
+                        };
+
+                        Ok((id, step as usize, first_decoder, successful, preview))
+                    })
+                    .ok()
+                    .map(|iter| {
+                        iter.filter_map(|r| r.ok())
+                            .map(|(id, step, decoder, successful, preview)| {
+                                let has_children = count_sub_branches(id).unwrap_or(0) > 0;
+                                (
+                                    step,
+                                    TreeNode {
+                                        decoder_name: decoder,
+                                        has_children,
+                                        successful,
+                                        cache_id: Some(id),
+                                        text_preview: preview,
+                                    },
+                                )
+                            })
+                            .collect::<Vec<_>>()
+                    })
+                    .unwrap_or_default();
+
+                for (step, node) in rows {
+                    tree.entry(step).or_default().push(node);
+                }
+            }
+        }
+
+        tree
+    }
+
+    /// Refreshes the tree branch data from the database.
+    ///
+    /// Call this after any branch mutation (create, delete) to keep
+    /// the tree view in sync.
+    pub fn refresh_tree_branches(&mut self) {
+        if let AppState::Results {
+            cache_id,
+            result,
+            tree_branches,
+            ..
+        } = &mut self.state
+        {
+            if let Some(cid) = cache_id {
+                *tree_branches = Self::load_tree_branches(*cid, result.path.len());
+            }
+        }
+    }
+
+    /// Sets the AI explanation text for the current step.
+    ///
+    /// # Arguments
+    ///
+    /// * `explanation` - The AI-generated explanation text
+    pub fn set_ai_explanation(&mut self, explanation: String) {
+        if let AppState::Results {
+            ai_explanation,
+            ai_loading,
+            ..
+        } = &mut self.state
+        {
+            *ai_explanation = Some(explanation);
+            *ai_loading = false;
+        }
+    }
+
+    /// Clears the AI explanation (e.g., when navigating to a different step).
+    pub fn clear_ai_explanation(&mut self) {
+        if let AppState::Results {
+            ai_explanation,
+            ai_loading,
+            ..
+        } = &mut self.state
+        {
+            *ai_explanation = None;
+            *ai_loading = false;
+        }
+    }
+
+    /// Switches focus between the tree view, level detail, and step details panels.
+    pub fn switch_focus(&mut self) {
+        if let AppState::Results { focus, .. } = &mut self.state {
+            *focus = match focus {
+                state::ResultsFocus::TreeView => state::ResultsFocus::LevelDetail,
+                state::ResultsFocus::LevelDetail => state::ResultsFocus::StepDetails,
+                state::ResultsFocus::StepDetails => state::ResultsFocus::TreeView,
+            };
+        }
+    }
+
+    // ============================================================================
     // Branch Modal Methods
     // ============================================================================
 
@@ -413,6 +583,11 @@ impl App {
                         current_branches: Vec::new(),
                         highlighted_branch: None,
                         branch_scroll_offset: 0,
+                        focus: state::ResultsFocus::default(),
+                        tree_branches: Self::load_tree_branches(parent_id, 0),
+                        level_visible_rows: 10,
+                        ai_explanation: None,
+                        ai_loading: false,
                     };
 
                     // Load branches for this step

@@ -50,7 +50,7 @@ proc-macro2 = "1.0.106" # Required due to https://github.com/rust-lang/rust/issu
 rayon = "1.11.0"
 ratatui = "0.29"
 regex = "1.12.2"
-reqwest = { version = "0.12", features = ["blocking"] }
+reqwest = { version = "0.12", features = ["blocking", "json"] }
 rpassword = "7.4.0"
 rusqlite = { version = "0.37", features = ["bundled"] }
 serde = { version = "1.0.228", features = ["derive"] }

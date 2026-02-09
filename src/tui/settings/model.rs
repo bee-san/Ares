@@ -283,7 +283,54 @@ impl SettingsModel {
                         },
                     ],
                 },
-                // Section 5: Color Scheme
+                // Section 5: AI Features
+                SettingsSection {
+                    name: "AI Features",
+                    description: "OpenAI-compatible AI features",
+                    fields: vec![
+                        SettingField {
+                            id: "ai_enabled",
+                            label: "Enable AI",
+                            description:
+                                "Enable AI-powered features (step explanation, translation)",
+                            field_type: FieldType::Boolean,
+                            value: SettingValue::Bool(config.ai_enabled),
+                            original_value: SettingValue::Bool(config.ai_enabled),
+                        },
+                        SettingField {
+                            id: "ai_api_url",
+                            label: "API URL",
+                            description:
+                                "OpenAI-compatible API endpoint (e.g., https://api.openai.com/v1)",
+                            field_type: FieldType::String {
+                                max_length: Some(500),
+                            },
+                            value: SettingValue::OptionalText(config.ai_api_url.clone()),
+                            original_value: SettingValue::OptionalText(config.ai_api_url.clone()),
+                        },
+                        SettingField {
+                            id: "ai_api_key",
+                            label: "API Key",
+                            description: "API key for authentication (stored in config.toml)",
+                            field_type: FieldType::String {
+                                max_length: Some(500),
+                            },
+                            value: SettingValue::OptionalText(config.ai_api_key.clone()),
+                            original_value: SettingValue::OptionalText(config.ai_api_key.clone()),
+                        },
+                        SettingField {
+                            id: "ai_model",
+                            label: "Model",
+                            description: "Model name to use (e.g., gpt-4o-mini, gpt-4o, llama3)",
+                            field_type: FieldType::String {
+                                max_length: Some(200),
+                            },
+                            value: SettingValue::OptionalText(config.ai_model.clone()),
+                            original_value: SettingValue::OptionalText(config.ai_model.clone()),
+                        },
+                    ],
+                },
+                // Section 6: Color Scheme (was Section 5)
                 SettingsSection {
                     name: "Themes",
                     description: "Color scheme and appearance",
@@ -400,7 +447,7 @@ impl SettingsModel {
                         },
                     ],
                 },
-                // Section 6: Decoders to Run
+                // Section 7: Decoders to Run
                 SettingsSection {
                     name: "Decoders to Run",
                     description: "Select which decoders are enabled",
@@ -433,7 +480,7 @@ impl SettingsModel {
                         }),
                     }],
                 },
-                // Section 7: Checkers to Run
+                // Section 8: Checkers to Run
                 SettingsSection {
                     name: "Checkers to Run",
                     description: "Select which checkers are enabled",
@@ -595,6 +642,26 @@ impl SettingsModel {
                             config.status_message_timeout = *v as u64;
                         }
                     }
+                    "ai_enabled" => {
+                        if let SettingValue::Bool(v) = &field.value {
+                            config.ai_enabled = *v;
+                        }
+                    }
+                    "ai_api_url" => {
+                        if let SettingValue::OptionalText(v) = &field.value {
+                            config.ai_api_url = v.clone();
+                        }
+                    }
+                    "ai_api_key" => {
+                        if let SettingValue::OptionalText(v) = &field.value {
+                            config.ai_api_key = v.clone();
+                        }
+                    }
+                    "ai_model" => {
+                        if let SettingValue::OptionalText(v) = &field.value {
+                            config.ai_model = v.clone();
+                        }
+                    }
                     _ => {}
                 }
             }
@@ -738,7 +805,7 @@ mod tests {
         let config = Config::default();
         let model = SettingsModel::from_config(&config);
 
-        assert_eq!(model.section_count(), 7);
+        assert_eq!(model.section_count(), 8);
         assert!(!model.has_changes());
     }
 

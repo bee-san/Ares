@@ -7,8 +7,9 @@
     clippy::missing_panics_doc
 )]
 
-/// The main crate for the ciphey project.
-/// This provides the library API interface for ciphey.
+/// AI module provides AI-powered features via OpenAI-compatible endpoints.
+pub mod ai;
+/// Library API input structure.
 mod api_library_input_struct;
 /// Checkers is a module that contains the functions that check if the input is plaintext
 pub mod checkers;
@@ -520,6 +521,31 @@ fn failure_result_to_cache(text: &String, start_time: SystemTime) -> Result<i64,
     storage::database::insert_cache(&cache_entry)
 }
 
+/// Runs a closure with panic output suppressed, catching any panics.
+///
+/// This temporarily replaces the global panic hook with a no-op before calling
+/// `catch_unwind`, then restores the original hook afterward. This prevents
+/// panic handlers (like `human_panic`) from writing to stderr, which would
+/// corrupt the TUI display when the terminal is in raw/alternate screen mode.
+///
+/// # Arguments
+///
+/// * `f` - The closure to run with panic suppression
+///
+/// # Returns
+///
+/// `Ok(R)` if the closure completed normally, `Err(...)` if it panicked.
+fn catch_unwind_silent<F, R>(f: F) -> std::thread::Result<R>
+where
+    F: FnOnce() -> R + std::panic::UnwindSafe,
+{
+    let prev_hook = std::panic::take_hook();
+    std::panic::set_hook(Box::new(|_| { /* suppress panic output */ }));
+    let result = std::panic::catch_unwind(f);
+    std::panic::set_hook(prev_hook);
+    result
+}
+
 /// Runs all decoders once on the input text, returning successful decodes.
 ///
 /// This function does NOT recurse - it only runs one layer of decoding.
@@ -548,6 +574,7 @@ fn failure_result_to_cache(text: &String, start_time: SystemTime) -> Result<i64,
 /// ```
 pub fn run_single_layer(text: &str, checker: &CheckerTypes) -> Vec<CrackResult> {
     use crate::decoders::DECODER_MAP;
+    use std::panic;
 
     let mut results = Vec::new();
 
@@ -558,12 +585,23 @@ pub fn run_single_layer(text: &str, checker: &CheckerTypes) -> Vec<CrackResult> 
         }
 
         let decoder = decoder_box.get::<()>();
-        let crack_result = decoder.crack(text, checker);
 
-        // Only include results that produced output
-        if let Some(ref outputs) = crack_result.unencrypted_text {
-            if !outputs.is_empty() {
-                results.push(crack_result);
+        // Catch panics from decoders (e.g., ascii85 crate overflow on certain inputs)
+        // Use catch_unwind_silent to suppress panic output that would corrupt the TUI display
+        let crack_result =
+            catch_unwind_silent(panic::AssertUnwindSafe(|| decoder.crack(text, checker)));
+
+        match crack_result {
+            Ok(crack_result) => {
+                // Only include results that produced output
+                if let Some(ref outputs) = crack_result.unencrypted_text {
+                    if !outputs.is_empty() {
+                        results.push(crack_result);
+                    }
+                }
+            }
+            Err(_) => {
+                log::debug!("Decoder '{}' panicked on input, skipping", name);
             }
         }
     }
@@ -604,19 +642,31 @@ pub fn run_specific_decoder(
     checker: &CheckerTypes,
 ) -> Option<CrackResult> {
     use crate::decoders::get_decoder_by_name;
+    use std::panic;
 
     let decoder_box = get_decoder_by_name(decoder_name)?;
     let decoder = decoder_box.get::<()>();
-    let crack_result = decoder.crack(text, checker);
 
-    // Only return if the decoder produced output
-    if let Some(ref outputs) = crack_result.unencrypted_text {
-        if !outputs.is_empty() {
-            return Some(crack_result);
+    // Catch panics from decoders (e.g., ascii85 crate overflow on certain inputs)
+    // Use catch_unwind_silent to suppress panic output that would corrupt the TUI display
+    let crack_result =
+        catch_unwind_silent(panic::AssertUnwindSafe(|| decoder.crack(text, checker)));
+
+    match crack_result {
+        Ok(crack_result) => {
+            // Only return if the decoder produced output
+            if let Some(ref outputs) = crack_result.unencrypted_text {
+                if !outputs.is_empty() {
+                    return Some(crack_result);
+                }
+            }
+            None
+        }
+        Err(_) => {
+            log::debug!("Decoder '{}' panicked on input, skipping", decoder_name);
+            None
         }
     }
-
-    None
 }
 
 /// DecoderResult is the result of decoders
@@ -732,6 +782,10 @@ impl Drop for TestDatabase {
 #[serial_test::parallel]
 mod tests {
     use super::perform_cracking;
+    use super::{run_single_layer, run_specific_decoder};
+    use crate::checkers::athena::Athena;
+    use crate::checkers::checker_type::{Check, Checker};
+    use crate::checkers::CheckerTypes;
     use crate::config::Config;
     use crate::{set_test_db_path, TestDatabase};
 
@@ -804,5 +858,190 @@ mod tests {
         // Since our input is the plaintext we did not decode it
         // Therefore we return with the default decoder
         assert!(res_unwrapped.path[0].decoder == "Default decoder");
+    }
+
+    // =========================================================================
+    // Baseline tests for run_single_layer
+    // =========================================================================
+
+    /// Helper to create an Athena checker for single-layer/specific-decoder tests.
+    fn make_checker() -> CheckerTypes {
+        CheckerTypes::CheckAthena(Checker::<Athena>::new())
+    }
+
+    #[test]
+    fn test_single_layer_base64() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+        crate::config::set_global_config(Config::default());
+
+        let checker = make_checker();
+        let results = run_single_layer("SGVsbG8gd29ybGQ=", &checker);
+
+        // Base64 decoder should produce output for valid base64 input
+        assert!(
+            !results.is_empty(),
+            "run_single_layer should return at least one result for valid base64"
+        );
+
+        // At least one result should come from Base64-related decoder
+        let has_base64 = results
+            .iter()
+            .any(|r| r.decoder.to_lowercase().contains("base64"));
+        assert!(
+            has_base64,
+            "Expected at least one Base64 decoder result, got decoders: {:?}",
+            results.iter().map(|r| &r.decoder).collect::<Vec<_>>()
+        );
+    }
+
+    #[test]
+    fn test_single_layer_plaintext_input() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+        crate::config::set_global_config(Config::default());
+
+        let checker = make_checker();
+        // Should not panic on plaintext input
+        let _results = run_single_layer("hello world", &checker);
+        // We don't assert on the contents — some decoders may produce garbage output
+        // The important thing is no panic
+    }
+
+    #[test]
+    fn test_single_layer_empty_input() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+        crate::config::set_global_config(Config::default());
+
+        let checker = make_checker();
+        let results = run_single_layer("", &checker);
+
+        assert!(
+            results.is_empty(),
+            "Empty input should produce no decoder results, got {}",
+            results.len()
+        );
+    }
+
+    #[test]
+    fn test_single_layer_no_panic_on_pathological_input() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+        crate::config::set_global_config(Config::default());
+
+        let checker = make_checker();
+        // Ascii85-like input that can trigger overflow panics in the ascii85 crate
+        let _results = run_single_layer("<~!!!~>", &checker);
+        // Success = no panic escaped catch_unwind
+    }
+
+    #[test]
+    fn test_single_layer_caesar_input() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+        crate::config::set_global_config(Config::default());
+
+        let checker = make_checker();
+        // ROT13 of "hello world"
+        let results = run_single_layer("uryyb jbeyq", &checker);
+
+        // Caesar decoder should produce output for ROT13 text
+        assert!(
+            !results.is_empty(),
+            "run_single_layer should return at least one result for ROT13 input"
+        );
+    }
+
+    #[test]
+    fn test_single_layer_multiple_decoders() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+        crate::config::set_global_config(Config::default());
+
+        let checker = make_checker();
+        // Base64 input can be decoded by multiple decoders (Base64, possibly others)
+        let results = run_single_layer("SGVsbG8gd29ybGQ=", &checker);
+
+        assert!(
+            results.len() > 1,
+            "Expected multiple decoders to produce output for base64 input, got {}",
+            results.len()
+        );
+    }
+
+    // =========================================================================
+    // Baseline tests for run_specific_decoder
+    // =========================================================================
+
+    #[test]
+    fn test_specific_decoder_base64() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+        crate::config::set_global_config(Config::default());
+
+        let checker = make_checker();
+        let result = run_specific_decoder("SGVsbG8gd29ybGQ=", "Base64", &checker);
+
+        assert!(
+            result.is_some(),
+            "Base64 decoder should produce output for valid base64"
+        );
+
+        let crack_result = result.unwrap();
+        let outputs = crack_result
+            .unencrypted_text
+            .as_ref()
+            .expect("Should have unencrypted_text");
+        assert!(
+            outputs.iter().any(|o| o.contains("Hello world")),
+            "Expected decoded text to contain 'Hello world', got: {:?}",
+            outputs
+        );
+    }
+
+    #[test]
+    fn test_specific_decoder_nonexistent() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+        crate::config::set_global_config(Config::default());
+
+        let checker = make_checker();
+        let result = run_specific_decoder("SGVsbG8=", "NonexistentDecoder", &checker);
+
+        assert!(result.is_none(), "Nonexistent decoder should return None");
+    }
+
+    #[test]
+    fn test_specific_decoder_empty_input() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+        crate::config::set_global_config(Config::default());
+
+        let checker = make_checker();
+        let result = run_specific_decoder("", "Base64", &checker);
+
+        assert!(
+            result.is_none(),
+            "Empty input should return None from Base64 decoder"
+        );
+    }
+
+    #[test]
+    fn test_specific_decoder_pathological_no_panic() {
+        let _test_db = TestDatabase::default();
+        set_test_db_path();
+        crate::config::set_global_config(Config::default());
+
+        let checker = make_checker();
+        // This ROT13 input triggers an overflow panic in the ascii85 crate's decode function.
+        // The catch_unwind in run_specific_decoder should prevent the panic from escaping.
+        let result = run_specific_decoder("uryyb jbeyq", "Ascii85", &checker);
+
+        // Should return None (panic caught), not propagate the panic
+        assert!(
+            result.is_none(),
+            "Ascii85 on pathological input should return None, not panic"
+        );
     }
 }

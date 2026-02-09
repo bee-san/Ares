@@ -9,6 +9,7 @@ use ratatui::widgets::{Block, BorderType, Borders, Paragraph};
 use super::app::{SetupApp, SetupState, WordlistFocus, TOTAL_STEPS};
 
 // Submodules
+pub mod ai;
 pub mod colors;
 pub mod summary;
 pub mod tutorial;
@@ -16,6 +17,7 @@ pub mod welcome;
 pub mod wordlist;
 
 // Re-export commonly used functions
+pub use ai::draw_ai_config;
 pub use colors::draw_theme_selection;
 pub use summary::{
     draw_complete, draw_cute_cat_question, draw_downloading, draw_enhanced_detection,
@@ -123,6 +125,23 @@ pub fn draw_setup(frame: &mut Frame, app: &SetupApp) {
         ),
         SetupState::CuteCat => draw_cute_cat_question(frame, main_chunks[1]),
         SetupState::ShowingCat => draw_showing_cat(frame, main_chunks[1]),
+        SetupState::AiConfig {
+            selected,
+            api_url,
+            api_key,
+            model,
+            focus,
+            cursor,
+        } => draw_ai_config(
+            frame,
+            main_chunks[1],
+            *selected,
+            api_url,
+            api_key,
+            model,
+            focus,
+            *cursor,
+        ),
         SetupState::Complete => draw_complete(frame, main_chunks[1], app),
     }
 
@@ -243,6 +262,24 @@ fn draw_controls(frame: &mut Frame, area: Rect, state: &SetupState) {
             }
         }
         SetupState::CuteCat => vec![("[Y]", "Yes!"), ("[N]", "No"), ("[Backspace]", "Back")],
+        SetupState::AiConfig {
+            selected, focus, ..
+        } => {
+            use super::ui::ai::AiConfigFocus;
+            if *selected == 1 && *focus != AiConfigFocus::EnableToggle {
+                vec![
+                    ("[Tab]", "Next Field"),
+                    ("[Enter]", "Confirm"),
+                    ("[Esc]", "Back"),
+                ]
+            } else {
+                vec![
+                    ("[Y/N]", "Choose"),
+                    ("[Enter]", "Confirm"),
+                    ("[Backspace]", "Back"),
+                ]
+            }
+        }
         SetupState::ShowingCat => vec![("", "Admiring cat...")],
         SetupState::Complete => vec![("[Enter]", "Finish")],
     };

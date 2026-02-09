@@ -7,6 +7,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
 use super::app::{SetupApp, SetupState, WordlistFocus};
 use super::themes::THEMES;
+use super::ui::ai::AiConfigFocus;
 
 /// Handles a keyboard event for the setup wizard.
 ///
@@ -34,6 +35,7 @@ pub fn handle_setup_key_event(app: &mut SetupApp, key: KeyEvent) {
         SetupState::Downloading { .. } => handle_downloading_keys(app, key),
         SetupState::CuteCat => handle_cute_cat_keys(app, key),
         SetupState::ShowingCat => handle_showing_cat_keys(app, key),
+        SetupState::AiConfig { .. } => handle_ai_config_keys(app, key),
         SetupState::Complete => handle_complete_keys(app, key),
     }
 }
@@ -546,6 +548,183 @@ fn handle_downloading_keys(app: &mut SetupApp, key: KeyEvent) {
             KeyCode::Esc if *failed => app.next_step(),
             KeyCode::Char('q') if *failed => app.should_quit = true,
             _ => {}
+        }
+    }
+}
+
+/// Handles keys on the AI configuration screen.
+fn handle_ai_config_keys(app: &mut SetupApp, key: KeyEvent) {
+    if let SetupState::AiConfig {
+        selected,
+        api_url,
+        api_key,
+        model,
+        focus,
+        cursor,
+    } = &mut app.state
+    {
+        match focus {
+            AiConfigFocus::EnableToggle => {
+                match key.code {
+                    KeyCode::Char('y') | KeyCode::Char('Y') => {
+                        *selected = 1;
+                    }
+                    KeyCode::Char('n') | KeyCode::Char('N') => {
+                        *selected = 0;
+                    }
+                    KeyCode::Up | KeyCode::Down | KeyCode::Char('k') | KeyCode::Char('j') => {
+                        *selected = if *selected == 0 { 1 } else { 0 };
+                    }
+                    KeyCode::Tab if *selected == 1 => {
+                        // Move to API URL field if AI is enabled
+                        *focus = AiConfigFocus::ApiUrl;
+                        *cursor = api_url.len();
+                    }
+                    KeyCode::Enter | KeyCode::Char(' ') => {
+                        if *selected == 0 {
+                            // AI disabled, skip to next step
+                            app.next_step();
+                        } else {
+                            // Move to API URL field
+                            *focus = AiConfigFocus::ApiUrl;
+                            *cursor = api_url.len();
+                        }
+                    }
+                    KeyCode::Backspace | KeyCode::Left | KeyCode::Char('p') => {
+                        app.prev_step();
+                    }
+                    KeyCode::Esc => app.prev_step(),
+                    _ => {}
+                }
+            }
+            AiConfigFocus::ApiUrl => match key.code {
+                KeyCode::Char(c) => {
+                    api_url.insert(*cursor, c);
+                    *cursor += 1;
+                }
+                KeyCode::Backspace => {
+                    if *cursor > 0 {
+                        *cursor -= 1;
+                        api_url.remove(*cursor);
+                    }
+                }
+                KeyCode::Delete => {
+                    if *cursor < api_url.len() {
+                        api_url.remove(*cursor);
+                    }
+                }
+                KeyCode::Left => {
+                    if *cursor > 0 {
+                        *cursor -= 1;
+                    }
+                }
+                KeyCode::Right => {
+                    if *cursor < api_url.len() {
+                        *cursor += 1;
+                    }
+                }
+                KeyCode::Home => *cursor = 0,
+                KeyCode::End => *cursor = api_url.len(),
+                KeyCode::Tab | KeyCode::Down | KeyCode::Enter => {
+                    *focus = AiConfigFocus::ApiKey;
+                    *cursor = api_key.len();
+                }
+                KeyCode::BackTab | KeyCode::Up => {
+                    *focus = AiConfigFocus::EnableToggle;
+                }
+                KeyCode::Esc => {
+                    *focus = AiConfigFocus::EnableToggle;
+                }
+                _ => {}
+            },
+            AiConfigFocus::ApiKey => match key.code {
+                KeyCode::Char(c) => {
+                    api_key.insert(*cursor, c);
+                    *cursor += 1;
+                }
+                KeyCode::Backspace => {
+                    if *cursor > 0 {
+                        *cursor -= 1;
+                        api_key.remove(*cursor);
+                    }
+                }
+                KeyCode::Delete => {
+                    if *cursor < api_key.len() {
+                        api_key.remove(*cursor);
+                    }
+                }
+                KeyCode::Left => {
+                    if *cursor > 0 {
+                        *cursor -= 1;
+                    }
+                }
+                KeyCode::Right => {
+                    if *cursor < api_key.len() {
+                        *cursor += 1;
+                    }
+                }
+                KeyCode::Home => *cursor = 0,
+                KeyCode::End => *cursor = api_key.len(),
+                KeyCode::Tab | KeyCode::Down | KeyCode::Enter => {
+                    *focus = AiConfigFocus::Model;
+                    *cursor = model.len();
+                }
+                KeyCode::BackTab | KeyCode::Up => {
+                    *focus = AiConfigFocus::ApiUrl;
+                    *cursor = api_url.len();
+                }
+                KeyCode::Esc => {
+                    *focus = AiConfigFocus::EnableToggle;
+                }
+                _ => {}
+            },
+            AiConfigFocus::Model => {
+                match key.code {
+                    KeyCode::Char(c) => {
+                        model.insert(*cursor, c);
+                        *cursor += 1;
+                    }
+                    KeyCode::Backspace => {
+                        if *cursor > 0 {
+                            *cursor -= 1;
+                            model.remove(*cursor);
+                        }
+                    }
+                    KeyCode::Delete => {
+                        if *cursor < model.len() {
+                            model.remove(*cursor);
+                        }
+                    }
+                    KeyCode::Left => {
+                        if *cursor > 0 {
+                            *cursor -= 1;
+                        }
+                    }
+                    KeyCode::Right => {
+                        if *cursor < model.len() {
+                            *cursor += 1;
+                        }
+                    }
+                    KeyCode::Home => *cursor = 0,
+                    KeyCode::End => *cursor = model.len(),
+                    KeyCode::Enter => {
+                        // Confirm and proceed to next step
+                        app.next_step();
+                    }
+                    KeyCode::Tab | KeyCode::Down => {
+                        // Wrap back to enable toggle
+                        *focus = AiConfigFocus::EnableToggle;
+                    }
+                    KeyCode::BackTab | KeyCode::Up => {
+                        *focus = AiConfigFocus::ApiKey;
+                        *cursor = api_key.len();
+                    }
+                    KeyCode::Esc => {
+                        *focus = AiConfigFocus::EnableToggle;
+                    }
+                    _ => {}
+                }
+            }
         }
     }
 }

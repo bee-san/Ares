@@ -3,6 +3,7 @@ use self::{
     checker_result::CheckResult,
     checker_type::{Check, CheckInfo, Checker},
     english::EnglishChecker,
+    language_checker::LanguageChecker,
     lemmeknow_checker::LemmeKnow,
     password::PasswordChecker,
     regex_checker::RegexChecker,
@@ -31,6 +32,8 @@ pub mod human_checker;
 pub use human_checker::reset_human_checker_state;
 // Re-export function to get human-confirmed text
 pub use human_checker::get_human_confirmed_text;
+/// The Language Detection checker detects foreign languages and translates to English using AI
+pub mod language_checker;
 /// The LemmeKnow Checker checks if the text matches a known Regex pattern.
 pub mod lemmeknow_checker;
 /// The Password checker checks if the text matches a known common password
@@ -58,6 +61,8 @@ pub enum CheckerTypes {
     CheckPassword(Checker<PasswordChecker>),
     /// Wrapper for Wordlist Checker
     CheckWordlist(Checker<WordlistChecker>),
+    /// Wrapper for Language Detection Checker
+    CheckLanguage(Checker<LanguageChecker>),
 }
 
 impl CheckerTypes {
@@ -71,6 +76,7 @@ impl CheckerTypes {
             CheckerTypes::CheckRegex(regex_checker) => regex_checker.check(text),
             CheckerTypes::CheckPassword(password_checker) => password_checker.check(text),
             CheckerTypes::CheckWordlist(wordlist_checker) => wordlist_checker.check(text),
+            CheckerTypes::CheckLanguage(language_checker) => language_checker.check(text),
         }
     }
 
@@ -112,6 +118,11 @@ impl CheckerTypes {
                 new_checker.sensitivity = sensitivity;
                 CheckerTypes::CheckWordlist(new_checker)
             }
+            CheckerTypes::CheckLanguage(_checker) => {
+                let mut new_checker = Checker::<LanguageChecker>::new();
+                new_checker.sensitivity = sensitivity;
+                CheckerTypes::CheckLanguage(new_checker)
+            }
         }
     }
 
@@ -125,6 +136,7 @@ impl CheckerTypes {
             CheckerTypes::CheckRegex(checker) => checker.get_sensitivity(),
             CheckerTypes::CheckPassword(checker) => checker.get_sensitivity(),
             CheckerTypes::CheckWordlist(checker) => checker.get_sensitivity(),
+            CheckerTypes::CheckLanguage(checker) => checker.get_sensitivity(),
         }
     }
 }
@@ -181,6 +193,10 @@ pub static CHECKER_MAP: Lazy<HashMap<&str, CheckerBox>> = Lazy::new(|| {
         (
             "Wordlist Checker",
             CheckerBox::new(Checker::<WordlistChecker>::new()),
+        ),
+        (
+            "Language Detection",
+            CheckerBox::new(Checker::<LanguageChecker>::new()),
         ),
     ])
 });

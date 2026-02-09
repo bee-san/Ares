@@ -7,9 +7,10 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use super::themes::{ColorScheme, Theme, THEMES};
+use super::ui::ai::AiConfigFocus;
 
 /// The total number of steps in the wizard (for progress display).
-pub const TOTAL_STEPS: usize = 7;
+pub const TOTAL_STEPS: usize = 8;
 
 /// Represents the current state of the setup wizard.
 #[derive(Debug, Clone)]
@@ -87,6 +88,21 @@ pub enum SetupState {
     CuteCat,
     /// Showing the cute cat for 3 seconds
     ShowingCat,
+    /// AI features configuration
+    AiConfig {
+        /// Whether AI is enabled (0 = no, 1 = yes)
+        selected: usize,
+        /// API URL input
+        api_url: String,
+        /// API key input (stored in plaintext in config)
+        api_key: String,
+        /// Model name input
+        model: String,
+        /// Which field is currently focused
+        focus: AiConfigFocus,
+        /// Cursor position in the active text field
+        cursor: usize,
+    },
     /// Setup complete - ready to exit
     Complete,
 }
@@ -237,6 +253,14 @@ pub struct SetupApp {
     pub model_path: Option<String>,
     /// Whether the user wants to see the cute cat
     pub show_cat: bool,
+    /// Whether AI features are enabled
+    pub ai_enabled: bool,
+    /// AI API URL
+    pub ai_api_url: String,
+    /// AI API key
+    pub ai_api_key: String,
+    /// AI model name
+    pub ai_model: String,
 }
 
 impl SetupApp {
@@ -257,6 +281,10 @@ impl SetupApp {
             hf_token: None,
             model_path: None,
             show_cat: false,
+            ai_enabled: false,
+            ai_api_url: String::new(),
+            ai_api_key: String::new(),
+            ai_model: String::new(),
         }
     }
 
@@ -277,9 +305,10 @@ impl SetupApp {
             SetupState::EnhancedDetection { .. } => 6,
             SetupState::TokenInput { .. } => 6,
             SetupState::Downloading { .. } => 6,
-            SetupState::CuteCat => 7,
-            SetupState::ShowingCat => 7,
-            SetupState::Complete => 7,
+            SetupState::AiConfig { .. } => 7,
+            SetupState::CuteCat => 8,
+            SetupState::ShowingCat => 8,
+            SetupState::Complete => 8,
         }
     }
 
@@ -385,7 +414,14 @@ impl SetupApp {
                         cursor: 0,
                     }
                 } else {
-                    SetupState::CuteCat
+                    SetupState::AiConfig {
+                        selected: 0,
+                        api_url: self.ai_api_url.clone(),
+                        api_key: self.ai_api_key.clone(),
+                        model: self.ai_model.clone(),
+                        focus: AiConfigFocus::EnableToggle,
+                        cursor: 0,
+                    }
                 }
             }
             SetupState::TokenInput { token, .. } => {
@@ -402,6 +438,37 @@ impl SetupApp {
                 if *failed {
                     // On failure, continue anyway
                     self.enhanced_detection = false;
+                }
+                SetupState::AiConfig {
+                    selected: 0,
+                    api_url: self.ai_api_url.clone(),
+                    api_key: self.ai_api_key.clone(),
+                    model: self.ai_model.clone(),
+                    focus: AiConfigFocus::EnableToggle,
+                    cursor: 0,
+                }
+            }
+            SetupState::AiConfig {
+                selected,
+                api_url,
+                api_key,
+                model,
+                ..
+            } => {
+                self.ai_enabled = *selected == 1;
+                if self.ai_enabled {
+                    // Store the AI config values, using defaults for empty fields
+                    self.ai_api_url = if api_url.is_empty() {
+                        "https://api.openai.com/v1".to_string()
+                    } else {
+                        api_url.clone()
+                    };
+                    self.ai_api_key = api_key.clone();
+                    self.ai_model = if model.is_empty() {
+                        "gpt-4o-mini".to_string()
+                    } else {
+                        model.clone()
+                    };
                 }
                 SetupState::CuteCat
             }
@@ -460,9 +527,21 @@ impl SetupApp {
                 token: self.hf_token.clone().unwrap_or_default(),
                 cursor: 0,
             },
-            SetupState::CuteCat => SetupState::EnhancedDetection {
-                selected: if self.enhanced_detection { 1 } else { 0 },
+            SetupState::CuteCat => SetupState::AiConfig {
+                selected: if self.ai_enabled { 1 } else { 0 },
+                api_url: self.ai_api_url.clone(),
+                api_key: self.ai_api_key.clone(),
+                model: self.ai_model.clone(),
+                focus: AiConfigFocus::EnableToggle,
+                cursor: 0,
             },
+            SetupState::AiConfig { .. } => {
+                if self.enhanced_detection {
+                    SetupState::EnhancedDetection { selected: 1 }
+                } else {
+                    SetupState::EnhancedDetection { selected: 0 }
+                }
+            }
             SetupState::ShowingCat => SetupState::CuteCat,
             SetupState::Complete => SetupState::CuteCat,
         };
@@ -560,6 +639,14 @@ impl SetupApp {
         );
         if let Some(ref path) = self.model_path {
             config.insert("model_path".to_string(), path.clone());
+        }
+
+        // Add AI configuration
+        config.insert("ai_enabled".to_string(), self.ai_enabled.to_string());
+        if self.ai_enabled {
+            config.insert("ai_api_url".to_string(), self.ai_api_url.clone());
+            config.insert("ai_api_key".to_string(), self.ai_api_key.clone());
+            config.insert("ai_model".to_string(), self.ai_model.clone());
         }
 
         config

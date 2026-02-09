@@ -113,7 +113,17 @@ fn octal_to_string(octal: &str) -> Result<String, Error> {
     // Also track potential delimiters to determine parsing strategy
     let cleaned: String = octal
         .chars()
-        .filter(|c| c.is_ascii_digit() || *c == ' ' || *c == ',' || *c == ';' || *c == '\t' || *c == '\n' || *c == '\r' || *c == '-' || *c == ':')
+        .filter(|c| {
+            c.is_ascii_digit()
+                || *c == ' '
+                || *c == ','
+                || *c == ';'
+                || *c == '\t'
+                || *c == '\n'
+                || *c == '\r'
+                || *c == '-'
+                || *c == ':'
+        })
         .collect();
 
     if cleaned.is_empty() {
@@ -128,7 +138,7 @@ fn octal_to_string(octal: &str) -> Result<String, Error> {
 
     // Try delimiter-based parsing first
     let has_delimiters = cleaned.chars().any(|c| !c.is_ascii_digit());
-    
+
     let result = if has_delimiters {
         // Split by common delimiters and parse each octal number
         parse_delimited_octal(&cleaned)

@@ -97,10 +97,16 @@ impl Decoders {
 
         // Process decoders in batches to limit concurrency
         for chunk in self.components.chunks(batch_size) {
-            // Run this batch in parallel
+            // Run this batch in parallel, catching panics from individual decoders
+            // (e.g., ascii85 crate can panic with "attempt to add with overflow")
             let batch_results: Vec<CrackResult> = chunk
                 .par_iter()
-                .map(|decoder| decoder.crack(text, &checker))
+                .filter_map(|decoder| {
+                    std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                        decoder.crack(text, &checker)
+                    }))
+                    .ok()
+                })
                 .collect();
 
             // Separate successful and unsuccessful results

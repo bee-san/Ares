@@ -55,6 +55,10 @@ impl App {
                 branch_path,
                 highlighted_branch,
                 branch_scroll_offset,
+                focus,
+                tree_branches,
+                level_visible_rows,
+                ai_explanation,
                 ..
             } => PreviousState::Results {
                 result: result.clone(),
@@ -64,6 +68,10 @@ impl App {
                 branch_path: branch_path.clone(),
                 highlighted_branch: *highlighted_branch,
                 branch_scroll_offset: *branch_scroll_offset,
+                focus: *focus,
+                tree_branches: tree_branches.clone(),
+                level_visible_rows: *level_visible_rows,
+                ai_explanation: ai_explanation.clone(),
             },
             AppState::Failure {
                 input_text,
@@ -123,6 +131,10 @@ impl App {
                     branch_path,
                     highlighted_branch,
                     branch_scroll_offset,
+                    focus,
+                    tree_branches,
+                    level_visible_rows,
+                    ai_explanation,
                 } => AppState::Results {
                     result,
                     selected_step,
@@ -132,6 +144,11 @@ impl App {
                     current_branches: Vec::new(),
                     highlighted_branch,
                     branch_scroll_offset,
+                    focus,
+                    tree_branches,
+                    level_visible_rows,
+                    ai_explanation,
+                    ai_loading: false,
                 },
                 PreviousState::Failure {
                     input_text,
@@ -662,6 +679,10 @@ impl App {
                         branch_path,
                         highlighted_branch,
                         branch_scroll_offset,
+                        focus,
+                        tree_branches,
+                        level_visible_rows,
+                        ai_explanation,
                     } => AppState::Results {
                         result,
                         selected_step,
@@ -671,6 +692,11 @@ impl App {
                         current_branches: Vec::new(),
                         highlighted_branch,
                         branch_scroll_offset,
+                        focus,
+                        tree_branches,
+                        level_visible_rows,
+                        ai_explanation,
+                        ai_loading: false,
                     },
                     PreviousState::Failure {
                         input_text,

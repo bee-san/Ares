@@ -98,15 +98,15 @@ use base58_ripple_decoder::Base58RippleDecoder;
 use base62_decoder::Base62Decoder;
 use binary_decoder::BinaryDecoder;
 use hexadecimal_decoder::HexadecimalDecoder;
-use octal_decoder::OctalDecoder;
 use interface::{Crack, Decoder};
+use octal_decoder::OctalDecoder;
 
 use a1z26_decoder::A1Z26Decoder;
 use ascii85_decoder::Ascii85Decoder;
+use baconian_decoder::BaconianDecoder;
 use base64_decoder::Base64Decoder;
 use base65536_decoder::Base65536Decoder;
 use base91_decoder::Base91Decoder;
-use baconian_decoder::BaconianDecoder;
 use braille_decoder::BrailleDecoder;
 use caesar_decoder::CaesarDecoder;
 use citrix_ctx1_decoder::CitrixCTX1Decoder;

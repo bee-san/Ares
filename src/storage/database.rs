@@ -179,6 +179,34 @@ impl PartialEq for CacheRow {
     }
 }
 
+#[derive(Debug, Clone)]
+/// Struct representing a row in the ai_cache table
+pub struct AiCacheRow {
+    /// Unique row identifier
+    pub id: i64,
+    /// The cache key (concatenation of function_type + params)
+    pub request_key: String,
+    /// The type of AI function ("explain_step", "detect_language", "translate")
+    pub function_type: String,
+    /// The AI response text
+    pub response: String,
+    /// The model used to generate this response
+    pub model: String,
+    /// When the response was cached
+    pub created_at: String,
+}
+
+impl PartialEq for AiCacheRow {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.request_key == other.request_key
+            && self.function_type == other.function_type
+            && self.response == other.response
+            && self.model == other.model
+            && self.created_at == other.created_at
+    }
+}
+
 /// Type of branch (how it was created)
 #[derive(Debug, Clone, PartialEq)]
 pub enum BranchType {
@@ -288,6 +316,18 @@ fn get_db_connection() -> Result<rusqlite::Connection, rusqlite::Error> {
         Some(path) => rusqlite::Connection::open(path),
         None => rusqlite::Connection::open_in_memory(),
     }
+}
+
+/// Public wrapper for getting a database connection.
+///
+/// This is primarily used by the TUI tree viewer to load branch data
+/// with custom queries not covered by the standard functions.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on connection failure.
+pub fn get_db_connection_pub() -> Result<rusqlite::Connection, rusqlite::Error> {
+    get_db_connection()
 }
 
 /// Public wrapper for setting up database
@@ -425,6 +465,23 @@ pub(crate) fn init_database() -> Result<rusqlite::Connection, rusqlite::Error> {
     )?;
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_wordlist_file_id ON wordlist(file_id);",
+        (),
+    )?;
+
+    // Initializing AI response cache table
+    conn.execute(
+        "CREATE TABLE IF NOT EXISTS ai_cache (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            request_key TEXT NOT NULL UNIQUE,
+            function_type TEXT NOT NULL,
+            response TEXT NOT NULL,
+            model TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );",
+        (),
+    )?;
+    conn.execute(
+        "CREATE INDEX IF NOT EXISTS idx_ai_cache_function_type ON ai_cache(function_type);",
         (),
     )?;
 
@@ -693,6 +750,48 @@ pub fn insert_branch(
     let row_id = transaction.last_insert_rowid();
     transaction.commit()?;
     Ok(row_id)
+}
+
+/// Links an existing cache row as a branch of a parent cache entry.
+///
+/// This updates an orphaned root-level cache row to become a branch by setting
+/// its `parent_cache_id`, `branch_step`, and `branch_type` fields. This is used
+/// when the branch result was inserted by `insert_cache` (which doesn't set
+/// branch columns) and needs to be retroactively linked to a parent.
+///
+/// # Arguments
+///
+/// * `cache_id` - The cache entry ID to update
+/// * `parent_cache_id` - The parent cache entry ID to link to
+/// * `branch_step` - The step index in the parent's path where branching occurred
+/// * `branch_type` - The type of branch (Auto, SingleLayer, Manual)
+///
+/// # Returns
+///
+/// Number of rows updated (should be 1 on success, 0 if cache_id not found).
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error.
+pub fn link_as_branch(
+    cache_id: i64,
+    parent_cache_id: i64,
+    branch_step: usize,
+    branch_type: &BranchType,
+) -> Result<usize, rusqlite::Error> {
+    let mut conn = get_db_connection()?;
+    let transaction = conn.transaction()?;
+    let rows_updated = transaction.execute(
+        "UPDATE cache SET parent_cache_id = ?1, branch_step = ?2, branch_type = ?3 WHERE id = ?4",
+        (
+            parent_cache_id,
+            branch_step as i64,
+            branch_type.as_str(),
+            cache_id,
+        ),
+    )?;
+    transaction.commit()?;
+    Ok(rows_updated)
 }
 
 /// Gets parent info for a branch
@@ -1843,6 +1942,90 @@ pub fn get_total_word_count_from_files() -> Result<i64, rusqlite::Error> {
         |row| row.get(0),
     )?;
     Ok(count)
+}
+
+// ============================================================================
+// AI Cache Functions
+// ============================================================================
+
+/// Inserts or updates an AI response cache entry.
+///
+/// Uses SQLite's INSERT OR REPLACE to handle upserts on the unique request_key.
+///
+/// # Arguments
+///
+/// * `request_key` - The unique cache key for this request
+/// * `function_type` - The AI function type ("explain_step", "detect_language", "translate")
+/// * `response` - The AI response text
+/// * `model` - The model name used
+///
+/// # Errors
+///
+/// Returns rusqlite::Error if the database operation fails.
+pub fn insert_ai_cache(
+    request_key: &str,
+    function_type: &str,
+    response: &str,
+    model: &str,
+) -> Result<(), rusqlite::Error> {
+    let conn = get_db_connection()?;
+    conn.execute(
+        "INSERT OR REPLACE INTO ai_cache (request_key, function_type, response, model, created_at)
+         VALUES (?1, ?2, ?3, ?4, ?5)",
+        rusqlite::params![request_key, function_type, response, model, get_timestamp()],
+    )?;
+    Ok(())
+}
+
+/// Reads a cached AI response by request key.
+///
+/// # Arguments
+///
+/// * `request_key` - The unique cache key to look up
+///
+/// # Returns
+///
+/// `Ok(Some(AiCacheRow))` if found, `Ok(None)` if not cached.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error if the database operation fails.
+pub fn read_ai_cache(request_key: &str) -> Result<Option<AiCacheRow>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, request_key, function_type, response, model, created_at
+         FROM ai_cache
+         WHERE request_key = ?1",
+    )?;
+    let mut rows = stmt.query_map([request_key], |row| {
+        Ok(AiCacheRow {
+            id: row.get(0)?,
+            request_key: row.get(1)?,
+            function_type: row.get(2)?,
+            response: row.get(3)?,
+            model: row.get(4)?,
+            created_at: row.get(5)?,
+        })
+    })?;
+    match rows.next() {
+        Some(Ok(row)) => Ok(Some(row)),
+        Some(Err(e)) => Err(e),
+        None => Ok(None),
+    }
+}
+
+/// Clears all entries from the AI response cache.
+///
+/// This is useful when the user changes their AI model, which would
+/// invalidate all cached responses.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error if the database operation fails.
+pub fn clear_ai_cache() -> Result<(), rusqlite::Error> {
+    let conn = get_db_connection()?;
+    conn.execute("DELETE FROM ai_cache", ())?;
+    Ok(())
 }
 
 #[cfg(test)]
@@ -3372,5 +3555,73 @@ mod tests {
         let result = set_word_enabled("nonexistent_word", false);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), 0); // No rows updated
+    }
+
+    #[test]
+    fn test_link_as_branch_updates_orphan() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        let mock_decoder = Decoder::<MockDecoder>::new();
+        let athena_checker = Checker::<Athena>::new();
+        let checker = CheckerTypes::CheckAthena(athena_checker);
+        let crack_result = mock_decoder.crack("test", &checker);
+
+        // Insert root entry
+        let root_entry = CacheEntry {
+            encoded_text: "root_encoded".to_string(),
+            decoded_text: "root_decoded".to_string(),
+            path: vec![crack_result.clone()],
+            execution_time_ms: 10,
+            input_length: 12,
+            decoder_count: 1,
+            checker_name: None,
+            key_used: None,
+        };
+        let root_id = insert_cache(&root_entry).unwrap();
+
+        // Insert orphan entry (no branch linkage)
+        let orphan_entry = CacheEntry {
+            encoded_text: "orphan_encoded".to_string(),
+            decoded_text: "orphan_decoded".to_string(),
+            path: vec![crack_result],
+            execution_time_ms: 5,
+            input_length: 14,
+            decoder_count: 1,
+            checker_name: None,
+            key_used: None,
+        };
+        let orphan_id = insert_cache(&orphan_entry).unwrap();
+
+        // Verify orphan has no parent
+        let parent_info = get_parent_info(orphan_id).unwrap();
+        assert!(
+            parent_info.is_none(),
+            "Orphan should have no parent initially"
+        );
+
+        // Link the orphan as a branch of root at step 0
+        let rows = link_as_branch(orphan_id, root_id, 0, &BranchType::Auto).unwrap();
+        assert_eq!(rows, 1, "Should update exactly 1 row");
+
+        // Verify it now has parent linkage
+        let parent_info = get_parent_info(orphan_id).unwrap();
+        assert!(
+            parent_info.is_some(),
+            "Orphan should now have parent linkage"
+        );
+        let info = parent_info.unwrap();
+        assert_eq!(info.parent_cache_id, root_id);
+        assert_eq!(info.branch_step, 0);
+    }
+
+    #[test]
+    fn test_link_as_branch_nonexistent_id() {
+        set_test_db_path();
+        let _conn = init_database().unwrap();
+
+        // Try to link a nonexistent cache ID
+        let rows = link_as_branch(99999, 1, 0, &BranchType::Auto).unwrap();
+        assert_eq!(rows, 0, "Should update 0 rows for nonexistent ID");
     }
 }

@@ -136,7 +136,11 @@ fn decode_baconian(text: &str) -> Option<String> {
     }
 
     // Find the two unique symbols used
-    let unique_chars: Vec<char> = normalized.chars().collect::<HashSet<_>>().into_iter().collect();
+    let unique_chars: Vec<char> = normalized
+        .chars()
+        .collect::<HashSet<_>>()
+        .into_iter()
+        .collect();
 
     // Baconian requires 1-2 unique symbols (1 for patterns like AAAAA = A)
     if unique_chars.is_empty() || unique_chars.len() > 2 {
@@ -358,7 +362,9 @@ mod tests {
     fn baconian_decode_invalid_length() {
         let decoder = Decoder::<BaconianDecoder>::new();
         // Not divisible by 5
-        let result = decoder.crack("AABB", &get_athena_checker()).unencrypted_text;
+        let result = decoder
+            .crack("AABB", &get_athena_checker())
+            .unencrypted_text;
         assert!(result.is_none());
     }
 
@@ -366,7 +372,9 @@ mod tests {
     fn baconian_decode_too_many_symbols() {
         let decoder = Decoder::<BaconianDecoder>::new();
         // More than 2 unique symbols
-        let result = decoder.crack("ABCDE", &get_athena_checker()).unencrypted_text;
+        let result = decoder
+            .crack("ABCDE", &get_athena_checker())
+            .unencrypted_text;
         assert!(result.is_none());
     }
 
@@ -374,7 +382,9 @@ mod tests {
     fn baconian_decode_single_symbol_valid() {
         let decoder = Decoder::<BaconianDecoder>::new();
         // Only 1 unique symbol - valid for 'A' pattern
-        let result = decoder.crack("AAAAA", &get_athena_checker()).unencrypted_text;
+        let result = decoder
+            .crack("AAAAA", &get_athena_checker())
+            .unencrypted_text;
         assert!(result.is_some());
         assert_eq!(result.unwrap()[0], "A");
     }

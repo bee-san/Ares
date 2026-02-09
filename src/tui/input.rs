@@ -6,7 +6,7 @@
 use arboard::Clipboard;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 
-use super::app::{App, AppState, WordlistManagerFocus};
+use super::app::{App, AppState, BranchContext, WordlistManagerFocus};
 use crate::config::Config;
 
 /// Actions that may need to be performed outside the input handler.
@@ -14,7 +14,7 @@ use crate::config::Config;
 /// Some operations like clipboard access may require special handling
 /// in the main event loop, so we return an action to indicate what
 /// needs to happen.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Action {
     /// Copy the given string to the system clipboard.
     CopyToClipboard(String),
@@ -45,12 +45,24 @@ pub enum Action {
     OpenDecoderSearch,
     /// Return to parent branch (Backspace when viewing a branch).
     ReturnToParent,
-    /// Run a full A* search as a branch.
-    RunBranchFullSearch(String),
+    /// Run a full A* search as a branch, with branch context for database linkage.
+    RunBranchFullSearch(String, Option<BranchContext>),
     /// Run single layer decoding as a branch.
     RunBranchSingleLayer(String),
     /// Run a specific decoder as a branch.
     RunBranchDecoder(String, String),
+    /// Request AI explanation for the selected decoder step.
+    /// Contains (decoder_name, input_text, output_text, optional_key).
+    ExplainStep {
+        /// The name of the decoder.
+        decoder_name: String,
+        /// The input text to the decoder step.
+        input_text: String,
+        /// The output text from the decoder step.
+        output_text: String,
+        /// Optional key used by the decoder.
+        key: Option<String>,
+    },
     /// No action required.
     None,
 }
@@ -238,11 +250,20 @@ fn handle_results_keys(
     selected_step_text: Option<String>,
     _path_len: usize,
 ) -> Action {
+    use super::app::ResultsFocus;
+
     // Track whether we're currently viewing a branch
     let is_viewing_branch = if let AppState::Results { branch_path, .. } = &app.state {
         branch_path.is_branch()
     } else {
         false
+    };
+
+    // Get the current focus panel
+    let current_focus = if let AppState::Results { focus, .. } = &app.state {
+        *focus
+    } else {
+        ResultsFocus::TreeView
     };
 
     // Check if there are branches at the current step
@@ -252,65 +273,77 @@ fn handle_results_keys(
     let highlighted_branch_id = app.get_highlighted_branch().map(|b| b.cache_id);
 
     match key.code {
-        // Handle 'g' key for gg command (go to first step)
+        // Handle 'g' key for gg command (go to first step) - works in TreeView focus
         KeyCode::Char('g') => {
-            if app.pending_g {
-                // gg - go to first step
-                app.pending_g = false;
-                app.first_step();
+            if current_focus == ResultsFocus::TreeView {
+                if app.pending_g {
+                    // gg - go to first step
+                    app.pending_g = false;
+                    app.first_step();
+                } else {
+                    // First g - set pending
+                    app.pending_g = true;
+                }
             } else {
-                // First g - set pending
-                app.pending_g = true;
+                app.pending_g = false;
             }
             Action::None
         }
-        // Return to home screen
+        // Return to home screen (always works)
         KeyCode::Char('b') => {
             app.pending_g = false;
             app.return_to_home();
             Action::None
         }
-        // Navigation: previous step (h/Left)
+        // Navigation: previous step (h/Left) - only in TreeView focus
         KeyCode::Left | KeyCode::Char('h') => {
             app.pending_g = false;
-            app.prev_step();
+            if current_focus == ResultsFocus::TreeView {
+                app.prev_step();
+            }
             Action::None
         }
-        // Navigation: next step (l/Right)
+        // Navigation: next step (l/Right) - only in TreeView focus
         KeyCode::Right | KeyCode::Char('l') => {
             app.pending_g = false;
-            app.next_step();
+            if current_focus == ResultsFocus::TreeView {
+                app.next_step();
+            }
             Action::None
         }
-        // Navigation: previous branch (k/Up)
+        // Navigation: up (k/Up) - in LevelDetail: previous branch; others: no-op
         KeyCode::Up | KeyCode::Char('k') => {
             app.pending_g = false;
-            if has_branches {
+            if current_focus == ResultsFocus::LevelDetail && has_branches {
                 app.prev_branch();
             }
             Action::None
         }
-        // Navigation: next branch (j/Down)
+        // Navigation: down (j/Down) - in LevelDetail: next branch; others: no-op
         KeyCode::Down | KeyCode::Char('j') => {
             app.pending_g = false;
-            if has_branches {
+            if current_focus == ResultsFocus::LevelDetail && has_branches {
                 app.next_branch();
             }
             Action::None
         }
-        // Go to first step (Home key)
+        // Go to first step (Home key) - works in TreeView focus
         KeyCode::Home => {
             app.pending_g = false;
-            app.first_step();
+            if current_focus == ResultsFocus::TreeView {
+                app.first_step();
+            }
             Action::None
         }
-        // Go to last step (G or End key)
+        // Go to last step (G or End key) - works in TreeView focus
         KeyCode::End | KeyCode::Char('G') => {
             app.pending_g = false;
-            app.last_step();
+            if current_focus == ResultsFocus::TreeView {
+                app.last_step();
+            }
             Action::None
         }
-        // Copy selected step's output to clipboard (vim-style 'y' for yank)
+        // Copy selected step's output to clipboard (vim-style 'y' for yank) - always works
         KeyCode::Char('c') | KeyCode::Char('y') => {
             app.pending_g = false;
             if let Some(text) = selected_step_text {
@@ -319,22 +352,35 @@ fn handle_results_keys(
                 Action::None
             }
         }
-        // Enter: Switch to branch if one is highlighted, otherwise open branch prompt
+        // Enter: Focus-aware action
+        // - LevelDetail focus: switch to highlighted branch, or select first branch
+        // - TreeView focus: open branch prompt to create a new branch
+        // - StepDetails focus: no-op
         KeyCode::Enter => {
             app.pending_g = false;
-            if let Some(cache_id) = highlighted_branch_id {
-                Action::SwitchToBranch(cache_id)
-            } else if has_branches {
-                // No branch highlighted but branches exist - do nothing or could select first
-                Action::None
-            } else if selected_step_text.is_some() {
-                // No branches - open branch prompt to create one
-                Action::OpenBranchPrompt
-            } else {
-                Action::None
+            match current_focus {
+                ResultsFocus::LevelDetail => {
+                    if let Some(cache_id) = highlighted_branch_id {
+                        Action::SwitchToBranch(cache_id)
+                    } else if has_branches {
+                        // Auto-select first branch if none highlighted
+                        app.next_branch();
+                        Action::None
+                    } else {
+                        Action::None
+                    }
+                }
+                ResultsFocus::TreeView => {
+                    if selected_step_text.is_some() {
+                        Action::OpenBranchPrompt
+                    } else {
+                        Action::None
+                    }
+                }
+                ResultsFocus::StepDetails => Action::None,
             }
         }
-        // Backspace: Return to parent branch (when viewing a branch)
+        // Backspace: Return to parent branch (when viewing a branch) - always works
         KeyCode::Backspace => {
             app.pending_g = false;
             if is_viewing_branch {
@@ -343,7 +389,46 @@ fn handle_results_keys(
                 Action::None
             }
         }
-        // Slash: Open decoder search modal
+        // AI Explain: request explanation for current step (always works)
+        KeyCode::Char('e') => {
+            app.pending_g = false;
+            if !crate::ai::is_ai_configured() {
+                app.set_status("AI not configured. Enable in Settings (Ctrl+S).".to_string());
+                return Action::None;
+            }
+            // Extract step data for the AI explanation
+            if let AppState::Results {
+                result,
+                selected_step,
+                ai_loading,
+                ..
+            } = &mut app.state
+            {
+                if *ai_loading {
+                    app.set_status("AI explanation already loading...".to_string());
+                    return Action::None;
+                }
+                if let Some(step) = result.path.get(*selected_step) {
+                    let decoder_name = step.decoder.to_string();
+                    let input_text = step.encrypted_text.clone();
+                    let output_text = step
+                        .unencrypted_text
+                        .as_ref()
+                        .and_then(|t| t.first().cloned())
+                        .unwrap_or_default();
+                    let key = step.key.clone();
+                    *ai_loading = true;
+                    return Action::ExplainStep {
+                        decoder_name,
+                        input_text,
+                        output_text,
+                        key,
+                    };
+                }
+            }
+            Action::None
+        }
+        // Slash: Open decoder search modal - always works
         KeyCode::Char('/') => {
             app.pending_g = false;
             if selected_step_text.is_some() {
@@ -351,6 +436,12 @@ fn handle_results_keys(
             } else {
                 Action::None
             }
+        }
+        // Tab: Switch focus between tree view and level detail
+        KeyCode::Tab => {
+            app.pending_g = false;
+            app.switch_focus();
+            Action::None
         }
         _ => {
             app.pending_g = false;
@@ -1079,8 +1170,9 @@ fn handle_branch_mode_prompt_keys(app: &mut App, key: KeyEvent) -> Action {
                 app.close_branch_mode_prompt();
                 match mode {
                     BranchMode::FullSearch => {
-                        // Run full A* search as a branch
-                        Action::RunBranchFullSearch(context.text_to_decode)
+                        // Run full A* search as a branch, passing full context for DB linkage
+                        let text = context.text_to_decode.clone();
+                        Action::RunBranchFullSearch(text, Some(context))
                     }
                     BranchMode::SingleLayer => {
                         // Run all decoders once on this text

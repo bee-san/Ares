@@ -16,9 +16,10 @@ use super::settings::SettingsModel;
 use super::spinner::{ENHANCED_SPINNER_FRAMES, QUOTES};
 use super::widgets::{
     render_list_editor, render_settings_screen as render_settings_panel, render_step_details,
-    render_toggle_list_editor, render_wordlist_manager, PathViewer, WordlistFocus,
+    render_toggle_list_editor, render_wordlist_manager, TreeViewer, WordlistFocus,
 };
 use crate::storage::database::BranchSummary;
+use crate::tui::widgets::tree_viewer::TreeNode;
 
 /// Modal width as percentage of screen width.
 const MODAL_WIDTH_PERCENT: u16 = 65;
@@ -116,6 +117,10 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
             current_branches,
             highlighted_branch,
             branch_scroll_offset,
+            focus,
+            tree_branches,
+            ai_explanation,
+            ai_loading,
             ..
         } => {
             draw_results_screen(
@@ -128,7 +133,11 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
                 current_branches,
                 *highlighted_branch,
                 *branch_scroll_offset,
+                *focus,
+                tree_branches,
                 colors,
+                ai_explanation.as_deref(),
+                *ai_loading,
             );
         }
         AppState::Failure {
@@ -418,12 +427,14 @@ fn draw_loading_screen(
     frame.render_widget(elapsed_paragraph, inner_chunks[7]);
 }
 
-/// Renders the results screen with three-column layout.
+/// Renders the results screen with horizontal split layout.
 ///
 /// Layout:
-/// - Top row: Input panel | Path viewer | Output panel
-/// - Middle: Step details panel
-/// - Bottom: Status bar with keybindings
+/// - Left (~38%): Step details panel
+/// - Right (~62%): Two vertically stacked panels
+///   - Top: Birds-eye tree view
+///   - Bottom: Level detail (scrollable branch list)
+/// - Bottom (full width): Status bar with keybindings
 ///
 /// # Arguments
 ///
@@ -436,6 +447,8 @@ fn draw_loading_screen(
 /// * `current_branches` - Branches for the currently selected step
 /// * `highlighted_branch` - Index of highlighted branch (if any)
 /// * `branch_scroll_offset` - Scroll offset for branch list
+/// * `focus` - Which panel is currently focused
+/// * `tree_branches` - Cached tree data for the birds-eye view
 /// * `colors` - The color scheme to use
 #[allow(clippy::too_many_arguments)]
 fn draw_results_screen(
@@ -448,66 +461,156 @@ fn draw_results_screen(
     current_branches: &[BranchSummary],
     highlighted_branch: Option<usize>,
     branch_scroll_offset: usize,
+    focus: super::app::ResultsFocus,
+    tree_branches: &std::collections::HashMap<usize, Vec<TreeNode>>,
     colors: &TuiColors,
+    ai_explanation: Option<&str>,
+    ai_loading: bool,
 ) {
-    // Calculate layout chunks - full-width path panel on top, step details below
-    // Branch list is integrated into the path panel
-    let chunks = Layout::default()
+    use super::app::ResultsFocus;
+
+    // Outer split: main area + status bar
+    let outer_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Min(10),   // Path panel (with optional branch list)
-            Constraint::Length(1), // Visual separator
-            Constraint::Min(8),    // Step details
+            Constraint::Min(1),    // Main area
             Constraint::Length(1), // Status bar
         ])
         .split(area);
 
-    // Render path panel with breadcrumb header
-    let path_title = format!(" ─ Path ({}) ─ ", branch_path.display());
-    let path_block = Block::default()
-        .title(path_title)
-        .title_style(colors.title)
+    // Main area: left (step details) + right (tree + level)
+    let main_chunks = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([
+            Constraint::Percentage(38), // Step details
+            Constraint::Percentage(62), // Tree view + Level detail
+        ])
+        .split(outer_chunks[0]);
+
+    // Right side: tree view (top) + level detail (bottom)
+    let right_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Percentage(55), // Tree view
+            Constraint::Percentage(45), // Level detail
+        ])
+        .split(main_chunks[1]);
+
+    // ── Left Panel: Step Details ──
+    let step_is_focused = focus == ResultsFocus::StepDetails;
+    let step_details_block = Block::default()
+        .title(" Step Details ")
+        .title_style(if step_is_focused {
+            colors.accent.add_modifier(Modifier::BOLD)
+        } else {
+            colors.title
+        })
         .borders(Borders::ALL)
-        .border_style(colors.border);
+        .border_type(if step_is_focused {
+            BorderType::Double
+        } else {
+            BorderType::Plain
+        })
+        .border_style(if step_is_focused {
+            colors.accent
+        } else {
+            colors.border
+        });
 
-    let path_inner = path_block.inner(chunks[0]);
-    frame.render_widget(path_block, chunks[0]);
+    let step_details_inner = step_details_block.inner(main_chunks[0]);
+    frame.render_widget(step_details_block, main_chunks[0]);
 
-    // Split path panel into path viewer and branch list (if branches exist)
-    if current_branches.is_empty() {
-        // No branches - full area for path viewer
-        let path_viewer = PathViewer::new();
-        path_viewer.render(
-            path_inner,
-            frame.buffer_mut(),
-            &result.path,
-            selected_step,
-            colors,
-        );
+    let current_step = result.path.get(selected_step);
+    render_step_details(
+        step_details_inner,
+        frame.buffer_mut(),
+        current_step,
+        colors,
+        ai_explanation,
+        ai_loading,
+    );
+
+    // ── Right Top Panel: Birds-Eye Tree View ──
+    let tree_is_focused = focus == ResultsFocus::TreeView;
+    let tree_title = format!(" Tree ({}) ", branch_path.display());
+    let tree_block = Block::default()
+        .title(tree_title)
+        .title_style(if tree_is_focused {
+            colors.accent.add_modifier(Modifier::BOLD)
+        } else {
+            colors.title
+        })
+        .borders(Borders::ALL)
+        .border_type(if tree_is_focused {
+            BorderType::Double
+        } else {
+            BorderType::Plain
+        })
+        .border_style(if tree_is_focused {
+            colors.accent
+        } else {
+            colors.border
+        });
+
+    let tree_inner = tree_block.inner(right_chunks[0]);
+    frame.render_widget(tree_block, right_chunks[0]);
+
+    let tree_viewer = TreeViewer::new();
+    tree_viewer.render(
+        tree_inner,
+        frame.buffer_mut(),
+        &result.path,
+        selected_step,
+        tree_branches,
+        colors,
+    );
+
+    // ── Right Bottom Panel: Level Detail (Branch List) ──
+    let level_is_focused = focus == ResultsFocus::LevelDetail;
+    let level_title = if current_branches.is_empty() {
+        " Branches ".to_string()
     } else {
-        // Split: 55% path viewer, 45% branch list
-        let path_chunks = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints([
-                Constraint::Percentage(55), // Path viewer
-                Constraint::Min(4),         // Branch list
-            ])
-            .split(path_inner);
-
-        // Render path viewer with branch count indicator
-        let path_viewer = PathViewer::new();
-        path_viewer.render_with_branch_count(
-            path_chunks[0],
-            frame.buffer_mut(),
-            &result.path,
+        format!(
+            " Branches from step {} ({} total) ",
             selected_step,
-            current_branches.len(),
-            colors,
-        );
+            current_branches.len()
+        )
+    };
+    let level_block = Block::default()
+        .title(level_title)
+        .title_style(if level_is_focused {
+            colors.accent.add_modifier(Modifier::BOLD)
+        } else {
+            colors.title
+        })
+        .borders(Borders::ALL)
+        .border_type(if level_is_focused {
+            BorderType::Double
+        } else {
+            BorderType::Plain
+        })
+        .border_style(if level_is_focused {
+            colors.accent
+        } else {
+            colors.border
+        });
 
-        // Render branch list section
+    let level_inner = level_block.inner(right_chunks[1]);
+    frame.render_widget(level_block, right_chunks[1]);
+
+    if current_branches.is_empty() {
+        // Show placeholder when no branches
+        let placeholder = Paragraph::new(Line::from(Span::styled(
+            "No branches at this step. Press [Enter] to create one, or [/] to search decoders.",
+            colors.muted,
+        )))
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: false });
+        frame.render_widget(placeholder, level_inner);
+    } else {
+        // Render branch list
         render_branch_list(
-            path_chunks[1],
+            level_inner,
             frame.buffer_mut(),
             current_branches,
             highlighted_branch,
@@ -517,20 +620,8 @@ fn draw_results_screen(
         );
     }
 
-    // Render visual separator line
-    let separator_line = Line::from(Span::styled(
-        "─".repeat(chunks[1].width as usize),
-        colors.border,
-    ));
-    let separator_paragraph = Paragraph::new(separator_line);
-    frame.render_widget(separator_paragraph, chunks[1]);
-
-    // Render step details
-    let current_step = result.path.get(selected_step);
-    render_step_details(chunks[2], frame.buffer_mut(), current_step, colors);
-
-    // Render status bar
-    draw_status_bar(frame, chunks[3], colors);
+    // ── Status Bar ──
+    draw_status_bar(frame, outer_chunks[1], focus, colors);
 }
 
 /// Renders the branch list section below the path viewer.
@@ -1186,23 +1277,65 @@ fn draw_main_input_area(
 
 /// Renders the status bar with keybinding hints.
 ///
+/// Shows context-aware keybindings based on the current panel focus.
+///
 /// # Arguments
 ///
 /// * `frame` - The Ratatui frame to render into
 /// * `area` - The area to render the status bar
+/// * `focus` - Which panel is currently focused in the Results screen
 /// * `colors` - The color scheme to use
-fn draw_status_bar(frame: &mut Frame, area: Rect, colors: &TuiColors) {
-    let keybindings = [
-        ("[h/l]", "Step"),
-        ("[j/k]", "Branch"),
-        ("[/]", "Search"),
-        ("[y]", "Yank"),
-        ("[b]", "Home"),
-        ("[Enter]", "Select"),
-        ("[?]", "Help"),
-    ];
+fn draw_status_bar(
+    frame: &mut Frame,
+    area: Rect,
+    focus: super::app::ResultsFocus,
+    colors: &TuiColors,
+) {
+    use super::app::ResultsFocus;
 
-    let mut spans = Vec::new();
+    let focus_label = match focus {
+        ResultsFocus::TreeView => "Tree",
+        ResultsFocus::LevelDetail => "Level",
+        ResultsFocus::StepDetails => "Step",
+    };
+
+    // Show different keybindings depending on which panel is focused
+    let keybindings: &[(&str, &str)] = match focus {
+        ResultsFocus::TreeView => &[
+            ("[h/l]", "Step"),
+            ("[gg/G]", "First/Last"),
+            ("[e]", "Explain"),
+            ("[Tab]", "Focus"),
+            ("[Enter]", "Branch"),
+            ("[/]", "Search"),
+            ("[y]", "Yank"),
+            ("[b]", "Home"),
+            ("[?]", "Help"),
+        ],
+        ResultsFocus::LevelDetail => &[
+            ("[j/k]", "Browse"),
+            ("[Enter]", "Select"),
+            ("[e]", "Explain"),
+            ("[Tab]", "Focus"),
+            ("[/]", "Search"),
+            ("[y]", "Yank"),
+            ("[b]", "Home"),
+            ("[?]", "Help"),
+        ],
+        ResultsFocus::StepDetails => &[
+            ("[e]", "Explain"),
+            ("[Tab]", "Focus"),
+            ("[y]", "Yank"),
+            ("[/]", "Search"),
+            ("[b]", "Home"),
+            ("[?]", "Help"),
+        ],
+    };
+
+    let mut spans = vec![Span::styled(
+        format!("[{}] ", focus_label),
+        colors.accent.add_modifier(Modifier::BOLD),
+    )];
     for (i, (key, desc)) in keybindings.iter().enumerate() {
         if i > 0 {
             spans.push(Span::styled("  ", colors.text));
@@ -1277,6 +1410,7 @@ fn draw_help_overlay(
             ("", ""),
             ("Actions", ""),
             ("y / c", "Yank (copy) output to clipboard"),
+            ("e", "Explain step with AI"),
             ("Enter", "Select branch or create new branch"),
             ("Backspace", "Return to parent branch"),
             ("/", "Search and run specific decoder"),

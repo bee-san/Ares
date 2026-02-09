@@ -114,6 +114,8 @@ pub fn render_step_details(
     buf: &mut Buffer,
     step: Option<&CrackResult>,
     colors: &TuiColors,
+    ai_explanation: Option<&str>,
+    ai_loading: bool,
 ) {
     let block = Block::default()
         .title(" Step Details ")
@@ -126,7 +128,7 @@ pub fn render_step_details(
 
     match step {
         Some(result) => {
-            render_step_content(inner_area, buf, result, colors);
+            render_step_content(inner_area, buf, result, colors, ai_explanation, ai_loading);
         }
         None => {
             render_placeholder(inner_area, buf, colors);
@@ -142,7 +144,14 @@ pub fn render_step_details(
 /// * `buf` - The buffer to render to
 /// * `result` - The `CrackResult` containing step information
 /// * `colors` - The TUI color scheme to use
-fn render_step_content(area: Rect, buf: &mut Buffer, result: &CrackResult, colors: &TuiColors) {
+fn render_step_content(
+    area: Rect,
+    buf: &mut Buffer,
+    result: &CrackResult,
+    colors: &TuiColors,
+    ai_explanation: Option<&str>,
+    ai_loading: bool,
+) {
     let key_display = result.key.as_ref().map_or("N/A".to_string(), |k| k.clone());
 
     let before_text = truncate_text(&result.encrypted_text, MAX_TEXT_LENGTH);
@@ -237,6 +246,29 @@ fn render_step_content(area: Rect, buf: &mut Buffer, result: &CrackResult, color
             lines.push(Line::from(vec![
                 Span::styled("Identified: ", colors.label.add_modifier(Modifier::BOLD)),
                 Span::styled(&result.check_description, colors.checker_info),
+            ]));
+        }
+    }
+
+    // Add AI explanation section
+    if ai_loading {
+        lines.push(Line::from(""));
+        lines.push(Line::from(vec![Span::styled(
+            "AI Explanation",
+            colors.label.add_modifier(Modifier::BOLD),
+        )]));
+        lines.push(Line::from(vec![Span::styled("  Loading...", colors.muted)]));
+    } else if let Some(explanation) = ai_explanation {
+        lines.push(Line::from(""));
+        lines.push(Line::from(vec![Span::styled(
+            "AI Explanation",
+            colors.label.add_modifier(Modifier::BOLD),
+        )]));
+        // Wrap the explanation text - split by lines and indent
+        for line in explanation.lines() {
+            lines.push(Line::from(vec![
+                Span::styled("  ", colors.text),
+                Span::styled(line.to_string(), colors.text),
             ]));
         }
     }

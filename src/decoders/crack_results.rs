@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 
 /// Every cracker returns this object which
 /// Either indicates success or failure among other things.
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct CrackResult {
     /// If our checkers return success, we change this bool to True
     pub success: bool,

@@ -18,7 +18,9 @@ use ratatui::prelude::*;
 use crate::checkers::checker_type::Check;
 use crate::config::Config;
 use crate::decoders::crack_results::CrackResult;
-use crate::storage::database::{get_cache_by_id, insert_branch, BranchType, CacheEntry};
+use crate::storage::database::{
+    get_cache_by_id, insert_branch, link_as_branch, BranchType, CacheEntry,
+};
 use crate::{CrackingResult, DecoderResult};
 
 use super::app::App;
@@ -155,9 +157,35 @@ fn run_event_loop(
     let mut result_receiver = initial_result_receiver;
     let mut confirmation_receiver = initial_confirmation_receiver;
 
+    // Branch context for linking RunBranchFullSearch results after the background thread returns.
+    // Set when RunBranchFullSearch fires, consumed when the result arrives.
+    let mut pending_branch_context: Option<super::app::BranchContext> = None;
+
+    // Channel for receiving AI explanation results from background thread
+    let mut ai_result_receiver: Option<mpsc::Receiver<Result<String, crate::ai::error::AiError>>> =
+        None;
+
     loop {
         // Draw the UI
-        terminal.draw(|frame| draw(frame, app, colors))?;
+        let completed_frame = terminal.draw(|frame| draw(frame, app, colors))?;
+
+        // Update level_visible_rows based on actual terminal size
+        // Layout: main area = terminal height - 1 (status bar)
+        // Right panel = 62% of main area width, split 55%/45% vertically
+        // Level detail panel = 45% of right panel height - 2 (borders)
+        // Branch list = level detail inner - 1 (header)
+        if let super::app::AppState::Results {
+            level_visible_rows, ..
+        } = &mut app.state
+        {
+            let term_height = completed_frame.area.height;
+            let main_height = term_height.saturating_sub(1); // minus status bar
+            let right_panel_height = main_height; // same as main area
+            let level_panel_height = (right_panel_height as f32 * 0.45) as u16;
+            let level_inner = level_panel_height.saturating_sub(2); // borders
+            let branch_rows = level_inner.saturating_sub(1); // header line
+            *level_visible_rows = (branch_rows as usize).max(1);
+        }
 
         // Calculate timeout for event polling
         let timeout = tick_rate
@@ -432,6 +460,14 @@ fn run_event_loop(
                                                 current_branches: branches,
                                                 highlighted_branch: None,
                                                 branch_scroll_offset: 0,
+                                                focus: super::app::ResultsFocus::default(),
+                                                tree_branches:
+                                                    super::app::App::load_tree_branches_static(
+                                                        parent_cache_id,
+                                                    ),
+                                                level_visible_rows: 10,
+                                                ai_explanation: None,
+                                                ai_loading: false,
                                             };
 
                                             app.set_status(
@@ -454,8 +490,11 @@ fn run_event_loop(
                                 }
                             }
                         }
-                        Action::RunBranchFullSearch(text) => {
+                        Action::RunBranchFullSearch(text, branch_context) => {
                             // Run a full A* search as a branch
+                            // Store branch context for post-hoc linking when the result arrives
+                            pending_branch_context = branch_context;
+
                             // Reset state for a fresh run
                             crate::checkers::reset_human_checker_state();
                             crate::timer::resume();
@@ -583,6 +622,8 @@ fn run_event_loop(
 
                                         // Refresh the branch list for the current step
                                         app.load_branches_for_step();
+                                        // Refresh tree data for birds-eye view
+                                        app.refresh_tree_branches();
 
                                         app.set_status(format!(
                                             "Created {} branches from single-layer decoding.",
@@ -649,6 +690,8 @@ fn run_event_loop(
                                                     saved_branch_id = Some(new_id);
                                                     // Refresh the branch list for current step
                                                     app.load_branches_for_step();
+                                                    // Refresh tree data for birds-eye view
+                                                    app.refresh_tree_branches();
                                                 }
                                             }
                                         }
@@ -682,6 +725,28 @@ fn run_event_loop(
                                     decoder_name
                                 ));
                             }
+                        }
+                        Action::ExplainStep {
+                            decoder_name,
+                            input_text,
+                            output_text,
+                            key,
+                        } => {
+                            // Spawn background thread for AI explanation
+                            let (ai_tx, ai_rx) = mpsc::channel();
+                            ai_result_receiver = Some(ai_rx);
+
+                            thread::spawn(move || {
+                                let result = crate::ai::explain_step(
+                                    &decoder_name,
+                                    &input_text,
+                                    &output_text,
+                                    key.as_deref(),
+                                );
+                                let _ = ai_tx.send(result);
+                            });
+
+                            app.set_status("Loading AI explanation...".to_string());
                         }
                         Action::None => {}
                     }
@@ -719,6 +784,24 @@ fn run_event_loop(
             }
         }
 
+        // Check for AI explanation result (non-blocking)
+        if let Some(ref ai_rx) = ai_result_receiver {
+            if let Ok(ai_result) = ai_rx.try_recv() {
+                match ai_result {
+                    Ok(explanation) => {
+                        app.set_ai_explanation(explanation);
+                        app.set_status("AI explanation loaded.".to_string());
+                    }
+                    Err(e) => {
+                        // Clear loading state on error
+                        app.clear_ai_explanation();
+                        app.set_status(format!("AI explanation failed: {}", e));
+                    }
+                }
+                ai_result_receiver = None;
+            }
+        }
+
         // Check for decode result (non-blocking)
         if let Some(ref rx) = result_receiver {
             if let Ok(cracking_result) = rx.try_recv() {
@@ -726,12 +809,36 @@ fn run_event_loop(
                     Some(decoder_result) => {
                         // Use set_result_with_cache_id if we have a cache_id for branching support
                         if let Some(cache_id) = cracking_result.cache_id {
+                            // If this result came from a RunBranchFullSearch, link it as a branch
+                            if let Some(ref ctx) = pending_branch_context {
+                                if let Some(parent_id) = ctx.parent_cache_id {
+                                    if let Err(e) = link_as_branch(
+                                        cache_id,
+                                        parent_id,
+                                        ctx.branch_step,
+                                        &BranchType::Auto,
+                                    ) {
+                                        app.set_status(format!(
+                                            "Warning: failed to link branch: {}",
+                                            e
+                                        ));
+                                    }
+                                }
+                            }
+                            pending_branch_context = None;
+
                             app.set_result_with_cache_id(decoder_result, cache_id);
+
+                            // Refresh branches so the new branch appears in the UI
+                            app.load_branches_for_step();
+                            app.refresh_tree_branches();
                         } else {
+                            pending_branch_context = None;
                             app.set_result(decoder_result);
                         }
                     }
                     None => {
+                        pending_branch_context = None;
                         let elapsed = start_time.elapsed();
                         app.set_failure(elapsed);
                     }

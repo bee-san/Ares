@@ -21,6 +21,8 @@ impl App {
             highlighted_branch,
             branch_scroll_offset,
             current_branches,
+            ai_explanation,
+            ai_loading,
             ..
         } = &mut self.state
         {
@@ -28,6 +30,9 @@ impl App {
             if path_len > 0 {
                 *selected_step = (*selected_step + 1) % path_len;
                 *scroll_offset = 0;
+                // Clear AI explanation when changing steps
+                *ai_explanation = None;
+                *ai_loading = false;
                 // Reset branch selection when changing steps
                 *highlighted_branch = None;
                 *branch_scroll_offset = 0;
@@ -56,6 +61,8 @@ impl App {
             highlighted_branch,
             branch_scroll_offset,
             current_branches,
+            ai_explanation,
+            ai_loading,
             ..
         } = &mut self.state
         {
@@ -67,6 +74,9 @@ impl App {
                     *selected_step - 1
                 };
                 *scroll_offset = 0;
+                // Clear AI explanation when changing steps
+                *ai_explanation = None;
+                *ai_loading = false;
                 // Reset branch selection when changing steps
                 *highlighted_branch = None;
                 *branch_scroll_offset = 0;
@@ -90,11 +100,15 @@ impl App {
             highlighted_branch,
             branch_scroll_offset,
             current_branches,
+            ai_explanation,
+            ai_loading,
             ..
         } = &mut self.state
         {
             *selected_step = 0;
             *scroll_offset = 0;
+            *ai_explanation = None;
+            *ai_loading = false;
             *highlighted_branch = None;
             *branch_scroll_offset = 0;
             if let Some(cid) = cache_id {
@@ -115,6 +129,8 @@ impl App {
             highlighted_branch,
             branch_scroll_offset,
             current_branches,
+            ai_explanation,
+            ai_loading,
             ..
         } = &mut self.state
         {
@@ -122,6 +138,8 @@ impl App {
             if path_len > 0 {
                 *selected_step = path_len - 1;
                 *scroll_offset = 0;
+                *ai_explanation = None;
+                *ai_loading = false;
                 *highlighted_branch = None;
                 *branch_scroll_offset = 0;
                 if let Some(cid) = cache_id {
@@ -163,6 +181,7 @@ impl App {
             current_branches,
             highlighted_branch,
             branch_scroll_offset,
+            level_visible_rows,
             ..
         } = &mut self.state
         {
@@ -182,8 +201,7 @@ impl App {
             }
 
             // Auto-scroll to keep highlighted branch visible
-            // Assuming ~5 visible branches at a time
-            let visible = 5;
+            let visible = *level_visible_rows;
             if let Some(idx) = highlighted_branch {
                 if *idx >= *branch_scroll_offset + visible {
                     *branch_scroll_offset = idx.saturating_sub(visible - 1);

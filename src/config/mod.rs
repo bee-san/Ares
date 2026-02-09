@@ -94,6 +94,18 @@ pub struct Config {
     /// Default: 10 seconds. Set to 0 to never auto-clear.
     #[serde(default = "default_status_message_timeout")]
     pub status_message_timeout: u64,
+    /// Whether AI features are enabled.
+    #[serde(default)]
+    pub ai_enabled: bool,
+    /// OpenAI-compatible API endpoint URL (e.g., "https://api.openai.com/v1").
+    #[serde(default)]
+    pub ai_api_url: Option<String>,
+    /// API key for the AI endpoint.
+    #[serde(default)]
+    pub ai_api_key: Option<String>,
+    /// Model name to use for AI features (e.g., "gpt-4o-mini").
+    #[serde(default)]
+    pub ai_model: Option<String>,
 }
 
 /// Default status message timeout in seconds.
@@ -167,6 +179,10 @@ impl Clone for Config {
             decoders_to_run: self.decoders_to_run.clone(),
             checkers_to_run: self.checkers_to_run.clone(),
             status_message_timeout: self.status_message_timeout,
+            ai_enabled: self.ai_enabled,
+            ai_api_url: self.ai_api_url.clone(),
+            ai_api_key: self.ai_api_key.clone(),
+            ai_model: self.ai_model.clone(),
         }
     }
 }
@@ -197,6 +213,10 @@ impl Default for Config {
             decoders_to_run: vec![],
             checkers_to_run: vec![],
             status_message_timeout: default_status_message_timeout(),
+            ai_enabled: false,
+            ai_api_url: None,
+            ai_api_key: None,
+            ai_model: None,
         };
 
         // Set default colors
@@ -341,6 +361,10 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
             "decoders_to_run",
             "checkers_to_run",
             "status_message_timeout",
+            "ai_enabled",
+            "ai_api_url",
+            "ai_api_key",
+            "ai_model",
         ];
         for key in table.keys() {
             if !known_keys.contains(&key.as_str()) {
@@ -538,6 +562,26 @@ pub fn create_config_from_setup(setup_config: std::collections::HashMap<String, 
                 );
                 // Don't exit - just continue without the wordlist
             }
+        }
+    }
+
+    // Set AI config if present
+    if let Some(ai_enabled) = setup_config.get("ai_enabled") {
+        config.ai_enabled = ai_enabled.parse().unwrap_or(false);
+    }
+    if let Some(ai_api_url) = setup_config.get("ai_api_url") {
+        if !ai_api_url.is_empty() {
+            config.ai_api_url = Some(ai_api_url.clone());
+        }
+    }
+    if let Some(ai_api_key) = setup_config.get("ai_api_key") {
+        if !ai_api_key.is_empty() {
+            config.ai_api_key = Some(ai_api_key.clone());
+        }
+    }
+    if let Some(ai_model) = setup_config.get("ai_model") {
+        if !ai_model.is_empty() {
+            config.ai_model = Some(ai_model.clone());
         }
     }
 
