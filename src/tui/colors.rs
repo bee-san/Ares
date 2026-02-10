@@ -3,6 +3,11 @@
 //! This module provides a bridge between Ciphey's configuration-based colorscheme
 //! and Ratatui's styling system. It converts the RGB color strings stored in
 //! [`Config::colourscheme`](crate::config::Config) into Ratatui [`Style`] objects.
+//!
+//! ## Consistency guarantee
+//!
+//! `TuiColors::from_config(&Config::default())` and `TuiColors::default()` produce
+//! identical styles. If you change one, update the other.
 
 use ratatui::style::{Color, Modifier, Style};
 
@@ -35,10 +40,7 @@ pub struct TuiColors {
     /// Uses the default terminal foreground color (white/light).
     pub text: Style,
 
-    /// Style for dimmed or secondary text (arrows, ellipsis, etc).
-    pub text_dimmed: Style,
-
-    /// Style for dimmed or secondary text.
+    /// Style for dimmed or secondary text (arrows, separators, shortcuts, etc.).
     /// Uses a gray color for less prominent information.
     pub muted: Style,
 
@@ -57,6 +59,7 @@ pub struct TuiColors {
     pub title: Style,
 
     /// Style for labels (e.g., "Decoder:", "Key:").
+    /// Derived from the "question" colorscheme key.
     pub label: Style,
 
     /// Style for values next to labels.
@@ -78,12 +81,15 @@ pub struct TuiColors {
     pub description: Style,
 
     /// Style for links.
+    /// Derived from the "informational" colorscheme key with underline.
     pub link: Style,
 
     /// Style for checker name.
+    /// Derived from the "question" colorscheme key with bold.
     pub checker_name: Style,
 
     /// Style for checker extra info (e.g., what LemmeKnow identified).
+    /// Derived from the "informational" colorscheme key.
     pub checker_info: Style,
 }
 
@@ -93,6 +99,9 @@ impl TuiColors {
     /// This method extracts colors from the config's colorscheme hashmap
     /// and converts them to Ratatui styles. If a color key is missing or
     /// cannot be parsed, sensible defaults are used.
+    ///
+    /// Fallback values match the defaults in [`Config::default()`] so that
+    /// `TuiColors::from_config(&Config::default())` a `TuiColors::default()`.
     pub fn from_config(config: &Config) -> Self {
         let informational = config
             .colourscheme
@@ -110,7 +119,7 @@ impl TuiColors {
             .colourscheme
             .get("warning")
             .and_then(|s| parse_color_string(s))
-            .unwrap_or(Color::Rgb(255, 165, 0)); // Orange fallback
+            .unwrap_or(Color::Rgb(255, 0, 0)); // Red fallback (matches Config::default & AGENTS.md)
 
         let error = config
             .colourscheme
@@ -130,7 +139,6 @@ impl TuiColors {
             warning: Style::default().fg(warning),
             error: Style::default().fg(error),
             text: Style::default().fg(Color::White),
-            text_dimmed: Style::default().fg(Color::DarkGray),
             muted: Style::default().fg(Color::DarkGray),
             highlight: Style::default()
                 .fg(informational)
@@ -140,7 +148,7 @@ impl TuiColors {
             title: Style::default()
                 .fg(informational)
                 .add_modifier(Modifier::BOLD),
-            label: Style::default().fg(question), // Use question color for labels
+            label: Style::default().fg(question),
             value: Style::default().fg(Color::White),
             info: Style::default()
                 .fg(Color::Cyan)
@@ -152,12 +160,12 @@ impl TuiColors {
             text_after: Style::default().fg(success_color),
             description: Style::default().fg(Color::Gray),
             link: Style::default()
-                .fg(Color::Blue)
+                .fg(informational)
                 .add_modifier(Modifier::UNDERLINED),
             checker_name: Style::default()
-                .fg(Color::Magenta)
+                .fg(question)
                 .add_modifier(Modifier::BOLD),
-            checker_info: Style::default().fg(Color::Magenta),
+            checker_info: Style::default().fg(informational),
         }
     }
 }
@@ -165,25 +173,24 @@ impl TuiColors {
 impl Default for TuiColors {
     /// Creates a [`TuiColors`] instance with default colors.
     ///
-    /// This is useful when the configuration is not available or as a fallback.
-    /// The default colors match Ciphey's default colorscheme.
+    /// These defaults match `TuiColors::from_config(&Config::default())` exactly.
     fn default() -> Self {
         let gold = Color::Rgb(255, 215, 0);
         let green = Color::Rgb(0, 255, 0);
+        let red = Color::Rgb(255, 0, 0);
 
         Self {
             primary: Style::default().fg(gold),
             success: Style::default().fg(green),
-            warning: Style::default().fg(Color::Rgb(255, 165, 0)),
-            error: Style::default().fg(Color::Rgb(255, 0, 0)),
+            warning: Style::default().fg(red),
+            error: Style::default().fg(red),
             text: Style::default().fg(Color::White),
-            text_dimmed: Style::default().fg(Color::DarkGray),
             muted: Style::default().fg(Color::DarkGray),
             highlight: Style::default().fg(gold).add_modifier(Modifier::BOLD),
             border: Style::default().fg(Color::Gray),
             accent: Style::default().fg(gold),
             title: Style::default().fg(gold).add_modifier(Modifier::BOLD),
-            label: Style::default().fg(Color::Cyan),
+            label: Style::default().fg(gold), // Matches from_config: uses question color (Gold)
             value: Style::default().fg(Color::White),
             info: Style::default()
                 .fg(Color::Cyan)
@@ -195,12 +202,10 @@ impl Default for TuiColors {
             text_after: Style::default().fg(green),
             description: Style::default().fg(Color::Gray),
             link: Style::default()
-                .fg(Color::Blue)
+                .fg(gold)
                 .add_modifier(Modifier::UNDERLINED),
-            checker_name: Style::default()
-                .fg(Color::Magenta)
-                .add_modifier(Modifier::BOLD),
-            checker_info: Style::default().fg(Color::Magenta),
+            checker_name: Style::default().fg(gold).add_modifier(Modifier::BOLD),
+            checker_info: Style::default().fg(gold),
         }
     }
 }
@@ -295,5 +300,23 @@ mod tests {
         let colors = TuiColors::default();
         assert_eq!(colors.primary.fg, Some(Color::Rgb(255, 215, 0)));
         assert_eq!(colors.success.fg, Some(Color::Rgb(0, 255, 0)));
+        assert_eq!(colors.warning.fg, Some(Color::Rgb(255, 0, 0)));
+        assert_eq!(colors.error.fg, Some(Color::Rgb(255, 0, 0)));
+    }
+
+    #[test]
+    fn test_from_config_matches_default() {
+        let from_config = TuiColors::from_config(&Config::default());
+        let default = TuiColors::default();
+
+        // Verify key styles match between from_config and default
+        assert_eq!(from_config.primary.fg, default.primary.fg);
+        assert_eq!(from_config.success.fg, default.success.fg);
+        assert_eq!(from_config.warning.fg, default.warning.fg);
+        assert_eq!(from_config.error.fg, default.error.fg);
+        assert_eq!(from_config.label.fg, default.label.fg);
+        assert_eq!(from_config.link.fg, default.link.fg);
+        assert_eq!(from_config.checker_name.fg, default.checker_name.fg);
+        assert_eq!(from_config.checker_info.fg, default.checker_info.fg);
     }
 }

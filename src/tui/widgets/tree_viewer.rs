@@ -106,7 +106,7 @@ impl TreeViewer {
         // Handle empty path case
         if path.is_empty() {
             let msg = Paragraph::new("No decoders used")
-                .style(colors.text_dimmed)
+                .style(colors.muted)
                 .alignment(Alignment::Center);
             let centered_area = centered_rect(area, 20, 1);
             msg.render(centered_area, buf);
@@ -241,12 +241,12 @@ impl TreeViewer {
 
     /// Renders the arrow connector between main path boxes.
     fn render_arrow(&self, x: u16, y: u16, buf: &mut Buffer, colors: &TuiColors) {
-        buf.set_string(x, y, ARROW_STR, colors.text_dimmed);
+        buf.set_string(x, y, ARROW_STR, colors.muted);
     }
 
     /// Renders an ellipsis indicator for truncated paths.
     fn render_ellipsis(&self, x: u16, y: u16, buf: &mut Buffer, colors: &TuiColors) {
-        buf.set_string(x, y + 1, "...", colors.text_dimmed);
+        buf.set_string(x, y + 1, "...", colors.muted);
     }
 
     /// Renders branches beneath a parent step in the main path.
@@ -291,7 +291,7 @@ impl TreeViewer {
             if is_selected_parent {
                 colors.accent
             } else {
-                colors.text_dimmed
+                colors.muted
             },
         );
 
@@ -321,7 +321,7 @@ impl TreeViewer {
             let remaining = branches.len() - visible_count;
             let indicator = format!("... {} more", remaining);
             let indicator_y = branch_start_y + visible_count as u16;
-            buf.set_string(parent_x, indicator_y, &indicator, colors.text_dimmed);
+            buf.set_string(parent_x, indicator_y, &indicator, colors.muted);
         }
     }
 

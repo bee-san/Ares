@@ -2,6 +2,30 @@
 //!
 //! This module provides a `TextInput` struct that encapsulates common text editing
 //! functionality, eliminating duplicated code across Settings, ListEditor, and WordlistManager states.
+//!
+//! The [`char_to_byte_pos`] helper is shared with [`super::multiline_text_input`]
+//! to avoid duplicating the char-index-to-byte-position calculation.
+
+/// Converts a character index to a byte position within a string.
+///
+/// This is needed because Rust strings are UTF-8 encoded, so character positions
+/// don't correspond 1:1 to byte positions for multi-byte characters.
+///
+/// # Arguments
+///
+/// * `s` - The string to index into
+/// * `char_idx` - The character index to convert
+///
+/// # Returns
+///
+/// The byte position of the character at `char_idx`, or `s.len()` if
+/// `char_idx` is at or past the end of the string.
+pub fn char_to_byte_pos(s: &str, char_idx: usize) -> usize {
+    s.char_indices()
+        .nth(char_idx)
+        .map(|(pos, _)| pos)
+        .unwrap_or(s.len())
+}
 
 /// A reusable text input field with cursor management.
 ///
@@ -103,13 +127,7 @@ impl TextInput {
         }
 
         // Insert at cursor position (using char indices, not byte indices)
-        let byte_pos = self
-            .buffer
-            .char_indices()
-            .nth(self.cursor_pos)
-            .map(|(pos, _)| pos)
-            .unwrap_or(self.buffer.len());
-
+        let byte_pos = char_to_byte_pos(&self.buffer, self.cursor_pos);
         self.buffer.insert(byte_pos, c);
         self.cursor_pos += 1;
     }
@@ -134,14 +152,7 @@ impl TextInput {
     pub fn backspace(&mut self) {
         if self.cursor_pos > 0 {
             self.cursor_pos -= 1;
-            // Find the byte position of the character to remove
-            let byte_pos = self
-                .buffer
-                .char_indices()
-                .nth(self.cursor_pos)
-                .map(|(pos, _)| pos)
-                .unwrap_or(self.buffer.len());
-
+            let byte_pos = char_to_byte_pos(&self.buffer, self.cursor_pos);
             self.buffer.remove(byte_pos);
         }
     }
@@ -167,14 +178,7 @@ impl TextInput {
     /// ```
     pub fn delete(&mut self) {
         if self.cursor_pos < self.buffer.chars().count() {
-            // Find the byte position of the character to remove
-            let byte_pos = self
-                .buffer
-                .char_indices()
-                .nth(self.cursor_pos)
-                .map(|(pos, _)| pos)
-                .unwrap_or(self.buffer.len());
-
+            let byte_pos = char_to_byte_pos(&self.buffer, self.cursor_pos);
             self.buffer.remove(byte_pos);
         }
     }

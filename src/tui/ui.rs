@@ -580,7 +580,7 @@ fn render_branch_list(
     );
 
     // Render header
-    let header_style = colors.text_dimmed;
+    let header_style = colors.muted;
     let header_line = Line::from(Span::styled(&header_text, header_style));
     let header_para = Paragraph::new(header_line).alignment(Alignment::Center);
 
@@ -628,7 +628,7 @@ fn render_branch_list(
         let indicator = format!("[^{} v{}]", branches_above, branches_below);
         let indicator_width = indicator.chars().count() as u16;
         let indicator_x = area.x + area.width.saturating_sub(indicator_width + 1);
-        buf.set_string(indicator_x, area.y, &indicator, colors.text_dimmed);
+        buf.set_string(indicator_x, area.y, &indicator, colors.muted);
     }
 }
 
@@ -692,7 +692,7 @@ fn render_branch_row(
     let mut spans = vec![
         Span::styled(prefix, style),
         Span::styled(format!("[{}]", branch.first_decoder), style),
-        Span::styled(" --> ", colors.text_dimmed),
+        Span::styled(" --> ", colors.muted),
         Span::styled(format!("\"{}\"", preview), style),
     ];
 
@@ -701,7 +701,7 @@ fn render_branch_row(
     }
 
     if !sub_count.is_empty() {
-        spans.push(Span::styled(sub_count, colors.text_dimmed));
+        spans.push(Span::styled(sub_count, colors.muted));
     }
 
     let line = Line::from(spans);

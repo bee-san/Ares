@@ -4,9 +4,17 @@
 //! because the terminal is in raw mode and using the alternate screen.
 //! This module provides a channel-based mechanism for the human checker
 //! to request confirmation from the TUI and receive the user's response.
+//!
+//! ## Design
+//!
+//! Global state uses `Mutex<Option<T>>` (no `OnceLock`) so that
+//! [`init_tui_confirmation_channel`] can be called multiple times within the
+//! same process  each call simply replaces the inner value. This removes the
+//! previous dual-code-path problem where the first call used `OnceLock::set()`
+//! and subsequent calls had to go through a different `reinit` path.
 
 use std::sync::mpsc::{self, Receiver, Sender};
-use std::sync::{Mutex, OnceLock};
+use std::sync::Mutex;
 
 use super::app::HumanConfirmationRequest;
 use crate::checkers::checker_result::CheckResult;
@@ -24,96 +32,83 @@ pub struct TuiConfirmationRequest {
 
 /// Global sender for TUI confirmation requests.
 ///
-/// This is wrapped in a Mutex so it can be replaced when rerunning Ciphey.
-/// The human checker uses this to send confirmation requests to the TUI.
-static TUI_CONFIRMATION_TX: OnceLock<Mutex<Option<Sender<TuiConfirmationRequest>>>> =
-    OnceLock::new();
+/// The human checker clones the inner `Sender` to dispatch requests to the TUI.
+/// Wrapped in `Mutex<Option<&>>` so it can be replaced on every
+/// [`init_tui_confirmation_channel`] call.
+static TUI_CONFIRMATION_TX: Mutex<Option<Sender<TuiConfirmationRequest>>> = Mutex::new(None);
 
-/// Global receiver for TUI confirmation requests, wrapped in a Mutex for thread-safe access.
+/// Global receiver for TUI confirmation requests.
 ///
-/// The receiver is wrapped in an Option inside a Mutex so it can be taken
-/// by the TUI event loop and replaced when rerunning.
-static TUI_CONFIRMATION_RX: OnceLock<Mutex<Option<Receiver<TuiConfirmationRequest>>>> =
-    OnceLock::new();
+/// The receiver is wrapped in `Mutex<Option<&>>` so it can be taken
+/// by the TUI event loop via [`take_confirmation_receiver`] and replaced
+/// when re-initialising.
+static TUI_CONFIRMATION_RX: Mutex<Option<Receiver<TuiConfirmationRequest>>> = Mutex::new(None);
 
-/// Initialize the TUI confirmation channel.
+/// Initialize (or re-initialize) the TUI confirmation channel.
 ///
-/// This function creates the channel used for communication between the human checker
-/// and the TUI. It must be called before starting the TUI and before any human checker
-/// calls that need to use TUI mode.
+/// Creates a fresh `mpsc` channel and stores the sender and receiver in the
+/// global statics. This function is idempotent  calling it multiple times
+/// simply replaces the previous channel, which is exactly what we want when
+/// rerunning a decode from the TUI.
 ///
 /// # Returns
 ///
-/// `true` if initialization succeeded, `false` if already initialized.
+/// Always returns `true`. The return value is kept for backward compatibility
+/// but callers no longer need to distinguish first-init from re-init.
 ///
 /// # Example
 ///
 /// ```ignore
 /// use ciphey::tui::human_checker_bridge::init_tui_confirmation_channel;
 ///
-/// // Initialize before starting TUI
-/// if init_tui_confirmation_channel() {
-///     println!("Channel initialized successfully");
-/// } else {
-///     println!("Channel was already initialized");
-/// }
+/// // Works on first call&
+/// init_tui_confirmation_channel();
+///
+/// // &and on subsequent calls (replaces the channel).
+/// init_tui_confirmation_channel();
 /// ```
 pub fn init_tui_confirmation_channel() -> bool {
     let (tx, rx) = mpsc::channel();
 
-    // Try to set both sender and receiver - only succeeds on first call
-    // If already initialized, return false (caller should use reinit for re-initialization)
-    let tx_set = TUI_CONFIRMATION_TX.set(Mutex::new(Some(tx))).is_ok();
-    let rx_set = TUI_CONFIRMATION_RX.set(Mutex::new(Some(rx))).is_ok();
+    if let Ok(mut guard) = TUI_CONFIRMATION_TX.lock() {
+        *guard = Some(tx);
+    }
+    if let Ok(mut guard) = TUI_CONFIRMATION_RX.lock() {
+        *guard = Some(rx);
+    }
 
-    // Return true only if both were newly set (first initialization)
-    tx_set && rx_set
+    true
 }
 
-/// Reinitialize the TUI confirmation channel for a new decode run.
+/// Re-initialize the TUI confirmation channel and return the new receiver.
 ///
-/// This function creates a fresh channel, replacing any existing sender/receiver.
-/// Call this when rerunning Ciphey to ensure the human checker can communicate
-/// with the TUI event loop properly.
+/// This is a convenience wrapper around [`init_tui_confirmation_channel`]
+/// that also takes the freshly-created receiver out of the global static
+/// so the caller can use it directly in the event loop.
 ///
 /// # Returns
 ///
-/// The new receiver if successful, `None` if the channel system wasn't initialized.
+/// `Some(Receiver)` on success, `None` if the mutex is poisoned.
 ///
 /// # Example
 ///
 /// ```ignore
 /// use ciphey::tui::human_checker_bridge::reinit_tui_confirmation_channel;
 ///
-/// // When rerunning Ciphey from a selected step:
 /// if let Some(new_receiver) = reinit_tui_confirmation_channel() {
 ///     // Use new_receiver in the event loop
 /// }
 /// ```
 pub fn reinit_tui_confirmation_channel() -> Option<Receiver<TuiConfirmationRequest>> {
-    // Create a fresh channel
-    let (tx, rx) = mpsc::channel();
-
-    // Replace the sender
-    let tx_mutex = TUI_CONFIRMATION_TX.get()?;
-    if let Ok(mut guard) = tx_mutex.lock() {
-        *guard = Some(tx);
-    }
-
-    // Return the new receiver (don't store it - caller will use it directly)
-    Some(rx)
+    init_tui_confirmation_channel();
+    take_confirmation_receiver()
 }
 
-/// Get the receiver for TUI confirmation requests.
+/// Take ownership of the confirmation receiver.
 ///
-/// This function takes ownership of the receiver, meaning it can only be called once
-/// successfully. Subsequent calls will return `None`. This ensures only one consumer
-/// (the TUI event loop) handles confirmation requests.
-///
-/// # Returns
-///
-/// `Some(Receiver<TuiConfirmationRequest>)` on first call after initialization,
-/// `None` if not initialized or already taken.
+/// Returns `Some(Receiver)` if a receiver is available, `None` otherwise.
+/// After this call the global receiver slot is empty until the next
+/// [`init_tui_confirmation_channel`] call.
 ///
 /// # Example
 ///
@@ -125,11 +120,11 @@ pub fn reinit_tui_confirmation_channel() -> Option<Receiver<TuiConfirmationReque
 /// // First call succeeds
 /// let receiver = take_confirmation_receiver().expect("Should get receiver");
 ///
-/// // Second call returns None
+/// // Second call returns None (receiver already taken)
 /// assert!(take_confirmation_receiver().is_none());
 /// ```
 pub fn take_confirmation_receiver() -> Option<Receiver<TuiConfirmationRequest>> {
-    TUI_CONFIRMATION_RX.get()?.lock().ok()?.take()
+    TUI_CONFIRMATION_RX.lock().ok()?.take()
 }
 
 /// Request confirmation from the TUI.
@@ -165,10 +160,9 @@ pub fn take_confirmation_receiver() -> Option<Receiver<TuiConfirmationRequest>> 
 /// }
 /// ```
 pub fn request_tui_confirmation(check_result: &CheckResult) -> Option<bool> {
-    // Get the sender from the Mutex, return None if not initialized or no sender
-    let tx_mutex = TUI_CONFIRMATION_TX.get()?;
+    // Clone the sender out of the Mutex so we don't hold the lock while blocking.
     let tx = {
-        let guard = tx_mutex.lock().ok()?;
+        let guard = TUI_CONFIRMATION_TX.lock().ok()?;
         guard.as_ref()?.clone()
     };
 
@@ -192,14 +186,9 @@ pub fn request_tui_confirmation(check_result: &CheckResult) -> Option<bool> {
 
 /// Check if TUI confirmation mode is active.
 ///
-/// This function checks whether the TUI confirmation channel has been initialized,
-/// indicating that the application is running in TUI mode and the human checker
-/// should use channel-based communication instead of direct stdin.
-///
-/// # Returns
-///
-/// `true` if the channel has been initialized (TUI mode is active),
-/// `false` otherwise.
+/// Returns `true` when a sender is present in the global slot, meaning
+/// the TUI has been initialised and the human checker should use
+/// channel-based communication instead of direct stdin.
 ///
 /// # Example
 ///
@@ -214,8 +203,8 @@ pub fn request_tui_confirmation(check_result: &CheckResult) -> Option<bool> {
 /// ```
 pub fn is_tui_confirmation_active() -> bool {
     TUI_CONFIRMATION_TX
-        .get()
-        .and_then(|m| m.lock().ok())
+        .lock()
+        .ok()
         .map(|guard| guard.is_some())
         .unwrap_or(false)
 }
@@ -223,10 +212,6 @@ pub fn is_tui_confirmation_active() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    // Note: Testing channel initialization is difficult because OnceLock persists
-    // across tests in the same process. True unit tests would require process
-    // isolation. The channel logic is tested indirectly via integration tests.
 
     /// Create a test CheckResult for use in tests.
     fn make_test_check_result() -> CheckResult {
@@ -248,5 +233,51 @@ mod tests {
         assert_eq!(request.text, "test plaintext");
         assert_eq!(request.description, "Test description");
         assert_eq!(request.checker_name, "TestChecker");
+    }
+
+    #[test]
+    fn test_init_channel_is_idempotent() {
+        // First init
+        assert!(init_tui_confirmation_channel());
+        assert!(is_tui_confirmation_active());
+
+        // Second init replaces the channel  still succeeds
+        assert!(init_tui_confirmation_channel());
+        assert!(is_tui_confirmation_active());
+    }
+
+    #[test]
+    fn test_take_receiver_returns_none_after_take() {
+        init_tui_confirmation_channel();
+
+        // First take succeeds
+        let rx = take_confirmation_receiver();
+        assert!(rx.is_some());
+
+        // Second take returns None (receiver was taken)
+        let rx2 = take_confirmation_receiver();
+        assert!(rx2.is_none());
+    }
+
+    #[test]
+    fn test_reinit_provides_fresh_receiver() {
+        init_tui_confirmation_channel();
+        // Take the first receiver
+        let _ = take_confirmation_receiver();
+
+        // Reinit creates a new channel and returns its receiver
+        let rx = reinit_tui_confirmation_channel();
+        assert!(rx.is_some());
+    }
+
+    #[test]
+    fn test_request_returns_none_when_not_initialised() {
+        // Clear any existing sender
+        if let Ok(mut guard) = TUI_CONFIRMATION_TX.lock() {
+            *guard = None;
+        }
+
+        let check_result = make_test_check_result();
+        assert!(request_tui_confirmation(&check_result).is_none());
     }
 }

@@ -2,6 +2,11 @@
 //!
 //! This module provides a `MultilineTextInput` struct that supports multi-line
 //! text editing, used for the home screen ciphertext input.
+//!
+//! Single-line byte-position calculations are delegated to
+//! [`super::text_input::char_to_byte_pos`] to avoid code duplication.
+
+use super::text_input::char_to_byte_pos;
 
 /// A multi-line text input field with cursor management.
 ///
@@ -47,14 +52,7 @@ impl MultilineTextInput {
     /// * `c` - The character to insert
     pub fn insert_char(&mut self, c: char) {
         let line = &mut self.lines[self.cursor_line];
-
-        // Find byte position for insertion
-        let byte_pos = line
-            .char_indices()
-            .nth(self.cursor_col)
-            .map(|(pos, _)| pos)
-            .unwrap_or(line.len());
-
+        let byte_pos = char_to_byte_pos(line, self.cursor_col);
         line.insert(byte_pos, c);
         self.cursor_col += 1;
     }
@@ -64,14 +62,7 @@ impl MultilineTextInput {
     /// The text after the cursor is moved to a new line, and the cursor
     /// moves to the beginning of that new line.
     pub fn insert_newline(&mut self) {
-        let current_line = &self.lines[self.cursor_line];
-
-        // Find byte position at cursor
-        let byte_pos = current_line
-            .char_indices()
-            .nth(self.cursor_col)
-            .map(|(pos, _)| pos)
-            .unwrap_or(current_line.len());
+        let byte_pos = char_to_byte_pos(&self.lines[self.cursor_line], self.cursor_col);
 
         // Split the current line
         let remainder = self.lines[self.cursor_line][byte_pos..].to_string();
@@ -89,16 +80,9 @@ impl MultilineTextInput {
     pub fn backspace(&mut self) {
         if self.cursor_col > 0 {
             // Delete character in current line
-            let line = &mut self.lines[self.cursor_line];
             self.cursor_col -= 1;
-
-            let byte_pos = line
-                .char_indices()
-                .nth(self.cursor_col)
-                .map(|(pos, _)| pos)
-                .unwrap_or(line.len());
-
-            line.remove(byte_pos);
+            let byte_pos = char_to_byte_pos(&self.lines[self.cursor_line], self.cursor_col);
+            self.lines[self.cursor_line].remove(byte_pos);
         } else if self.cursor_line > 0 {
             // Join with previous line
             let current_line = self.lines.remove(self.cursor_line);
@@ -116,15 +100,8 @@ impl MultilineTextInput {
 
         if self.cursor_col < line_len {
             // Delete character at cursor
-            let line = &mut self.lines[self.cursor_line];
-
-            let byte_pos = line
-                .char_indices()
-                .nth(self.cursor_col)
-                .map(|(pos, _)| pos)
-                .unwrap_or(line.len());
-
-            line.remove(byte_pos);
+            let byte_pos = char_to_byte_pos(&self.lines[self.cursor_line], self.cursor_col);
+            self.lines[self.cursor_line].remove(byte_pos);
         } else if self.cursor_line < self.lines.len() - 1 {
             // Join with next line
             let next_line = self.lines.remove(self.cursor_line + 1);

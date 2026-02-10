@@ -1,15 +1,10 @@
 //! Loading spinner and cryptography quotes for the TUI.
 //!
-//! This module provides a spinner animation with braille characters and
-//! a collection of funny/interesting cryptography-related quotes to display
-//! during decoding operations. Quotes are randomized each time to keep users
-//! entertained with diverse cryptography facts.
+//! This module provides spinner animation frames and a collection of funny/interesting
+//! cryptography-related quotes to display during decoding operations. Quotes are
+//! randomized each time to keep users entertained with diverse cryptography facts.
 
-use rand::seq::SliceRandom;
 use rand::Rng;
-
-/// Braille/unicode spinner frames for smooth animation.
-const SPINNER_FRAMES: &[&str] = &["⠋", "⠙", "⠹", "⠸", "⠼", "⠴", "⠦", "⠧", "⠇", "⠏"];
 
 /// Enhanced braille spinner frames for more visible animation (fuller dots).
 pub const ENHANCED_SPINNER_FRAMES: &[&str] = &["⣾", "⣽", "⣻", "⢿", "⡿", "⣟", "⣯", "⣷"];
@@ -66,149 +61,25 @@ pub fn random_quote_index() -> usize {
     rand::thread_rng().gen_range(0..QUOTES.len())
 }
 
-/// A loading spinner with cryptography quotes.
-///
-/// The spinner displays animated braille characters and cycles through
-/// a collection of quotes (in randomized order) during long-running operations.
-pub struct Spinner {
-    /// Current spinner frame index.
-    frame: usize,
-    /// Current quote index in the randomized order.
-    quote_index: usize,
-    /// Randomized order of quote indices.
-    quote_order: Vec<usize>,
-}
-
-impl Spinner {
-    /// Creates a new spinner starting at the first frame and a random quote order.
-    ///
-    /// The quotes are shuffled into a random order each time a new spinner is created,
-    /// ensuring variety across different decoding sessions.
-    ///
-    /// # Examples
-    ///
-    /// ```
-    /// use ciphey::tui::spinner::Spinner;
-    ///
-    /// let spinner = Spinner::new();
-    /// ```
-    pub fn new() -> Self {
-        let mut quote_order: Vec<usize> = (0..QUOTES.len()).collect();
-        quote_order.shuffle(&mut rand::thread_rng());
-
-        Self {
-            frame: 0,
-            quote_index: 0,
-            quote_order,
-        }
-    }
-
-    /// Advances the spinner to the next frame.
-    ///
-    /// The frame wraps around to the beginning when it reaches the end.
-    pub fn tick(&mut self) {
-        self.frame = (self.frame + 1) % SPINNER_FRAMES.len();
-    }
-
-    /// Advances to the next quote.
-    ///
-    /// The quote wraps around to the beginning when it reaches the end.
-    pub fn next_quote(&mut self) {
-        self.quote_index = (self.quote_index + 1) % QUOTES.len();
-    }
-
-    /// Returns the current spinner frame character.
-    pub fn current_frame(&self) -> &'static str {
-        SPINNER_FRAMES[self.frame]
-    }
-
-    /// Returns the current quote from the randomized quote sequence.
-    pub fn current_quote(&self) -> &'static str {
-        let quote_idx = self.quote_order[self.quote_index];
-        QUOTES[quote_idx]
-    }
-
-    /// Returns the total number of spinner frames.
-    pub fn frame_count() -> usize {
-        SPINNER_FRAMES.len()
-    }
-
-    /// Returns the total number of quotes.
-    pub fn quote_count() -> usize {
-        QUOTES.len()
-    }
-}
-
-impl Default for Spinner {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
-    fn test_spinner_new() {
-        let spinner = Spinner::new();
-        assert_eq!(spinner.frame, 0);
-        assert_eq!(spinner.quote_index, 0);
-        assert_eq!(spinner.quote_order.len(), QUOTES.len());
-    }
-
-    #[test]
-    fn test_spinner_tick() {
-        let mut spinner = Spinner::new();
-        assert_eq!(spinner.current_frame(), "⠋");
-        spinner.tick();
-        assert_eq!(spinner.current_frame(), "⠙");
-    }
-
-    #[test]
-    fn test_spinner_tick_wraps() {
-        let mut spinner = Spinner::new();
-        for _ in 0..SPINNER_FRAMES.len() {
-            spinner.tick();
-        }
-        assert_eq!(spinner.frame, 0);
-        assert_eq!(spinner.current_frame(), "⠋");
-    }
-
-    #[test]
-    fn test_next_quote() {
-        let mut spinner = Spinner::new();
-        let first_quote = spinner.current_quote();
-        spinner.next_quote();
-        let second_quote = spinner.current_quote();
-        assert_ne!(first_quote, second_quote);
-    }
-
-    #[test]
-    fn test_next_quote_wraps() {
-        let mut spinner = Spinner::new();
-        for _ in 0..QUOTES.len() {
-            spinner.next_quote();
-        }
-        assert_eq!(spinner.quote_index, 0);
-    }
-
-    #[test]
-    fn test_frame_count() {
-        assert_eq!(Spinner::frame_count(), 10);
-    }
-
-    #[test]
     fn test_quote_count() {
-        assert!(Spinner::quote_count() >= 35);
-        assert!(Spinner::quote_count() <= 45);
+        assert_eq!(QUOTES.len(), 40);
     }
 
     #[test]
-    fn test_default() {
-        let spinner = Spinner::default();
-        assert_eq!(spinner.frame, 0);
-        assert_eq!(spinner.quote_index, 0);
-        assert_eq!(spinner.quote_order.len(), QUOTES.len());
+    fn test_enhanced_spinner_frame_count() {
+        assert_eq!(ENHANCED_SPINNER_FRAMES.len(), 8);
+    }
+
+    #[test]
+    fn test_random_quote_index_in_range() {
+        for _ in 0..100 {
+            let idx = random_quote_index();
+            assert!(idx < QUOTES.len());
+        }
     }
 }
