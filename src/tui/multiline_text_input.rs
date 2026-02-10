@@ -227,6 +227,71 @@ impl MultilineTextInput {
         }
     }
 
+    /// Moves the cursor left by one word.
+    ///
+    /// A "word" boundary is a transition between alphanumeric/underscore characters
+    /// and non-word characters. Skips non-word chars first, then word chars.
+    pub fn move_cursor_word_left(&mut self) {
+        let line = &self.lines[self.cursor_line];
+        let chars: Vec<char> = line.chars().collect();
+
+        if self.cursor_col == 0 {
+            // At start of line, move to end of previous line
+            if self.cursor_line > 0 {
+                self.cursor_line -= 1;
+                self.cursor_col = self.lines[self.cursor_line].chars().count();
+            }
+            return;
+        }
+
+        let mut col = self.cursor_col;
+
+        // Skip non-word characters backwards
+        while col > 0 && !is_word_char(chars[col - 1]) {
+            col -= 1;
+        }
+
+        // Skip word characters backwards
+        while col > 0 && is_word_char(chars[col - 1]) {
+            col -= 1;
+        }
+
+        self.cursor_col = col;
+    }
+
+    /// Moves the cursor right by one word.
+    ///
+    /// A "word" boundary is a transition between alphanumeric/underscore characters
+    /// and non-word characters. Skips word chars first, then non-word chars.
+    pub fn move_cursor_word_right(&mut self) {
+        let line = &self.lines[self.cursor_line];
+        let chars: Vec<char> = line.chars().collect();
+        let len = chars.len();
+
+        if self.cursor_col >= len {
+            // At end of line, move to start of next line
+            if self.cursor_line < self.lines.len() - 1 {
+                self.cursor_line += 1;
+                self.cursor_col = 0;
+            }
+            return;
+        }
+
+        let mut col = self.cursor_col;
+
+        // Skip word characters forwards
+        while col < len && is_word_char(chars[col]) {
+            col += 1;
+        }
+
+        // Skip non-word characters forwards
+        while col < len && !is_word_char(chars[col]) {
+            col += 1;
+        }
+
+        self.cursor_col = col;
+    }
+
     /// Moves the cursor to the beginning of the current line.
     pub fn move_cursor_home(&mut self) {
         self.cursor_col = 0;
@@ -335,6 +400,11 @@ impl Default for MultilineTextInput {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Returns true if the character is a "word" character (alphanumeric or underscore).
+fn is_word_char(c: char) -> bool {
+    c.is_alphanumeric() || c == '_'
 }
 
 #[cfg(test)]
@@ -471,6 +541,41 @@ mod tests {
         assert_eq!(input.get_text(), "世界");
         assert_eq!(input.cursor_pos(), (0, 2));
         assert_eq!(input.char_count(), 2);
+    }
+
+    #[test]
+    fn test_word_left_basic() {
+        let mut input = MultilineTextInput::new();
+        input.set_text("hello world");
+        // cursor at end (col 11)
+        input.move_cursor_word_left();
+        assert_eq!(input.cursor_pos(), (0, 6)); // start of "world"
+        input.move_cursor_word_left();
+        assert_eq!(input.cursor_pos(), (0, 0)); // start of "hello"
+    }
+
+    #[test]
+    fn test_word_right_basic() {
+        let mut input = MultilineTextInput::new();
+        input.set_text("hello world");
+        input.move_cursor_to_start();
+        input.move_cursor_word_right();
+        assert_eq!(input.cursor_pos(), (0, 6)); // start of "world"
+        input.move_cursor_word_right();
+        assert_eq!(input.cursor_pos(), (0, 11)); // end
+    }
+
+    #[test]
+    fn test_word_nav_across_lines() {
+        let mut input = MultilineTextInput::new();
+        input.set_text("abc\ndef");
+        // cursor at start of line 1 (line 1, col 0)
+        input.move_cursor_to_start();
+        input.move_cursor_down();
+        assert_eq!(input.cursor_pos(), (1, 0));
+        input.move_cursor_word_left();
+        // Should jump to end of line 0
+        assert_eq!(input.cursor_pos(), (0, 3));
     }
 
     #[test]

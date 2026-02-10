@@ -162,9 +162,7 @@ impl TuiColors {
             link: Style::default()
                 .fg(informational)
                 .add_modifier(Modifier::UNDERLINED),
-            checker_name: Style::default()
-                .fg(question)
-                .add_modifier(Modifier::BOLD),
+            checker_name: Style::default().fg(question).add_modifier(Modifier::BOLD),
             checker_info: Style::default().fg(informational),
         }
     }
@@ -201,9 +199,7 @@ impl Default for TuiColors {
             text_before: Style::default().fg(Color::Yellow),
             text_after: Style::default().fg(green),
             description: Style::default().fg(Color::Gray),
-            link: Style::default()
-                .fg(gold)
-                .add_modifier(Modifier::UNDERLINED),
+            link: Style::default().fg(gold).add_modifier(Modifier::UNDERLINED),
             checker_name: Style::default().fg(gold).add_modifier(Modifier::BOLD),
             checker_info: Style::default().fg(gold),
         }

@@ -8,7 +8,9 @@
 //! than requiring `App`-level guards everywhere.
 
 use std::collections::HashMap;
+use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 use crate::checkers::checker_result::CheckResult;
@@ -314,6 +316,10 @@ pub struct LoadingState {
     pub current_quote: usize,
     /// Current frame of the spinner animation.
     pub spinner_frame: usize,
+    /// Number of decoder combinations tried so far (shared with background thread).
+    pub decoders_tried: Arc<AtomicUsize>,
+    /// Cancellation flag to signal the background thread to stop.
+    pub cancel_flag: Arc<AtomicBool>,
 }
 
 impl LoadingState {

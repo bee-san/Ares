@@ -19,7 +19,9 @@
 //! - [`start_fresh_decode`] — combines the above for `SubmitHomeInput` / `Rerun` / `RunBranchFullSearch`
 
 use std::io::{self, Stdout};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering as AtomicOrdering};
 use std::sync::mpsc::{self, Receiver, Sender};
+use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -38,7 +40,7 @@ use crate::storage::database::{
 };
 use crate::{CrackingResult, DecoderResult};
 
-use super::app::App;
+use super::app::{App, StatusSeverity};
 use super::colors::TuiColors;
 use super::human_checker_bridge::{
     init_tui_confirmation_channel, reinit_tui_confirmation_channel, take_confirmation_receiver,
@@ -71,11 +73,7 @@ enum BackgroundMessage {
     /// Ask-AI response.
     AskAiResponse(Result<String, crate::ai::error::AiError>),
     /// Single-layer decode results with text and branch context.
-    SingleLayerResult(
-        Vec<CrackResult>,
-        String,
-        Option<super::app::BranchContext>,
-    ),
+    SingleLayerResult(Vec<CrackResult>, String, Option<super::app::BranchContext>),
 }
 
 // =============================================================================
@@ -148,15 +146,19 @@ fn reconstruct_result_from_path(path_json: &[String], decoded_text: String) -> D
 
 /// Prepares the app for a new loading state and resets timing counters.
 ///
-/// Returns a fresh `Instant` for `start_time` tracking.
-fn transition_to_loading(app: &mut App) -> Instant {
+/// Returns `(start_time, decoders_tried_counter, cancel_flag)`.
+fn transition_to_loading(app: &mut App) -> (Instant, Arc<AtomicUsize>, Arc<AtomicBool>) {
+    let decoders_tried = Arc::new(AtomicUsize::new(0));
+    let cancel_flag = Arc::new(AtomicBool::new(false));
     app.state = super::app::AppState::Loading(super::app::LoadingState {
         start_time: Instant::now(),
         current_quote: random_quote_index(),
         spinner_frame: 0,
+        decoders_tried: decoders_tried.clone(),
+        cancel_flag: cancel_flag.clone(),
     });
     app.clear_status();
-    Instant::now()
+    (Instant::now(), decoders_tried, cancel_flag)
 }
 
 // =============================================================================
@@ -217,6 +219,9 @@ pub fn run_tui(input_text: Option<&str>, config: Config) -> TuiResult<()> {
         spawn_decode_thread(text.to_string(), &config, &bg_tx);
     }
 
+    // Current cancel flag — updated whenever a new decode starts
+    let mut current_cancel_flag: Option<Arc<AtomicBool>> = None;
+
     // Run the main loop
     let result = run_event_loop(
         &mut terminal,
@@ -226,6 +231,7 @@ pub fn run_tui(input_text: Option<&str>, config: Config) -> TuiResult<()> {
         bg_tx,
         bg_rx,
         confirmation_receiver,
+        &mut current_cancel_flag,
     );
 
     // Restore terminal
@@ -257,6 +263,7 @@ fn run_event_loop(
     bg_tx: Sender<BackgroundMessage>,
     bg_rx: Receiver<BackgroundMessage>,
     initial_confirmation_receiver: Option<Receiver<TuiConfirmationRequest>>,
+    current_cancel_flag: &mut Option<Arc<AtomicBool>>,
 ) -> TuiResult<()> {
     let tick_rate = Duration::from_millis(TICK_RATE_MS);
     let mut last_tick = Instant::now();
@@ -306,6 +313,7 @@ fn run_event_loop(
                         &mut pending_branch_context,
                         &mut start_time,
                         &mut tick_count,
+                        current_cancel_flag,
                     );
                 }
             }
@@ -316,11 +324,17 @@ fn run_event_loop(
             app.tick();
             tick_count += 1;
 
+            // Only auto-clear Info/Success status messages on the timer.
+            // Error/Warning messages persist until acknowledged by a keypress.
             if config.status_message_timeout > 0 {
                 let status_clear_ticks =
                     (config.status_message_timeout * 1000 / TICK_RATE_MS) as usize;
                 if status_clear_ticks > 0 && tick_count.is_multiple_of(status_clear_ticks) {
-                    app.clear_status();
+                    if let Some(ref msg) = app.status_message {
+                        if matches!(msg.severity, StatusSeverity::Info | StatusSeverity::Success) {
+                            app.clear_status();
+                        }
+                    }
                 }
             }
 
@@ -365,14 +379,15 @@ fn handle_action(
     pending_branch_context: &mut Option<super::app::BranchContext>,
     start_time: &mut Instant,
     tick_count: &mut usize,
+    current_cancel_flag: &mut Option<Arc<AtomicBool>>,
 ) {
     match action {
         Action::None => {}
 
         // ----- Clipboard -----
         Action::CopyToClipboard(text) => match copy_to_clipboard(&text) {
-            Ok(()) => app.set_status("Copied to clipboard!".to_string()),
-            Err(e) => app.set_status(format!("Copy failed: {}", e)),
+            Ok(()) => app.set_status_success("Copied to clipboard!".to_string()),
+            Err(e) => app.set_status_error(format!("Copy failed: {}", e)),
         },
 
         // ----- Start a fresh decode from the home screen -----
@@ -385,8 +400,8 @@ fn handle_action(
                 confirmation_receiver,
                 start_time,
                 tick_count,
+                current_cancel_flag,
             );
-            app.set_status("Decoding...".to_string());
         }
 
         // ----- Rerun from a selected intermediate step -----
@@ -399,14 +414,14 @@ fn handle_action(
                 confirmation_receiver,
                 start_time,
                 tick_count,
+                current_cancel_flag,
             );
-            app.set_status("Rerunning Ciphey...".to_string());
         }
 
         // ----- Settings -----
         Action::OpenSettings => {
             app.open_settings(config);
-            app.set_status("Settings opened. Press Esc to close.".to_string());
+            app.set_status("Settings opened. Esc to close, Ctrl+S to save.".to_string());
         }
         Action::SaveSettings => {
             if let super::app::AppState::Settings(ref ss) = app.state {
@@ -414,9 +429,9 @@ fn handle_action(
                 ss.settings.apply_to_config(&mut new_config);
                 crate::config::set_global_config(new_config.clone());
                 if let Err(e) = crate::config::save_config(&new_config) {
-                    app.set_status(format!("Error saving settings: {}", e));
+                    app.set_status_error(format!("Error saving settings: {}", e));
                 } else {
-                    app.set_status("Settings saved!".to_string());
+                    app.set_status_success("Settings saved!".to_string());
                 }
             }
             app.close_settings();
@@ -445,8 +460,8 @@ fn handle_action(
         Action::OpenDecoderSearch => app.open_decoder_search(),
         Action::OpenQuickSearch => app.open_quick_search(config),
         Action::LaunchQuickSearch(url) => match open::that(&url) {
-            Ok(()) => app.set_status("Opened in browser.".to_string()),
-            Err(e) => app.set_status(format!("Failed to open browser: {}", e)),
+            Ok(()) => app.set_status_success("Opened in browser.".to_string()),
+            Err(e) => app.set_status_error(format!("Failed to open browser: {}", e)),
         },
 
         // ----- Branch: return to parent -----
@@ -465,6 +480,7 @@ fn handle_action(
                 confirmation_receiver,
                 start_time,
                 tick_count,
+                current_cancel_flag,
             );
             app.set_status("Running full search on branch...".to_string());
         }
@@ -477,6 +493,16 @@ fn handle_action(
         // ----- Branch: run a specific decoder -----
         Action::RunBranchDecoder(text, decoder_name) => {
             handle_run_branch_decoder(app, text, decoder_name, config);
+        }
+
+        // ----- Cancel decode and return to Home -----
+        Action::CancelDecode => {
+            // Signal the background thread to stop
+            if let Some(ref flag) = current_cancel_flag {
+                flag.store(true, AtomicOrdering::Relaxed);
+            }
+            app.return_to_home();
+            app.set_status("Decode cancelled.".to_string());
         }
 
         // ----- AI: explain step -----
@@ -555,11 +581,14 @@ fn start_fresh_decode(
     confirmation_receiver: &mut Option<Receiver<TuiConfirmationRequest>>,
     start_time: &mut Instant,
     tick_count: &mut usize,
+    current_cancel_flag: &mut Option<Arc<AtomicBool>>,
 ) {
     reset_for_fresh_run();
     app.input_text = text.to_string();
-    *start_time = transition_to_loading(app);
+    let (new_start, _decoders_tried, cancel_flag) = transition_to_loading(app);
+    *start_time = new_start;
     *tick_count = 0;
+    *current_cancel_flag = Some(cancel_flag);
     *confirmation_receiver = reinit_tui_confirmation_channel();
     spawn_decode_thread(text.to_string(), config, bg_tx);
 }
@@ -665,9 +694,10 @@ fn handle_run_branch_single_layer(
     thread::spawn(move || {
         crate::config::set_global_config(config_clone);
 
-        let checker = crate::checkers::CheckerTypes::CheckAthena(
-            crate::checkers::checker_type::Checker::<crate::checkers::athena::Athena>::new(),
-        );
+        let checker =
+            crate::checkers::CheckerTypes::CheckAthena(crate::checkers::checker_type::Checker::<
+                crate::checkers::athena::Athena,
+            >::new());
 
         let results = crate::run_single_layer(&text_clone, &checker);
         let _ = tx.send(BackgroundMessage::SingleLayerResult(
@@ -686,9 +716,10 @@ fn handle_run_branch_decoder(app: &mut App, text: String, decoder_name: String, 
 
     let branch_ctx = app.get_branch_context();
 
-    let checker = crate::checkers::CheckerTypes::CheckAthena(
-        crate::checkers::checker_type::Checker::<crate::checkers::athena::Athena>::new(),
-    );
+    let checker =
+        crate::checkers::CheckerTypes::CheckAthena(crate::checkers::checker_type::Checker::<
+            crate::checkers::athena::Athena,
+        >::new());
 
     if let Some(result) = crate::run_specific_decoder(&text, &decoder_name, &checker) {
         if let Some(outputs) = &result.unencrypted_text {
@@ -722,10 +753,7 @@ fn handle_run_branch_decoder(app: &mut App, text: String, decoder_name: String, 
                 }
 
                 let preview = if first_output.len() > 50 {
-                    format!(
-                        "{}...",
-                        first_output.chars().take(50).collect::<String>()
-                    )
+                    format!("{}...", first_output.chars().take(50).collect::<String>())
                 } else {
                     first_output.clone()
                 };
@@ -818,7 +846,7 @@ fn handle_background_message(
             }
             Err(e) => {
                 app.clear_ai_explanation();
-                app.set_status(format!("AI explanation failed: {}", e));
+                app.set_status_error(format!("AI explanation failed: {}", e));
             }
         },
         BackgroundMessage::AskAiResponse(ask_result) => match ask_result {
@@ -828,7 +856,7 @@ fn handle_background_message(
             }
             Err(e) => {
                 app.set_ask_ai_error(format!("{}", e));
-                app.set_status(format!("AI question failed: {}", e));
+                app.set_status_error(format!("AI question failed: {}", e));
             }
         },
         BackgroundMessage::SingleLayerResult(results, text, branch_context) => {
@@ -850,16 +878,10 @@ fn handle_decode_result(
                 // If this result came from a RunBranchFullSearch, link it as a branch
                 if let Some(ref ctx) = *pending_branch_context {
                     if let Some(parent_id) = ctx.parent_cache_id {
-                        if let Err(e) = link_as_branch(
-                            cache_id,
-                            parent_id,
-                            ctx.branch_step,
-                            &BranchType::Auto,
-                        ) {
-                            app.set_status(format!(
-                                "Warning: failed to link branch: {}",
-                                e
-                            ));
+                        if let Err(e) =
+                            link_as_branch(cache_id, parent_id, ctx.branch_step, &BranchType::Auto)
+                        {
+                            app.set_status(format!("Warning: failed to link branch: {}", e));
                         }
                     }
                 }

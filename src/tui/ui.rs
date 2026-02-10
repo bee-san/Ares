@@ -7,7 +7,9 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph, Wrap};
 
-use super::app::{App, AppState, HistoryEntry, HumanConfirmationRequest, WordlistManagerFocus};
+use super::app::{
+    App, AppState, HistoryEntry, HumanConfirmationRequest, StatusSeverity, WordlistManagerFocus,
+};
 use super::colors::TuiColors;
 use super::multiline_text_input::MultilineTextInput;
 use super::settings::SettingsModel;
@@ -71,36 +73,33 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
             );
         }
         AppState::Loading(ls) => {
+            let tried = ls.decoders_tried.load(std::sync::atomic::Ordering::Relaxed);
             draw_loading_screen(
                 frame,
                 area,
                 ls.spinner_frame,
                 ls.current_quote,
                 &ls.start_time,
+                tried,
                 colors,
             );
         }
         AppState::HumanConfirmation(hc) => {
-            // Draw loading screen in background
+            // Draw loading screen in background (no progress counter available)
             draw_loading_screen(
                 frame,
                 area,
                 hc.spinner_frame,
                 hc.current_quote,
                 &hc.start_time,
+                0,
                 colors,
             );
             // Draw confirmation modal on top
             draw_human_confirmation_screen(frame, area, &hc.request, colors);
         }
         AppState::Results(rs) => {
-            draw_results_screen(
-                frame,
-                area,
-                &app.input_text,
-                rs,
-                colors,
-            );
+            draw_results_screen(frame, area, &app.input_text, rs, colors);
         }
         AppState::Failure(fs) => {
             draw_failure_screen(frame, area, &fs.input_text, fs.elapsed, colors);
@@ -227,7 +226,7 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
 
     // Render status message if present
     if let Some(ref msg) = app.status_message {
-        draw_status_message(frame, area, msg, colors);
+        draw_status_message(frame, area, &msg.text, msg.severity, colors);
     }
 }
 
@@ -253,6 +252,7 @@ fn draw_loading_screen(
     spinner_frame: usize,
     quote_index: usize,
     start_time: &std::time::Instant,
+    decoders_tried: usize,
     colors: &TuiColors,
 ) {
     // Create outer block with decorated title
@@ -355,11 +355,16 @@ fn draw_loading_screen(
         .wrap(Wrap { trim: false });
     frame.render_widget(quote_paragraph, quote_inner);
 
-    // Render elapsed time
-    let elapsed_line = Line::from(Span::styled(
-        format!("Elapsed: {:.1}s", elapsed_secs),
-        colors.muted,
-    ));
+    // Render elapsed time and progress counter
+    let progress_text = if decoders_tried > 0 {
+        format!(
+            "Elapsed: {:.1}s  •  Tried {} decoder combinations",
+            elapsed_secs, decoders_tried
+        )
+    } else {
+        format!("Elapsed: {:.1}s", elapsed_secs)
+    };
+    let elapsed_line = Line::from(Span::styled(progress_text, colors.muted));
     let elapsed_paragraph = Paragraph::new(elapsed_line).alignment(Alignment::Center);
     frame.render_widget(elapsed_paragraph, inner_chunks[7]);
 }
@@ -1131,11 +1136,11 @@ fn draw_main_input_area(
         if is_focused {
             vec![Line::from(vec![
                 Span::styled("█", colors.accent.add_modifier(Modifier::SLOW_BLINK)),
-                Span::styled(" Type or paste ciphertext here...", colors.muted),
+                Span::styled(" Paste or type ciphertext here...", colors.muted),
             ])]
         } else {
             vec![Line::from(Span::styled(
-                "Type or paste ciphertext here...",
+                "Paste or type ciphertext here...",
                 colors.muted,
             ))]
         }
@@ -1263,6 +1268,7 @@ fn draw_help_overlay(
             ("↑ / k", "Navigate history up"),
             ("↓ / j", "Navigate history down"),
             ("← / →", "Move cursor / switch panels"),
+            ("Ctrl+← / →", "Move cursor by word"),
             ("", ""),
             ("Actions", ""),
             ("Enter", "Submit input / Select history entry"),
@@ -1306,12 +1312,15 @@ fn draw_help_overlay(
             ("Enter", "Edit selected field"),
             ("Space", "Toggle boolean field"),
             ("Ctrl+S", "Save settings and close"),
-            ("Esc", "Show save confirmation / Cancel edit"),
+            ("Esc", "Close settings / Cancel edit"),
         ],
         HelpContext::Loading => vec![
             ("General", ""),
+            ("Esc / b", "Cancel decode and return home"),
+            ("q", "Quit the application"),
+            ("Ctrl+C", "Quit the application"),
             ("Ctrl+S", "Open settings panel"),
-            ("q / Esc", "Quit the application"),
+            ("?", "Toggle this help overlay"),
         ],
     };
 
@@ -1430,8 +1439,18 @@ fn draw_human_confirmation_screen(
     frame.render_widget(instructions_paragraph, inner_chunks[4]);
 }
 
-/// Renders a status message at the bottom of the screen.
-fn draw_status_message(frame: &mut Frame, area: Rect, message: &str, colors: &TuiColors) {
+/// Renders a status message at the bottom of the screen with severity-based styling.
+///
+/// - `Info` / `Success` — uses success color
+/// - `Warning` — uses warning color with ⚠ prefix
+/// - `Error` — uses error color with ✗ prefix
+fn draw_status_message(
+    frame: &mut Frame,
+    area: Rect,
+    message: &str,
+    severity: StatusSeverity,
+    colors: &TuiColors,
+) {
     let msg_area = Rect {
         x: area.x + 1,
         y: area.y + area.height.saturating_sub(2),
@@ -1439,7 +1458,15 @@ fn draw_status_message(frame: &mut Frame, area: Rect, message: &str, colors: &Tu
         height: 1,
     };
 
-    let paragraph = Paragraph::new(Span::styled(message, colors.success));
+    let (prefix, style) = match severity {
+        StatusSeverity::Info => ("", colors.text),
+        StatusSeverity::Success => ("✓ ", colors.success),
+        StatusSeverity::Warning => ("⚠ ", colors.accent),
+        StatusSeverity::Error => ("✗ ", colors.error),
+    };
+
+    let display = format!("{}{}", prefix, message);
+    let paragraph = Paragraph::new(Span::styled(display, style));
     frame.render_widget(paragraph, msg_area);
 }
 

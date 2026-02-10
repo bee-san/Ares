@@ -3,7 +3,9 @@
 //! This module defines the core state management for the terminal user interface,
 //! handling transitions between loading, results, settings, and failure states.
 
+use std::sync::atomic::{AtomicBool, AtomicUsize};
 use std::sync::mpsc;
+use std::sync::Arc;
 use std::time::{Duration, Instant};
 
 // Submodules
@@ -17,16 +19,40 @@ pub mod wordlist;
 pub use state::{
     AppState, AskAiOverlay, BranchContext, BranchMode, BranchModePromptState, BranchPath,
     DecoderSearchOverlay, FailureState, HelpContext, HistoryEntry, HomeState,
-    HumanConfirmationRequest, HumanConfirmationState, ListEditorState, LoadingState,
-    PreviousState, QuickSearchOverlay, ResultsFocus, ResultsState, ResultsStateSaved,
-    SaveConfirmationState, SettingsState, SettingsStateSnapshot, ThemePickerState,
-    ToggleListEditorState, WordlistFileInfo, WordlistManagerFocus, WordlistManagerState,
+    HumanConfirmationRequest, HumanConfirmationState, ListEditorState, LoadingState, PreviousState,
+    QuickSearchOverlay, ResultsFocus, ResultsState, ResultsStateSaved, SaveConfirmationState,
+    SettingsState, SettingsStateSnapshot, ThemePickerState, ToggleListEditorState,
+    WordlistFileInfo, WordlistManagerFocus, WordlistManagerState,
 };
 
 use crate::DecoderResult;
 
 use super::multiline_text_input::MultilineTextInput;
 use super::spinner::random_quote_index;
+
+/// Severity level for status messages.
+///
+/// Controls how long a message persists and how it's styled.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum StatusSeverity {
+    /// Informational messages  auto-clear on timer.
+    Info,
+    /// Success messages  auto-clear on timer.
+    Success,
+    /// Warning messages  persist until any keypress.
+    Warning,
+    /// Error messages  persist until any keypress.
+    Error,
+}
+
+/// A status message with severity for display at the bottom of the screen.
+#[derive(Debug, Clone)]
+pub struct StatusMessage {
+    /// The message text.
+    pub text: String,
+    /// Severity level controlling persistence and styling.
+    pub severity: StatusSeverity,
+}
 
 /// Main application struct managing TUI state and user interactions.
 #[derive(Debug)]
@@ -39,8 +65,8 @@ pub struct App {
     pub should_quit: bool,
     /// Flag indicating whether the help overlay is visible.
     pub show_help: bool,
-    /// Optional status message for user feedback (e.g., clipboard operations).
-    pub status_message: Option<String>,
+    /// Optional status message with severity for user feedback.
+    pub status_message: Option<StatusMessage>,
     /// Pending 'g' key for vim-style gg command.
     pub pending_g: bool,
     /// Decoder search overlay (floats over Results screen when Some).
@@ -67,6 +93,8 @@ impl App {
                 start_time: Instant::now(),
                 current_quote: random_quote_index(),
                 spinner_frame: 0,
+                decoders_tried: Arc::new(AtomicUsize::new(0)),
+                cancel_flag: Arc::new(AtomicBool::new(false)),
             }),
             input_text,
             should_quit: false,
@@ -165,6 +193,8 @@ impl App {
                 start_time: Instant::now(),
                 current_quote: random_quote_index(),
                 spinner_frame: 0,
+                decoders_tried: Arc::new(AtomicUsize::new(0)),
+                cancel_flag: Arc::new(AtomicBool::new(false)),
             });
             Some(input)
         } else {
@@ -235,9 +265,7 @@ impl App {
         // Preserve loading state animation values
         let (start_time, current_quote, spinner_frame) = match &self.state {
             AppState::Loading(ls) => (ls.start_time, ls.current_quote, ls.spinner_frame),
-            AppState::HumanConfirmation(hc) => {
-                (hc.start_time, hc.current_quote, hc.spinner_frame)
-            }
+            AppState::HumanConfirmation(hc) => (hc.start_time, hc.current_quote, hc.spinner_frame),
             _ => (Instant::now(), 0, 0),
         };
 
@@ -265,6 +293,8 @@ impl App {
                 start_time: hc.start_time,
                 current_quote: hc.current_quote,
                 spinner_frame: hc.spinner_frame,
+                decoders_tried: Arc::new(AtomicUsize::new(0)),
+                cancel_flag: Arc::new(AtomicBool::new(false)),
             });
         }
     }
@@ -274,18 +304,80 @@ impl App {
         self.show_help = !self.show_help;
     }
 
-    /// Sets a temporary status message for user feedback.
+    /// Sets a temporary informational status message for user feedback.
+    ///
+    /// Info messages auto-clear on the status message timer.
     ///
     /// # Arguments
     ///
     /// * `msg` - The status message to display
     pub fn set_status(&mut self, msg: String) {
-        self.status_message = Some(msg);
+        self.status_message = Some(StatusMessage {
+            text: msg,
+            severity: StatusSeverity::Info,
+        });
+    }
+
+    /// Sets a success status message for user feedback.
+    ///
+    /// Success messages auto-clear on the status message timer.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The status message to display
+    pub fn set_status_success(&mut self, msg: String) {
+        self.status_message = Some(StatusMessage {
+            text: msg,
+            severity: StatusSeverity::Success,
+        });
+    }
+
+    /// Sets an error status message for user feedback.
+    ///
+    /// Error messages persist until the user presses any key.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The error message to display
+    pub fn set_status_error(&mut self, msg: String) {
+        self.status_message = Some(StatusMessage {
+            text: msg,
+            severity: StatusSeverity::Error,
+        });
+    }
+
+    /// Sets a warning status message for user feedback.
+    ///
+    /// Warning messages persist until the user presses any key.
+    ///
+    /// # Arguments
+    ///
+    /// * `msg` - The warning message to display
+    pub fn set_status_warning(&mut self, msg: String) {
+        self.status_message = Some(StatusMessage {
+            text: msg,
+            severity: StatusSeverity::Warning,
+        });
     }
 
     /// Clears the current status message.
     pub fn clear_status(&mut self) {
         self.status_message = None;
+    }
+
+    /// Acknowledges a persistent status message (Error/Warning) so it clears on next tick.
+    ///
+    /// Called when any key is pressed while an Error/Warning status is shown.
+    /// Info/Success messages are not affected (they auto-clear on timer).
+    pub fn acknowledge_status(&mut self) {
+        if let Some(ref msg) = self.status_message {
+            if matches!(
+                msg.severity,
+                StatusSeverity::Error | StatusSeverity::Warning
+            ) {
+                self.status_message = None;
+            }
+        }
     }
 
     /// Returns to the Home state from Results or Failure state.

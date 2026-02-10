@@ -101,6 +101,8 @@ pub enum Action {
     ImportWordlist(String),
     /// Delete a wordlist file by database ID (I/O handled by event loop).
     DeleteWordlist(i64),
+    /// Cancel the current decode and return to Home.
+    CancelDecode,
     /// No action required.
     None,
 }
@@ -130,6 +132,9 @@ pub enum Action {
 ///
 /// An `Action` indicating if any follow-up operation is needed.
 pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
+    // ── 0. Acknowledge persistent status messages on any keypress ──────
+    app.acknowledge_status();
+
     // ── 1. Overlays (float on top of Results) ──────────────────────────
     if app.is_ask_ai_active() {
         return handle_ask_ai_keys(app, key);
@@ -144,10 +149,9 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
     // ── 2. State-specific handlers (early return) ──────────────────────
     match &app.state {
         AppState::Home(_) => return handle_home_keys(app, key),
+        AppState::Loading(_) => return handle_loading_keys(app, key),
         AppState::HumanConfirmation(_) => return handle_confirmation_keys(app, key),
-        AppState::Settings(ss) => {
-            return handle_settings_keys(app, key, ss.editing_mode)
-        }
+        AppState::Settings(ss) => return handle_settings_keys(app, key, ss.editing_mode),
         AppState::ListEditor(_) => return handle_list_editor_keys(app, key),
         AppState::WordlistManager(wm) => {
             return handle_wordlist_manager_keys(app, key, wm.focus.clone())
@@ -157,18 +161,22 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
         AppState::ToggleListEditor(_) => return handle_toggle_list_editor_keys(app, key),
         AppState::BranchModePrompt(_) => return handle_branch_mode_prompt_keys(app, key),
         AppState::Failure(_) => return handle_failure_keys(app, key),
-        // Loading and Results fall through to global + state-specific handling below
-        AppState::Loading(_) | AppState::Results(_) => {}
+        // Results falls through to global + state-specific handling below
+        AppState::Results(_) => {}
     }
 
-    // ── 3. Global keybindings (Loading & Results only) ─────────────────
+    // ── 3. Global keybindings (Results only now) ───────────────────────
     if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
         app.should_quit = true;
         return Action::None;
     }
 
     match key.code {
-        KeyCode::Char('q') | KeyCode::Esc => {
+        KeyCode::Char('q') => {
+            app.should_quit = true;
+            return Action::None;
+        }
+        KeyCode::Esc => {
             app.should_quit = true;
             return Action::None;
         }
@@ -194,7 +202,6 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
         return handle_results_keys(app, key, selected_step_text);
     }
 
-    // Loading state: only global bindings work (handled above)
     Action::None
 }
 
@@ -213,11 +220,7 @@ pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
 /// # Returns
 ///
 /// An `Action` if clipboard copy, rerun, branching, etc. was requested.
-fn handle_results_keys(
-    app: &mut App,
-    key: KeyEvent,
-    selected_step_text: Option<String>,
-) -> Action {
+fn handle_results_keys(app: &mut App, key: KeyEvent, selected_step_text: Option<String>) -> Action {
     use super::app::ResultsFocus;
 
     let is_viewing_branch = if let AppState::Results(ref rs) = app.state {
@@ -399,6 +402,34 @@ fn handle_results_keys(
     }
 }
 
+/// Handles key events in the Loading state.
+///
+/// - `Esc` / `b` cancels the decode and returns to Home
+/// - `Ctrl+C` quits the application
+/// - `Ctrl+S` opens settings
+/// - `?` toggles help
+/// - `q` quits the application
+fn handle_loading_keys(app: &mut App, key: KeyEvent) -> Action {
+    if key.modifiers.contains(KeyModifiers::CONTROL) && key.code == KeyCode::Char('c') {
+        app.should_quit = true;
+        return Action::None;
+    }
+
+    match key.code {
+        KeyCode::Esc | KeyCode::Char('b') => Action::CancelDecode,
+        KeyCode::Char('q') => {
+            app.should_quit = true;
+            Action::None
+        }
+        KeyCode::Char('?') => {
+            app.show_help = !app.show_help;
+            Action::None
+        }
+        KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::OpenSettings,
+        _ => Action::None,
+    }
+}
+
 /// Handles key events in the Home state.
 ///
 /// The Home state allows users to input ciphertext:
@@ -406,6 +437,7 @@ fn handle_results_keys(
 /// - Enter submits the text for decoding (or selects history entry)
 /// - Ctrl+Enter inserts a newline
 /// - Arrow keys move the cursor (or navigate history when history is focused)
+/// - Ctrl+Left/Right for word-level movement
 /// - Backspace/Delete remove characters
 /// - Ctrl+S opens settings
 /// - Tab cycles between history panel and input
@@ -483,6 +515,9 @@ fn handle_home_keys(app: &mut App, key: KeyEvent) -> Action {
             KeyCode::Left => {
                 if history_focused {
                     Action::None
+                } else if key.modifiers.contains(KeyModifiers::CONTROL) {
+                    text_input.move_cursor_word_left();
+                    Action::None
                 } else if text_input.is_cursor_at_start() && !history.is_empty() {
                     *selected_history = Some(0);
                     *history_scroll_offset = 0;
@@ -495,6 +530,9 @@ fn handle_home_keys(app: &mut App, key: KeyEvent) -> Action {
             KeyCode::Right => {
                 if history_focused {
                     *selected_history = None;
+                    Action::None
+                } else if key.modifiers.contains(KeyModifiers::CONTROL) {
+                    text_input.move_cursor_word_right();
                     Action::None
                 } else {
                     text_input.move_cursor_right();
@@ -637,14 +675,15 @@ fn handle_failure_keys(app: &mut App, key: KeyEvent) -> Action {
             app.show_help = !app.show_help;
             Action::None
         }
-        KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-            Action::OpenSettings
-        }
+        KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => Action::OpenSettings,
         _ => Action::None,
     }
 }
 
 /// Handles key events in the Settings state.
+///
+/// - `Esc` closes settings without saving (discards changes).
+/// - `Ctrl+S` saves and closes.
 fn handle_settings_keys(app: &mut App, key: KeyEvent, editing_mode: bool) -> Action {
     if editing_mode {
         match key.code {
@@ -669,7 +708,8 @@ fn handle_settings_keys(app: &mut App, key: KeyEvent, editing_mode: bool) -> Act
     } else {
         match key.code {
             KeyCode::Esc => {
-                app.show_save_confirmation();
+                // Directly close settings without saving (consistent Esc = cancel)
+                app.close_settings();
                 Action::None
             }
             KeyCode::Char('s') if key.modifiers.contains(KeyModifiers::CONTROL) => {
@@ -1064,9 +1104,7 @@ fn handle_branch_mode_prompt_keys(app: &mut App, key: KeyEvent) -> Action {
                         let text = context.text_to_decode.clone();
                         Action::RunBranchFullSearch(text, Some(context))
                     }
-                    BranchMode::SingleLayer => {
-                        Action::RunBranchSingleLayer(context.text_to_decode)
-                    }
+                    BranchMode::SingleLayer => Action::RunBranchSingleLayer(context.text_to_decode),
                 }
             }
             // Cancel
@@ -1096,9 +1134,7 @@ fn handle_decoder_search_keys(app: &mut App, key: KeyEvent) -> Action {
                 }
                 Action::None
             }
-            KeyCode::Down | KeyCode::Char('j')
-                if key.modifiers.contains(KeyModifiers::CONTROL) =>
-            {
+            KeyCode::Down | KeyCode::Char('j') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 if !overlay.filtered_decoders.is_empty()
                     && overlay.selected_index < overlay.filtered_decoders.len() - 1
                 {
@@ -1378,14 +1414,15 @@ mod tests {
     }
 
     #[test]
-    fn test_quit_with_escape() {
+    fn test_cancel_with_escape_in_loading() {
         let mut app = App::new("test input".to_string());
         assert!(!app.should_quit);
 
+        // In Loading state, Esc cancels the decode (returns CancelDecode)
         let action = handle_key_event(&mut app, make_simple_key(KeyCode::Esc));
 
-        assert!(app.should_quit);
-        assert_eq!(action, Action::None);
+        assert!(!app.should_quit); // Does NOT quit
+        assert_eq!(action, Action::CancelDecode);
     }
 
     #[test]

@@ -131,7 +131,10 @@ impl App {
     /// Enters edit mode for the currently selected field, or activates it if it's a special type.
     pub fn edit_current_field(&mut self) {
         if let AppState::Settings(ref mut ss) = self.state {
-            let field = match ss.settings.get_field_at(ss.selected_section, ss.selected_field) {
+            let field = match ss
+                .settings
+                .get_field_at(ss.selected_section, ss.selected_field)
+            {
                 Some(f) => f,
                 None => return,
             };
@@ -139,9 +142,9 @@ impl App {
             match &field.field_type {
                 // Boolean fields toggle immediately
                 FieldType::Boolean => {
-                    if let Some(field_mut) =
-                        ss.settings
-                            .get_field_at_mut(ss.selected_section, ss.selected_field)
+                    if let Some(field_mut) = ss
+                        .settings
+                        .get_field_at_mut(ss.selected_section, ss.selected_field)
                     {
                         if let SettingValue::Bool(v) = &field_mut.value {
                             field_mut.value = SettingValue::Bool(!*v);
@@ -273,19 +276,21 @@ impl App {
                 return;
             }
 
-            let field =
-                match ss.settings.get_field_at(ss.selected_section, ss.selected_field) {
-                    Some(f) => f,
-                    None => return,
-                };
+            let field = match ss
+                .settings
+                .get_field_at(ss.selected_section, ss.selected_field)
+            {
+                Some(f) => f,
+                None => return,
+            };
 
             // Parse and validate the input
             let input_text = ss.text_input.get_text();
             match super::super::settings::validation::parse_input(input_text, &field.field_type) {
                 Ok(new_value) => {
-                    if let Some(field_mut) =
-                        ss.settings
-                            .get_field_at_mut(ss.selected_section, ss.selected_field)
+                    if let Some(field_mut) = ss
+                        .settings
+                        .get_field_at_mut(ss.selected_section, ss.selected_field)
                     {
                         field_mut.value = new_value;
                         ss.validation_errors.remove(field_mut.id);
