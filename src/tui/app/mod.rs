@@ -15,9 +15,12 @@ pub mod wordlist;
 
 // Re-export commonly used types
 pub use state::{
-    AppState, AskAiOverlay, BranchContext, BranchMode, BranchPath, DecoderSearchOverlay,
-    HelpContext, HistoryEntry, HumanConfirmationRequest, PreviousState, QuickSearchOverlay,
-    ResultsFocus, SettingsStateSnapshot, WordlistFileInfo, WordlistManagerFocus,
+    AppState, AskAiOverlay, BranchContext, BranchMode, BranchModePromptState, BranchPath,
+    DecoderSearchOverlay, FailureState, HelpContext, HistoryEntry, HomeState,
+    HumanConfirmationRequest, HumanConfirmationState, ListEditorState, LoadingState,
+    PreviousState, QuickSearchOverlay, ResultsFocus, ResultsState, ResultsStateSaved,
+    SaveConfirmationState, SettingsState, SettingsStateSnapshot, ThemePickerState,
+    ToggleListEditorState, WordlistFileInfo, WordlistManagerFocus, WordlistManagerState,
 };
 
 use crate::DecoderResult;
@@ -60,11 +63,11 @@ impl App {
     /// A new `App` instance initialized in the `Loading` state.
     pub fn new(input_text: String) -> Self {
         Self {
-            state: AppState::Loading {
+            state: AppState::Loading(LoadingState {
                 start_time: Instant::now(),
                 current_quote: random_quote_index(),
                 spinner_frame: 0,
-            },
+            }),
             input_text,
             should_quit: false,
             show_help: false,
@@ -92,12 +95,12 @@ impl App {
         };
 
         Self {
-            state: AppState::Home {
+            state: AppState::Home(HomeState {
                 text_input: MultilineTextInput::new(),
                 history,
                 selected_history: None,
                 history_scroll_offset: 0,
-            },
+            }),
             input_text: String::new(),
             should_quit: false,
             show_help: false,
@@ -113,20 +116,13 @@ impl App {
     ///
     /// Call this after returning from a decode attempt to update the history panel.
     pub fn refresh_history(&mut self) {
-        if let AppState::Home {
-            history,
-            selected_history,
-            history_scroll_offset,
-            ..
-        } = &mut self.state
-        {
-            *history = match crate::storage::database::read_cache_history() {
+        if let AppState::Home(ref mut home) = self.state {
+            home.history = match crate::storage::database::read_cache_history() {
                 Ok(rows) => rows.iter().map(HistoryEntry::from_cache_row).collect(),
                 Err(_) => Vec::new(),
             };
-            // Reset selection and scroll when refreshing
-            *selected_history = None;
-            *history_scroll_offset = 0;
+            home.selected_history = None;
+            home.history_scroll_offset = 0;
         }
     }
 
@@ -136,7 +132,7 @@ impl App {
     ///
     /// `true` if in Home state, `false` otherwise.
     pub fn is_home(&self) -> bool {
-        matches!(self.state, AppState::Home { .. })
+        matches!(self.state, AppState::Home(_))
     }
 
     /// Gets the text from the Home state text input.
@@ -146,7 +142,7 @@ impl App {
     /// The text entered by the user, or an empty string if not in Home state.
     pub fn get_home_input(&self) -> String {
         match &self.state {
-            AppState::Home { text_input, .. } => text_input.get_text(),
+            AppState::Home(home) => home.text_input.get_text(),
             _ => String::new(),
         }
     }
@@ -158,18 +154,18 @@ impl App {
     /// `Some(input_text)` if transition was successful, `None` if not in Home state
     /// or input is empty.
     pub fn submit_home_input(&mut self) -> Option<String> {
-        if let AppState::Home { text_input, .. } = &self.state {
-            let input = text_input.get_text();
+        if let AppState::Home(ref home) = self.state {
+            let input = home.text_input.get_text();
             if input.trim().is_empty() {
                 return None;
             }
 
             self.input_text = input.clone();
-            self.state = AppState::Loading {
+            self.state = AppState::Loading(LoadingState {
                 start_time: Instant::now(),
                 current_quote: random_quote_index(),
                 spinner_frame: 0,
-            };
+            });
             Some(input)
         } else {
             None
@@ -182,28 +178,8 @@ impl App {
     /// animation and rotate through loading quotes.
     pub fn tick(&mut self) {
         match &mut self.state {
-            AppState::Loading {
-                spinner_frame,
-                current_quote,
-                ..
-            } => {
-                *spinner_frame = spinner_frame.wrapping_add(1);
-                // Rotate quotes every ~100 ticks (assuming ~10 ticks/sec, change every 10 seconds)
-                if *spinner_frame % 100 == 0 {
-                    *current_quote = current_quote.wrapping_add(1);
-                }
-            }
-            AppState::HumanConfirmation {
-                spinner_frame,
-                current_quote,
-                ..
-            } => {
-                *spinner_frame = spinner_frame.wrapping_add(1);
-                // Rotate quotes every ~100 ticks (assuming ~10 ticks/sec, change every 10 seconds)
-                if *spinner_frame % 100 == 0 {
-                    *current_quote = current_quote.wrapping_add(1);
-                }
-            }
+            AppState::Loading(ref mut loading) => loading.tick(),
+            AppState::HumanConfirmation(ref mut hc) => hc.tick(),
             _ => {}
         }
     }
@@ -217,23 +193,7 @@ impl App {
     ///
     /// * `result` - The successful decoding result to display
     pub fn set_result(&mut self, result: DecoderResult) {
-        let last_step = result.path.len().saturating_sub(1);
-        self.state = AppState::Results {
-            result,
-            selected_step: last_step,
-            scroll_offset: 0,
-            cache_id: None,
-            branch_path: state::BranchPath::new(),
-            current_branches: Vec::new(),
-            highlighted_branch: None,
-            branch_scroll_offset: 0,
-            focus: state::ResultsFocus::default(),
-            tree_branches: std::collections::HashMap::new(),
-            level_visible_rows: 10,
-            ai_explanation: None,
-            ai_loading: false,
-            ai_explanation_cache: std::collections::HashMap::new(),
-        };
+        self.state = AppState::Results(ResultsState::new(result));
     }
 
     /// Transitions the application to the Results state with a cache ID.
@@ -246,28 +206,7 @@ impl App {
     /// * `result` - The successful decoding result to display
     /// * `cache_id` - The database cache ID for this result
     pub fn set_result_with_cache_id(&mut self, result: DecoderResult, cache_id: i64) {
-        let last_step = result.path.len().saturating_sub(1);
-        // Load all branches for the tree view
-        let tree_branches = Self::load_tree_branches(cache_id, result.path.len());
-        // Load cached AI explanations from database
-        let ai_explanation_cache =
-            crate::storage::database::read_cache_ai_explanations(cache_id).unwrap_or_default();
-        self.state = AppState::Results {
-            result,
-            selected_step: last_step,
-            scroll_offset: 0,
-            cache_id: Some(cache_id),
-            branch_path: state::BranchPath::new(),
-            current_branches: Vec::new(),
-            highlighted_branch: None,
-            branch_scroll_offset: 0,
-            focus: state::ResultsFocus::default(),
-            tree_branches,
-            level_visible_rows: 10,
-            ai_explanation: None,
-            ai_loading: false,
-            ai_explanation_cache,
-        };
+        self.state = AppState::Results(ResultsState::new_with_cache_id(result, cache_id));
     }
 
     /// Transitions the application to the Failure state.
@@ -276,10 +215,10 @@ impl App {
     ///
     /// * `elapsed` - How long the decoding attempt took
     pub fn set_failure(&mut self, elapsed: Duration) {
-        self.state = AppState::Failure {
+        self.state = AppState::Failure(FailureState {
             input_text: self.input_text.clone(),
             elapsed,
-        };
+        });
     }
 
     /// Transitions to the HumanConfirmation state to ask the user to verify plaintext.
@@ -295,27 +234,20 @@ impl App {
     ) {
         // Preserve loading state animation values
         let (start_time, current_quote, spinner_frame) = match &self.state {
-            AppState::Loading {
-                start_time,
-                current_quote,
-                spinner_frame,
-            } => (*start_time, *current_quote, *spinner_frame),
-            AppState::HumanConfirmation {
-                start_time,
-                current_quote,
-                spinner_frame,
-                ..
-            } => (*start_time, *current_quote, *spinner_frame),
+            AppState::Loading(ls) => (ls.start_time, ls.current_quote, ls.spinner_frame),
+            AppState::HumanConfirmation(hc) => {
+                (hc.start_time, hc.current_quote, hc.spinner_frame)
+            }
             _ => (Instant::now(), 0, 0),
         };
 
-        self.state = AppState::HumanConfirmation {
+        self.state = AppState::HumanConfirmation(HumanConfirmationState {
             start_time,
             current_quote,
             spinner_frame,
             request,
             response_sender,
-        };
+        });
     }
 
     /// Sends a response to the human confirmation request and returns to Loading state.
@@ -324,23 +256,16 @@ impl App {
     ///
     /// * `accepted` - Whether the user accepted the plaintext candidate
     pub fn respond_to_confirmation(&mut self, accepted: bool) {
-        if let AppState::HumanConfirmation {
-            start_time,
-            current_quote,
-            spinner_frame,
-            response_sender,
-            ..
-        } = &self.state
-        {
+        if let AppState::HumanConfirmation(ref hc) = self.state {
             // Send the response (ignore error if receiver dropped)
-            let _ = response_sender.send(accepted);
+            let _ = hc.response_sender.send(accepted);
 
             // Return to loading state
-            self.state = AppState::Loading {
-                start_time: *start_time,
-                current_quote: *current_quote,
-                spinner_frame: *spinner_frame,
-            };
+            self.state = AppState::Loading(LoadingState {
+                start_time: hc.start_time,
+                current_quote: hc.current_quote,
+                spinner_frame: hc.spinner_frame,
+            });
         }
     }
 
@@ -374,12 +299,12 @@ impl App {
             Err(_) => Vec::new(),
         };
 
-        self.state = AppState::Home {
+        self.state = AppState::Home(HomeState {
             text_input: MultilineTextInput::new(),
             history,
             selected_history: None,
             history_scroll_offset: 0,
-        };
+        });
         self.input_text.clear();
         self.clear_status();
     }
@@ -488,15 +413,9 @@ impl App {
     /// Call this after any branch mutation (create, delete) to keep
     /// the tree view in sync.
     pub fn refresh_tree_branches(&mut self) {
-        if let AppState::Results {
-            cache_id,
-            result,
-            tree_branches,
-            ..
-        } = &mut self.state
-        {
-            if let Some(cid) = cache_id {
-                *tree_branches = Self::load_tree_branches(*cid, result.path.len());
+        if let AppState::Results(ref mut rs) = self.state {
+            if let Some(cid) = rs.cache_id {
+                rs.tree_branches = Self::load_tree_branches(cid, rs.result.path.len());
             }
         }
     }
@@ -507,38 +426,25 @@ impl App {
     ///
     /// * `explanation` - The AI-generated explanation text
     pub fn set_ai_explanation(&mut self, explanation: String) {
-        if let AppState::Results {
-            ai_explanation,
-            ai_loading,
-            ai_explanation_cache,
-            selected_step,
-            cache_id,
-            ..
-        } = &mut self.state
-        {
-            let step = *selected_step;
-            ai_explanation_cache.insert(step, explanation.clone());
-            *ai_explanation = Some(explanation.clone());
-            *ai_loading = false;
+        if let AppState::Results(ref mut rs) = self.state {
+            let step = rs.selected_step;
+            rs.ai_explanation_cache.insert(step, explanation.clone());
+            rs.ai_explanation = Some(explanation.clone());
+            rs.ai_loading = false;
 
             // Persist to database (best-effort)
-            if let Some(cid) = cache_id {
+            if let Some(cid) = rs.cache_id {
                 let _ =
-                    crate::storage::database::update_cache_ai_explanation(*cid, step, &explanation);
+                    crate::storage::database::update_cache_ai_explanation(cid, step, &explanation);
             }
         }
     }
 
     /// Clears the AI explanation (e.g., when navigating to a different step).
     pub fn clear_ai_explanation(&mut self) {
-        if let AppState::Results {
-            ai_explanation,
-            ai_loading,
-            ..
-        } = &mut self.state
-        {
-            *ai_explanation = None;
-            *ai_loading = false;
+        if let AppState::Results(ref mut rs) = self.state {
+            rs.ai_explanation = None;
+            rs.ai_loading = false;
         }
     }
 
@@ -546,24 +452,18 @@ impl App {
     ///
     /// Called when navigating between steps so cached explanations re-appear.
     pub fn load_cached_ai_explanation(&mut self) {
-        if let AppState::Results {
-            ai_explanation,
-            ai_explanation_cache,
-            selected_step,
-            ..
-        } = &mut self.state
-        {
-            *ai_explanation = ai_explanation_cache.get(selected_step).cloned();
+        if let AppState::Results(ref mut rs) = self.state {
+            rs.ai_explanation = rs.ai_explanation_cache.get(&rs.selected_step).cloned();
         }
     }
 
     /// Switches focus between the tree view, level detail, and step details panels.
     pub fn switch_focus(&mut self) {
-        if let AppState::Results { focus, .. } = &mut self.state {
-            *focus = match focus {
-                state::ResultsFocus::TreeView => state::ResultsFocus::LevelDetail,
-                state::ResultsFocus::LevelDetail => state::ResultsFocus::StepDetails,
-                state::ResultsFocus::StepDetails => state::ResultsFocus::TreeView,
+        if let AppState::Results(ref mut rs) = self.state {
+            rs.focus = match rs.focus {
+                ResultsFocus::TreeView => ResultsFocus::LevelDetail,
+                ResultsFocus::LevelDetail => ResultsFocus::StepDetails,
+                ResultsFocus::StepDetails => ResultsFocus::TreeView,
             };
         }
     }
@@ -578,10 +478,10 @@ impl App {
     /// Allows choosing between full A* search or single-layer decoding.
     pub fn open_branch_prompt(&mut self) {
         if let Some(context) = self.get_branch_context() {
-            self.state = AppState::BranchModePrompt {
+            self.state = AppState::BranchModePrompt(BranchModePromptState {
                 selected_mode: BranchMode::FullSearch,
                 branch_context: context,
-            };
+            });
         }
     }
 
@@ -593,9 +493,9 @@ impl App {
         use crate::decoders::crack_results::CrackResult;
         use crate::storage::database::get_cache_by_id;
 
-        if let AppState::BranchModePrompt { branch_context, .. } = &self.state {
-            if let Some(parent_id) = branch_context.parent_cache_id {
-                let branch_step = branch_context.branch_step;
+        if let AppState::BranchModePrompt(ref bmp) = self.state {
+            if let Some(parent_id) = bmp.branch_context.parent_cache_id {
+                let branch_step = bmp.branch_context.branch_step;
 
                 // Load the parent result from the database
                 if let Ok(Some(cache_row)) = get_cache_by_id(parent_id) {
@@ -613,22 +513,9 @@ impl App {
                     self.input_text = cache_row.encoded_text;
 
                     // Restore to Results state
-                    self.state = AppState::Results {
-                        result,
-                        selected_step: branch_step,
-                        scroll_offset: 0,
-                        cache_id: Some(parent_id),
-                        branch_path: state::BranchPath::new(),
-                        current_branches: Vec::new(),
-                        highlighted_branch: None,
-                        branch_scroll_offset: 0,
-                        focus: state::ResultsFocus::default(),
-                        tree_branches: Self::load_tree_branches(parent_id, 0),
-                        level_visible_rows: 10,
-                        ai_explanation: None,
-                        ai_loading: false,
-                        ai_explanation_cache: std::collections::HashMap::new(),
-                    };
+                    let mut rs = ResultsState::new_with_cache_id(result, parent_id);
+                    rs.selected_step = branch_step;
+                    self.state = AppState::Results(rs);
 
                     // Load branches for this step
                     self.load_branches_for_step();
@@ -678,15 +565,11 @@ impl App {
     /// Parses the config's quick_searches entries into (name, url_template) pairs.
     pub fn open_quick_search(&mut self, config: &crate::config::Config) {
         // Only open if we're in Results state and have a selected step with output
-        if let AppState::Results {
-            result,
-            selected_step,
-            ..
-        } = &self.state
-        {
-            let output_text = result
+        if let AppState::Results(ref rs) = self.state {
+            let output_text = rs
+                .result
                 .path
-                .get(*selected_step)
+                .get(rs.selected_step)
                 .and_then(|step| step.unencrypted_text.as_ref())
                 .and_then(|texts| texts.first().cloned())
                 .unwrap_or_default();
@@ -739,13 +622,8 @@ impl App {
     /// Extracts step context from the Results state and initializes
     /// the overlay with an empty question input.
     pub fn open_ask_ai(&mut self) {
-        if let AppState::Results {
-            result,
-            selected_step,
-            ..
-        } = &self.state
-        {
-            if let Some(step) = result.path.get(*selected_step) {
+        if let AppState::Results(ref rs) = self.state {
+            if let Some(step) = rs.result.path.get(rs.selected_step) {
                 let output_text = step
                     .unencrypted_text
                     .as_ref()
@@ -810,18 +688,18 @@ impl App {
     /// This determines which set of keybindings should be shown in the help overlay.
     pub fn help_context(&self) -> HelpContext {
         match &self.state {
-            AppState::Home { .. } => HelpContext::Home,
-            AppState::Results { .. } => HelpContext::Results,
-            AppState::Settings { .. }
-            | AppState::ListEditor { .. }
-            | AppState::WordlistManager { .. }
-            | AppState::ThemePicker { .. }
-            | AppState::ToggleListEditor { .. }
-            | AppState::SaveConfirmation { .. } => HelpContext::Settings,
-            AppState::Loading { .. }
-            | AppState::HumanConfirmation { .. }
-            | AppState::Failure { .. }
-            | AppState::BranchModePrompt { .. } => HelpContext::Loading,
+            AppState::Home(_) => HelpContext::Home,
+            AppState::Results(_) => HelpContext::Results,
+            AppState::Settings(_)
+            | AppState::ListEditor(_)
+            | AppState::WordlistManager(_)
+            | AppState::ThemePicker(_)
+            | AppState::ToggleListEditor(_)
+            | AppState::SaveConfirmation(_) => HelpContext::Settings,
+            AppState::Loading(_)
+            | AppState::HumanConfirmation(_)
+            | AppState::Failure(_)
+            | AppState::BranchModePrompt(_) => HelpContext::Loading,
         }
     }
 }

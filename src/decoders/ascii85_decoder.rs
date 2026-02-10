@@ -11,6 +11,7 @@ use super::interface::Crack;
 use super::interface::Decoder;
 
 use log::{debug, info, trace};
+use std::panic;
 
 /// The ASCII85 decoder, call:
 /// `let ascii85_decoder = Decoder::<Ascii85Decoder>::new()` to create a new instance
@@ -99,6 +100,7 @@ impl Crack for Decoder<Ascii85Decoder> {
 
 /// Helper function to decode ASCII85
 /// Handles both delimited (<~...~>) and non-delimited formats
+/// Uses panic::catch_unwind to handle arithmetic overflow panics from the ascii85 crate
 fn decode_ascii85_no_error_handling(text: &str) -> Option<String> {
     // Try to decode the text
     // The ascii85 crate handles both delimited and non-delimited formats
@@ -111,10 +113,24 @@ fn decode_ascii85_no_error_handling(text: &str) -> Option<String> {
         text_to_decode
     };
 
-    // Try to decode
-    match ascii85::decode(stripped_text) {
-        Ok(decoded_bytes) => String::from_utf8(decoded_bytes).ok(),
-        Err(_) => None,
+    // Need to own the string for catch_unwind (requires 'static or owned data)
+    let stripped_owned = stripped_text.to_string();
+
+    // Temporarily suppress panic output - the default panic hook prints to stderr,
+    // which runs BEFORE catch_unwind catches the panic
+    let prev_hook = panic::take_hook();
+    panic::set_hook(Box::new(|_| {})); // Silent no-op hook
+
+    // Catch any panics from the ascii85 library (e.g., arithmetic overflow on invalid input)
+    let result = panic::catch_unwind(|| ascii85::decode(&stripped_owned));
+
+    // Restore the original panic hook
+    panic::set_hook(prev_hook);
+
+    match result {
+        Ok(Ok(decoded_bytes)) => String::from_utf8(decoded_bytes).ok(),
+        Ok(Err(_)) => None, // Library returned a decode error
+        Err(_) => None,     // Library panicked (e.g., arithmetic overflow)
     }
 }
 
@@ -196,5 +212,36 @@ mod tests {
             .crack("😂", &get_athena_checker())
             .unencrypted_text;
         assert!(result.is_none());
+    }
+
+    #[test]
+    fn ascii85_handles_overflow_panic_on_ip_address() {
+        // IP addresses and other invalid input cause arithmetic overflow in ascii85 crate
+        // This test ensures we catch the panic and return None gracefully
+        let ascii85_decoder = Decoder::<Ascii85Decoder>::new();
+        let result = ascii85_decoder
+            .crack("192.168.1.1", &get_athena_checker())
+            .unencrypted_text;
+        assert!(result.is_none());
+    }
+
+    #[test]
+    fn ascii85_handles_overflow_panic_on_random_text() {
+        // Various random text inputs that may trigger arithmetic overflow
+        let ascii85_decoder = Decoder::<Ascii85Decoder>::new();
+        let test_inputs = vec![
+            "123.456.789.0",
+            "test.example.com",
+            "user@example.com",
+            "random garbage text that might overflow",
+        ];
+        for input in test_inputs {
+            let result = ascii85_decoder
+                .crack(input, &get_athena_checker())
+                .unencrypted_text;
+            // Should not panic, may return Some or None depending on decode result
+            // The important thing is that it doesn't crash
+            let _ = result;
+        }
     }
 }

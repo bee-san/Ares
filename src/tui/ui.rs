@@ -7,9 +7,7 @@
 use ratatui::prelude::*;
 use ratatui::widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph, Wrap};
 
-use super::app::{
-    App, AppState, BranchPath, HistoryEntry, HumanConfirmationRequest, WordlistManagerFocus,
-};
+use super::app::{App, AppState, HistoryEntry, HumanConfirmationRequest, WordlistManagerFocus};
 use super::colors::TuiColors;
 use super::multiline_text_input::MultilineTextInput;
 use super::settings::SettingsModel;
@@ -20,7 +18,6 @@ use super::widgets::{
     WordlistFocus,
 };
 use crate::storage::database::BranchSummary;
-use crate::tui::widgets::tree_viewer::TreeNode;
 
 /// Modal width as percentage of screen width.
 const MODAL_WIDTH_PERCENT: u16 = 65;
@@ -62,213 +59,136 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
 
     // Render the appropriate screen based on state
     match &app.state {
-        AppState::Home {
-            text_input,
-            history,
-            selected_history,
-            history_scroll_offset,
-        } => {
+        AppState::Home(home) => {
             draw_home_screen(
                 frame,
                 area,
-                text_input,
-                history,
-                *selected_history,
-                *history_scroll_offset,
+                &home.text_input,
+                &home.history,
+                home.selected_history,
+                home.history_scroll_offset,
                 colors,
             );
         }
-        AppState::Loading {
-            start_time,
-            current_quote,
-            spinner_frame,
-        } => {
+        AppState::Loading(ls) => {
             draw_loading_screen(
                 frame,
                 area,
-                *spinner_frame,
-                *current_quote,
-                start_time,
+                ls.spinner_frame,
+                ls.current_quote,
+                &ls.start_time,
                 colors,
             );
         }
-        AppState::HumanConfirmation {
-            start_time,
-            current_quote,
-            spinner_frame,
-            request,
-            response_sender: _,
-        } => {
+        AppState::HumanConfirmation(hc) => {
             // Draw loading screen in background
             draw_loading_screen(
                 frame,
                 area,
-                *spinner_frame,
-                *current_quote,
-                start_time,
+                hc.spinner_frame,
+                hc.current_quote,
+                &hc.start_time,
                 colors,
             );
             // Draw confirmation modal on top
-            draw_human_confirmation_screen(frame, area, request, colors);
+            draw_human_confirmation_screen(frame, area, &hc.request, colors);
         }
-        AppState::Results {
-            result,
-            selected_step,
-            branch_path,
-            current_branches,
-            highlighted_branch,
-            branch_scroll_offset,
-            focus,
-            tree_branches,
-            ai_explanation,
-            ai_loading,
-            ..
-        } => {
+        AppState::Results(rs) => {
             draw_results_screen(
                 frame,
                 area,
                 &app.input_text,
-                result,
-                *selected_step,
-                branch_path,
-                current_branches,
-                *highlighted_branch,
-                *branch_scroll_offset,
-                *focus,
-                tree_branches,
+                rs,
                 colors,
-                ai_explanation.as_deref(),
-                *ai_loading,
             );
         }
-        AppState::Failure {
-            input_text,
-            elapsed,
-        } => {
-            draw_failure_screen(frame, area, input_text, *elapsed, colors);
+        AppState::Failure(fs) => {
+            draw_failure_screen(frame, area, &fs.input_text, fs.elapsed, colors);
         }
-        AppState::Settings {
-            settings,
-            selected_section,
-            selected_field,
-            editing_mode,
-            text_input,
-            scroll_offset,
-            validation_errors,
-            ..
-        } => {
+        AppState::Settings(ss) => {
             draw_settings_screen(
                 frame,
                 area,
-                settings,
-                *selected_section,
-                *selected_field,
-                *editing_mode,
-                text_input.get_text(),
-                text_input.cursor_pos(),
-                *scroll_offset,
-                validation_errors,
-                settings.has_changes(),
+                &ss.settings,
+                ss.selected_section,
+                ss.selected_field,
+                ss.editing_mode,
+                ss.text_input.get_text(),
+                ss.text_input.cursor_pos(),
+                ss.scroll_offset,
+                &ss.validation_errors,
+                ss.settings.has_changes(),
                 colors,
             );
         }
-        AppState::ListEditor {
-            field_label,
-            items,
-            selected_item,
-            text_input,
-            ..
-        } => {
+        AppState::ListEditor(le) => {
             draw_list_editor_screen(
                 frame,
                 area,
-                field_label,
-                items,
-                *selected_item,
-                text_input.get_text(),
-                text_input.cursor_pos(),
+                &le.field_label,
+                &le.items,
+                le.selected_item,
+                le.text_input.get_text(),
+                le.text_input.cursor_pos(),
                 colors,
             );
         }
-        AppState::WordlistManager {
-            wordlist_files,
-            selected_row,
-            focus,
-            text_input,
-            pending_changes,
-            ..
-        } => {
+        AppState::WordlistManager(wm) => {
             draw_wordlist_manager_screen(
                 frame,
                 area,
-                wordlist_files,
-                *selected_row,
-                focus,
-                text_input.get_text(),
-                !pending_changes.is_empty(),
+                &wm.wordlist_files,
+                wm.selected_row,
+                &wm.focus,
+                wm.text_input.get_text(),
+                !wm.pending_changes.is_empty(),
                 colors,
             );
         }
-        AppState::ThemePicker {
-            selected_theme,
-            custom_mode,
-            custom_colors,
-            custom_field,
-            ..
-        } => {
+        AppState::ThemePicker(tp) => {
             draw_theme_picker_screen(
                 frame,
                 area,
-                *selected_theme,
-                *custom_mode,
-                custom_colors,
-                *custom_field,
+                tp.selected_theme,
+                tp.custom_mode,
+                &tp.custom_colors,
+                tp.custom_field,
                 colors,
             );
         }
-        AppState::SaveConfirmation { parent_settings } => {
+        AppState::SaveConfirmation(sc) => {
             // Render the settings screen in the background first
             draw_settings_screen(
                 frame,
                 area,
-                &parent_settings.settings,
-                parent_settings.selected_section,
-                parent_settings.selected_field,
+                &sc.parent_settings.settings,
+                sc.parent_settings.selected_section,
+                sc.parent_settings.selected_field,
                 false, // not editing
                 "",    // empty input buffer
                 0,     // cursor at 0
-                parent_settings.scroll_offset,
-                &parent_settings.validation_errors,
-                parent_settings.settings.has_changes(),
+                sc.parent_settings.scroll_offset,
+                &sc.parent_settings.validation_errors,
+                sc.parent_settings.settings.has_changes(),
                 colors,
             );
             // Then render the confirmation modal on top
             draw_save_confirmation_modal(&area, &mut frame.buffer_mut(), colors);
         }
-        AppState::ToggleListEditor {
-            field_label,
-            all_items,
-            selected_items,
-            cursor_index,
-            scroll_offset,
-            ..
-        } => {
+        AppState::ToggleListEditor(tle) => {
             draw_toggle_list_editor_screen(
                 frame,
                 area,
-                field_label,
-                all_items,
-                selected_items,
-                *cursor_index,
-                *scroll_offset,
+                &tle.field_label,
+                &tle.all_items,
+                &tle.selected_items,
+                tle.cursor_index,
+                tle.scroll_offset,
                 colors,
             );
         }
-        AppState::BranchModePrompt {
-            selected_mode,
-            branch_context: _,
-        } => {
-            draw_branch_mode_prompt(frame, area, *selected_mode, colors);
+        AppState::BranchModePrompt(bmp) => {
+            draw_branch_mode_prompt(frame, area, bmp.selected_mode, colors);
         }
     }
 
@@ -458,31 +378,14 @@ fn draw_loading_screen(
 /// * `frame` - The Ratatui frame to render into
 /// * `area` - The area to render within
 /// * `input_text` - The original input text
-/// * `result` - The successful decoding result
-/// * `selected_step` - Index of the currently selected step
-/// * `branch_path` - Current position in branch hierarchy
-/// * `current_branches` - Branches for the currently selected step
-/// * `highlighted_branch` - Index of highlighted branch (if any)
-/// * `branch_scroll_offset` - Scroll offset for branch list
-/// * `focus` - Which panel is currently focused
-/// * `tree_branches` - Cached tree data for the birds-eye view
+/// * `rs` - The results state data
 /// * `colors` - The color scheme to use
-#[allow(clippy::too_many_arguments)]
 fn draw_results_screen(
     frame: &mut Frame,
     area: Rect,
     _input_text: &str,
-    result: &crate::DecoderResult,
-    selected_step: usize,
-    branch_path: &BranchPath,
-    current_branches: &[BranchSummary],
-    highlighted_branch: Option<usize>,
-    branch_scroll_offset: usize,
-    focus: super::app::ResultsFocus,
-    tree_branches: &std::collections::HashMap<usize, Vec<TreeNode>>,
+    rs: &super::app::ResultsState,
     colors: &TuiColors,
-    ai_explanation: Option<&str>,
-    ai_loading: bool,
 ) {
     use super::app::ResultsFocus;
 
@@ -514,7 +417,7 @@ fn draw_results_screen(
         .split(main_chunks[1]);
 
     // ── Left Panel: Step Details ──
-    let step_is_focused = focus == ResultsFocus::StepDetails;
+    let step_is_focused = rs.focus == ResultsFocus::StepDetails;
     let step_details_block = Block::default()
         .title(" Step Details ")
         .title_style(if step_is_focused {
@@ -537,19 +440,19 @@ fn draw_results_screen(
     let step_details_inner = step_details_block.inner(main_chunks[0]);
     frame.render_widget(step_details_block, main_chunks[0]);
 
-    let current_step = result.path.get(selected_step);
+    let current_step = rs.result.path.get(rs.selected_step);
     render_step_details(
         step_details_inner,
         frame.buffer_mut(),
         current_step,
         colors,
-        ai_explanation,
-        ai_loading,
+        rs.ai_explanation.as_deref(),
+        rs.ai_loading,
     );
 
     // ── Right Top Panel: Birds-Eye Tree View ──
-    let tree_is_focused = focus == ResultsFocus::TreeView;
-    let tree_title = format!(" Tree ({}) ", branch_path.display());
+    let tree_is_focused = rs.focus == ResultsFocus::TreeView;
+    let tree_title = format!(" Tree ({}) ", rs.branch_path.display());
     let tree_block = Block::default()
         .title(tree_title)
         .title_style(if tree_is_focused {
@@ -576,21 +479,21 @@ fn draw_results_screen(
     tree_viewer.render(
         tree_inner,
         frame.buffer_mut(),
-        &result.path,
-        selected_step,
-        tree_branches,
+        &rs.result.path,
+        rs.selected_step,
+        &rs.tree_branches,
         colors,
     );
 
     // ── Right Bottom Panel: Level Detail (Branch List) ──
-    let level_is_focused = focus == ResultsFocus::LevelDetail;
-    let level_title = if current_branches.is_empty() {
+    let level_is_focused = rs.focus == ResultsFocus::LevelDetail;
+    let level_title = if rs.current_branches.is_empty() {
         " Branches ".to_string()
     } else {
         format!(
             " Branches from step {} ({} total) ",
-            selected_step,
-            current_branches.len()
+            rs.selected_step,
+            rs.current_branches.len()
         )
     };
     let level_block = Block::default()
@@ -615,7 +518,7 @@ fn draw_results_screen(
     let level_inner = level_block.inner(right_chunks[1]);
     frame.render_widget(level_block, right_chunks[1]);
 
-    if current_branches.is_empty() {
+    if rs.current_branches.is_empty() {
         // Show placeholder when no branches
         let placeholder = Paragraph::new(Line::from(Span::styled(
             "No branches at this step. Press [Enter] to create one, or [/] to search decoders.",
@@ -629,16 +532,16 @@ fn draw_results_screen(
         render_branch_list(
             level_inner,
             frame.buffer_mut(),
-            current_branches,
-            highlighted_branch,
-            branch_scroll_offset,
-            selected_step,
+            &rs.current_branches,
+            rs.highlighted_branch,
+            rs.branch_scroll_offset,
+            rs.selected_step,
             colors,
         );
     }
 
     // ── Status Bar ──
-    draw_status_bar(frame, outer_chunks[1], focus, colors);
+    draw_status_bar(frame, outer_chunks[1], rs.focus, colors);
 }
 
 /// Renders the branch list section below the path viewer.
@@ -1066,9 +969,7 @@ fn draw_history_panel(
             ];
 
             // Add time on a new conceptual "line" but we'll truncate to fit
-            // For simplicity, append time with dimmed style
-            // Note: Use chars().count() for proper Unicode width calculation
-            let status_width = 2u16; // "✓ " or "✗ " is 2 display cells
+            let status_width = 2u16;
             let preview_width = entry.encoded_text_preview.chars().count() as u16;
             let remaining_width = area.width.saturating_sub(4 + status_width + preview_width);
             if remaining_width > 6 {
@@ -1094,7 +995,6 @@ fn draw_history_panel(
         let scroll_info = format!("{}/{}", effective_scroll + 1, history.len());
         let scroll_indicator = Paragraph::new(Line::from(Span::styled(scroll_info, colors.muted)))
             .alignment(Alignment::Right);
-        // Render at bottom of area
         let indicator_area = Rect {
             x: area.x,
             y: area.y + area.height.saturating_sub(1),
@@ -1106,16 +1006,7 @@ fn draw_history_panel(
 }
 
 /// Formats a timestamp into a relative time string.
-///
-/// # Arguments
-///
-/// * `timestamp` - The timestamp string in "YYYY-MM-DD HH:MM:SS" format
-///
-/// # Returns
-///
-/// A human-readable relative time string like "2m ago", "1h ago", "Yesterday"
 fn format_relative_time(timestamp: &str) -> String {
-    // Parse the timestamp (format: "YYYY-MM-DD HH:MM:SS")
     let parsed = chrono::NaiveDateTime::parse_from_str(timestamp, "%Y-%m-%d %H:%M:%S");
 
     match parsed {
@@ -1134,23 +1025,14 @@ fn format_relative_time(timestamp: &str) -> String {
             } else if duration.num_days() < 7 {
                 format!("{}d ago", duration.num_days())
             } else {
-                // Show date for older entries
                 dt.format("%b %d").to_string()
             }
         }
-        Err(_) => timestamp.to_string(), // Fallback to raw timestamp
+        Err(_) => timestamp.to_string(),
     }
 }
 
 /// Renders the main input area with welcome message and text input.
-///
-/// # Arguments
-///
-/// * `frame` - The Ratatui frame to render into
-/// * `area` - The area to render within
-/// * `text_input` - The multi-line text input component
-/// * `is_focused` - Whether the input area is currently focused
-/// * `colors` - The color scheme to use
 fn draw_main_input_area(
     frame: &mut Frame,
     area: Rect,
@@ -1158,19 +1040,17 @@ fn draw_main_input_area(
     is_focused: bool,
     colors: &TuiColors,
 ) {
-    // Layout the main area
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(4), // Welcome message and instructions
-            Constraint::Length(1), // Spacing
-            Constraint::Min(8),    // Text input area
-            Constraint::Length(1), // Spacing
-            Constraint::Length(1), // Status bar with keybindings
+            Constraint::Length(4),
+            Constraint::Length(1),
+            Constraint::Min(8),
+            Constraint::Length(1),
+            Constraint::Length(1),
         ])
         .split(area);
 
-    // Render welcome message and instructions
     let welcome_lines = vec![
         Line::from(Span::styled(
             "Welcome to Ciphey",
@@ -1190,7 +1070,6 @@ fn draw_main_input_area(
     let welcome_paragraph = Paragraph::new(welcome_lines).alignment(Alignment::Center);
     frame.render_widget(welcome_paragraph, chunks[0]);
 
-    // Create the text input box with focus styling
     let input_block = Block::default()
         .title(" Ciphertext ")
         .title_style(if is_focused {
@@ -1214,7 +1093,6 @@ fn draw_main_input_area(
     let input_inner = input_block.inner(chunks[2]);
     frame.render_widget(input_block, chunks[2]);
 
-    // Render the text input content with cursor
     let (cursor_line, cursor_col) = text_input.cursor_pos();
     let scroll_offset = text_input.scroll_offset();
     let visible_lines = input_inner.height as usize;
@@ -1229,10 +1107,8 @@ fn draw_main_input_area(
             let is_cursor_line = line_idx == cursor_line;
 
             if is_cursor_line && line_idx >= scroll_offset && is_focused {
-                // Build line with cursor (only show cursor when focused)
                 let display_line_idx = line_idx - scroll_offset;
                 if display_line_idx < visible_lines {
-                    // Insert cursor character at the right position
                     let chars: Vec<char> = line_text.chars().collect();
                     let before: String = chars.iter().take(cursor_col).collect();
                     let after: String = chars.iter().skip(cursor_col).collect();
@@ -1251,7 +1127,6 @@ fn draw_main_input_area(
         })
         .collect();
 
-    // If input is empty, show placeholder
     let display_lines = if text_input.is_empty() {
         if is_focused {
             vec![Line::from(vec![
@@ -1271,7 +1146,6 @@ fn draw_main_input_area(
     let input_paragraph = Paragraph::new(display_lines).wrap(Wrap { trim: false });
     frame.render_widget(input_paragraph, input_inner);
 
-    // Render status bar with keybindings
     let keybindings = [
         ("[Tab]", "Switch"),
         ("[Enter]", "Decode"),
@@ -1293,15 +1167,6 @@ fn draw_main_input_area(
 }
 
 /// Renders the status bar with keybinding hints.
-///
-/// Shows context-aware keybindings based on the current panel focus.
-///
-/// # Arguments
-///
-/// * `frame` - The Ratatui frame to render into
-/// * `area` - The area to render the status bar
-/// * `focus` - Which panel is currently focused in the Results screen
-/// * `colors` - The color scheme to use
 fn draw_status_bar(
     frame: &mut Frame,
     area: Rect,
@@ -1316,7 +1181,6 @@ fn draw_status_bar(
         ResultsFocus::StepDetails => "Step",
     };
 
-    // Show different keybindings depending on which panel is focused
     let keybindings: &[(&str, &str)] = match focus {
         ResultsFocus::TreeView => &[
             ("[h/l]", "Step"),
@@ -1372,16 +1236,6 @@ fn draw_status_bar(
 }
 
 /// Renders the help overlay popup.
-///
-/// Shows context-aware keybindings in a centered popup on top of the current screen.
-/// The keybindings displayed depend on the current application state.
-///
-/// # Arguments
-///
-/// * `frame` - The Ratatui frame to render into
-/// * `area` - The full screen area
-/// * `context` - The help context determining which keybindings to show
-/// * `colors` - The color scheme to use
 fn draw_help_overlay(
     frame: &mut Frame,
     area: Rect,
@@ -1390,13 +1244,9 @@ fn draw_help_overlay(
 ) {
     use super::app::HelpContext;
 
-    // Calculate popup size and position
     let popup_area = centered_rect(area, HELP_WIDTH_PERCENT, HELP_HEIGHT_PERCENT);
-
-    // Clear the area behind the popup
     frame.render_widget(Clear, popup_area);
 
-    // Create the popup block
     let block = Block::default()
         .title(" Help ")
         .title_style(colors.title)
@@ -1406,7 +1256,6 @@ fn draw_help_overlay(
     let inner_area = block.inner(popup_area);
     frame.render_widget(block, popup_area);
 
-    // Build keybindings based on context
     let keybindings: Vec<(&str, &str)> = match context {
         HelpContext::Home => vec![
             ("Navigation", ""),
@@ -1427,9 +1276,8 @@ fn draw_help_overlay(
             ("→ / l", "Select next step"),
             ("↑ / k", "Select previous branch"),
             ("↓ / j", "Select next branch"),
-            ("gg", "Go to first step"),
+            ("gg / Home", "Go to first step"),
             ("G / End", "Go to last step"),
-            ("Home", "Go to first step"),
             ("", ""),
             ("Actions", ""),
             ("y / c", "Yank (copy) output to clipboard"),
@@ -1477,16 +1325,13 @@ fn draw_help_overlay(
 
     for (key, description) in keybindings {
         if key.is_empty() && description.is_empty() {
-            // Empty line separator
             lines.push(Line::from(""));
         } else if description.is_empty() {
-            // Section header
             lines.push(Line::from(Span::styled(
                 key,
                 colors.label.add_modifier(Modifier::BOLD),
             )));
         } else {
-            // Regular keybinding
             lines.push(Line::from(vec![
                 Span::styled(format!("{:16}", key), colors.accent),
                 Span::styled(description, colors.text),
@@ -1499,53 +1344,37 @@ fn draw_help_overlay(
 }
 
 /// Renders the human confirmation modal for plaintext verification.
-///
-/// Displays a centered modal popup asking the user to confirm whether the
-/// detected plaintext is correct. The modal appears over the loading screen.
-///
-/// # Arguments
-///
-/// * `frame` - The Ratatui frame to render into
-/// * `area` - The full screen area
-/// * `request` - The confirmation request containing candidate text and checker info
-/// * `colors` - The color scheme to use
 fn draw_human_confirmation_screen(
     frame: &mut Frame,
     area: Rect,
     request: &HumanConfirmationRequest,
     colors: &TuiColors,
 ) {
-    // Calculate modal size (65% width, 55% height for better padding)
     let modal_area = centered_rect(area, MODAL_WIDTH_PERCENT, MODAL_HEIGHT_PERCENT);
-
-    // Clear the area behind the modal
     frame.render_widget(Clear, modal_area);
 
-    // Create the modal block with double border
     let modal_block = Block::default()
         .title(" Confirm Plaintext? ")
         .title_style(colors.highlight)
         .borders(Borders::ALL)
         .border_type(BorderType::Double)
         .border_style(colors.accent)
-        .padding(Padding::new(2, 2, 1, 1)); // Add padding inside the modal
+        .padding(Padding::new(2, 2, 1, 1));
 
     let inner_area = modal_block.inner(modal_area);
     frame.render_widget(modal_block, modal_area);
 
-    // Calculate layout for the inner content
     let inner_chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(2), // "Detected by:" line with icon
-            Constraint::Length(1), // Spacing
-            Constraint::Min(5),    // Plaintext box (increased min height)
-            Constraint::Length(2), // Spacing
-            Constraint::Length(1), // Instructions with styled buttons
+            Constraint::Length(2),
+            Constraint::Length(1),
+            Constraint::Min(5),
+            Constraint::Length(2),
+            Constraint::Length(1),
         ])
         .split(inner_area);
 
-    // Render "Detected by:" line with magnifying glass icon
     let detected_by_line = Line::from(vec![
         Span::styled("🔍 ", colors.accent),
         Span::styled("Detected by: ", colors.label),
@@ -1557,14 +1386,12 @@ fn draw_human_confirmation_screen(
     let detected_paragraph = Paragraph::new(detected_by_line);
     frame.render_widget(detected_paragraph, inner_chunks[0]);
 
-    // Prepare the plaintext text (truncate if too long)
     let display_text = if request.text.len() > MAX_PLAINTEXT_PREVIEW_LEN {
         format!("{}...", &request.text[..MAX_PLAINTEXT_PREVIEW_LEN])
     } else {
         request.text.clone()
     };
 
-    // Create the plaintext box with rounded border and padding
     let plaintext_block = Block::default()
         .title(" Candidate Plaintext ")
         .title_style(colors.muted)
@@ -1576,12 +1403,10 @@ fn draw_human_confirmation_screen(
     let plaintext_inner = plaintext_block.inner(inner_chunks[2]);
     frame.render_widget(plaintext_block, inner_chunks[2]);
 
-    // Render the plaintext text inside the box
     let plaintext_paragraph =
         Paragraph::new(Span::styled(&display_text, colors.text)).wrap(Wrap { trim: false });
     frame.render_widget(plaintext_paragraph, plaintext_inner);
 
-    // Render styled button instructions at the bottom
     let instructions = Line::from(vec![
         Span::styled("Press ", colors.muted),
         Span::styled(
@@ -1606,15 +1431,7 @@ fn draw_human_confirmation_screen(
 }
 
 /// Renders a status message at the bottom of the screen.
-///
-/// # Arguments
-///
-/// * `frame` - The Ratatui frame to render into
-/// * `area` - The full screen area
-/// * `message` - The status message to display
-/// * `colors` - The color scheme to use
 fn draw_status_message(frame: &mut Frame, area: Rect, message: &str, colors: &TuiColors) {
-    // Position at the bottom of the screen
     let msg_area = Rect {
         x: area.x + 1,
         y: area.y + area.height.saturating_sub(2),
@@ -1627,24 +1444,6 @@ fn draw_status_message(frame: &mut Frame, area: Rect, message: &str, colors: &Tu
 }
 
 /// Creates a centered rectangle within the given area.
-///
-/// # Arguments
-///
-/// * `area` - The outer area to center within
-/// * `percent_x` - Width as a percentage of the outer area (0-100)
-/// * `percent_y` - Height as a percentage of the outer area (0-100)
-///
-/// # Returns
-///
-/// A [`Rect`] that is centered within the given area with the specified dimensions.
-///
-/// # Example
-///
-/// ```ignore
-/// let outer = Rect::new(0, 0, 100, 50);
-/// let centered = centered_rect(outer, 50, 50);
-/// // centered is a 50x25 rect centered within outer
-/// ```
 pub fn centered_rect(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
     let popup_width = area.width * percent_x / 100;
     let popup_height = area.height * percent_y / 100;
@@ -1656,16 +1455,6 @@ pub fn centered_rect(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
 }
 
 /// Parses a quote string into quote and attribution parts.
-///
-/// Expects format: "Quote text - Attribution" or just "Quote text"
-///
-/// # Arguments
-///
-/// * `quote_text` - The full quote string
-///
-/// # Returns
-///
-/// A tuple of (quote, attribution) where attribution may be empty.
 fn parse_quote(quote_text: &str) -> (&str, &str) {
     if let Some(dash_pos) = quote_text.rfind(" - ") {
         let quote = &quote_text[..dash_pos];
@@ -1677,21 +1466,6 @@ fn parse_quote(quote_text: &str) -> (&str, &str) {
 }
 
 /// Renders the settings screen.
-///
-/// # Arguments
-///
-/// * `frame` - The Ratatui frame to render into
-/// * `area` - The area to render within
-/// * `settings` - The settings model to display
-/// * `selected_section` - Index of selected section
-/// * `selected_field` - Index of selected field within section
-/// * `editing_mode` - Whether currently editing a field
-/// * `input_buffer` - Current input buffer contents
-/// * `cursor_pos` - Cursor position in input buffer
-/// * `scroll_offset` - Scroll offset for long lists
-/// * `validation_errors` - Map of field_id -> error message
-/// * `has_changes` - Whether settings have been modified
-/// * `colors` - The color scheme to use
 #[allow(clippy::too_many_arguments)]
 fn draw_settings_screen(
     frame: &mut Frame,
@@ -1724,17 +1498,6 @@ fn draw_settings_screen(
 }
 
 /// Renders the list editor screen.
-///
-/// # Arguments
-///
-/// * `frame` - The Ratatui frame to render into
-/// * `area` - The area to render within
-/// * `field_label` - Name of the field being edited
-/// * `items` - Current list items
-/// * `selected_item` - Currently selected item index
-/// * `input_buffer` - Input buffer for new items
-/// * `cursor_pos` - Cursor position in input buffer
-/// * `colors` - The color scheme to use
 #[allow(clippy::too_many_arguments)]
 fn draw_list_editor_screen(
     frame: &mut Frame,
@@ -1759,17 +1522,6 @@ fn draw_list_editor_screen(
 }
 
 /// Renders the toggle list editor screen.
-///
-/// # Arguments
-///
-/// * `frame` - The Ratatui frame to render into
-/// * `area` - The area to render within
-/// * `field_label` - Name of the field being edited
-/// * `all_items` - All available items
-/// * `selected_items` - Currently selected/enabled items
-/// * `cursor_index` - Currently highlighted item
-/// * `scroll_offset` - Scroll offset for long lists
-/// * `colors` - The color scheme to use
 #[allow(clippy::too_many_arguments)]
 fn draw_toggle_list_editor_screen(
     frame: &mut Frame,
@@ -1794,17 +1546,6 @@ fn draw_toggle_list_editor_screen(
 }
 
 /// Renders the wordlist manager screen.
-///
-/// # Arguments
-///
-/// * `frame` - The Ratatui frame to render into
-/// * `area` - The area to render within
-/// * `wordlist_files` - List of wordlist files
-/// * `selected_row` - Currently selected row
-/// * `focus` - Current focus state
-/// * `path_input` - Input buffer for new path
-/// * `has_pending_changes` - Whether there are unsaved changes
-/// * `colors` - The color scheme to use
 #[allow(clippy::too_many_arguments)]
 fn draw_wordlist_manager_screen(
     frame: &mut Frame,
@@ -1816,7 +1557,6 @@ fn draw_wordlist_manager_screen(
     has_pending_changes: bool,
     colors: &TuiColors,
 ) {
-    // Convert app focus to widget focus
     let widget_focus = match focus {
         WordlistManagerFocus::Table => WordlistFocus::Table,
         WordlistManagerFocus::AddPathInput => WordlistFocus::AddPath,
@@ -1835,76 +1575,6 @@ fn draw_wordlist_manager_screen(
     );
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_centered_rect_basic() {
-        let area = Rect::new(0, 0, 100, 50);
-        let centered = centered_rect(area, 50, 50);
-
-        assert_eq!(centered.width, 50);
-        assert_eq!(centered.height, 25);
-        assert_eq!(centered.x, 25);
-        assert_eq!(centered.y, 12);
-    }
-
-    #[test]
-    fn test_centered_rect_full_size() {
-        let area = Rect::new(0, 0, 100, 50);
-        let centered = centered_rect(area, 100, 100);
-
-        assert_eq!(centered.width, 100);
-        assert_eq!(centered.height, 50);
-        assert_eq!(centered.x, 0);
-        assert_eq!(centered.y, 0);
-    }
-
-    #[test]
-    fn test_centered_rect_small() {
-        let area = Rect::new(0, 0, 100, 50);
-        let centered = centered_rect(area, 10, 10);
-
-        assert_eq!(centered.width, 10);
-        assert_eq!(centered.height, 5);
-        assert_eq!(centered.x, 45);
-        assert_eq!(centered.y, 22);
-    }
-
-    #[test]
-    fn test_centered_rect_with_offset() {
-        let area = Rect::new(10, 5, 100, 50);
-        let centered = centered_rect(area, 50, 50);
-
-        assert_eq!(centered.width, 50);
-        assert_eq!(centered.height, 25);
-        assert_eq!(centered.x, 35); // 10 + (100-50)/2 = 10 + 25
-        assert_eq!(centered.y, 17); // 5 + (50-25)/2 = 5 + 12
-    }
-
-    #[test]
-    fn test_parse_quote_with_attribution() {
-        let (quote, attribution) = parse_quote("Some quote here - Author Name");
-        assert_eq!(quote, "Some quote here");
-        assert_eq!(attribution, "Author Name");
-    }
-
-    #[test]
-    fn test_parse_quote_without_attribution() {
-        let (quote, attribution) = parse_quote("Just a quote without attribution");
-        assert_eq!(quote, "Just a quote without attribution");
-        assert_eq!(attribution, "");
-    }
-
-    #[test]
-    fn test_parse_quote_with_multiple_dashes() {
-        let (quote, attribution) = parse_quote("Quote with dash-in-middle - The Author");
-        assert_eq!(quote, "Quote with dash-in-middle");
-        assert_eq!(attribution, "The Author");
-    }
-}
-
 /// Renders the theme picker screen.
 fn draw_theme_picker_screen(
     frame: &mut Frame,
@@ -1917,7 +1587,6 @@ fn draw_theme_picker_screen(
 ) {
     use super::widgets::theme_picker::ThemePicker;
 
-    // Create outer block with title
     let block = Block::default()
         .title(" Choose Theme ")
         .title_style(colors.title)
@@ -1928,7 +1597,6 @@ fn draw_theme_picker_screen(
     let inner = block.inner(area);
     frame.render_widget(block, area);
 
-    // Render theme picker widget
     let picker = ThemePicker::new();
     let buf = frame.buffer_mut();
     picker.render(
@@ -1944,10 +1612,6 @@ fn draw_theme_picker_screen(
 
 /// Renders the save confirmation modal as an overlay.
 fn draw_save_confirmation_modal(area: &Rect, buf: &mut Buffer, colors: &TuiColors) {
-    use ratatui::layout::Alignment;
-    use ratatui::widgets::{Block, BorderType, Borders, Clear, Padding, Paragraph, Wrap};
-
-    // Create a centered modal area
     let modal_width = 50;
     let modal_height = 7;
 
@@ -1961,10 +1625,8 @@ fn draw_save_confirmation_modal(area: &Rect, buf: &mut Buffer, colors: &TuiColor
         height: modal_height.min(area.height),
     };
 
-    // Clear the modal area (makes it stand out from background)
     Clear.render(modal_area, buf);
 
-    // Create modal block
     let block = Block::default()
         .title(" Unsaved Changes ")
         .title_style(colors.accent.add_modifier(Modifier::BOLD))
@@ -1976,7 +1638,6 @@ fn draw_save_confirmation_modal(area: &Rect, buf: &mut Buffer, colors: &TuiColor
     let inner = block.inner(modal_area);
     block.render(modal_area, buf);
 
-    // Create modal content
     let lines = vec![
         Line::from(Span::styled(
             "Do you want to save your changes?",
@@ -2001,8 +1662,6 @@ fn draw_save_confirmation_modal(area: &Rect, buf: &mut Buffer, colors: &TuiColor
 }
 
 /// Renders the branch mode prompt modal.
-///
-/// Displays a centered modal for choosing between full A* search and single-layer decoding.
 fn draw_branch_mode_prompt(
     frame: &mut Frame,
     area: Rect,
@@ -2024,10 +1683,8 @@ fn draw_branch_mode_prompt(
         height: modal_height.min(area.height),
     };
 
-    // Clear the modal area
     frame.render_widget(Clear, modal_area);
 
-    // Create modal block
     let block = Block::default()
         .title(" How do you want to branch? ")
         .title_style(colors.accent.add_modifier(Modifier::BOLD))
@@ -2095,8 +1752,6 @@ fn draw_branch_mode_prompt(
 }
 
 /// Renders the decoder search modal (vim-style).
-///
-/// Displays a search input at the bottom-left of the screen with filtered decoder list.
 fn draw_decoder_search(
     frame: &mut Frame,
     area: Rect,
@@ -2108,7 +1763,6 @@ fn draw_decoder_search(
     let modal_width: u16 = 35;
     let modal_height: u16 = 12.min(filtered_decoders.len() as u16 + 4);
 
-    // Position at bottom-left
     let modal_area = Rect {
         x: area.x + 2,
         y: area.y + area.height.saturating_sub(modal_height + 2),
@@ -2116,10 +1770,8 @@ fn draw_decoder_search(
         height: modal_height.min(area.height.saturating_sub(4)),
     };
 
-    // Clear the modal area
     frame.render_widget(Clear, modal_area);
 
-    // Create modal block with search prompt
     let title = format!(" /{} ", search_text);
     let block = Block::default()
         .title(title)
@@ -2131,7 +1783,6 @@ fn draw_decoder_search(
     let inner = block.inner(modal_area);
     frame.render_widget(block, modal_area);
 
-    // Render filtered decoder list
     let visible_count = inner.height.saturating_sub(1) as usize;
     let start = if selected_index >= visible_count {
         selected_index - visible_count + 1
@@ -2176,9 +1827,6 @@ fn draw_decoder_search(
 }
 
 /// Renders the quick search overlay.
-///
-/// Displays a small floating modal at the bottom-left of the screen listing
-/// configured search providers (e.g., Google, ChatGPT, CyberChef).
 fn draw_quick_search(
     frame: &mut Frame,
     area: Rect,
@@ -2189,7 +1837,6 @@ fn draw_quick_search(
     let modal_width: u16 = 30;
     let modal_height: u16 = (entries.len() as u16 + 4).min(14);
 
-    // Position at bottom-left (same style as decoder search)
     let modal_area = Rect {
         x: area.x + 2,
         y: area.y + area.height.saturating_sub(modal_height + 2),
@@ -2197,10 +1844,8 @@ fn draw_quick_search(
         height: modal_height.min(area.height.saturating_sub(4)),
     };
 
-    // Clear the modal area
     frame.render_widget(Clear, modal_area);
 
-    // Create modal block
     let block = Block::default()
         .title(" Open in... ")
         .title_style(colors.accent)
@@ -2211,7 +1856,6 @@ fn draw_quick_search(
     let inner = block.inner(modal_area);
     frame.render_widget(block, modal_area);
 
-    // Render entry list
     let visible_count = inner.height.saturating_sub(1) as usize;
     let start = if selected_index >= visible_count {
         selected_index - visible_count + 1
@@ -2253,4 +1897,74 @@ fn draw_quick_search(
 
     let paragraph = Paragraph::new(all_lines);
     frame.render_widget(paragraph, inner);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_centered_rect_basic() {
+        let area = Rect::new(0, 0, 100, 50);
+        let centered = centered_rect(area, 50, 50);
+
+        assert_eq!(centered.width, 50);
+        assert_eq!(centered.height, 25);
+        assert_eq!(centered.x, 25);
+        assert_eq!(centered.y, 12);
+    }
+
+    #[test]
+    fn test_centered_rect_full_size() {
+        let area = Rect::new(0, 0, 100, 50);
+        let centered = centered_rect(area, 100, 100);
+
+        assert_eq!(centered.width, 100);
+        assert_eq!(centered.height, 50);
+        assert_eq!(centered.x, 0);
+        assert_eq!(centered.y, 0);
+    }
+
+    #[test]
+    fn test_centered_rect_small() {
+        let area = Rect::new(0, 0, 100, 50);
+        let centered = centered_rect(area, 10, 10);
+
+        assert_eq!(centered.width, 10);
+        assert_eq!(centered.height, 5);
+        assert_eq!(centered.x, 45);
+        assert_eq!(centered.y, 22);
+    }
+
+    #[test]
+    fn test_centered_rect_with_offset() {
+        let area = Rect::new(10, 5, 100, 50);
+        let centered = centered_rect(area, 50, 50);
+
+        assert_eq!(centered.width, 50);
+        assert_eq!(centered.height, 25);
+        assert_eq!(centered.x, 35);
+        assert_eq!(centered.y, 17);
+    }
+
+    #[test]
+    fn test_parse_quote_with_attribution() {
+        let (quote, attribution) = parse_quote("Some quote here - Author Name");
+        assert_eq!(quote, "Some quote here");
+        assert_eq!(attribution, "Author Name");
+    }
+
+    #[test]
+    fn test_parse_quote_without_attribution() {
+        let (quote, attribution) = parse_quote("Just a quote without attribution");
+        assert_eq!(quote, "Just a quote without attribution");
+        assert_eq!(attribution, "");
+    }
+
+    #[test]
+    fn test_parse_quote_with_multiple_dashes() {
+        let (quote, attribution) = parse_quote("Quote with dash-in-middle - The Author");
+        assert_eq!(quote, "Quote with dash-in-middle");
+        assert_eq!(attribution, "The Author");
+    }
 }

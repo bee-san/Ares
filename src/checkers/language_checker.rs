@@ -71,14 +71,14 @@ impl Check for Checker<LanguageChecker> {
 
         let language = detection.detected_language.as_deref().unwrap_or("Unknown");
 
-        // Attempt translation
-        match crate::ai::translate(text, language) {
-            Ok(translated) => {
+        // Attempt translation with language description
+        match crate::ai::translate_with_description(text, language) {
+            Ok(trans_result) => {
                 result.is_identified = true;
-                result.text = translated;
+                result.text = trans_result.translation;
                 result.description = format!(
-                    "Detected {} (confidence: {}), translated to English",
-                    language, confidence
+                    "Foreign language detected: {} (confidence: {}).\n\n{}\n\nTranslated to English.",
+                    language, confidence, trans_result.language_description
                 );
             }
             Err(_) => {
@@ -86,10 +86,17 @@ impl Check for Checker<LanguageChecker> {
                 // Mark as identified with original text
                 result.is_identified = true;
                 result.text = text.to_string();
-                result.description = format!(
-                    "Detected {} (confidence: {}) but translation failed",
-                    language, confidence
-                );
+                result.description = if language == "Unknown" {
+                    format!(
+                        "Foreign language detected (confidence: {}). Translation unavailable.",
+                        confidence
+                    )
+                } else {
+                    format!(
+                        "Foreign language detected: {} (confidence: {}). Translation failed.",
+                        language, confidence
+                    )
+                };
             }
         }
 

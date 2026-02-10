@@ -54,6 +54,7 @@ use checkers::{
     athena::Athena,
     checker_result::CheckResult,
     checker_type::{Check, Checker},
+    language_checker::LanguageChecker,
     wait_athena::WaitAthena,
 };
 use log::debug;
@@ -434,16 +435,56 @@ pub fn perform_cracking_with_cache_id(text: &str, config: Config) -> CrackingRes
 
 /// Checks if the given input is plaintext or not
 /// Used at the start of the program to not waste CPU cycles
+///
+/// This function runs checkers ONLY at layer 0 (before any decoding):
+/// 1. Athena/WaitAthena - standard plaintext detection (LemmeKnow, English checker, etc.)
+/// 2. LanguageChecker - detects foreign language text and translates to English (if AI is configured)
+///
+/// If either checker identifies the text as plaintext, we return early without starting the decoder search.
 fn check_if_input_text_is_plaintext(text: &str) -> CheckResult {
     let config = get_config();
 
-    if config.top_results {
+    // Step 1: Run Athena/WaitAthena first
+    let athena_result = if config.top_results {
         let wait_athena_checker = Checker::<WaitAthena>::new();
-        wait_athena_checker.check(text)
+        let result = wait_athena_checker.check(text);
+        if result.is_identified {
+            debug!(
+                "WaitAthena identified text as plaintext at layer 0: {}",
+                result.description
+            );
+        }
+        result
     } else {
         let athena_checker = Checker::<Athena>::new();
-        athena_checker.check(text)
+        let result = athena_checker.check(text);
+        if result.is_identified {
+            debug!(
+                "Athena identified text as plaintext at layer 0: {}",
+                result.description
+            );
+        }
+        result
+    };
+
+    // If Athena identified plaintext, return immediately
+    if athena_result.is_identified {
+        return athena_result;
     }
+
+    // Step 2: Run LanguageChecker if Athena didn't identify
+    let language_checker = Checker::<LanguageChecker>::new();
+    let language_result = language_checker.check(text);
+    if language_result.is_identified {
+        debug!(
+            "LanguageChecker identified text as foreign language at layer 0: {}",
+            language_result.description
+        );
+        return language_result;
+    }
+
+    // Neither identified - return Athena's result (is_identified = false)
+    athena_result
 }
 
 /// Stores a successful DecoderResult into the cache table

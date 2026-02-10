@@ -1,7 +1,7 @@
 //! Wordlist manager modal management methods.
 
 use super::super::text_input::TextInput;
-use super::state::{AppState, WordlistManagerFocus};
+use super::state::{AppState, SettingsState, WordlistManagerFocus};
 use super::App;
 use crate::storage::bloom::{build_bloom_filter_from_db, save_bloom_filter};
 use crate::storage::database::{set_wordlist_file_enabled, set_words_enabled_by_file_id};
@@ -12,14 +12,9 @@ impl App {
     /// Applies pending changes to the database and rebuilds the bloom filter
     /// if any changes were made.
     pub fn finish_wordlist_manager(&mut self) {
-        if let AppState::WordlistManager {
-            parent_settings,
-            pending_changes,
-            ..
-        } = &self.state
-        {
-            let snapshot = parent_settings.as_ref().clone();
-            let changes = pending_changes.clone();
+        if let AppState::WordlistManager(ref wm) = self.state {
+            let snapshot = wm.parent_settings.as_ref().clone();
+            let changes = wm.pending_changes.clone();
 
             // Apply pending changes to database
             let mut changes_applied = false;
@@ -39,7 +34,7 @@ impl App {
                 }
             }
 
-            self.state = AppState::Settings {
+            self.state = AppState::Settings(SettingsState {
                 settings: snapshot.settings,
                 selected_section: snapshot.selected_section,
                 selected_field: snapshot.selected_field,
@@ -48,19 +43,16 @@ impl App {
                 scroll_offset: snapshot.scroll_offset,
                 previous_state: snapshot.previous_state,
                 validation_errors: snapshot.validation_errors,
-            };
+            });
         }
     }
 
     /// Cancels wordlist manager and returns to settings.
     pub fn cancel_wordlist_manager(&mut self) {
-        if let AppState::WordlistManager {
-            parent_settings, ..
-        } = &self.state
-        {
-            let snapshot = parent_settings.as_ref().clone();
+        if let AppState::WordlistManager(ref wm) = self.state {
+            let snapshot = wm.parent_settings.as_ref().clone();
 
-            self.state = AppState::Settings {
+            self.state = AppState::Settings(SettingsState {
                 settings: snapshot.settings,
                 selected_section: snapshot.selected_section,
                 selected_field: snapshot.selected_field,
@@ -69,14 +61,14 @@ impl App {
                 scroll_offset: snapshot.scroll_offset,
                 previous_state: snapshot.previous_state,
                 validation_errors: snapshot.validation_errors,
-            };
+            });
         }
     }
 
     /// Cycles focus in the wordlist manager (Table -> AddPath -> Done -> Table).
     pub fn wordlist_manager_next_focus(&mut self) {
-        if let AppState::WordlistManager { focus, .. } = &mut self.state {
-            *focus = match focus {
+        if let AppState::WordlistManager(ref mut wm) = self.state {
+            wm.focus = match wm.focus {
                 WordlistManagerFocus::Table => WordlistManagerFocus::AddPathInput,
                 WordlistManagerFocus::AddPathInput => WordlistManagerFocus::DoneButton,
                 WordlistManagerFocus::DoneButton => WordlistManagerFocus::Table,

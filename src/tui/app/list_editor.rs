@@ -1,27 +1,21 @@
 //! List editor modal management methods.
 
 use super::super::{settings::SettingValue, text_input::TextInput};
-use super::state::AppState;
+use super::state::{AppState, SettingsState};
 use super::App;
 
 impl App {
     /// Returns from list editor back to settings, updating the field value.
     pub fn finish_list_editor(&mut self) {
-        if let AppState::ListEditor {
-            field_id,
-            items,
-            parent_settings,
-            ..
-        } = &self.state
-        {
-            let mut snapshot = parent_settings.as_ref().clone();
+        if let AppState::ListEditor(ref le) = self.state {
+            let mut snapshot = le.parent_settings.as_ref().clone();
 
             // Update the field value with the edited items
-            if let Some(field) = snapshot.settings.get_field_mut(field_id) {
-                field.value = SettingValue::List(items.clone());
+            if let Some(field) = snapshot.settings.get_field_mut(&le.field_id) {
+                field.value = SettingValue::List(le.items.clone());
             }
 
-            self.state = AppState::Settings {
+            self.state = AppState::Settings(SettingsState {
                 settings: snapshot.settings,
                 selected_section: snapshot.selected_section,
                 selected_field: snapshot.selected_field,
@@ -30,19 +24,16 @@ impl App {
                 scroll_offset: snapshot.scroll_offset,
                 previous_state: snapshot.previous_state,
                 validation_errors: snapshot.validation_errors,
-            };
+            });
         }
     }
 
     /// Returns from list editor back to settings without saving changes.
     pub fn cancel_list_editor(&mut self) {
-        if let AppState::ListEditor {
-            parent_settings, ..
-        } = &self.state
-        {
-            let snapshot = parent_settings.as_ref().clone();
+        if let AppState::ListEditor(ref le) = self.state {
+            let snapshot = le.parent_settings.as_ref().clone();
 
-            self.state = AppState::Settings {
+            self.state = AppState::Settings(SettingsState {
                 settings: snapshot.settings,
                 selected_section: snapshot.selected_section,
                 selected_field: snapshot.selected_field,
@@ -51,44 +42,33 @@ impl App {
                 scroll_offset: snapshot.scroll_offset,
                 previous_state: snapshot.previous_state,
                 validation_errors: snapshot.validation_errors,
-            };
+            });
         }
     }
 
     /// Adds a new item to the list editor.
     pub fn list_editor_add_item(&mut self) {
-        if let AppState::ListEditor {
-            items,
-            text_input,
-            selected_item,
-            ..
-        } = &mut self.state
-        {
-            let trimmed = text_input.get_text().trim();
+        if let AppState::ListEditor(ref mut le) = self.state {
+            let trimmed = le.text_input.get_text().trim();
             if !trimmed.is_empty() {
-                items.push(trimmed.to_string());
-                *selected_item = Some(items.len() - 1);
+                le.items.push(trimmed.to_string());
+                le.selected_item = Some(le.items.len() - 1);
             }
-            text_input.clear();
+            le.text_input.clear();
         }
     }
 
     /// Removes the selected item from the list editor.
     pub fn list_editor_remove_item(&mut self) {
-        if let AppState::ListEditor {
-            items,
-            selected_item,
-            ..
-        } = &mut self.state
-        {
-            if let Some(idx) = *selected_item {
-                if idx < items.len() {
-                    items.remove(idx);
+        if let AppState::ListEditor(ref mut le) = self.state {
+            if let Some(idx) = le.selected_item {
+                if idx < le.items.len() {
+                    le.items.remove(idx);
                     // Adjust selection
-                    if items.is_empty() {
-                        *selected_item = None;
-                    } else if idx >= items.len() {
-                        *selected_item = Some(items.len() - 1);
+                    if le.items.is_empty() {
+                        le.selected_item = None;
+                    } else if idx >= le.items.len() {
+                        le.selected_item = Some(le.items.len() - 1);
                     }
                 }
             }
@@ -97,17 +77,12 @@ impl App {
 
     /// Selects the next item in the list editor.
     pub fn list_editor_next_item(&mut self) {
-        if let AppState::ListEditor {
-            items,
-            selected_item,
-            ..
-        } = &mut self.state
-        {
-            if items.is_empty() {
-                *selected_item = None;
+        if let AppState::ListEditor(ref mut le) = self.state {
+            if le.items.is_empty() {
+                le.selected_item = None;
             } else {
-                *selected_item = Some(match *selected_item {
-                    Some(idx) => (idx + 1) % items.len(),
+                le.selected_item = Some(match le.selected_item {
+                    Some(idx) => (idx + 1) % le.items.len(),
                     None => 0,
                 });
             }
@@ -116,19 +91,14 @@ impl App {
 
     /// Selects the previous item in the list editor.
     pub fn list_editor_prev_item(&mut self) {
-        if let AppState::ListEditor {
-            items,
-            selected_item,
-            ..
-        } = &mut self.state
-        {
-            if items.is_empty() {
-                *selected_item = None;
+        if let AppState::ListEditor(ref mut le) = self.state {
+            if le.items.is_empty() {
+                le.selected_item = None;
             } else {
-                *selected_item = Some(match *selected_item {
-                    Some(0) => items.len() - 1,
+                le.selected_item = Some(match le.selected_item {
+                    Some(0) => le.items.len() - 1,
                     Some(idx) => idx - 1,
-                    None => items.len() - 1,
+                    None => le.items.len() - 1,
                 });
             }
         }

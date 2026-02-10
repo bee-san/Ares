@@ -183,6 +183,50 @@ Rules:\n\
     ]
 }
 
+/// Builds the prompt messages for translating text and providing a language description.
+///
+/// This combines translation with an educational description of the source language,
+/// returning a structured JSON response containing both the translation and language info.
+///
+/// # Arguments
+///
+/// * `text` - The text to translate
+/// * `source_language` - The detected source language (e.g., "French", "Japanese")
+pub fn build_translate_with_description_prompt(
+    text: &str,
+    source_language: &str,
+) -> Vec<ChatMessage> {
+    let system_prompt = format!(
+        "\
+You are a professional translator and linguist. Your task is to translate text from {} to English \
+and provide a brief description of the source language.\n\n\
+Respond ONLY with a JSON object in this exact format, with no other text:\n\
+{{\n\
+  \"translation\": \"the English translation here\",\n\
+  \"language_description\": \"1-2 sentence description of the language\"\n\
+}}\n\n\
+Rules for translation:\n\
+- Preserve the original meaning as closely as possible\n\
+- If the text contains technical terms, keep them accurate\n\
+- If parts are ambiguous, translate the most likely meaning\n\n\
+Rules for language_description:\n\
+- Keep it to 1-2 sentences (under 50 words)\n\
+- Include: language family, approximate number of speakers, and where it's primarily spoken\n\
+- Mention the writing system if it's non-Latin (e.g., Cyrillic, Kanji, Arabic script)",
+        source_language
+    );
+
+    let user_content = format!(
+        "Translate this {} text to English and describe the language:\n\n{}",
+        source_language, text
+    );
+
+    vec![
+        ChatMessage::system(&system_prompt),
+        ChatMessage::user(&user_content),
+    ]
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -241,5 +285,34 @@ mod tests {
         assert!(system.contains("is_foreign_language"));
         assert!(system.contains("detected_language"));
         assert!(system.contains("confidence"));
+    }
+
+    #[test]
+    fn test_translate_with_description_prompt() {
+        let messages = build_translate_with_description_prompt("Bonjour le monde", "French");
+        assert_eq!(messages.len(), 2);
+        assert!(messages[0].content.contains("French"));
+        assert!(messages[0].content.contains("English"));
+        assert!(messages[0].content.contains("JSON"));
+        assert!(messages[1].content.contains("Bonjour le monde"));
+    }
+
+    #[test]
+    fn test_translate_with_description_system_prompt_has_json_format() {
+        let messages = build_translate_with_description_prompt("test", "Spanish");
+        let system = &messages[0].content;
+        assert!(system.contains("translation"));
+        assert!(system.contains("language_description"));
+    }
+
+    #[test]
+    fn test_translate_with_description_system_prompt_has_guidelines() {
+        let messages = build_translate_with_description_prompt("test", "German");
+        let system = &messages[0].content;
+        // Should mention language family and speakers
+        assert!(system.contains("language family"));
+        assert!(system.contains("speakers"));
+        // Should mention writing system for non-Latin
+        assert!(system.contains("writing system"));
     }
 }

@@ -48,6 +48,15 @@ pub struct LanguageDetectionResult {
     pub confidence: Option<String>,
 }
 
+/// Result of a translation request that includes a language description.
+#[derive(Debug, Clone)]
+pub struct TranslationWithDescription {
+    /// The English translation of the input text.
+    pub translation: String,
+    /// A brief description of the source language (language family, speakers, regions).
+    pub language_description: String,
+}
+
 /// Computes a deterministic cache key from the function type, model, and input parameters.
 ///
 /// The key format is `function_type|model|param1|param2|...` which provides
@@ -240,6 +249,86 @@ pub fn ask_about_step(
     client.chat_completion(messages, Some(0.7))
 }
 
+/// Translates text from a detected source language into English, with a language description.
+///
+/// This provides both the translation and an educational description of the source
+/// language (language family, number of speakers, regions where spoken, writing system).
+///
+/// # Arguments
+///
+/// * `text` - The text to translate
+/// * `source_language` - The detected source language (e.g., "French", "Japanese")
+///
+/// # Errors
+///
+/// Returns `AiError::Disabled` if AI is not enabled, `AiError::NotConfigured`
+/// if configuration is incomplete, or other variants for HTTP/API errors.
+pub fn translate_with_description(
+    text: &str,
+    source_language: &str,
+) -> Result<TranslationWithDescription, AiError> {
+    let config = get_config();
+    if !config.ai_enabled {
+        return Err(AiError::Disabled);
+    }
+    let client = AiClient::from_config(config).ok_or(AiError::NotConfigured)?;
+
+    // Check cache first
+    let cache_key = compute_cache_key(
+        "translate_with_description",
+        client.model(),
+        &[text, source_language],
+    );
+    if let Ok(Some(cached)) = read_ai_cache(&cache_key) {
+        return parse_translation_with_description_response(&cached.response);
+    }
+
+    let messages = prompts::build_translate_with_description_prompt(text, source_language);
+    let response = client.chat_completion(messages, Some(0.3))?;
+
+    // Store in cache (best-effort, ignore errors)
+    let _ = insert_ai_cache(
+        &cache_key,
+        "translate_with_description",
+        &response,
+        client.model(),
+    );
+
+    parse_translation_with_description_response(&response)
+}
+
+/// Parses the JSON response from the translation with description prompt.
+fn parse_translation_with_description_response(
+    response: &str,
+) -> Result<TranslationWithDescription, AiError> {
+    // The model should return a JSON object, but it might include markdown code fences
+    let json_str = response
+        .trim()
+        .trim_start_matches("```json")
+        .trim_start_matches("```")
+        .trim_end_matches("```")
+        .trim();
+
+    let parsed: serde_json::Value = serde_json::from_str(json_str)?;
+
+    let translation = parsed
+        .get("translation")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_default();
+
+    let language_description = parsed
+        .get("language_description")
+        .and_then(|v| v.as_str())
+        .map(|s| s.to_string())
+        .unwrap_or_default();
+
+    Ok(TranslationWithDescription {
+        translation,
+        language_description,
+    })
+}
+
 /// Parses the JSON response from the language detection prompt.
 fn parse_language_detection_response(response: &str) -> Result<LanguageDetectionResult, AiError> {
     // The model should return a JSON object, but it might include markdown code fences
@@ -341,5 +430,49 @@ mod tests {
         let response = "This is not JSON";
         let result = parse_language_detection_response(response);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_translation_with_description_basic() {
+        let response = r#"{"translation": "Hello world", "language_description": "French is a Romance language."}"#;
+        let result = parse_translation_with_description_response(response).unwrap();
+        assert_eq!(result.translation, "Hello world");
+        assert_eq!(result.language_description, "French is a Romance language.");
+    }
+
+    #[test]
+    fn test_parse_translation_with_description_with_code_fences() {
+        let response = "```json\n{\"translation\": \"Good morning\", \"language_description\": \"Spanish is spoken by 500 million people.\"}\n```";
+        let result = parse_translation_with_description_response(response).unwrap();
+        assert_eq!(result.translation, "Good morning");
+        assert!(result.language_description.contains("Spanish"));
+    }
+
+    #[test]
+    fn test_parse_translation_with_description_missing_fields() {
+        let response = r#"{}"#;
+        let result = parse_translation_with_description_response(response).unwrap();
+        // Should return empty strings for missing fields
+        assert_eq!(result.translation, "");
+        assert_eq!(result.language_description, "");
+    }
+
+    #[test]
+    fn test_parse_translation_with_description_invalid_json() {
+        let response = "This is not JSON";
+        let result = parse_translation_with_description_response(response);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn test_parse_translation_with_description_complex() {
+        let response = r#"{
+            "translation": "The quick brown fox jumps over the lazy dog",
+            "language_description": "German is a West Germanic language spoken by ~100 million native speakers, primarily in Germany, Austria, and Switzerland. It uses the Latin alphabet with umlauts (ä, ö, ü) and the ß character."
+        }"#;
+        let result = parse_translation_with_description_response(response).unwrap();
+        assert!(result.translation.contains("fox"));
+        assert!(result.language_description.contains("Germanic"));
+        assert!(result.language_description.contains("Germany"));
     }
 }
