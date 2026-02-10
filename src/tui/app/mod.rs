@@ -15,9 +15,9 @@ pub mod wordlist;
 
 // Re-export commonly used types
 pub use state::{
-    AppState, BranchContext, BranchMode, BranchPath, DecoderSearchOverlay, HelpContext,
-    HistoryEntry, HumanConfirmationRequest, PreviousState, QuickSearchOverlay, ResultsFocus,
-    SettingsStateSnapshot, WordlistFileInfo, WordlistManagerFocus,
+    AppState, AskAiOverlay, BranchContext, BranchMode, BranchPath, DecoderSearchOverlay,
+    HelpContext, HistoryEntry, HumanConfirmationRequest, PreviousState, QuickSearchOverlay,
+    ResultsFocus, SettingsStateSnapshot, WordlistFileInfo, WordlistManagerFocus,
 };
 
 use crate::DecoderResult;
@@ -44,6 +44,8 @@ pub struct App {
     pub decoder_search: Option<DecoderSearchOverlay>,
     /// Quick search overlay (floats over Results screen when Some).
     pub quick_search: Option<QuickSearchOverlay>,
+    /// Ask AI overlay (floats over Results screen when Some).
+    pub ask_ai: Option<AskAiOverlay>,
 }
 
 impl App {
@@ -70,6 +72,7 @@ impl App {
             pending_g: false,
             decoder_search: None,
             quick_search: None,
+            ask_ai: None,
         }
     }
 
@@ -102,6 +105,7 @@ impl App {
             pending_g: false,
             decoder_search: None,
             quick_search: None,
+            ask_ai: None,
         }
     }
 
@@ -228,6 +232,7 @@ impl App {
             level_visible_rows: 10,
             ai_explanation: None,
             ai_loading: false,
+            ai_explanation_cache: std::collections::HashMap::new(),
         };
     }
 
@@ -244,6 +249,9 @@ impl App {
         let last_step = result.path.len().saturating_sub(1);
         // Load all branches for the tree view
         let tree_branches = Self::load_tree_branches(cache_id, result.path.len());
+        // Load cached AI explanations from database
+        let ai_explanation_cache =
+            crate::storage::database::read_cache_ai_explanations(cache_id).unwrap_or_default();
         self.state = AppState::Results {
             result,
             selected_step: last_step,
@@ -258,6 +266,7 @@ impl App {
             level_visible_rows: 10,
             ai_explanation: None,
             ai_loading: false,
+            ai_explanation_cache,
         };
     }
 
@@ -492,7 +501,7 @@ impl App {
         }
     }
 
-    /// Sets the AI explanation text for the current step.
+    /// Sets the AI explanation text for the current step and caches it.
     ///
     /// # Arguments
     ///
@@ -501,11 +510,22 @@ impl App {
         if let AppState::Results {
             ai_explanation,
             ai_loading,
+            ai_explanation_cache,
+            selected_step,
+            cache_id,
             ..
         } = &mut self.state
         {
-            *ai_explanation = Some(explanation);
+            let step = *selected_step;
+            ai_explanation_cache.insert(step, explanation.clone());
+            *ai_explanation = Some(explanation.clone());
             *ai_loading = false;
+
+            // Persist to database (best-effort)
+            if let Some(cid) = cache_id {
+                let _ =
+                    crate::storage::database::update_cache_ai_explanation(*cid, step, &explanation);
+            }
         }
     }
 
@@ -519,6 +539,21 @@ impl App {
         {
             *ai_explanation = None;
             *ai_loading = false;
+        }
+    }
+
+    /// Loads AI explanation from the per-step cache for the current step.
+    ///
+    /// Called when navigating between steps so cached explanations re-appear.
+    pub fn load_cached_ai_explanation(&mut self) {
+        if let AppState::Results {
+            ai_explanation,
+            ai_explanation_cache,
+            selected_step,
+            ..
+        } = &mut self.state
+        {
+            *ai_explanation = ai_explanation_cache.get(selected_step).cloned();
         }
     }
 
@@ -592,6 +627,7 @@ impl App {
                         level_visible_rows: 10,
                         ai_explanation: None,
                         ai_loading: false,
+                        ai_explanation_cache: std::collections::HashMap::new(),
                     };
 
                     // Load branches for this step
@@ -696,6 +732,77 @@ impl App {
     /// Checks if the quick search overlay is active.
     pub fn is_quick_search_active(&self) -> bool {
         self.quick_search.is_some()
+    }
+
+    /// Opens the Ask AI overlay for the currently selected step.
+    ///
+    /// Extracts step context from the Results state and initializes
+    /// the overlay with an empty question input.
+    pub fn open_ask_ai(&mut self) {
+        if let AppState::Results {
+            result,
+            selected_step,
+            ..
+        } = &self.state
+        {
+            if let Some(step) = result.path.get(*selected_step) {
+                let output_text = step
+                    .unencrypted_text
+                    .as_ref()
+                    .and_then(|t| t.first().cloned())
+                    .unwrap_or_default();
+
+                self.ask_ai = Some(AskAiOverlay {
+                    text_input: MultilineTextInput::new(),
+                    decoder_name: step.decoder.to_string(),
+                    step_input: step.encrypted_text.chars().take(500).collect(),
+                    step_output: output_text.chars().take(500).collect(),
+                    step_key: step.key.clone(),
+                    step_description: step.description.to_string(),
+                    step_link: step.link.to_string(),
+                    response: None,
+                    loading: false,
+                    error: None,
+                    response_scroll: 0,
+                });
+            }
+        }
+    }
+
+    /// Closes the Ask AI overlay.
+    pub fn close_ask_ai(&mut self) {
+        self.ask_ai = None;
+    }
+
+    /// Checks if the Ask AI overlay is active.
+    pub fn is_ask_ai_active(&self) -> bool {
+        self.ask_ai.is_some()
+    }
+
+    /// Sets the Ask AI overlay to loading state.
+    pub fn set_ask_ai_loading(&mut self) {
+        if let Some(ref mut overlay) = self.ask_ai {
+            overlay.loading = true;
+            overlay.error = None;
+        }
+    }
+
+    /// Sets the Ask AI response text.
+    pub fn set_ask_ai_response(&mut self, response: String) {
+        if let Some(ref mut overlay) = self.ask_ai {
+            overlay.response = Some(response);
+            overlay.loading = false;
+            overlay.error = None;
+            overlay.response_scroll = 0;
+        }
+    }
+
+    /// Sets the Ask AI error message.
+    pub fn set_ask_ai_error(&mut self, error: String) {
+        if let Some(ref mut overlay) = self.ask_ai {
+            overlay.error = Some(error);
+            overlay.loading = false;
+        }
     }
 
     /// Gets the appropriate help context based on current state.

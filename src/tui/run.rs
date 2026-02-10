@@ -165,6 +165,16 @@ fn run_event_loop(
     let mut ai_result_receiver: Option<mpsc::Receiver<Result<String, crate::ai::error::AiError>>> =
         None;
 
+    // Channel for receiving Ask AI responses from background thread
+    let mut ask_ai_receiver: Option<mpsc::Receiver<Result<String, crate::ai::error::AiError>>> =
+        None;
+
+    // Channel for receiving single-layer decoding results from background thread.
+    // Stores (results, text_decoded, branch_context) for post-processing.
+    let mut single_layer_receiver: Option<
+        mpsc::Receiver<(Vec<CrackResult>, String, Option<super::app::BranchContext>)>,
+    > = None;
+
     loop {
         // Draw the UI
         let completed_frame = terminal.draw(|frame| draw(frame, app, colors))?;
@@ -308,6 +318,7 @@ fn run_event_loop(
                             app.close_settings();
                         }
                         Action::ShowHistoryResult {
+                            cache_id,
                             encoded_text,
                             decoded_text,
                             path,
@@ -327,8 +338,8 @@ fn run_event_loop(
                             // Update input_text for display purposes
                             app.input_text = encoded_text;
 
-                            // Set the result state
-                            app.set_result(result);
+                            // Set the result state with cache_id for branch support
+                            app.set_result_with_cache_id(result, cache_id);
                             app.set_status("Showing saved result from history.".to_string());
                         }
                         Action::SwitchToBranch(cache_id) => {
@@ -479,6 +490,8 @@ fn run_event_loop(
                                                 level_visible_rows: 10,
                                                 ai_explanation: None,
                                                 ai_loading: false,
+                                                ai_explanation_cache:
+                                                    std::collections::HashMap::new(),
                                             };
 
                                             app.set_status(
@@ -543,6 +556,7 @@ fn run_event_loop(
                         Action::RunBranchSingleLayer(text) => {
                             // Run single layer decoding (all decoders once)
                             // This is a quick exploration that doesn't recurse
+                            // Runs in a background thread to avoid freezing the UI
 
                             // Get branch context from the BranchModePrompt state before transitioning
                             let branch_context = if let super::app::AppState::BranchModePrompt {
@@ -556,8 +570,7 @@ fn run_event_loop(
                                 app.get_branch_context()
                             };
 
-                            // Restore to Results state by getting context and going back
-                            // We need to restore the Results state since we're coming from BranchModePrompt
+                            // Restore to Results state so user sees the parent while waiting
                             if let Some(context) = &branch_context {
                                 if let Some(parent_id) = context.parent_cache_id {
                                     // Restore the Results state from the parent cache entry
@@ -580,79 +593,28 @@ fn run_event_loop(
                                 }
                             }
 
+                            app.set_status("Running single-layer decoders...".to_string());
+
+                            // Spawn background thread for single-layer decoding
+                            let (sl_tx, sl_rx) = mpsc::channel();
+                            single_layer_receiver = Some(sl_rx);
+
                             let config_clone = config.clone();
-                            crate::config::set_global_config(config_clone.clone());
+                            let branch_context_clone = branch_context.clone();
+                            let text_clone = text.clone();
+                            thread::spawn(move || {
+                                crate::config::set_global_config(config_clone);
 
-                            // Create checker for single layer run
-                            let checker = crate::checkers::CheckerTypes::CheckAthena(
-                                crate::checkers::checker_type::Checker::<
-                                    crate::checkers::athena::Athena,
-                                >::new(),
-                            );
-
-                            let results = crate::run_single_layer(&text, &checker);
-
-                            if results.is_empty() {
-                                app.set_status(
-                                    "No decoders produced output for this text.".to_string(),
+                                // Create checker for single layer run
+                                let checker = crate::checkers::CheckerTypes::CheckAthena(
+                                    crate::checkers::checker_type::Checker::<
+                                        crate::checkers::athena::Athena,
+                                    >::new(),
                                 );
-                            } else {
-                                // Store results as branches in the database
-                                let mut branches_created = 0;
 
-                                if let Some(context) = branch_context {
-                                    if let Some(parent_cache_id) = context.parent_cache_id {
-                                        for result in &results {
-                                            // Only store results that have unencrypted_text
-                                            if let Some(outputs) = &result.unencrypted_text {
-                                                if let Some(decoded) = outputs.first() {
-                                                    let cache_entry = CacheEntry {
-                                                        encoded_text: text.clone(),
-                                                        decoded_text: decoded.clone(),
-                                                        path: vec![result.clone()],
-                                                        execution_time_ms: 0,
-                                                        input_length: text.len() as i64,
-                                                        decoder_count: 1,
-                                                        checker_name: None,
-                                                        key_used: result.key.clone(),
-                                                    };
-
-                                                    if insert_branch(
-                                                        &cache_entry,
-                                                        parent_cache_id,
-                                                        context.branch_step,
-                                                        &BranchType::SingleLayer,
-                                                    )
-                                                    .is_ok()
-                                                    {
-                                                        branches_created += 1;
-                                                    }
-                                                }
-                                            }
-                                        }
-
-                                        // Refresh the branch list for the current step
-                                        app.load_branches_for_step();
-                                        // Refresh tree data for birds-eye view
-                                        app.refresh_tree_branches();
-
-                                        app.set_status(format!(
-                                            "Created {} branches from single-layer decoding.",
-                                            branches_created
-                                        ));
-                                    } else {
-                                        app.set_status(
-                                            "Cannot create branches: no parent cache ID."
-                                                .to_string(),
-                                        );
-                                    }
-                                } else {
-                                    app.set_status(format!(
-                                        "Found {} decoder outputs but no branch context.",
-                                        results.len()
-                                    ));
-                                }
-                            }
+                                let results = crate::run_single_layer(&text_clone, &checker);
+                                let _ = sl_tx.send((results, text_clone, branch_context_clone));
+                            });
                         }
                         Action::RunBranchDecoder(text, decoder_name) => {
                             // Run a specific decoder on the text
@@ -759,6 +721,43 @@ fn run_event_loop(
 
                             app.set_status("Loading AI explanation...".to_string());
                         }
+                        Action::OpenAskAi => {
+                            app.open_ask_ai();
+                        }
+                        Action::SubmitAskAi(question) => {
+                            app.set_ask_ai_loading();
+
+                            // Extract step context from the overlay
+                            if let Some(ref overlay) = app.ask_ai {
+                                let decoder_name = overlay.decoder_name.clone();
+                                let step_input = overlay.step_input.clone();
+                                let step_output = overlay.step_output.clone();
+                                let step_key = overlay.step_key.clone();
+                                let step_description = overlay.step_description.clone();
+                                let step_link = overlay.step_link.clone();
+
+                                let (ask_tx, ask_rx) = mpsc::channel();
+                                ask_ai_receiver = Some(ask_rx);
+
+                                thread::spawn(move || {
+                                    let result = crate::ai::ask_about_step(
+                                        &question,
+                                        &decoder_name,
+                                        &step_input,
+                                        &step_output,
+                                        step_key.as_deref(),
+                                        &step_description,
+                                        &step_link,
+                                    );
+                                    let _ = ask_tx.send(result);
+                                });
+                            }
+
+                            app.set_status("AI is thinking...".to_string());
+                        }
+                        Action::CloseAskAi => {
+                            app.close_ask_ai();
+                        }
                         Action::None => {}
                     }
                 }
@@ -810,6 +809,89 @@ fn run_event_loop(
                     }
                 }
                 ai_result_receiver = None;
+            }
+        }
+
+        // Check for Ask AI response (non-blocking)
+        if let Some(ref ask_rx) = ask_ai_receiver {
+            if let Ok(ask_result) = ask_rx.try_recv() {
+                match ask_result {
+                    Ok(response) => {
+                        app.set_ask_ai_response(response);
+                        app.clear_status();
+                    }
+                    Err(e) => {
+                        app.set_ask_ai_error(format!("{}", e));
+                        app.set_status(format!("AI question failed: {}", e));
+                    }
+                }
+                ask_ai_receiver = None;
+            }
+        }
+
+        // Check for single-layer decoding results (non-blocking)
+        if let Some(ref sl_rx) = single_layer_receiver {
+            if let Ok((results, text, branch_context)) = sl_rx.try_recv() {
+                single_layer_receiver = None;
+
+                if results.is_empty() {
+                    app.set_status("No decoders produced output for this text.".to_string());
+                } else {
+                    // Store results as branches in the database
+                    let mut branches_created = 0;
+
+                    if let Some(context) = branch_context {
+                        if let Some(parent_cache_id) = context.parent_cache_id {
+                            for result in &results {
+                                // Only store results that have unencrypted_text
+                                if let Some(outputs) = &result.unencrypted_text {
+                                    if let Some(decoded) = outputs.first() {
+                                        let cache_entry = CacheEntry {
+                                            encoded_text: text.clone(),
+                                            decoded_text: decoded.clone(),
+                                            path: vec![result.clone()],
+                                            execution_time_ms: 0,
+                                            input_length: text.len() as i64,
+                                            decoder_count: 1,
+                                            checker_name: None,
+                                            key_used: result.key.clone(),
+                                        };
+
+                                        if insert_branch(
+                                            &cache_entry,
+                                            parent_cache_id,
+                                            context.branch_step,
+                                            &BranchType::SingleLayer,
+                                        )
+                                        .is_ok()
+                                        {
+                                            branches_created += 1;
+                                        }
+                                    }
+                                }
+                            }
+
+                            // Refresh the branch list for the current step
+                            app.load_branches_for_step();
+                            // Refresh tree data for birds-eye view
+                            app.refresh_tree_branches();
+
+                            app.set_status(format!(
+                                "Created {} branches from single-layer decoding.",
+                                branches_created
+                            ));
+                        } else {
+                            app.set_status(
+                                "Cannot create branches: no parent cache ID.".to_string(),
+                            );
+                        }
+                    } else {
+                        app.set_status(format!(
+                            "Found {} decoder outputs but no branch context.",
+                            results.len()
+                        ));
+                    }
+                }
             }
         }
 

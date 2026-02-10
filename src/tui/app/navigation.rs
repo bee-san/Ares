@@ -23,6 +23,7 @@ impl App {
             current_branches,
             ai_explanation,
             ai_loading,
+            ai_explanation_cache,
             ..
         } = &mut self.state
         {
@@ -30,8 +31,8 @@ impl App {
             if path_len > 0 {
                 *selected_step = (*selected_step + 1) % path_len;
                 *scroll_offset = 0;
-                // Clear AI explanation when changing steps
-                *ai_explanation = None;
+                // Load AI explanation from cache for the new step
+                *ai_explanation = ai_explanation_cache.get(selected_step).cloned();
                 *ai_loading = false;
                 // Reset branch selection when changing steps
                 *highlighted_branch = None;
@@ -63,6 +64,7 @@ impl App {
             current_branches,
             ai_explanation,
             ai_loading,
+            ai_explanation_cache,
             ..
         } = &mut self.state
         {
@@ -74,8 +76,8 @@ impl App {
                     *selected_step - 1
                 };
                 *scroll_offset = 0;
-                // Clear AI explanation when changing steps
-                *ai_explanation = None;
+                // Load AI explanation from cache for the new step
+                *ai_explanation = ai_explanation_cache.get(selected_step).cloned();
                 *ai_loading = false;
                 // Reset branch selection when changing steps
                 *highlighted_branch = None;
@@ -102,12 +104,13 @@ impl App {
             current_branches,
             ai_explanation,
             ai_loading,
+            ai_explanation_cache,
             ..
         } = &mut self.state
         {
             *selected_step = 0;
             *scroll_offset = 0;
-            *ai_explanation = None;
+            *ai_explanation = ai_explanation_cache.get(&0).cloned();
             *ai_loading = false;
             *highlighted_branch = None;
             *branch_scroll_offset = 0;
@@ -131,6 +134,7 @@ impl App {
             current_branches,
             ai_explanation,
             ai_loading,
+            ai_explanation_cache,
             ..
         } = &mut self.state
         {
@@ -138,7 +142,7 @@ impl App {
             if path_len > 0 {
                 *selected_step = path_len - 1;
                 *scroll_offset = 0;
-                *ai_explanation = None;
+                *ai_explanation = ai_explanation_cache.get(selected_step).cloned();
                 *ai_loading = false;
                 *highlighted_branch = None;
                 *branch_scroll_offset = 0;

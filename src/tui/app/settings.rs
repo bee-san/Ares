@@ -59,6 +59,7 @@ impl App {
                 tree_branches,
                 level_visible_rows,
                 ai_explanation,
+                ai_explanation_cache,
                 ..
             } => PreviousState::Results {
                 result: result.clone(),
@@ -72,6 +73,7 @@ impl App {
                 tree_branches: tree_branches.clone(),
                 level_visible_rows: *level_visible_rows,
                 ai_explanation: ai_explanation.clone(),
+                ai_explanation_cache: ai_explanation_cache.clone(),
             },
             AppState::Failure {
                 input_text,
@@ -135,6 +137,7 @@ impl App {
                     tree_branches,
                     level_visible_rows,
                     ai_explanation,
+                    ai_explanation_cache,
                 } => AppState::Results {
                     result,
                     selected_step,
@@ -149,6 +152,7 @@ impl App {
                     level_visible_rows,
                     ai_explanation,
                     ai_loading: false,
+                    ai_explanation_cache,
                 },
                 PreviousState::Failure {
                     input_text,
@@ -683,6 +687,7 @@ impl App {
                         tree_branches,
                         level_visible_rows,
                         ai_explanation,
+                        ai_explanation_cache,
                     } => AppState::Results {
                         result,
                         selected_step,
@@ -697,6 +702,7 @@ impl App {
                         level_visible_rows,
                         ai_explanation,
                         ai_loading: false,
+                        ai_explanation_cache,
                     },
                     PreviousState::Failure {
                         input_text,

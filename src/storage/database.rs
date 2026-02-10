@@ -519,6 +519,11 @@ fn run_branch_migration(conn: &rusqlite::Connection) -> Result<(), rusqlite::Err
         conn.execute("ALTER TABLE cache ADD COLUMN branch_type TEXT", ())?;
     }
 
+    // Add ai_explanations JSON column if it doesn't exist
+    if !columns.contains(&"ai_explanations".to_string()) {
+        conn.execute("ALTER TABLE cache ADD COLUMN ai_explanations JSON", ())?;
+    }
+
     // Create index for efficient branch lookups
     conn.execute(
         "CREATE INDEX IF NOT EXISTS idx_cache_parent_id ON cache(parent_cache_id);",
@@ -2028,6 +2033,99 @@ pub fn clear_ai_cache() -> Result<(), rusqlite::Error> {
     Ok(())
 }
 
+// ============================================================================
+// Cache AI Explanations Functions
+// ============================================================================
+
+/// Updates the AI explanations JSON for a specific cache entry.
+///
+/// Merges the given step explanation into the existing JSON (or creates a new one).
+///
+/// # Arguments
+///
+/// * `cache_id` - The cache entry ID to update
+/// * `step_index` - The step index in the path
+/// * `explanation` - The AI-generated explanation text
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error.
+pub fn update_cache_ai_explanation(
+    cache_id: i64,
+    step_index: usize,
+    explanation: &str,
+) -> Result<(), rusqlite::Error> {
+    let conn = get_db_connection()?;
+
+    // Read existing explanations
+    let existing_json: Option<String> = conn
+        .query_row(
+            "SELECT ai_explanations FROM cache WHERE id = ?1",
+            [cache_id],
+            |row| row.get(0),
+        )
+        .ok();
+
+    let mut explanations: std::collections::HashMap<String, String> = existing_json
+        .as_deref()
+        .and_then(|json| serde_json::from_str(json).ok())
+        .unwrap_or_default();
+
+    explanations.insert(step_index.to_string(), explanation.to_string());
+
+    let json = serde_json::to_string(&explanations).unwrap_or_default();
+    conn.execute(
+        "UPDATE cache SET ai_explanations = ?1 WHERE id = ?2",
+        rusqlite::params![json, cache_id],
+    )?;
+
+    Ok(())
+}
+
+/// Reads all AI explanations for a cache entry.
+///
+/// # Arguments
+///
+/// * `cache_id` - The cache entry ID
+///
+/// # Returns
+///
+/// A HashMap mapping step index to explanation text. Empty if no explanations exist.
+///
+/// # Errors
+///
+/// Returns rusqlite::Error on database error.
+pub fn read_cache_ai_explanations(
+    cache_id: i64,
+) -> Result<std::collections::HashMap<usize, String>, rusqlite::Error> {
+    let conn = get_db_connection()?;
+
+    let json: Option<String> = conn
+        .query_row(
+            "SELECT ai_explanations FROM cache WHERE id = ?1",
+            [cache_id],
+            |row| row.get(0),
+        )
+        .ok()
+        .flatten();
+
+    let map: std::collections::HashMap<usize, String> = json
+        .as_deref()
+        .and_then(|j| {
+            let string_map: std::collections::HashMap<String, String> =
+                serde_json::from_str(j).ok()?;
+            Some(
+                string_map
+                    .into_iter()
+                    .filter_map(|(k, v)| k.parse::<usize>().ok().map(|idx| (idx, v)))
+                    .collect(),
+            )
+        })
+        .unwrap_or_default();
+
+    Ok(map)
+}
+
 #[cfg(test)]
 #[serial_test::serial]
 mod tests {
@@ -2349,7 +2447,7 @@ mod tests {
             generate_cache_row(&encoded_text_2, &decoded_text_2);
         let row_result = insert_cache(&cache_entry_2);
         assert!(row_result.is_ok());
-        assert_eq!(row_result.unwrap(), 1);
+        assert_eq!(row_result.unwrap(), 2);
 
         let stmt_result = conn.prepare("SELECT * FROM cache;");
         let mut stmt = stmt_result.unwrap();
@@ -3261,7 +3359,10 @@ mod tests {
     #[test]
     fn wordlist_read_all_words() {
         set_test_db_path();
-        let _conn = init_database().unwrap();
+        let conn = init_database().unwrap();
+
+        // Clear any leftover words from other tests sharing the in-memory DB
+        conn.execute("DELETE FROM wordlist", ()).unwrap();
 
         // Insert multiple words
         insert_word("word1", "test_source").unwrap();

@@ -28,8 +28,10 @@ pub enum Action {
     /// Save settings and return to previous state.
     SaveSettings,
     /// Show results from a successful history entry.
-    /// Contains (encoded_text, decoded_text, path as JSON strings).
+    /// Contains (cache_id, encoded_text, decoded_text, path as JSON strings).
     ShowHistoryResult {
+        /// The database cache ID for branch linking.
+        cache_id: i64,
         /// The original encoded text.
         encoded_text: String,
         /// The decoded plaintext.
@@ -67,6 +69,13 @@ pub enum Action {
         /// Optional key used by the decoder.
         key: Option<String>,
     },
+    /// Open the Ask AI modal for the selected step.
+    OpenAskAi,
+    /// Submit a question to AI about the selected step.
+    /// Contains the question text.
+    SubmitAskAi(String),
+    /// Close the Ask AI modal.
+    CloseAskAi,
     /// No action required.
     None,
 }
@@ -105,6 +114,11 @@ pub enum Action {
 /// }
 /// ```
 pub fn handle_key_event(app: &mut App, key: KeyEvent) -> Action {
+    // Handle Ask AI overlay FIRST (it floats on top of Results)
+    if app.is_ask_ai_active() {
+        return handle_ask_ai_keys(app, key);
+    }
+
     // Handle decoder search overlay FIRST (it floats on top of Results)
     if app.is_decoder_search_active() {
         return handle_decoder_search_keys(app, key);
@@ -437,6 +451,15 @@ fn handle_results_keys(
             }
             Action::None
         }
+        // Ask AI: open a modal to ask a question about this step
+        KeyCode::Char('a') => {
+            app.pending_g = false;
+            if !crate::ai::is_ai_configured() {
+                app.set_status("AI not configured. Enable in Settings (Ctrl+S).".to_string());
+                return Action::None;
+            }
+            Action::OpenAskAi
+        }
         // Slash: Open decoder search modal - always works
         KeyCode::Char('/') => {
             app.pending_g = false;
@@ -532,6 +555,7 @@ fn handle_home_keys(app: &mut App, key: KeyEvent) -> Action {
                             if entry.successful {
                                 // Successful entry: show results
                                 return Action::ShowHistoryResult {
+                                    cache_id: entry.id,
                                     encoded_text: entry.encoded_text_full.clone(),
                                     decoded_text: entry.decoded_text.clone(),
                                     path: entry.path.clone(),
@@ -1338,6 +1362,92 @@ fn handle_quick_search_keys(app: &mut App, key: KeyEvent) -> Action {
             // Cancel
             KeyCode::Esc => {
                 app.close_quick_search();
+                Action::None
+            }
+            _ => Action::None,
+        }
+    } else {
+        Action::None
+    }
+}
+
+/// Handles key events for the Ask AI overlay.
+fn handle_ask_ai_keys(app: &mut App, key: KeyEvent) -> Action {
+    if let Some(ref mut overlay) = app.ask_ai {
+        match key.code {
+            // Escape closes the modal
+            KeyCode::Esc => Action::CloseAskAi,
+            // Ctrl+Enter submits the question
+            KeyCode::Enter if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                let question = overlay.text_input.get_text();
+                if question.trim().is_empty() {
+                    Action::None
+                } else if overlay.loading {
+                    Action::None
+                } else {
+                    Action::SubmitAskAi(question)
+                }
+            }
+            // Ctrl+C copies the response
+            KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                if let Some(ref response) = overlay.response {
+                    Action::CopyToClipboard(response.clone())
+                } else {
+                    Action::None
+                }
+            }
+            // Regular Enter inserts newline in question input
+            KeyCode::Enter => {
+                overlay.text_input.insert_newline();
+                Action::None
+            }
+            // Text input
+            KeyCode::Char(c) => {
+                if !key.modifiers.contains(KeyModifiers::CONTROL)
+                    && !key.modifiers.contains(KeyModifiers::ALT)
+                {
+                    overlay.text_input.insert_char(c);
+                }
+                Action::None
+            }
+            KeyCode::Backspace => {
+                overlay.text_input.backspace();
+                Action::None
+            }
+            KeyCode::Delete => {
+                overlay.text_input.delete();
+                Action::None
+            }
+            KeyCode::Left => {
+                overlay.text_input.move_cursor_left();
+                Action::None
+            }
+            KeyCode::Right => {
+                overlay.text_input.move_cursor_right();
+                Action::None
+            }
+            KeyCode::Up => {
+                if overlay.response.is_some() {
+                    overlay.response_scroll = overlay.response_scroll.saturating_sub(1);
+                } else {
+                    overlay.text_input.move_cursor_up();
+                }
+                Action::None
+            }
+            KeyCode::Down => {
+                if overlay.response.is_some() {
+                    overlay.response_scroll = overlay.response_scroll.saturating_add(1);
+                } else {
+                    overlay.text_input.move_cursor_down();
+                }
+                Action::None
+            }
+            KeyCode::Home => {
+                overlay.text_input.move_cursor_home();
+                Action::None
+            }
+            KeyCode::End => {
+                overlay.text_input.move_cursor_end();
                 Action::None
             }
             _ => Action::None,

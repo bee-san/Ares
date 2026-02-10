@@ -11,7 +11,9 @@
 //! - [`theme_picker`]: Modal for selecting color themes
 //! - [`toggle_list_editor`]: Modal for selecting items from a fixed set (decoders/checkers)
 //! - [`tree_viewer`]: Birds-eye tree view of the decoder path and all branches
+//! - [`ask_ai_modal`]: Floating modal for asking AI questions about a step
 
+pub mod ask_ai_modal;
 pub mod list_editor;
 pub mod settings_panel;
 pub mod step_details;
@@ -21,6 +23,7 @@ pub mod toggle_list_editor;
 pub mod tree_viewer;
 pub mod wordlist_manager;
 
+pub use ask_ai_modal::render_ask_ai_modal;
 pub use list_editor::{render_list_editor, ListEditor};
 pub use settings_panel::{render_settings_screen, SettingsPanel};
 pub use step_details::render_step_details;

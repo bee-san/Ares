@@ -15,8 +15,9 @@ use super::multiline_text_input::MultilineTextInput;
 use super::settings::SettingsModel;
 use super::spinner::{ENHANCED_SPINNER_FRAMES, QUOTES};
 use super::widgets::{
-    render_list_editor, render_settings_screen as render_settings_panel, render_step_details,
-    render_toggle_list_editor, render_wordlist_manager, TreeViewer, WordlistFocus,
+    render_ask_ai_modal, render_list_editor, render_settings_screen as render_settings_panel,
+    render_step_details, render_toggle_list_editor, render_wordlist_manager, TreeViewer,
+    WordlistFocus,
 };
 use crate::storage::database::BranchSummary;
 use crate::tui::widgets::tree_viewer::TreeNode;
@@ -292,6 +293,11 @@ pub fn draw(frame: &mut Frame, app: &App, colors: &TuiColors) {
             overlay.selected_index,
             colors,
         );
+    }
+
+    // Render Ask AI overlay if active (floats on top of Results screen)
+    if let Some(ref overlay) = app.ask_ai {
+        render_ask_ai_modal(frame, area, overlay, colors);
     }
 
     // Render help overlay if visible
@@ -1316,6 +1322,7 @@ fn draw_status_bar(
             ("[h/l]", "Step"),
             ("[gg/G]", "First/Last"),
             ("[e]", "Explain"),
+            ("[a]", "Ask AI"),
             ("[Tab]", "Focus"),
             ("[Enter]", "Branch"),
             ("[/]", "Search"),
@@ -1328,6 +1335,7 @@ fn draw_status_bar(
             ("[j/k]", "Browse"),
             ("[Enter]", "Select"),
             ("[e]", "Explain"),
+            ("[a]", "Ask AI"),
             ("[Tab]", "Focus"),
             ("[/]", "Search"),
             ("[o]", "Open"),
@@ -1337,6 +1345,7 @@ fn draw_status_bar(
         ],
         ResultsFocus::StepDetails => &[
             ("[e]", "Explain"),
+            ("[a]", "Ask AI"),
             ("[Tab]", "Focus"),
             ("[y]", "Yank"),
             ("[/]", "Search"),
@@ -1425,6 +1434,7 @@ fn draw_help_overlay(
             ("Actions", ""),
             ("y / c", "Yank (copy) output to clipboard"),
             ("e", "Explain step with AI"),
+            ("a", "Ask AI a question about this step"),
             ("o", "Open output in browser"),
             ("Enter", "Select branch or create new branch"),
             ("Backspace", "Return to parent branch"),

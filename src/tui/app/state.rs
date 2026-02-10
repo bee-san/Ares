@@ -144,6 +144,36 @@ pub enum HelpContext {
     Loading,
 }
 
+/// Overlay for asking AI a question about the current step.
+///
+/// This floats over the Results screen, providing a multiline input
+/// for the question, showing step context, and displaying the AI response.
+#[derive(Debug)]
+pub struct AskAiOverlay {
+    /// Multiline text input for the question.
+    pub text_input: MultilineTextInput,
+    /// Name of the decoder for the step being asked about.
+    pub decoder_name: String,
+    /// Input text to the decoder step.
+    pub step_input: String,
+    /// Output text from the decoder step.
+    pub step_output: String,
+    /// Key used by the decoder (if any).
+    pub step_key: Option<String>,
+    /// Description of the decoder.
+    pub step_description: String,
+    /// Reference link for the decoder.
+    pub step_link: String,
+    /// AI's response (None if not yet answered).
+    pub response: Option<String>,
+    /// Whether an AI request is currently in-flight.
+    pub loading: bool,
+    /// Error message if the AI request failed.
+    pub error: Option<String>,
+    /// Scroll offset for the response area (in lines).
+    pub response_scroll: u16,
+}
+
 /// Overlay for vim-style decoder search (floats over Results screen).
 ///
 /// This is implemented as an overlay rather than a state variant so that
@@ -290,7 +320,11 @@ pub enum AppState {
         ai_explanation: Option<String>,
         /// Whether an AI explanation request is currently in progress.
         ai_loading: bool,
+        /// Cache of AI explanations for all steps (step_index -> explanation text).
+        /// This avoids re-fetching explanations when navigating between steps.
+        ai_explanation_cache: std::collections::HashMap<usize, String>,
     },
+    /// Decoding failed to produce any valid plaintext.
     Failure {
         /// The original input text that could not be decoded.
         input_text: String,
@@ -440,7 +474,10 @@ pub enum PreviousState {
         level_visible_rows: usize,
         /// Cached AI explanation text.
         ai_explanation: Option<String>,
+        /// Cache of AI explanations per step.
+        ai_explanation_cache: std::collections::HashMap<usize, String>,
     },
+    /// Was in the failure state (decoding produced no valid plaintext).
     Failure {
         /// The input text.
         input_text: String,

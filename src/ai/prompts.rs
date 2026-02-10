@@ -26,34 +26,90 @@ pub fn build_explain_step_prompt(
     key: Option<&str>,
 ) -> Vec<ChatMessage> {
     let system_prompt = "\
-You are an expert cryptographer and encoding specialist. Your job is to explain \
-how a specific decoder or cipher transforms an input into an output. \
-Keep your explanation clear and concise, suitable for someone learning about \
-cryptography and encoding. \
-\n\n\
-Structure your response as:\n\
-1. A brief description of what the encoding/cipher is (1-2 sentences)\n\
-2. How the specific input was transformed into the output (step-by-step if helpful)\n\
-3. If a key was used, explain how the key affects the transformation\n\
-\n\
-Keep the total response under 200 words. Use plain language, not academic jargon.";
+You are a concise cryptography expert. Explain ONLY the specific transformation shown.
 
-    let user_content = if let Some(key_val) = key {
-        format!(
-            "Explain how the \"{}\" decoder transforms this input into the output.\n\n\
-             Input: {}\n\
-             Output: {}\n\
-             Key used: {}",
-            decoder_name, input, output, key_val
-        )
+Your answer must be:
+1. One sentence about what this decoder does
+2. Exactly how THIS input became THIS output (be concrete, reference the actual data)
+3. If a key was used, briefly mention its role
+
+Keep it under 75 words total. Be direct. Focus on the actual data transformation, not general theory.";
+
+    let key_section = if let Some(key_val) = key {
+        format!("\nKey: {}", key_val)
     } else {
-        format!(
-            "Explain how the \"{}\" decoder transforms this input into the output.\n\n\
-             Input: {}\n\
-             Output: {}",
-            decoder_name, input, output
-        )
+        String::new()
     };
+
+    let user_content = format!(
+        "Decoder: {}\nInput: {}\nOutput: {}{}",
+        decoder_name, input, output, key_section
+    );
+
+    vec![
+        ChatMessage::system(system_prompt),
+        ChatMessage::user(&user_content),
+    ]
+}
+
+/// Truncates text for display in prompts, ensuring we don't send huge payloads.
+fn truncate_for_prompt(text: &str, max_len: usize) -> String {
+    if text.chars().count() <= max_len {
+        text.to_string()
+    } else {
+        format!("{}...", text.chars().take(max_len).collect::<String>())
+    }
+}
+
+/// Builds the prompt messages for answering a user question about a decoder step.
+///
+/// Provides full step context (decoder name, input, output, key, description, link)
+/// so the AI can give a specific, accurate answer.
+///
+/// # Arguments
+///
+/// * `question` - The user's question
+/// * `decoder_name` - The name of the decoder
+/// * `input` - The input text to the decoder step
+/// * `output` - The output text from the decoder step
+/// * `key` - Optional key used by the decoder
+/// * `description` - Short description of the decoder
+/// * `link` - Reference link for the decoder
+pub fn build_ask_about_step_prompt(
+    question: &str,
+    decoder_name: &str,
+    input: &str,
+    output: &str,
+    key: Option<&str>,
+    description: &str,
+    link: &str,
+) -> Vec<ChatMessage> {
+    let system_prompt = "\
+You are an expert in cryptography, encoding, and decoding. \
+Answer the user's question about this decoding step accurately and clearly. \
+Use the provided context to give specific answers. \
+Keep responses concise but thorough (under 300 words).";
+
+    let key_str = key.unwrap_or("N/A");
+    let context = format!(
+        "Context:\n\
+         Decoder: {}\n\
+         Description: {}\n\
+         Input: {} ({} chars)\n\
+         Output: {} ({} chars)\n\
+         Key: {}\n\
+         Reference: {}",
+        decoder_name,
+        description,
+        truncate_for_prompt(input, 200),
+        input.chars().count(),
+        truncate_for_prompt(output, 200),
+        output.chars().count(),
+        key_str,
+        link
+    );
+
+    let user_content = format!("{}\n\nQuestion: {}", context, question);
 
     vec![
         ChatMessage::system(system_prompt),
@@ -140,7 +196,7 @@ mod tests {
         assert!(messages[1].content.contains("Base64"));
         assert!(messages[1].content.contains("SGVsbG8="));
         assert!(messages[1].content.contains("Hello"));
-        assert!(!messages[1].content.contains("Key used"));
+        assert!(!messages[1].content.contains("Key:"));
     }
 
     #[test]
@@ -148,7 +204,7 @@ mod tests {
         let messages = build_explain_step_prompt("Caesar", "Uryyb", "Hello", Some("13"));
         assert_eq!(messages.len(), 2);
         assert!(messages[1].content.contains("Caesar"));
-        assert!(messages[1].content.contains("Key used: 13"));
+        assert!(messages[1].content.contains("Key: 13"));
     }
 
     #[test]
@@ -174,8 +230,8 @@ mod tests {
         let messages = build_explain_step_prompt("Hex", "48656c6c6f", "Hello", None);
         let system = &messages[0].content;
         // System prompt should contain structure guidelines
-        assert!(system.contains("brief description"));
-        assert!(system.contains("200 words"));
+        assert!(system.contains("One sentence"));
+        assert!(system.contains("75 words"));
     }
 
     #[test]

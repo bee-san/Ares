@@ -573,8 +573,18 @@ fn handle_ai_config_keys(app: &mut SetupApp, key: KeyEvent) {
                     KeyCode::Char('n') | KeyCode::Char('N') => {
                         *selected = 0;
                     }
-                    KeyCode::Up | KeyCode::Down | KeyCode::Char('k') | KeyCode::Char('j') => {
-                        *selected = if *selected == 0 { 1 } else { 0 };
+                    KeyCode::Left | KeyCode::Char('h') => {
+                        // Toggle to No
+                        *selected = 0;
+                    }
+                    KeyCode::Right | KeyCode::Char('l') => {
+                        // Toggle to Yes
+                        *selected = 1;
+                    }
+                    KeyCode::Down | KeyCode::Char('j') if *selected == 1 => {
+                        // Move to API URL field if AI is enabled
+                        *focus = AiConfigFocus::ApiUrl;
+                        *cursor = api_url.len();
                     }
                     KeyCode::Tab if *selected == 1 => {
                         // Move to API URL field if AI is enabled
@@ -591,7 +601,7 @@ fn handle_ai_config_keys(app: &mut SetupApp, key: KeyEvent) {
                             *cursor = api_url.len();
                         }
                     }
-                    KeyCode::Backspace | KeyCode::Left | KeyCode::Char('p') => {
+                    KeyCode::Backspace | KeyCode::Char('p') => {
                         app.prev_step();
                     }
                     KeyCode::Esc => app.prev_step(),

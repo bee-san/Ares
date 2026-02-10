@@ -193,6 +193,53 @@ pub fn translate(text: &str, source_language: &str) -> Result<String, AiError> {
     Ok(response)
 }
 
+/// Answers a user's question about a specific decoder step.
+///
+/// Uses the AI model to answer the question with full step context.
+/// Responses are NOT cached (always fresh) since questions are freeform.
+///
+/// # Arguments
+///
+/// * `question` - The user's freeform question
+/// * `decoder_name` - The name of the decoder
+/// * `input` - The input text to the decoder step
+/// * `output` - The output text from the decoder step
+/// * `key` - Optional key used by the decoder
+/// * `description` - Short description of the decoder
+/// * `link` - Reference link for the decoder
+///
+/// # Errors
+///
+/// Returns `AiError::Disabled` if AI is not enabled, `AiError::NotConfigured`
+/// if configuration is incomplete, or other variants for HTTP/API errors.
+pub fn ask_about_step(
+    question: &str,
+    decoder_name: &str,
+    input: &str,
+    output: &str,
+    key: Option<&str>,
+    description: &str,
+    link: &str,
+) -> Result<String, AiError> {
+    let config = get_config();
+    if !config.ai_enabled {
+        return Err(AiError::Disabled);
+    }
+    let client = AiClient::from_config(config).ok_or(AiError::NotConfigured)?;
+
+    let messages = prompts::build_ask_about_step_prompt(
+        question,
+        decoder_name,
+        input,
+        output,
+        key,
+        description,
+        link,
+    );
+    // Higher temperature for conversational responses
+    client.chat_completion(messages, Some(0.7))
+}
+
 /// Parses the JSON response from the language detection prompt.
 fn parse_language_detection_response(response: &str) -> Result<LanguageDetectionResult, AiError> {
     // The model should return a JSON object, but it might include markdown code fences
