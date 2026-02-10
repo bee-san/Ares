@@ -528,7 +528,15 @@ fn handle_action(
         // ----- AI: ask a question -----
         Action::OpenAskAi => app.open_ask_ai(),
         Action::SubmitAskAi(question) => {
-            app.set_ask_ai_loading();
+            // Clone history BEFORE set_ask_ai_loading appends the user message
+            let history = app
+                .ask_ai
+                .as_ref()
+                .map(|o| o.conversation_history.clone())
+                .unwrap_or_default();
+
+            app.set_ask_ai_loading(&question);
+
             if let Some(ref overlay) = app.ask_ai {
                 let decoder_name = overlay.decoder_name.clone();
                 let step_input = overlay.step_input.clone();
@@ -547,6 +555,7 @@ fn handle_action(
                         step_key.as_deref(),
                         &step_description,
                         &step_link,
+                        &history,
                     );
                     let _ = tx.send(BackgroundMessage::AskAiResponse(result));
                 });

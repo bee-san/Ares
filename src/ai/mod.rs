@@ -7,8 +7,9 @@
 //! # Features
 //!
 //! - **Step explanation**: Explain how a decoder transforms input to output
+//! - **Ask about step**: Answer questions about a decoder step (with conversation history)
 //! - **Language detection**: Detect if text is in a foreign language
-//! - **Translation**: Translate foreign language text to English
+//! - **Translation**: Translate foreign language text to English with language description
 //!
 //! # Configuration
 //!
@@ -23,6 +24,9 @@
 //! AI responses are cached in SQLite (`ai_cache` table) to avoid redundant API
 //! calls. The cache key includes the function type, input parameters, and model
 //! name, so switching models automatically invalidates the cache.
+//!
+//! Cache keys use null byte (`\0`) separators to prevent collisions when
+//! parameters contain common delimiter characters.
 
 /// HTTP client for OpenAI-compatible API endpoints.
 pub mod client;
@@ -31,7 +35,7 @@ pub mod error;
 /// Prompt templates for each AI use case.
 pub mod prompts;
 
-use client::AiClient;
+use client::{AiClient, ChatMessage};
 use error::AiError;
 
 use crate::config::get_config;
@@ -59,12 +63,13 @@ pub struct TranslationWithDescription {
 
 /// Computes a deterministic cache key from the function type, model, and input parameters.
 ///
-/// The key format is `function_type|model|param1|param2|...` which provides
-/// uniqueness across different functions and model configurations.
+/// Uses null byte (`\0`) as separator to avoid collisions — null bytes cannot
+/// appear in valid UTF-8 text content, making collisions impossible regardless
+/// of what characters the parameters contain.
 fn compute_cache_key(function_type: &str, model: &str, params: &[&str]) -> String {
-    let mut key = format!("{}|{}", function_type, model);
+    let mut key = format!("{}\0{}", function_type, model);
     for param in params {
-        key.push('|');
+        key.push('\0');
         key.push_str(param);
     }
     key
@@ -122,7 +127,7 @@ pub fn explain_step(
     }
 
     let messages = prompts::build_explain_step_prompt(decoder_name, input, output, key);
-    let response = client.chat_completion(messages, Some(0.3))?;
+    let response = client.chat_completion(messages, Some(0.3), Some(300))?;
 
     // Store in cache (best-effort, ignore errors)
     let _ = insert_ai_cache(&cache_key, "explain_step", &response, client.model());
@@ -157,7 +162,7 @@ pub fn detect_language(text: &str) -> Result<LanguageDetectionResult, AiError> {
     }
 
     let messages = prompts::build_detect_language_prompt(text);
-    let response = client.chat_completion(messages, Some(0.1))?;
+    let response = client.chat_completion(messages, Some(0.1), Some(100))?;
 
     // Store in cache (best-effort, ignore errors)
     let _ = insert_ai_cache(&cache_key, "detect_language", &response, client.model());
@@ -166,46 +171,14 @@ pub fn detect_language(text: &str) -> Result<LanguageDetectionResult, AiError> {
     parse_language_detection_response(&response)
 }
 
-/// Translates text from a detected source language into English.
-///
-/// This should be called after `detect_language` confirms the text is
-/// in a foreign language.
-///
-/// # Arguments
-///
-/// * `text` - The text to translate
-/// * `source_language` - The detected source language (e.g., "French", "Japanese")
-///
-/// # Errors
-///
-/// Returns `AiError::Disabled` if AI is not enabled, `AiError::NotConfigured`
-/// if configuration is incomplete, or other variants for HTTP/API errors.
-pub fn translate(text: &str, source_language: &str) -> Result<String, AiError> {
-    let config = get_config();
-    if !config.ai_enabled {
-        return Err(AiError::Disabled);
-    }
-    let client = AiClient::from_config(config).ok_or(AiError::NotConfigured)?;
-
-    // Check cache first
-    let cache_key = compute_cache_key("translate", client.model(), &[text, source_language]);
-    if let Ok(Some(cached)) = read_ai_cache(&cache_key) {
-        return Ok(cached.response);
-    }
-
-    let messages = prompts::build_translate_prompt(text, source_language);
-    let response = client.chat_completion(messages, Some(0.3))?;
-
-    // Store in cache (best-effort, ignore errors)
-    let _ = insert_ai_cache(&cache_key, "translate", &response, client.model());
-
-    Ok(response)
-}
-
 /// Answers a user's question about a specific decoder step.
 ///
 /// Uses the AI model to answer the question with full step context.
-/// Responses are NOT cached (always fresh) since questions are freeform.
+/// Supports multi-turn conversation by accepting prior conversation history
+/// (user/assistant message pairs).
+///
+/// Responses are NOT cached (always fresh) since questions are freeform
+/// and conversation history makes caching impractical.
 ///
 /// # Arguments
 ///
@@ -216,11 +189,13 @@ pub fn translate(text: &str, source_language: &str) -> Result<String, AiError> {
 /// * `key` - Optional key used by the decoder
 /// * `description` - Short description of the decoder
 /// * `link` - Reference link for the decoder
+/// * `history` - Previous conversation messages for multi-turn context
 ///
 /// # Errors
 ///
 /// Returns `AiError::Disabled` if AI is not enabled, `AiError::NotConfigured`
 /// if configuration is incomplete, or other variants for HTTP/API errors.
+#[allow(clippy::too_many_arguments)]
 pub fn ask_about_step(
     question: &str,
     decoder_name: &str,
@@ -229,6 +204,7 @@ pub fn ask_about_step(
     key: Option<&str>,
     description: &str,
     link: &str,
+    history: &[ChatMessage],
 ) -> Result<String, AiError> {
     let config = get_config();
     if !config.ai_enabled {
@@ -244,9 +220,10 @@ pub fn ask_about_step(
         key,
         description,
         link,
+        history,
     );
     // Higher temperature for conversational responses
-    client.chat_completion(messages, Some(0.7))
+    client.chat_completion(messages, Some(0.7), Some(2048))
 }
 
 /// Translates text from a detected source language into English, with a language description.
@@ -284,7 +261,7 @@ pub fn translate_with_description(
     }
 
     let messages = prompts::build_translate_with_description_prompt(text, source_language);
-    let response = client.chat_completion(messages, Some(0.3))?;
+    let response = client.chat_completion(messages, Some(0.3), Some(1024))?;
 
     // Store in cache (best-effort, ignore errors)
     let _ = insert_ai_cache(
@@ -374,7 +351,7 @@ mod tests {
             "gpt-4o-mini",
             &["Base64", "input", "output", ""],
         );
-        assert_eq!(key, "explain_step|gpt-4o-mini|Base64|input|output|");
+        assert_eq!(key, "explain_step\0gpt-4o-mini\0Base64\0input\0output\0");
     }
 
     #[test]
@@ -396,6 +373,23 @@ mod tests {
         let key1 = compute_cache_key("translate", "model", &["hello", "French"]);
         let key2 = compute_cache_key("translate", "model", &["world", "French"]);
         assert_ne!(key1, key2);
+    }
+
+    #[test]
+    fn test_compute_cache_key_no_pipe_collision() {
+        // With old `|` separator, these would collide:
+        // "a|b" + "c" vs "a" + "b|c"
+        // With `\0` separator, they must be different.
+        let key1 = compute_cache_key("f", "m", &["a|b", "c"]);
+        let key2 = compute_cache_key("f", "m", &["a", "b|c"]);
+        assert_ne!(key1, key2);
+    }
+
+    #[test]
+    fn test_compute_cache_key_uses_null_separator() {
+        let key = compute_cache_key("func", "model", &["p1", "p2"]);
+        assert!(key.contains('\0'));
+        assert!(!key.contains('|'));
     }
 
     #[test]

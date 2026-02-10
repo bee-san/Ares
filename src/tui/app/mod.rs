@@ -734,6 +734,7 @@ impl App {
                     loading: false,
                     error: None,
                     response_scroll: 0,
+                    conversation_history: Vec::new(),
                 });
             }
         }
@@ -749,21 +750,40 @@ impl App {
         self.ask_ai.is_some()
     }
 
-    /// Sets the Ask AI overlay to loading state.
-    pub fn set_ask_ai_loading(&mut self) {
+    /// Sets the Ask AI overlay to loading state and records the user question in history.
+    ///
+    /// # Arguments
+    ///
+    /// * `question` - The user's question text to record in conversation history
+    pub fn set_ask_ai_loading(&mut self, question: &str) {
         if let Some(ref mut overlay) = self.ask_ai {
             overlay.loading = true;
             overlay.error = None;
+
+            // Record the user's question in conversation history
+            overlay
+                .conversation_history
+                .push(crate::ai::client::ChatMessage::user(question));
         }
     }
 
-    /// Sets the Ask AI response text.
+    /// Sets the Ask AI response text and appends the Q&A pair to conversation history.
+    ///
+    /// # Arguments
+    ///
+    /// * `response` - The AI's response text
     pub fn set_ask_ai_response(&mut self, response: String) {
         if let Some(ref mut overlay) = self.ask_ai {
-            overlay.response = Some(response);
+            overlay.response = Some(response.clone());
             overlay.loading = false;
             overlay.error = None;
             overlay.response_scroll = 0;
+
+            // Append the assistant response to conversation history.
+            // The user message was already appended in set_ask_ai_loading_with_question.
+            overlay
+                .conversation_history
+                .push(crate::ai::client::ChatMessage::assistant(&response));
         }
     }
 

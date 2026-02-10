@@ -12,8 +12,15 @@ pub enum AiError {
     NotConfigured,
     /// AI features are disabled in the config.
     Disabled,
-    /// HTTP request failed (network error, timeout, etc.).
+    /// HTTP request failed (network error, DNS resolution, etc.).
     HttpError(String),
+    /// The HTTP request timed out (connect or read timeout).
+    Timeout,
+    /// The API returned HTTP 429 (rate limited).
+    RateLimited {
+        /// Optional `Retry-After` value in seconds from the response header.
+        retry_after: Option<u64>,
+    },
     /// The API returned a non-success status code.
     ApiError {
         /// HTTP status code returned by the API.
@@ -33,6 +40,14 @@ impl fmt::Display for AiError {
             }
             AiError::Disabled => write!(f, "AI features are disabled in the configuration"),
             AiError::HttpError(msg) => write!(f, "HTTP request failed: {}", msg),
+            AiError::Timeout => write!(f, "AI request timed out"),
+            AiError::RateLimited { retry_after } => {
+                if let Some(secs) = retry_after {
+                    write!(f, "Rate limited by API (retry after {}s)", secs)
+                } else {
+                    write!(f, "Rate limited by API")
+                }
+            }
             AiError::ApiError { status, message } => {
                 write!(f, "API error (status {}): {}", status, message)
             }
@@ -45,7 +60,11 @@ impl std::error::Error for AiError {}
 
 impl From<reqwest::Error> for AiError {
     fn from(err: reqwest::Error) -> Self {
-        AiError::HttpError(err.to_string())
+        if err.is_timeout() {
+            AiError::Timeout
+        } else {
+            AiError::HttpError(err.to_string())
+        }
     }
 }
 
@@ -73,8 +92,32 @@ mod tests {
 
     #[test]
     fn test_display_http_error() {
-        let err = AiError::HttpError("connection timeout".to_string());
-        assert!(err.to_string().contains("connection timeout"));
+        let err = AiError::HttpError("connection refused".to_string());
+        assert!(err.to_string().contains("connection refused"));
+    }
+
+    #[test]
+    fn test_display_timeout() {
+        let err = AiError::Timeout;
+        assert!(err.to_string().contains("timed out"));
+    }
+
+    #[test]
+    fn test_display_rate_limited_with_retry() {
+        let err = AiError::RateLimited {
+            retry_after: Some(30),
+        };
+        let display = err.to_string();
+        assert!(display.contains("Rate limited"));
+        assert!(display.contains("30s"));
+    }
+
+    #[test]
+    fn test_display_rate_limited_without_retry() {
+        let err = AiError::RateLimited { retry_after: None };
+        let display = err.to_string();
+        assert!(display.contains("Rate limited"));
+        assert!(!display.contains("retry after"));
     }
 
     #[test]

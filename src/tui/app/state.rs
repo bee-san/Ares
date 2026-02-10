@@ -19,6 +19,8 @@ use crate::storage::database::BranchSummary;
 use crate::tui::widgets::tree_viewer::TreeNode;
 use crate::DecoderResult;
 
+use crate::ai::client::ChatMessage;
+
 use super::super::multiline_text_input::MultilineTextInput;
 use super::super::settings::SettingsModel;
 use super::super::text_input::TextInput;
@@ -154,6 +156,8 @@ pub enum HelpContext {
 ///
 /// This floats over the Results screen, providing a multiline input
 /// for the question, showing step context, and displaying the AI response.
+/// Supports multi-turn conversation by maintaining a history of
+/// user/assistant message pairs.
 #[derive(Debug)]
 pub struct AskAiOverlay {
     /// Multiline text input for the question.
@@ -178,6 +182,8 @@ pub struct AskAiOverlay {
     pub error: Option<String>,
     /// Scroll offset for the response area (in lines).
     pub response_scroll: u16,
+    /// Conversation history for multi-turn Q&A (user/assistant pairs).
+    pub conversation_history: Vec<ChatMessage>,
 }
 
 /// Overlay for vim-style decoder search (floats over Results screen).

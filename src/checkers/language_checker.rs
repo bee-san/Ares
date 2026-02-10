@@ -48,8 +48,10 @@ impl Check for Checker<LanguageChecker> {
             return result;
         }
 
-        // Skip very short text (unlikely to be meaningful foreign language)
-        if text.len() < 3 {
+        // Skip very short text (unlikely to be meaningful foreign language).
+        // Use char count for Unicode safety, and require at least 20 chars
+        // since language detection on very short strings is unreliable.
+        if text.chars().count() < 20 {
             return result;
         }
 

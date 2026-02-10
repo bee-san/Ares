@@ -3,12 +3,29 @@
 //! This module provides a client that can communicate with any OpenAI-compatible
 //! API endpoint (OpenAI, Ollama, LM Studio, Azure OpenAI, etc.) using the
 //! standard chat completions API.
+//!
+//! Features:
+//! - Configurable connect and request timeouts
+//! - Automatic retry with exponential backoff for transient errors (5xx)
+//! - Dedicated handling of 429 (rate limited) responses
+
+use std::thread;
+use std::time::Duration;
 
 use serde::{Deserialize, Serialize};
 
 use crate::config::Config;
 
 use super::error::AiError;
+
+/// Maximum number of retries for transient (5xx) errors.
+const MAX_RETRIES: u32 = 2;
+/// Base delay for exponential backoff between retries (in milliseconds).
+const RETRY_BASE_DELAY_MS: u64 = 1000;
+/// Connect timeout for HTTP requests (in seconds).
+const CONNECT_TIMEOUT_SECS: u64 = 10;
+/// Total request timeout for HTTP requests (in seconds).
+const REQUEST_TIMEOUT_SECS: u64 = 60;
 
 /// A message in a chat completion request.
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -32,6 +49,14 @@ impl ChatMessage {
     pub fn user(content: &str) -> Self {
         Self {
             role: "user".to_string(),
+            content: content.to_string(),
+        }
+    }
+
+    /// Creates a new assistant message.
+    pub fn assistant(content: &str) -> Self {
+        Self {
+            role: "assistant".to_string(),
             content: content.to_string(),
         }
     }
@@ -113,20 +138,26 @@ impl AiClient {
 
     /// Sends a chat completion request and returns the assistant's response text.
     ///
+    /// Includes automatic retry with exponential backoff for transient (5xx) errors.
+    /// Does not retry client errors (4xx) except 429 which is surfaced as `RateLimited`.
+    ///
     /// # Arguments
     ///
     /// * `messages` - The conversation messages to send
     /// * `temperature` - Optional sampling temperature (defaults to model's default)
+    /// * `max_tokens` - Optional maximum tokens for the response
     ///
     /// # Errors
     ///
-    /// Returns `AiError::HttpError` if the request fails, `AiError::ApiError` if the
-    /// API returns a non-success status code, or `AiError::ParseError` if the response
-    /// cannot be parsed.
+    /// Returns `AiError::Timeout` if the request times out, `AiError::RateLimited`
+    /// for 429 responses, `AiError::HttpError` for network failures,
+    /// `AiError::ApiError` for other non-success status codes, or
+    /// `AiError::ParseError` if the response cannot be parsed.
     pub fn chat_completion(
         &self,
         messages: Vec<ChatMessage>,
         temperature: Option<f32>,
+        max_tokens: Option<u32>,
     ) -> Result<String, AiError> {
         let url = format!("{}/chat/completions", self.api_url.trim_end_matches('/'));
 
@@ -134,38 +165,96 @@ impl AiClient {
             model: self.model.clone(),
             messages,
             temperature,
-            max_tokens: Some(2048),
+            max_tokens,
         };
 
-        let client = reqwest::blocking::Client::new();
-        let response = client
-            .post(&url)
-            .header("Content-Type", "application/json")
-            .header("Authorization", format!("Bearer {}", self.api_key))
-            .json(&request_body)
-            .send()?;
+        let client = reqwest::blocking::Client::builder()
+            .connect_timeout(Duration::from_secs(CONNECT_TIMEOUT_SECS))
+            .timeout(Duration::from_secs(REQUEST_TIMEOUT_SECS))
+            .build()
+            .map_err(|e| AiError::HttpError(e.to_string()))?;
 
-        let status = response.status().as_u16();
-        let body = response.text()?;
+        let mut last_error: Option<AiError> = None;
 
-        if status != 200 {
-            // Try to parse error response for a helpful message
-            let message = match serde_json::from_str::<ApiErrorResponse>(&body) {
-                Ok(err_resp) => err_resp.error.message,
-                Err(_) => body,
+        for attempt in 0..=MAX_RETRIES {
+            if attempt > 0 {
+                // Exponential backoff: 1s, 2s
+                let delay_ms = RETRY_BASE_DELAY_MS * (1 << (attempt - 1));
+                thread::sleep(Duration::from_millis(delay_ms));
+            }
+
+            let response = match client
+                .post(&url)
+                .header("Content-Type", "application/json")
+                .header("Authorization", format!("Bearer {}", self.api_key))
+                .json(&request_body)
+                .send()
+            {
+                Ok(resp) => resp,
+                Err(e) => {
+                    let ai_err: AiError = e.into();
+                    // Don't retry timeouts  they'll just timeout again
+                    if matches!(ai_err, AiError::Timeout) {
+                        return Err(ai_err);
+                    }
+                    last_error = Some(ai_err);
+                    continue;
+                }
             };
-            return Err(AiError::ApiError { status, message });
+
+            let status = response.status().as_u16();
+
+            // Handle 429 (rate limited)  don't retry, surface immediately
+            if status == 429 {
+                let retry_after = response
+                    .headers()
+                    .get("retry-after")
+                    .and_then(|v| v.to_str().ok())
+                    .and_then(|v| v.parse::<u64>().ok());
+                return Err(AiError::RateLimited { retry_after });
+            }
+
+            let body = match response.text() {
+                Ok(b) => b,
+                Err(e) => {
+                    last_error = Some(e.into());
+                    continue;
+                }
+            };
+
+            // Retry on 5xx (server) errors
+            if status >= 500 {
+                let message = match serde_json::from_str::<ApiErrorResponse>(&body) {
+                    Ok(err_resp) => err_resp.error.message,
+                    Err(_) => body,
+                };
+                last_error = Some(AiError::ApiError { status, message });
+                continue;
+            }
+
+            // Don't retry 4xx (client) errors
+            if status != 200 {
+                let message = match serde_json::from_str::<ApiErrorResponse>(&body) {
+                    Ok(err_resp) => err_resp.error.message,
+                    Err(_) => body,
+                };
+                return Err(AiError::ApiError { status, message });
+            }
+
+            // Success  parse response
+            let parsed: ChatCompletionResponse = serde_json::from_str(&body)?;
+            let content = parsed
+                .choices
+                .into_iter()
+                .next()
+                .map(|c| c.message.content)
+                .unwrap_or_default();
+
+            return Ok(content);
         }
 
-        let parsed: ChatCompletionResponse = serde_json::from_str(&body)?;
-        let content = parsed
-            .choices
-            .into_iter()
-            .next()
-            .map(|c| c.message.content)
-            .unwrap_or_default();
-
-        Ok(content)
+        // All retries exhausted
+        Err(last_error.unwrap_or_else(|| AiError::HttpError("All retries exhausted".to_string())))
     }
 
     /// Returns the configured model name.
@@ -195,6 +284,13 @@ mod tests {
         let msg = ChatMessage::user("Hello!");
         assert_eq!(msg.role, "user");
         assert_eq!(msg.content, "Hello!");
+    }
+
+    #[test]
+    fn test_chat_message_assistant() {
+        let msg = ChatMessage::assistant("I can help with that.");
+        assert_eq!(msg.role, "assistant");
+        assert_eq!(msg.content, "I can help with that.");
     }
 
     #[test]
@@ -253,6 +349,20 @@ mod tests {
         assert!(json.contains("system"));
         assert!(json.contains("user"));
         assert!(json.contains("temperature"));
+    }
+
+    #[test]
+    fn test_chat_completion_request_serialization_no_max_tokens() {
+        let request = ChatCompletionRequest {
+            model: "gpt-4o-mini".to_string(),
+            messages: vec![ChatMessage::user("Hi")],
+            temperature: None,
+            max_tokens: None,
+        };
+
+        let json = serde_json::to_string(&request).unwrap();
+        assert!(!json.contains("max_tokens"));
+        assert!(!json.contains("temperature"));
     }
 
     #[test]
