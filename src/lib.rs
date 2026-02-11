@@ -11,6 +11,8 @@
 pub mod ai;
 /// Library API input structure.
 mod api_library_input_struct;
+/// Unified error types for ciphey operations.
+pub mod error;
 /// Checkers is a module that contains the functions that check if the input is plaintext
 pub mod checkers;
 /// CLI Arg Parsing library

@@ -12,8 +12,11 @@ use crate::DecoderResult;
 
 /// Breadth first search is our search algorithm
 /// https://en.wikipedia.org/wiki/Breadth-first_search
+/// Maintained as an alternative search algorithm to A*. While A* is the primary
+/// search strategy (see `astar.rs`), BFS is kept as a simpler fallback that
+/// doesn't require heuristic tuning.
 #[allow(dead_code)]
-pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
+pub(crate) fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
     let initial = DecoderResult {
         text: vec![input],
         path: vec![],

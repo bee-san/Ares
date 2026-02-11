@@ -340,10 +340,10 @@ fn expand_node(
     // Prevent reciprocal decoders from being applied consecutively
     if let Some(last_decoder) = current_node.state.path.last() {
         if last_decoder.checker_description.contains("reciprocal") {
-            let excluded_name = &last_decoder.decoder;
+            let excluded_name = last_decoder.decoder;
             decoders
                 .components
-                .retain(|d| d.get_name() != *excluded_name);
+                .retain(|d| *d != excluded_name);
         }
     }
 
@@ -471,7 +471,7 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
     let all_decoder_names: Vec<String> = all_decoders
         .components
         .iter()
-        .map(|d| d.get_name().to_string())
+        .map(|d| d.to_string())
         .collect();
 
     // Calculate heuristic before moving input

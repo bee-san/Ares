@@ -1,7 +1,7 @@
 /// Athena checker runs all other checkers and returns immediately when a plaintext is found.
 /// This is the standard checker that exits early when a plaintext is found.
 /// For a version that continues checking and collects all plaintexts, see WaitAthena.
-use crate::{checkers::checker_result::CheckResult, cli_pretty_printing, config::get_config};
+use crate::{checkers::checker_result::CheckResult, config::get_config};
 use gibberish_or_not::Sensitivity;
 use lemmeknow::Identifier;
 use log::trace;
@@ -29,10 +29,37 @@ fn should_run_checker(checker_name: &str) -> bool {
     config.checkers_to_run.is_empty() || config.checkers_to_run.contains(&checker_name.to_string())
 }
 
+/// Run a single checker and, if it identifies plaintext, pass it through
+/// the human checker. Returns `Some(CheckResult)` if the checker identified
+/// the text (human may have accepted or rejected), `None` otherwise.
+///
+/// This eliminates the repeated 8-line pattern that was duplicated for every
+/// checker in the old Athena implementation.
+fn run_checker_with_human<T>(
+    checker: &Checker<T>,
+    checker_result: &CheckResult,
+) -> Option<CheckResult> {
+    if !checker_result.is_identified {
+        return None;
+    }
+
+    let human_result = human_checker::human_checker(checker_result);
+    trace!(
+        "Human checker called from {} with result: {}",
+        checker.name,
+        human_result
+    );
+
+    let mut check_res = CheckResult::new(checker);
+    check_res.is_identified = human_result;
+    check_res.text = checker_result.text.clone();
+    check_res.description = checker_result.description.clone();
+    Some(check_res)
+}
+
 impl Check for Checker<Athena> {
     fn new() -> Self {
         Checker {
-            // TODO: Update fields with proper values
             name: "Athena Checker",
             description: "Runs all available checkers",
             link: "",
@@ -55,18 +82,8 @@ impl Check for Checker<Athena> {
             trace!("running regex");
             let regex_checker = Checker::<RegexChecker>::new().with_sensitivity(self.sensitivity);
             let regex_result = regex_checker.check(text);
-            if regex_result.is_identified {
-                let mut check_res = CheckResult::new(&regex_checker);
-                trace!("DEBUG: Athena - About to run human checker for regex result");
-                let human_result = human_checker::human_checker(&regex_result);
-                trace!(
-                    "Human checker called from regex checker with result: {}",
-                    human_result
-                );
-                check_res.is_identified = human_result;
-                check_res.text = regex_result.text;
-                check_res.description = regex_result.description;
-                return check_res;
+            if let Some(res) = run_checker_with_human(&regex_checker, &regex_result) {
+                return res;
             }
         } else if config.regex.is_none() {
             // Run wordlist checker first if a wordlist is provided (and enabled)
@@ -75,43 +92,18 @@ impl Check for Checker<Athena> {
                 let wordlist_checker =
                     Checker::<WordlistChecker>::new().with_sensitivity(self.sensitivity);
                 let wordlist_result = wordlist_checker.check(text);
-                if wordlist_result.is_identified {
-                    let mut check_res = CheckResult::new(&wordlist_checker);
-                    let human_result = human_checker::human_checker(&wordlist_result);
-                    trace!(
-                        "Human checker called from wordlist checker with result: {}",
-                        human_result
-                    );
-                    check_res.is_identified = human_result;
-                    check_res.text = wordlist_result.text;
-                    check_res.description = wordlist_result.description;
-                    cli_pretty_printing::success(&format!(
-                        "DEBUG: Athena wordlist checker - human_result: {}, check_res.is_identified: {}",
-                        human_result, check_res.is_identified
-                    ));
-                    return check_res;
+                if let Some(res) = run_checker_with_human(&wordlist_checker, &wordlist_result) {
+                    return res;
                 }
             }
 
             // In Ciphey if the user uses the regex checker all the other checkers turn off
             // This is because they are looking for one specific bit of information so will not want the other checkers
-            // TODO: wrap all checkers in oncecell so we only create them once!
             if should_run_checker("LemmeKnow Checker") {
                 let lemmeknow = Checker::<LemmeKnow>::new().with_sensitivity(self.sensitivity);
                 let lemmeknow_result = lemmeknow.check(text);
-                //println!("Text is {}", text);
-                if lemmeknow_result.is_identified {
-                    let mut check_res = CheckResult::new(&lemmeknow);
-                    let human_result = human_checker::human_checker(&lemmeknow_result);
-                    trace!(
-                        "Human checker called from lemmeknow checker with result: {}",
-                        human_result
-                    );
-                    check_res.is_identified = human_result;
-                    check_res.text = lemmeknow_result.text;
-                    check_res.description = lemmeknow_result.description;
-                    cli_pretty_printing::success(&format!("DEBUG: Athena lemmeknow checker - human_result: {}, check_res.is_identified: {}", human_result, check_res.is_identified));
-                    return check_res;
+                if let Some(res) = run_checker_with_human(&lemmeknow, &lemmeknow_result) {
+                    return res;
                 }
             }
 
@@ -119,39 +111,16 @@ impl Check for Checker<Athena> {
             if should_run_checker("Password Checker") {
                 let password = Checker::<PasswordChecker>::new().with_sensitivity(self.sensitivity);
                 let password_result = password.check(text);
-                if password_result.is_identified {
-                    let mut check_res = CheckResult::new(&password);
-                    let human_result = human_checker::human_checker(&password_result);
-                    trace!(
-                        "Human checker called from password checker with result: {}",
-                        human_result
-                    );
-                    check_res.is_identified = human_result;
-                    check_res.text = password_result.text;
-                    check_res.description = password_result.description;
-                    cli_pretty_printing::success(&format!("DEBUG: Athena password checker - human_result: {}, check_res.is_identified: {}", human_result, check_res.is_identified));
-                    return check_res;
+                if let Some(res) = run_checker_with_human(&password, &password_result) {
+                    return res;
                 }
             }
 
             if should_run_checker("English Checker") {
                 let english = Checker::<EnglishChecker>::new().with_sensitivity(self.sensitivity);
                 let english_result = english.check(text);
-                if english_result.is_identified {
-                    let mut check_res = CheckResult::new(&english);
-                    let human_result = human_checker::human_checker(&english_result);
-                    trace!(
-                        "Human checker called from english checker with result: {}",
-                        human_result
-                    );
-                    check_res.is_identified = human_result;
-                    check_res.text = english_result.text;
-                    check_res.description = english_result.description;
-                    cli_pretty_printing::success(&format!(
-                        "DEBUG: Athena english checker - human_result: {}, check_res.is_identified: {}",
-                        human_result, check_res.is_identified
-                    ));
-                    return check_res;
+                if let Some(res) = run_checker_with_human(&english, &english_result) {
+                    return res;
                 }
             }
         }

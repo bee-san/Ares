@@ -132,9 +132,22 @@ pub fn default_quick_searches() -> Vec<String> {
 /// Cell for storing global Config
 static CONFIG: OnceCell<Config> = OnceCell::new();
 
-/// To initialize global config with custom values
+/// To initialize global config with custom values.
+///
+/// # Warning
+///
+/// This must be called **before** any call to `get_config()`, because
+/// `get_config()` will initialize the config with `Config::default()` via
+/// `OnceLock::get_or_init`. If `set_global_config` is called after that,
+/// the user-provided config is silently discarded.
 pub fn set_global_config(config: Config) {
-    CONFIG.set(config).ok(); // ok() used to make compiler happy about using Result
+    if CONFIG.set(config).is_err() {
+        log::warn!(
+            "set_global_config() called but CONFIG was already initialized. \
+             User-provided config was discarded. Ensure set_global_config() \
+             is called before any call to get_config()."
+        );
+    }
 }
 
 /// Get the global config.
@@ -619,12 +632,28 @@ pub fn create_config_from_setup(setup_config: std::collections::HashMap<String, 
     config
 }
 
-/// Save a Config struct to a file
+/// Save a Config struct to a file.
+///
+/// # Panics
+///
+/// This function will panic if:
+/// - The config cannot be serialized to TOML
+/// - The file cannot be created or written to
+///
+/// For a fallible version, use the individual operations with `?` directly.
 pub fn save_config_to_file(config: &Config, path: &std::path::Path) {
-    let toml_string = toml::to_string_pretty(config).expect("Could not serialize config");
-    let mut file = File::create(path).expect("Could not create config file");
-    file.write_all(toml_string.as_bytes())
-        .expect("Could not write to config file");
+    let toml_string = toml::to_string_pretty(config)
+        .expect("Could not serialize config (this is a bug  Config should always be serializable)");
+    let mut file = File::create(path).unwrap_or_else(|e| {
+        panic!("Could not create config file at '{}': {}", path.display(), e)
+    });
+    file.write_all(toml_string.as_bytes()).unwrap_or_else(|e| {
+        panic!(
+            "Could not write to config file at '{}': {}",
+            path.display(),
+            e
+        )
+    });
 }
 
 /// Saves the given config to the standard config file location.

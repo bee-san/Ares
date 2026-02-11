@@ -41,7 +41,7 @@ mod helper_functions;
 ///    We can return an Option? An Enum? And then match on that
 ///    So if we return CrackSuccess we return
 ///    Else if we return an array, we add it to the children and go again.
-pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
+pub(crate) fn search_for_plaintext(input: String) -> Option<DecoderResult> {
     let config = get_config();
     let timeout = config.timeout;
     let timer = timer::start(timeout);
@@ -103,7 +103,8 @@ pub fn search_for_plaintext(input: String) -> Option<DecoderResult> {
 /// Performs the decodings by getting all of the decoders
 /// and calling `.run` which in turn loops through them and calls
 /// `.crack()`.
-#[allow(dead_code)]
+///
+/// Used by the BFS search algorithm (an alternative to A*).
 fn perform_decoding(text: &DecoderResult) -> MyResults {
     let decoders = filter_and_get_decoders(text);
     let athena_checker = Checker::<Athena>::new();

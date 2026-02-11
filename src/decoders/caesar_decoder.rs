@@ -54,6 +54,15 @@ impl Crack for Decoder<CaesarDecoder> {
     fn crack(&self, text: &str, checker: &CheckerTypes) -> CrackResult {
         trace!("Trying Caesar Cipher with text {:?}", text);
         let mut results = CrackResult::new(self, text.to_string());
+
+        // Short-circuit: if the input has no alphabetic characters, Caesar
+        // cipher cannot produce any different output (it only rotates letters).
+        // This avoids 25 wasted iterations on inputs like "12345" or "###".
+        if !text.chars().any(|c| c.is_ascii_alphabetic()) {
+            trace!("Caesar short-circuit: no alphabetic characters in input");
+            return results;
+        }
+
         let mut decoded_strings = Vec::new();
 
         // Use the checker with Low sensitivity for Caesar cipher

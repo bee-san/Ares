@@ -19,19 +19,102 @@ use crate::decoders::DECODER_MAP;
 use crate::CrackResult;
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
-use std::sync::Mutex;
+use std::sync::RwLock;
 
-/// Track decoder success rates for adaptive learning
-pub static DECODER_SUCCESS_RATES: Lazy<Mutex<HashMap<String, (usize, usize)>>> =
-    Lazy::new(|| Mutex::new(HashMap::new()));
+// ── A* Heuristic & Path Complexity Constants ──────────────────────────
+
+/// Base cost for applying a different encoder (e.g. Base64 → Hex).
+const ENCODER_BASE_COST: f32 = 0.7;
+
+/// Cost for applying the same encoder again (e.g. base64 → base64).
+/// Kept very low because nested same-encoding is common in CTFs.
+const REPEATED_ENCODER_COST: f32 = 0.2;
+
+/// Base cost multiplier for cipher decoders.
+/// The actual cost is `CIPHER_BASE_COST * cipher_position * popularity_multiplier`.
+const CIPHER_BASE_COST: f32 = 2.0;
+
+/// Upper bound of the popularity multiplier range.
+/// Multiplier = `POPULARITY_MULTIPLIER_CEILING - popularity`, giving range 1.0–2.0.
+const POPULARITY_MULTIPLIER_CEILING: f32 = 2.0;
+
+/// Default popularity score for decoders not found in `DECODER_MAP`.
+const DEFAULT_POPULARITY: f32 = 0.5;
+
+/// Weight applied to `(1 - success_rate)` as a penalty in decoder ranking.
+const SUCCESS_PENALTY_WEIGHT: f32 = 0.3;
+
+/// Entropy threshold above which encoders receive a bonus in ranking.
+const HIGH_ENTROPY_THRESHOLD: f32 = 0.6;
+
+/// Bonus (negative cost) given to encoders when input entropy exceeds the threshold.
+const ENCODER_ENTROPY_BONUS: f32 = -0.1;
+
+/// Penalty added to heuristic when the next decoder is unknown.
+const UNKNOWN_DECODER_PENALTY: f32 = 0.25;
+
+/// Default success rate returned for decoders with no recorded history.
+const DEFAULT_SUCCESS_RATE: f32 = 0.5;
+
+/// Weight of Shannon entropy in the heuristic score (multiplied by normalized entropy).
+const ENTROPY_WEIGHT: f32 = 2.0;
+
+/// Weight of decoder success rate in the heuristic score.
+const DECODER_SUCCESS_WEIGHT: f32 = 0.5;
+
+/// Weight of string quality in the heuristic score.
+const QUALITY_WEIGHT: f32 = 0.5;
+
+/// Maximum entropy normalization factor (~log₂(95) ≈ 6.57 for ASCII printable).
+const ENTROPY_NORMALIZATION: f32 = 6.6;
+
+// ── String Quality & Pruning Constants ────────────────────────────────
+
+/// Maximum character count (exclusive) below which a string is considered too
+/// short to decode. The gibberish_or_not library needs at least 3 characters.
+const MIN_DECODABLE_LENGTH: usize = 2;
+
+/// Maximum non-printable character ratio before a string is rejected for decoding.
+const MAX_NON_PRINTABLE_RATIO: f32 = 0.3;
+
+/// Non-printable ratio threshold above which `calculate_string_quality` returns 0.
+const QUALITY_NON_PRINTABLE_THRESHOLD: f32 = 0.5;
+
+/// Minimum quality score threshold; strings below this are considered undecodable.
+const MIN_QUALITY_THRESHOLD: f32 = 0.2;
+
+/// Minimum string length for a non-minimal quality score.
+const MIN_LENGTH_FOR_QUALITY: usize = 3;
+
+/// String length above which quality is capped at a reduced value.
+const MAX_OPTIMAL_LENGTH: usize = 5000;
+
+/// Ideal string length used as the center point for quality calculation.
+const QUALITY_IDEAL_LENGTH: f32 = 100.0;
+
+/// Divisor used to normalize the distance from `QUALITY_IDEAL_LENGTH`.
+const QUALITY_LENGTH_DIVISOR: f32 = 900.0;
+
+/// Quality score returned for very short strings (below `MIN_LENGTH_FOR_QUALITY`).
+const SHORT_STRING_QUALITY: f32 = 0.1;
+
+/// Quality score returned for very long strings (above `MAX_OPTIMAL_LENGTH`).
+const LONG_STRING_QUALITY: f32 = 0.3;
+
+/// Track decoder success rates for adaptive learning.
+///
+/// Uses `RwLock` instead of `Mutex` because reads (from `rank_decoders` on the
+/// A* hot path) vastly outnumber writes, and `RwLock` allows concurrent reads.
+pub(crate) static DECODER_SUCCESS_RATES: Lazy<RwLock<HashMap<String, (usize, usize)>>> =
+    Lazy::new(|| RwLock::new(HashMap::new()));
 
 /// Represents a decoder with its estimated cost for ranking purposes
 #[derive(Debug, Clone)]
-pub struct RankedDecoder {
+pub(crate) struct RankedDecoder {
     /// Name of the decoder
-    pub name: String,
+    pub(crate) name: String,
     /// Estimated cost for trying this decoder (lower = better)
-    pub estimated_cost: f32,
+    pub(crate) estimated_cost: f32,
 }
 
 /// Rank decoders by their estimated cost for a given input text and current path
@@ -50,53 +133,51 @@ pub struct RankedDecoder {
 /// # Returns
 ///
 /// A vector of RankedDecoder sorted by estimated_cost (lowest first)
-pub fn rank_decoders(
+pub(crate) fn rank_decoders(
     text: &str,
     path: &[CrackResult],
     available_decoders: &[String],
 ) -> Vec<RankedDecoder> {
+    // Pre-compute values that are the same for all decoders to avoid
+    // redundant work inside the per-decoder loop.
+    let entropy = calculate_entropy(text);
+    let existing_cipher_count = path.iter().filter(|p| !is_encoder(p.decoder)).count();
+    let last_decoder_name = path.last().map(|p| p.decoder);
+
     let mut ranked: Vec<RankedDecoder> = available_decoders
         .iter()
         .map(|name| {
             let is_enc = is_encoder(name);
 
             // Estimate the cost for this decoder based on:
-            // 1. Base cost: encoders are cheap (0.7), ciphers are expensive (2.0+)
-            // 2. Repeated same-encoder bonus: if last decoder was same encoder, very cheap (0.2)
+            // 1. Base cost: encoders are cheap, ciphers are expensive
+            // 2. Repeated same-encoder bonus: if last decoder was same encoder, very cheap
             // 3. Cipher penalty: escalating penalty for multiple ciphers in path
 
-            // Count existing ciphers in path
-            let existing_cipher_count = path.iter().filter(|p| !is_encoder(p.decoder)).count();
-
-            // Get last decoder name for repeat-encoder bonus
-            let last_decoder_name = path.last().map(|p| p.decoder);
-
             let estimated_path_cost = if is_enc {
-                // Encoder cost
                 if last_decoder_name == Some(name.as_str()) {
                     // Repeated same encoder - very cheap
-                    0.2
+                    REPEATED_ENCODER_COST
                 } else {
                     // Different encoder
-                    0.7
+                    ENCODER_BASE_COST
                 }
             } else {
                 // Cipher cost - escalating penalty
                 let cipher_position = existing_cipher_count + 1;
                 let popularity = get_decoder_popularity(name);
-                let popularity_multiplier = 2.0 - popularity; // Range: 1.0 to 2.0
-                2.0 * cipher_position as f32 * popularity_multiplier
+                let popularity_multiplier = POPULARITY_MULTIPLIER_CEILING - popularity;
+                CIPHER_BASE_COST * cipher_position as f32 * popularity_multiplier
             };
 
             // Add success rate modifier (historical learning)
             let success_rate = get_decoder_success_rate(name);
-            let success_penalty = (1.0 - success_rate) * 0.3; // 0-0.3 penalty
+            let success_penalty = (1.0 - success_rate) * SUCCESS_PENALTY_WEIGHT;
 
             // Add entropy-based modifier for encoders
             // Higher entropy input is more likely to be encoded
-            let entropy = calculate_entropy(text);
-            let entropy_bonus = if is_enc && entropy > 0.6 {
-                -0.1 // Bonus for encoders on high-entropy input
+            let entropy_bonus = if is_enc && entropy > HIGH_ENTROPY_THRESHOLD {
+                ENCODER_ENTROPY_BONUS
             } else {
                 0.0
             };
@@ -136,17 +217,39 @@ pub fn rank_decoders(
 /// # Returns
 ///
 /// * Normalized entropy value between 0.0 and 1.0
-pub fn calculate_entropy(text: &str) -> f32 {
+pub(crate) fn calculate_entropy(text: &str) -> f32 {
     if text.is_empty() {
         return 1.0; // Empty string is maximally uncertain
     }
 
+    // Fast path: use a fixed-size byte frequency array for ASCII text.
+    // This avoids allocating a HashMap on every call, which matters because
+    // calculate_entropy is invoked for every A* node.
+    if text.is_ascii() {
+        let mut freq = [0u32; 256];
+        let len = text.len() as f32;
+        for &b in text.as_bytes() {
+            freq[b as usize] += 1;
+        }
+        let entropy: f32 = freq
+            .iter()
+            .filter(|&&count| count > 0)
+            .map(|&count| {
+                let p = count as f32 / len;
+                -p * p.log2()
+            })
+            .sum();
+        // Normalize: max entropy for ASCII printable is ~log2(95) ≈ 6.57
+        return (entropy / ENTROPY_NORMALIZATION).min(1.0);
+    }
+
+    // Slow path: fall back to HashMap for non-ASCII (Unicode) text
     let mut freq: HashMap<char, usize> = HashMap::new();
     for c in text.chars() {
         *freq.entry(c).or_insert(0) += 1;
     }
 
-    let len = text.len() as f32;
+    let len = text.chars().count() as f32;
     let entropy: f32 = freq
         .values()
         .map(|&count| {
@@ -159,9 +262,7 @@ pub fn calculate_entropy(text: &str) -> f32 {
         })
         .sum();
 
-    // Normalize: max entropy for ASCII printable is ~log2(95) ≈ 6.57
-    // We use 6.6 as the normalization factor
-    (entropy / 6.6).min(1.0)
+    (entropy / ENTROPY_NORMALIZATION).min(1.0)
 }
 
 /// Check if a decoder is an encoder (has "decoder" tag) vs a cipher
@@ -176,7 +277,7 @@ pub fn calculate_entropy(text: &str) -> f32 {
 /// # Returns
 ///
 /// * `true` if the decoder is an encoder, `false` if it's a cipher
-pub fn is_encoder(decoder_name: &str) -> bool {
+pub(crate) fn is_encoder(decoder_name: &str) -> bool {
     if let Some(decoder_box) = DECODER_MAP.get(decoder_name) {
         let decoder = decoder_box.get::<()>();
         decoder.get_tags().contains(&"decoder")
@@ -198,14 +299,13 @@ pub fn is_encoder(decoder_name: &str) -> bool {
 ///
 /// # Returns
 ///
-/// * The popularity score (0.0 to 1.0), defaults to 0.5 if unknown
-pub fn get_decoder_popularity(decoder_name: &str) -> f32 {
+/// * The popularity score (0.0 to 1.0), defaults to `DEFAULT_POPULARITY` if unknown
+pub(crate) fn get_decoder_popularity(decoder_name: &str) -> f32 {
     if let Some(decoder_box) = DECODER_MAP.get(decoder_name) {
         let decoder = decoder_box.get::<()>();
         decoder.get_popularity()
     } else {
-        // Default to moderate popularity for unknown decoders
-        0.5
+        DEFAULT_POPULARITY
     }
 }
 
@@ -214,9 +314,9 @@ pub fn get_decoder_popularity(decoder_name: &str) -> f32 {
 /// This function calculates the "conceptual complexity" of a decoding path,
 /// implementing Occam's Razor by making simpler explanations cheaper:
 ///
-/// - Repeated same-encoder applications are cheap (0.2 each after the first)
-/// - Different encoders cost more (0.7 each)
-/// - Ciphers are expensive (base cost 2.0, escalating for multiple ciphers)
+/// - Repeated same-encoder applications are cheap (`REPEATED_ENCODER_COST` each after the first)
+/// - Different encoders cost more (`ENCODER_BASE_COST` each)
+/// - Ciphers are expensive (base cost `CIPHER_BASE_COST`, escalating for multiple ciphers)
 /// - Cipher cost is adjusted by popularity: higher popularity = lower cost
 ///
 /// # Arguments
@@ -236,7 +336,7 @@ pub fn get_decoder_popularity(decoder_name: &str) -> f32 {
 /// | base64 × 3 → caesar (0.8 pop) | 0.7 + 0.2×2 + 2.0×1.2 = 3.5 |
 /// | base64 × 3 → vigenere (0.6 pop) | 0.7 + 0.2×2 + 2.0×1.4 = 3.9 |
 /// | caesar → vigenere | 2.0×1.2 + 4.0×1.4 = 7.8 |
-pub fn calculate_path_complexity(path: &[CrackResult]) -> f32 {
+pub(crate) fn calculate_path_complexity(path: &[CrackResult]) -> f32 {
     if path.is_empty() {
         return 0.0;
     }
@@ -256,15 +356,15 @@ pub fn calculate_path_complexity(path: &[CrackResult]) -> f32 {
             // Get cipher popularity to adjust cost
             // More popular ciphers (like Caesar) get lower cost multiplier
             let popularity = get_decoder_popularity(step.decoder);
-            let popularity_multiplier = 2.0 - popularity; // Range: 1.0 to 2.0
+            let popularity_multiplier = POPULARITY_MULTIPLIER_CEILING - popularity;
 
-            complexity += 2.0 * cipher_count as f32 * popularity_multiplier;
+            complexity += CIPHER_BASE_COST * cipher_count as f32 * popularity_multiplier;
         } else if is_repeated {
             // Repeated same encoder (e.g., base64 → base64) is common
-            complexity += 0.2;
+            complexity += REPEATED_ENCODER_COST;
         } else {
             // Different encoder
-            complexity += 0.7;
+            complexity += ENCODER_BASE_COST;
         }
 
         prev_decoder = Some(step.decoder);
@@ -279,8 +379,13 @@ pub fn calculate_path_complexity(path: &[CrackResult]) -> f32 {
 ///
 /// * `decoder` - The name of the decoder
 /// * `success` - Whether the decoder was successful
-pub fn update_decoder_stats(decoder: &str, success: bool) {
-    let mut stats = DECODER_SUCCESS_RATES.lock().unwrap();
+///
+/// # Panics
+///
+/// Panics if the `DECODER_SUCCESS_RATES` RwLock is poisoned, which indicates
+/// a bug (another thread panicked while holding the write lock).
+pub(crate) fn update_decoder_stats(decoder: &str, success: bool) {
+    let mut stats = DECODER_SUCCESS_RATES.write().unwrap();
     let (successes, total) = stats.entry(decoder.to_string()).or_insert((0, 0));
 
     if success {
@@ -300,16 +405,20 @@ pub fn update_decoder_stats(decoder: &str, success: bool) {
 /// # Returns
 ///
 /// * The success rate as a float between 0.0 and 1.0
-pub fn get_decoder_success_rate(decoder: &str) -> f32 {
-    let stats = DECODER_SUCCESS_RATES.lock().unwrap();
+///
+/// # Panics
+///
+/// Panics if the `DECODER_SUCCESS_RATES` RwLock is poisoned, which indicates
+/// a bug (another thread panicked while holding the write lock).
+pub(crate) fn get_decoder_success_rate(decoder: &str) -> f32 {
+    let stats = DECODER_SUCCESS_RATES.read().unwrap();
     if let Some((successes, total)) = stats.get(decoder) {
         if *total > 0 {
             return *successes as f32 / *total as f32;
         }
     }
 
-    // Default for unknown decoders
-    0.5
+    DEFAULT_SUCCESS_RATE
 }
 
 /// Calculate the quality of a string for pruning
@@ -321,28 +430,27 @@ pub fn get_decoder_success_rate(decoder: &str) -> f32 {
 /// # Returns
 ///
 /// * A quality score between 0.0 and 1.0
-pub fn calculate_string_quality(s: &str) -> f32 {
+pub(crate) fn calculate_string_quality(s: &str) -> f32 {
     // Check for high percentage of invisible characters
     let non_printable_ratio = calculate_non_printable_ratio(s);
-    if non_printable_ratio > 0.5 {
+    if non_printable_ratio > QUALITY_NON_PRINTABLE_THRESHOLD {
         return 0.0; // Return lowest quality for strings with >50% invisible chars
     }
 
     // Factors to consider:
-    // 1. Length (not too short, not too long
-    if s.len() < 3 {
-        0.1
-    } else if s.len() > 5000 {
-        0.3
+    // 1. Length (not too short, not too long)
+    if s.len() < MIN_LENGTH_FOR_QUALITY {
+        SHORT_STRING_QUALITY
+    } else if s.len() > MAX_OPTIMAL_LENGTH {
+        LONG_STRING_QUALITY
     } else {
-        1.0 - (s.len() as f32 - 100.0).abs() / 900.0
+        1.0 - (s.len() as f32 - QUALITY_IDEAL_LENGTH).abs() / QUALITY_LENGTH_DIVISOR
     }
 }
 
 /// Check if string is worth being decoded
-pub fn calculate_string_worth(s: &str) -> bool {
-    // check if string is less than 3 chars
-    if calculate_string_quality(s) < 0.2 {
+pub(crate) fn calculate_string_worth(s: &str) -> bool {
+    if calculate_string_quality(s) < MIN_QUALITY_THRESHOLD {
         return false;
     }
 
@@ -351,7 +459,7 @@ pub fn calculate_string_worth(s: &str) -> bool {
 
 /// Calculate the ratio of non-printable characters in a string
 /// Returns a value between 0.0 (all printable) and 1.0 (all non-printable)
-pub fn calculate_non_printable_ratio(text: &str) -> f32 {
+pub(crate) fn calculate_non_printable_ratio(text: &str) -> f32 {
     if text.is_empty() {
         return 1.0;
     }
@@ -394,7 +502,7 @@ pub fn calculate_non_printable_ratio(text: &str) -> f32 {
 /// # Returns
 /// A float value representing the heuristic cost (lower is better)
 #[allow(unused_variables)]
-pub fn generate_heuristic(
+pub(crate) fn generate_heuristic(
     text: &str,
     path: &[CrackResult],
     next_decoder: &Option<Box<dyn Crack + Sync>>,
@@ -404,21 +512,21 @@ pub fn generate_heuristic(
     // 1. Entropy score: lower entropy = more plaintext-like = lower score
     // Entropy is normalized to 0-1, we scale it for importance
     let entropy = calculate_entropy(text);
-    score += entropy * 2.0; // Range: 0-2
+    score += entropy * ENTROPY_WEIGHT; // Range: 0-2
 
     // 2. Decoder success rate prior (if we know what decoder might be next)
     // Higher success rate = lower penalty
     if let Some(decoder) = next_decoder {
         let success_rate = get_decoder_success_rate(decoder.get_name());
-        score += (1.0 - success_rate) * 0.5; // Range: 0-0.5
+        score += (1.0 - success_rate) * DECODER_SUCCESS_WEIGHT; // Range: 0-0.5
     } else {
         // Unknown next decoder, moderate penalty
-        score += 0.25;
+        score += UNKNOWN_DECODER_PENALTY;
     }
 
     // 3. String quality penalty
     let quality = calculate_string_quality(text);
-    score += (1.0 - quality) * 0.5; // Range: 0-0.5
+    score += (1.0 - quality) * QUALITY_WEIGHT; // Range: 0-0.5
 
     score
 }
@@ -429,9 +537,9 @@ pub fn generate_heuristic(
 /// ## Decision Criteria
 ///
 /// A string is considered undecodeble if:
-/// - It has 2 or fewer characters
-/// - It has more than 30% non-printable characters
-/// - Its overall quality score is below 0.2
+/// - It has `MIN_DECODABLE_LENGTH` or fewer characters
+/// - It has more than `MAX_NON_PRINTABLE_RATIO` non-printable characters
+/// - Its overall quality score is below `MIN_QUALITY_THRESHOLD`
 ///
 /// ## Rationale
 ///
@@ -443,21 +551,21 @@ pub fn generate_heuristic(
 ///
 /// Filtering out these strings early saves computational resources and
 /// prevents the search from exploring unproductive paths.
-pub fn check_if_string_cant_be_decoded(text: &str) -> bool {
+pub(crate) fn check_if_string_cant_be_decoded(text: &str) -> bool {
     // Check for strings that are too short
-    if text.len() <= 2 {
+    if text.len() <= MIN_DECODABLE_LENGTH {
         return true;
     }
 
     // Check for strings with high non-printable character ratio
     let non_printable_ratio = calculate_non_printable_ratio(text);
-    if non_printable_ratio > 0.3 {
+    if non_printable_ratio > MAX_NON_PRINTABLE_RATIO {
         return true;
     }
 
     // Check for overall string quality
     let quality = calculate_string_quality(text);
-    if quality < 0.2 {
+    if quality < MIN_QUALITY_THRESHOLD {
         return true;
     }
 
@@ -524,9 +632,11 @@ mod tests {
             r
         };
 
-        // Single encoder: 0.7
+        // Single encoder: ENCODER_BASE_COST (0.7)
         let single_encoder = vec![base64_result.clone()];
-        assert!((calculate_path_complexity(&single_encoder) - 0.7).abs() < 0.01);
+        assert!(
+            (calculate_path_complexity(&single_encoder) - ENCODER_BASE_COST).abs() < 0.01
+        );
 
         // Repeated encoder (base64 × 3): 0.7 + 0.2 + 0.2 = 1.1
         let repeated_encoder = vec![
@@ -534,11 +644,16 @@ mod tests {
             base64_result.clone(),
             base64_result.clone(),
         ];
-        assert!((calculate_path_complexity(&repeated_encoder) - 1.1).abs() < 0.01);
+        assert!(
+            (calculate_path_complexity(&repeated_encoder)
+                - (ENCODER_BASE_COST + REPEATED_ENCODER_COST * 2.0))
+                .abs()
+                < 0.01
+        );
 
-        // Single cipher: 2.0 * cipher_count * popularity_multiplier
+        // Single cipher: CIPHER_BASE_COST * cipher_count * popularity_multiplier
         // Caesar (when looked up in DECODER_MAP) has popularity 0.8, multiplier = 1.2
-        // But test uses mock CrackResult, which falls back to default 0.5 popularity
+        // But test uses mock CrackResult, which falls back to DEFAULT_POPULARITY (0.5)
         // So multiplier = 2.0 - 0.5 = 1.5, cost = 2.0 * 1 * 1.5 = 3.0
         let single_cipher = vec![caesar_result.clone()];
         let caesar_cost = calculate_path_complexity(&single_cipher);

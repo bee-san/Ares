@@ -9,8 +9,15 @@ use log::trace;
 use std::fs;
 use std::io::{Read, Write};
 use std::path::PathBuf;
+use std::sync::OnceLock;
 
 use super::database::{get_word_count, read_all_words};
+
+/// Cached bloom filter loaded once from disk and reused for all subsequent
+/// lookups. This avoids deserializing JSON from disk on every call to
+/// `load_bloom_filter()`, which was a significant performance bottleneck
+/// for the wordlist checker (called on every A* node).
+static CACHED_BLOOM_FILTER: OnceLock<Option<Bloom<String>>> = OnceLock::new();
 
 /// Bloom filter file name stored in ~/.ciphey/
 const BLOOM_FILTER_FILE: &str = "wordlist_bloom.dat";
@@ -146,17 +153,43 @@ pub fn save_bloom_filter(bloom: &Bloom<String>) -> Result<(), BloomError> {
     Ok(())
 }
 
-/// Loads a bloom filter from disk
+/// Loads a bloom filter from disk, caching it in a `OnceLock` so the
+/// deserialization only happens once.
 ///
 /// # Returns
 ///
-/// Returns `Some(Bloom<String>)` if the file exists and can be loaded,
+/// Returns `Some(&Bloom<String>)` if the file exists and can be loaded,
 /// `None` if the file doesn't exist (not an error condition)
 ///
 /// # Errors
 ///
 /// Returns `BloomError` if the file exists but cannot be read or deserialized
-pub fn load_bloom_filter() -> Result<Option<Bloom<String>>, BloomError> {
+pub fn load_bloom_filter() -> Result<Option<&'static Bloom<String>>, BloomError> {
+    // Fast path: return the cached value if already loaded
+    if let Some(cached) = CACHED_BLOOM_FILTER.get() {
+        return Ok(cached.as_ref());
+    }
+
+    // Slow path: load from disk (only runs once)
+    let result = load_bloom_filter_from_disk();
+
+    match result {
+        Ok(bloom_opt) => {
+            // Store in cache (ignore if another thread beat us)
+            let _ = CACHED_BLOOM_FILTER.set(bloom_opt);
+            Ok(CACHED_BLOOM_FILTER.get().unwrap().as_ref())
+        }
+        Err(e) => {
+            // Cache None so we don't retry on every call
+            let _ = CACHED_BLOOM_FILTER.set(None);
+            Err(e)
+        }
+    }
+}
+
+/// Internal function that actually reads the bloom filter from disk.
+/// Called only once by `load_bloom_filter()`.
+fn load_bloom_filter_from_disk() -> Result<Option<Bloom<String>>, BloomError> {
     let path = get_bloom_filter_path();
     trace!("Loading bloom filter from {:?}", path);
 

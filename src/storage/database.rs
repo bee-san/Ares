@@ -930,7 +930,8 @@ pub fn insert_cache(cache_entry: &CacheEntry) -> Result<i64, rusqlite::Error> {
         None => false,
     };
 
-    let path_json = serde_json::to_string(&path).unwrap();
+    let path_json = serde_json::to_string(&path)
+        .expect("Failed to serialize CrackResult path to JSON (this is a bug)");
     let mut conn = get_db_connection()?;
     let transaction = conn.transaction()?;
     transaction.execute(

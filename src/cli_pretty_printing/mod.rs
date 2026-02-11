@@ -210,7 +210,6 @@ pub fn statement(text: &str, role: Option<&str>) -> String {
 ///
 /// # Returns
 /// * `String` - The text colored in the warning color
-#[allow(dead_code)]
 pub fn warning(text: &str) -> String {
     color_string(text, "warning")
 }
@@ -228,20 +227,6 @@ pub fn success(text: &str) -> String {
     color_string(text, "success")
 }
 
-/// Colors text using the warning color from config for error messages.
-///
-/// Note: Uses warning color since error is not defined in the color scheme.
-/// Used for error messages that indicate operation failure.
-///
-/// # Arguments
-/// * `text` - The error message to be colored
-///
-/// # Returns
-/// * `String` - The text colored in the warning color
-#[allow(dead_code)]
-fn error(text: &str) -> String {
-    color_string(text, "warning")
-}
 
 /// Colors text using the question color from config.
 ///

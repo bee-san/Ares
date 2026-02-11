@@ -116,17 +116,6 @@ fn print_question<T: Display>(text: T) -> String {
     apply_color(&text.to_string(), Color::Yellow)
 }
 
-/// Prints a success message in green color.
-///
-/// # Arguments
-/// * `text` - Any type that implements Display trait to be printed in green
-///
-/// # Returns
-/// * `String` - The input text formatted in green color
-#[allow(dead_code)]
-fn print_success<T: Display>(text: T) -> String {
-    apply_color(&text.to_string(), Color::Green)
-}
 
 /// Prints text in a specified RGB color.
 ///
@@ -792,42 +781,6 @@ fn color_scheme_to_hashmap(scheme: ColorScheme) -> HashMap<String, String> {
     map
 }
 
-/// Prompts the user for a wordlist file path and validates that the file exists
-/// Returns the path if valid, or None if the user cancels
-#[allow(dead_code)]
-fn get_wordlist_path() -> Option<String> {
-    println!(
-        "\n{}",
-        print_statement("Enter the path to your wordlist file:")
-    );
-    println!("{}", print_statement("(Leave empty to cancel)"));
-
-    let mut input = String::new();
-    std::io::stdin()
-        .read_line(&mut input)
-        .expect("Failed to read input");
-    let input = input.trim();
-
-    if input.is_empty() {
-        println!("{}", print_statement("No wordlist will be used."));
-        return None;
-    }
-
-    // Check if the file exists
-    if !Path::new(input).exists() {
-        println!("{}", print_warning("File does not exist!"));
-        return get_wordlist_path(); // Recursively prompt until valid or cancelled
-    }
-
-    // Check if the file is readable
-    match std::fs::File::open(input) {
-        Ok(_) => Some(input.to_string()),
-        Err(e) => {
-            println!("{}", print_warning(format!("Cannot read file: {}", e)));
-            get_wordlist_path() // Recursively prompt until valid or cancelled
-        }
-    }
-}
 
 /// Prompts the user for a wordlist file path using the provided theme.
 /// Returns the path if valid, or None if the user cancels

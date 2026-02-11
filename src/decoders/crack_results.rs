@@ -57,6 +57,26 @@ impl CrackResult {
         self.success = checker_result.is_identified;
     }
 
+    /// Helper that combines setting the decoded text, running the checker, and
+    /// updating the result in one call. This eliminates the repetitive
+    /// three-line pattern found in almost every single-candidate decoder:
+    ///
+    /// ```ignore
+    /// let checker_result = checker.check(&decoded_text);
+    /// results.unencrypted_text = Some(vec![decoded_text]);
+    /// results.update_checker(&checker_result);
+    /// ```
+    ///
+    /// # Arguments
+    ///
+    /// * `decoded_text` - The decoded candidate text
+    /// * `checker` - The checker to validate the decoded text
+    pub fn check_and_set(&mut self, decoded_text: String, checker: &CheckerTypes) {
+        let checker_result = checker.check(&decoded_text);
+        self.unencrypted_text = Some(vec![decoded_text]);
+        self.update_checker(&checker_result);
+    }
+
     /// Converts CrackResult into JSON
     ///
     /// # Errors
