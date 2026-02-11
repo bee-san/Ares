@@ -27,7 +27,7 @@ clap = {version = "4.5.57", features = ["derive"]}
 termcolor = "1.4"
 crossbeam = "0.8"
 dirs = "6.0.0"
-env_logger = "0.11.8"
+env_logger = "0.11.9"
 gibberish-or-not = "5.0.7"
 human-panic = "2.0.6"
 include_dir = "0.7.3"
