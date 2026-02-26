@@ -5,16 +5,22 @@ use crate::storage::database;
 use crate::{cli_pretty_printing, timer};
 use dashmap::DashSet;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::OnceLock;
+use std::sync::{Mutex, OnceLock};
 use text_io::read;
 
 static SEEN_PROMPTS: OnceLock<DashSet<String>> = OnceLock::new();
 // if human checker is called, we set this to true
 // so we dont call it again
 static HUMAN_CONFIRMED: AtomicBool = AtomicBool::new(false);
+// Mutex to ensure only one thread prompts the user at a time
+static PROMPT_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
 fn get_seen_prompts() -> &'static DashSet<String> {
     SEEN_PROMPTS.get_or_init(DashSet::new)
+}
+
+fn get_prompt_lock() -> &'static Mutex<()> {
+    PROMPT_LOCK.get_or_init(|| Mutex::new(()))
 }
 
 /// The Human Checker asks humans if the expected plaintext is real plaintext
@@ -23,7 +29,7 @@ fn get_seen_prompts() -> &'static DashSet<String> {
 /// TODO: Add a way to specify a list of checkers to use in the library. This checker is not library friendly!
 // compile this if we are not running tests
 pub fn human_checker(input: &CheckResult) -> bool {
-    // Check if a human has already confirmed a result
+    // Check if a human has already confirmed a result (fast path)
     if HUMAN_CONFIRMED.load(Ordering::Acquire) {
         return true;
     }
@@ -36,11 +42,33 @@ pub fn human_checker(input: &CheckResult) -> bool {
         return true;
     }
 
+    // Acquire the lock to ensure only one thread prompts the user at a time
+    let lock_result = get_prompt_lock().lock();
+    let _guard = match lock_result {
+        Ok(guard) => guard,
+        Err(poisoned) => {
+            cli_pretty_printing::warning(
+                "DEBUG: Prompt lock was poisoned; proceeding with recovered lock guard",
+            );
+            // Recover the inner guard even though the mutex is poisoned
+            poisoned.into_inner()
+        }
+    };
+
+    // Double-check HUMAN_CONFIRMED after acquiring the lock
+    // Another thread might have confirmed while we were waiting for the lock
+    if HUMAN_CONFIRMED.load(Ordering::Acquire) {
+        timer::resume();
+        return true;
+    }
+
     // Check if we've already prompted for this text
     let prompt_key = format!("{}{}", input.description, input.text);
     if !get_seen_prompts().insert(prompt_key) {
+        timer::resume();
         return true; // Return true to allow the search to continue
     }
+
     human_checker_check(&input.description, &input.text);
 
     let reply: String = read!("{}\n");
@@ -53,6 +81,9 @@ pub fn human_checker(input: &CheckResult) -> bool {
             "DEBUG: Human confirmed a result, future checks will be skipped",
         );
     }
+
+    // Lock is released here when _guard goes out of scope
+    drop(_guard);
     timer::resume();
 
     cli_pretty_printing::success(&format!("DEBUG: Human checker returning: {}", result));
