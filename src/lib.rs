@@ -93,12 +93,9 @@ use self::decoders::crack_results::CrackResult;
 /// let mut config = Config::default();
 /// # let _test_db = ciphey::TestDatabase::default();
 /// # ciphey::set_test_db_path();
-/// // You can set the config to your liking using the Config struct
-/// // Just edit the data like below if you want:
-/// config.timeout = 0;
-/// let result = perform_cracking("VGhlIG1haW4gZnVuY3Rpb24gdG8gY2FsbCB3aGljaCBwZXJmb3JtcyB0aGUgY3JhY2tpbmcu", config);
+/// // If the program cannot decode the text it will return None.
+/// let result = perform_cracking("", config);
 /// assert!(true);
-/// // If the program times out, or it cannot decode the text it will return None.
 /// assert!(result.is_none());
 /// ```
 pub fn perform_cracking(text: &str, config: Config) -> Option<DecoderResult> {

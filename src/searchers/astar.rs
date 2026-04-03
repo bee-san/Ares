@@ -96,12 +96,6 @@ struct AStarNode {
     /// This increases by 1 for each decoder applied
     cost: u32,
 
-    /// Heuristic value (h) - estimated cost to reach the goal
-    /// Currently a placeholder value, but could be improved with
-    /// cipher identification techniques to better estimate how close
-    /// we are to finding plaintext
-    heuristic: f32,
-
     /// Total cost (f = g + h) used for prioritization in the queue
     /// Nodes with lower total_cost are explored first
     total_cost: f32,
@@ -137,37 +131,43 @@ impl Eq for AStarNode {}
 
 /// Thread-safe priority queue wrapper for A* open set
 struct ThreadSafePriorityQueue {
+    /// Heap backing the open set, guarded for concurrent access.
     queue: Mutex<BinaryHeap<AStarNode>>,
 }
 
 impl ThreadSafePriorityQueue {
+    /// Creates an empty thread-safe priority queue.
     fn new() -> Self {
         ThreadSafePriorityQueue {
             queue: Mutex::new(BinaryHeap::new()),
         }
     }
 
+    /// Pushes a node into the queue.
     fn push(&self, node: AStarNode) {
         let mut queue = self.queue.lock().unwrap();
         queue.push(node);
     }
 
+    /// Removes and returns the highest-priority node, if any.
     fn pop(&self) -> Option<AStarNode> {
         let mut queue = self.queue.lock().unwrap();
         queue.pop()
     }
 
+    /// Returns whether the queue currently has no nodes.
     fn is_empty(&self) -> bool {
         let queue = self.queue.lock().unwrap();
         queue.is_empty()
     }
 
+    /// Returns the number of queued nodes.
     fn len(&self) -> usize {
         let queue = self.queue.lock().unwrap();
         queue.len()
     }
 
-    // Extract a batch of nodes with highest priority
+    /// Extracts up to `batch_size` highest-priority nodes from the queue.
     fn extract_batch(&self, batch_size: usize) -> Vec<AStarNode> {
         let mut queue = self.queue.lock().unwrap();
         let mut batch = Vec::with_capacity(batch_size);
@@ -258,7 +258,6 @@ fn expand_node(
                             path: decoders_used,
                         },
                         cost: current_node.cost + 1,
-                        heuristic: -1000.0, // Very negative to ensure highest priority
                         total_cost: -1000.0, // Very negative to ensure highest priority
                         next_decoder_name: Some("__RESULT__".to_string()), // Special marker
                     };
@@ -313,7 +312,6 @@ fn expand_node(
                             path: decoders_used,
                         },
                         cost,
-                        heuristic,
                         total_cost,
                         next_decoder_name: Some(r.decoder.to_string()),
                     };
@@ -394,7 +392,6 @@ fn expand_node(
                             path: decoders_used,
                         },
                         cost,
-                        heuristic,
                         total_cost,
                         next_decoder_name: Some(decoder.get_name().to_string()),
                     };
@@ -446,9 +443,6 @@ fn expand_node(
 /// - `result_sender`: Channel to send the result when found
 /// - `stop`: Atomic boolean to signal when to stop the search
 pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Arc<AtomicBool>) {
-    // Calculate heuristic before moving input
-    let initial_heuristic = generate_heuristic(&input, &[], &None);
-
     let initial = DecoderResult {
         text: vec![input],
         path: vec![],
@@ -466,7 +460,6 @@ pub fn astar(input: String, result_sender: Sender<Option<DecoderResult>>, stop: 
     open_set.push(AStarNode {
         state: initial,
         cost: 0,
-        heuristic: initial_heuristic,
         total_cost: 0.0,
         next_decoder_name: None,
     });

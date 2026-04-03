@@ -81,21 +81,17 @@ pub fn parse_cli_args() -> (String, Config) {
         env_logger::Env::default().filter_or(env_logger::DEFAULT_FILTER_ENV, min_log_level),
     );
 
-    // If both the file and text are proivded, panic because we're not sure which one to use
-    if opts.file.is_some() && opts.text.is_some() {
-        panic_failure_both_input_and_fail_provided();
-    }
-
-    let input_text: String = if opts.file.is_some() {
-        read_and_parse_file(opts.file.unwrap())
-    } else {
-        opts.text
-            .expect("Error. No input was provided. Please use ciphey --help")
+    let input_text: String = match (opts.file.take(), opts.text.take()) {
+        (Some(_), Some(_)) => {
+            panic_failure_both_input_and_fail_provided();
+            unreachable!("panic helper should terminate the process");
+        }
+        (Some(file), None) => read_and_parse_file(file),
+        (None, Some(text)) => text,
+        (None, None) => {
+            panic!("Error. No input was provided. Please use ciphey --help")
+        }
     };
-
-    // Fixes bug where opts.text and opts.file are partially borrowed
-    opts.text = None;
-    opts.file = None;
 
     trace!("Program was called with CLI 😉");
     trace!("Parsed the arguments");
@@ -122,11 +118,7 @@ pub fn read_and_parse_file(file_path: String) -> String {
     // https://stackoverflow.com/a/729795
     // Which means if a user creates a file on Unix, it'll have a new line appended.
     // This is probably not what they wanted to decode (it is not what I wanted) so we are removing them
-    if contents.ends_with(['\n', '\r']) {
-        contents.strip_suffix(['\n', '\r']).unwrap().to_owned()
-    } else {
-        contents
-    }
+    contents.trim_end_matches(['\n', '\r']).to_owned()
 }
 
 /// Turns our CLI arguments into a config stuct

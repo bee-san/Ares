@@ -209,6 +209,9 @@ fn get_default_scheme() -> ColorScheme {
 ///
 /// # Returns
 /// * `HashMap<String, String>` - A mapping of role names to their RGB color values
+///
+/// # Panics
+/// This function can panic if stdout cannot be flushed during an interactive prompt.
 pub fn run_first_time_setup() -> HashMap<String, String> {
     println!(
         "\n{}",

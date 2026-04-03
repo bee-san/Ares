@@ -172,14 +172,18 @@ pub fn get_config_file_path() -> std::path::PathBuf {
 
 /// Create a default config file at the specified path
 ///
+/// # Errors
+///
+/// This function returns an error if the config file cannot be created, serialized, or written.
+///
 /// # Panics
 ///
-/// This function will panic if:
-/// - The config cannot be serialized to TOML
-/// - The config file path cannot be determined (see `get_config_file_path`)
+/// This function will panic if the config file path cannot be determined
+/// (see `get_config_file_path`).
 pub fn create_default_config_file() -> std::io::Result<()> {
     let config = Config::default();
-    let toml_string = toml::to_string_pretty(&config).expect("Could not serialize config");
+    let toml_string = toml::to_string_pretty(&config)
+        .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
     let path = get_config_file_path();
     let mut file = File::create(path)?;
     file.write_all(toml_string.as_bytes())?;
@@ -251,15 +255,9 @@ fn parse_toml_with_unknown_keys(contents: &str) -> Config {
 /// * The file contains invalid UTF-8 characters
 ///
 /// # Safety
-/// This implementation uses unsafe code in two places:
-/// 1. Memory mapping (unsafe { Mmap::map(&file) }):
-///    - This is unsafe because the memory map could become invalid if the underlying file is modified
-///    - We accept this risk since the wordlist is only loaded once at startup and not expected to change
-///
-/// 2. UTF-8 conversion (unsafe { std::str::from_utf8_unchecked(&mmap) }):
-///    - This is unsafe because it assumes the file contains valid UTF-8
-///    - We attempt to convert to UTF-8 first and panic if invalid, making this assumption safe
-///    - The unchecked version is used for performance since we verify UTF-8 validity first
+/// This implementation uses memory mapping for large files.
+/// `unsafe { Mmap::map(&file) }` is required because the map could become invalid
+/// if the underlying file is modified while the mapping is in use.
 pub fn load_wordlist<P: AsRef<Path>>(path: P) -> io::Result<HashSet<String>> {
     let file = File::open(path)?;
     let file_size = file.metadata()?.len();
@@ -274,12 +272,10 @@ pub fn load_wordlist<P: AsRef<Path>>(path: P) -> io::Result<HashSet<String>> {
         let reader = BufReader::new(file);
         let mut wordlist = HashSet::new();
 
-        for line in reader.lines() {
-            if let Ok(word) = line {
-                let trimmed = word.trim().to_string();
-                if !trimmed.is_empty() {
-                    wordlist.insert(trimmed);
-                }
+        for word in reader.lines().map_while(Result::ok) {
+            let trimmed = word.trim().to_string();
+            if !trimmed.is_empty() {
+                wordlist.insert(trimmed);
             }
         }
 
@@ -290,13 +286,13 @@ pub fn load_wordlist<P: AsRef<Path>>(path: P) -> io::Result<HashSet<String>> {
         let mmap = unsafe { Mmap::map(&file)? };
 
         // Verify the file contains valid UTF-8 before proceeding
-        if std::str::from_utf8(&mmap).is_err() {
-            panic!("Wordlist file contains invalid UTF-8");
-        }
-
-        // Now we can safely use from_utf8_unchecked since we verified it's valid UTF-8
         let mut wordlist = HashSet::new();
-        let content = unsafe { std::str::from_utf8_unchecked(&mmap) };
+        let content = std::str::from_utf8(&mmap).map_err(|_| {
+            io::Error::new(
+                io::ErrorKind::InvalidData,
+                "Wordlist file contains invalid UTF-8",
+            )
+        })?;
         for line in content.lines() {
             let trimmed = line.trim();
             if !trimmed.is_empty() {
@@ -315,14 +311,15 @@ pub fn get_config_file_into_struct() -> Config {
     if !path.exists() {
         // First run - get user preferences
         let first_run_config = crate::cli::run_first_time_setup();
-        let mut config = Config::default();
-
-        // Extract color scheme values
-        config.colourscheme = first_run_config
+        let colourscheme = first_run_config
             .iter()
             .filter(|(k, _)| !k.starts_with("wordlist") && *k != "timeout")
             .map(|(k, v)| (k.clone(), v.clone()))
             .collect();
+        let mut config = Config {
+            colourscheme,
+            ..Config::default()
+        };
 
         // Set timeout if present
         if let Some(timeout) = first_run_config.get("timeout") {

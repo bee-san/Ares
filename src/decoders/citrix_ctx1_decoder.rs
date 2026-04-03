@@ -87,7 +87,7 @@ impl Crack for Decoder<CitrixCTX1Decoder> {
 
 /// Decodes Citrix CTX1
 fn decode_citrix_ctx1(text: &str) -> Result<String, Error> {
-    if text.len() % 4 != 0 {
+    if !text.len().is_multiple_of(4) {
         return Err(Error::InvalidLength);
     }
 

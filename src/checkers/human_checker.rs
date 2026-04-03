@@ -8,17 +8,22 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, OnceLock};
 use text_io::read;
 
+/// Prompts already shown in this process so repeated candidates do not ask again.
 static SEEN_PROMPTS: OnceLock<DashSet<String>> = OnceLock::new();
 // if human checker is called, we set this to true
 // so we dont call it again
+/// Indicates whether a human has already accepted a candidate in this process.
 static HUMAN_CONFIRMED: AtomicBool = AtomicBool::new(false);
 // Mutex to ensure only one thread prompts the user at a time
+/// Serializes interactive prompts so concurrent searches do not overlap on stdin/stdout.
 static PROMPT_LOCK: OnceLock<Mutex<()>> = OnceLock::new();
 
+/// Returns the process-wide set of prompts that have already been shown.
 fn get_seen_prompts() -> &'static DashSet<String> {
     SEEN_PROMPTS.get_or_init(DashSet::new)
 }
 
+/// Returns the mutex used to serialize access to the human prompt.
 fn get_prompt_lock() -> &'static Mutex<()> {
     PROMPT_LOCK.get_or_init(|| Mutex::new(()))
 }

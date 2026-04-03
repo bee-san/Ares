@@ -424,7 +424,7 @@ pub fn countdown_until_program_ends(seconds_spent_running: u32, duration: u32) {
     if config.api_mode {
         return;
     }
-    if seconds_spent_running % 5 == 0 && seconds_spent_running != 0 {
+    if seconds_spent_running.is_multiple_of(5) && seconds_spent_running != 0 {
         let time_left = duration - seconds_spent_running;
         if time_left == 0 {
             return;
@@ -497,6 +497,9 @@ pub fn warning_unknown_config_key(key: &str) {
 }
 
 /// Display all plaintext results collected by WaitAthena
+///
+/// # Panics
+/// This function can panic if stdin cannot be read when prompting to write many results to a file.
 pub fn display_top_results(results: &[PlaintextResult]) {
     let config = crate::config::get_config();
     if config.api_mode {

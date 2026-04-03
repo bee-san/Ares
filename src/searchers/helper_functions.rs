@@ -173,6 +173,8 @@ pub fn generate_heuristic(
     if let Some(decoder) = next_decoder {
         // Use the decoder's popularity via the get_popularity method (higher popularity = lower score)
         base_score += 1.0 - decoder.get_popularity();
+        // Favor decoders that have produced successful outputs in this run.
+        base_score += (1.0 - get_decoder_success_rate(decoder.get_name())) * 0.25;
     } else {
         // If next decoder is None, add a moderate penalty
         base_score += 0.5;

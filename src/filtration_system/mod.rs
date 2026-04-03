@@ -148,6 +148,7 @@ impl DecoderFilter {
     }
 
     /// Add a tag to exclude
+    #[cfg_attr(not(test), allow(dead_code))]
     pub fn exclude_tag(mut self, tag: &str) -> Self {
         self.exclude_tags.push(tag.to_string());
         self
@@ -194,6 +195,7 @@ pub fn get_decoder_tagged_decoders(text_struct: &DecoderResult) -> Decoders {
 }
 
 /// Get decoders without the "decoder" tag
+#[cfg_attr(not(test), allow(dead_code))]
 pub fn get_non_decoder_tagged_decoders(text_struct: &DecoderResult) -> Decoders {
     trace!("Getting non-decoder-tagged decoders");
     let filter = DecoderFilter::new().exclude_tag("decoder");

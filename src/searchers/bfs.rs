@@ -1,5 +1,6 @@
 use crate::cli_pretty_printing::decoded_how_many_times;
 use crate::filtration_system::MyResults;
+use crate::searchers::helper_functions::check_if_string_cant_be_decoded;
 use crossbeam::channel::Sender;
 
 use log::trace;
@@ -92,12 +93,6 @@ pub fn bfs(input: String, result_sender: Sender<Option<DecoderResult>>, stop: Ar
     result_sender.try_send(None).ok();
 }
 
-/// If this returns False it will not attempt to decode that string
-#[allow(dead_code)]
-fn check_if_string_cant_be_decoded(text: &str) -> bool {
-    text.len() <= 2
-}
-
 #[cfg(test)]
 mod tests {
     use crossbeam::channel::bounded;
@@ -138,13 +133,13 @@ mod tests {
     fn string_size_checker_returns_bad_if_string_cant_be_decoded() {
         // Should return true because it cant decode it
         let text = "12";
-        assert!(check_if_string_cant_be_decoded(text));
+        assert!(crate::searchers::helper_functions::check_if_string_cant_be_decoded(text));
     }
 
     #[test]
     fn string_size_checker_returns_ok_if_string_can_be_decoded() {
         // Should return true because it cant decode it
         let text = "123";
-        assert!(!check_if_string_cant_be_decoded(text));
+        assert!(!crate::searchers::helper_functions::check_if_string_cant_be_decoded(text));
     }
 }
