@@ -144,4 +144,9 @@ We also have a `is_password` function to determine if a string is an exact passw
 
 We now store statistics in a database. This is useful for seeing how ciphey is doing over time.
 
+# AI Use
+
+We use AI for 2 things:
+1. The TUI is entirely vibe coded.
+2. I made AI spend hours researching every single CTF challenge out there. It created a list of 15,071 CTFs. It then went through every single CTF and looked for writeups. In those writeups it looked for anything related to encoding / decoding. It then created tests out of those. This enabled us to increase our testing coverage and make sure all CTF encoding / decoding challenges are solveable with this tool.
 
