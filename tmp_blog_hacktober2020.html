@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>Hacktober 2020 CTF Writeup :: CharCharBloggles</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<meta name="description" content="I&amp;rsquo;m super excited to be writing my first CTF challenge writeup! This CTF was a lot of fun, and I learned some new skills!
+If you have questions about a challenge or one of my explanations feel free to poke me: @CharCharBonkles
+Table of Contents (The challenges I solved):
+ Linux  Talking to the Dead 1 Talking to the Dead 2 Talking to the Dead 3 Talking to the Dead 4   Programming  Message in an Array   Stego  Ghost Hunter Blasphemy   Cryptography  Hail Caesar!" />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<link rel="canonical" href="https://charcharbinks.com/post/hacktober2020-writeup/" />
+
+
+
+
+<link rel="stylesheet" href="https://charcharbinks.com/assets/style.css">
+
+  <link rel="stylesheet" href="https://charcharbinks.com/assets/pink.css">
+
+
+
+
+
+
+<link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://charcharbinks.com/img/apple-touch-icon-144-precomposed.png">
+
+  <link rel="shortcut icon" href="https://charcharbinks.com/favicon.ico">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+<meta name="twitter:creator" content="[CharCharBonkles]" />
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Hacktober 2020 CTF Writeup :: CharCharBloggles">
+<meta property="og:description" content="I&amp;rsquo;m super excited to be writing my first CTF challenge writeup! This CTF was a lot of fun, and I learned some new skills!
+If you have questions about a challenge or one of my explanations feel free to poke me: @CharCharBonkles
+Table of Contents (The challenges I solved):
+ Linux  Talking to the Dead 1 Talking to the Dead 2 Talking to the Dead 3 Talking to the Dead 4   Programming  Message in an Array   Stego  Ghost Hunter Blasphemy   Cryptography  Hail Caesar!" />
+<meta property="og:url" content="https://charcharbinks.com/post/hacktober2020-writeup/" />
+<meta property="og:site_name" content="Hacktober 2020 CTF Writeup" />
+
+  
+    <meta property="og:image" content="https://charcharbinks.com/favicon.ico">
+  
+
+<meta property="og:image:width" content="2048">
+<meta property="og:image:height" content="1024">
+
+
+  <meta property="article:published_time" content="2020-10-31 00:00:00 &#43;0000 UTC" />
+
+
+
+
+
+
+
+
+
+
+<script>(function(v,i,s,a){if(!v._visaSettings){v._visaSettings={};}v._visaSettings["8c8ecdc4-f9b9-11ea-b589-901b0edac50a"]={v:"0.3",s:"8c8ecdc4-f9b9-11ea-b589-901b0edac50a",a:"1"};_v=i.getElementsByTagName("head")[0];_a=_v;_i=i.createElement("script");_s=_i;_s.defer="defer";_s.src=s+a+v._visaSettings["8c8ecdc4-f9b9-11ea-b589-901b0edac50a"].v;_a.appendChild(_s);})(window,document,"//app-worker.visitor-analytics.io/main",".js?s=8c8ecdc4-f9b9-11ea-b589-901b0edac50a&v=")</script>
+
+
+
+</head>
+<body class="">
+
+
+<div class="container full headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="https://twitter.com/CharCharBonkles">
+  <div class="logo">
+    Twitter
+  </div>
+</a>
+
+    </div>
+    <div class="menu-trigger">menu</div>
+  </div>
+  
+    <nav class="menu">
+  <ul class="menu__inner menu__inner--desktop">
+    
+      
+        
+          <li><a href="../../page/about">About Me</a></li>
+        
+      
+        
+          <li><a href="../../tags/ctf">CTF</a></li>
+        
+      
+        
+          <li><a href="../../tags/database">Database</a></li>
+        
+      
+        
+          <li><a href="../../post">Recent Posts</a></li>
+        
+      
+      
+    
+
+    
+  </ul>
+
+  <ul class="menu__inner menu__inner--mobile">
+    
+      
+        <li><a href="../../page/about">About Me</a></li>
+      
+    
+      
+        <li><a href="../../tags/ctf">CTF</a></li>
+      
+    
+      
+        <li><a href="../../tags/database">Database</a></li>
+      
+    
+      
+        <li><a href="../../post">Recent Posts</a></li>
+      
+    
+    
+  </ul>
+</nav>
+
+  
+</header>
+
+
+  <div class="content">
+    
+<div class="post">
+  <h1 class="post-title">
+    <a href="https://charcharbinks.com/post/hacktober2020-writeup/">Hacktober 2020 CTF Writeup</a></h1>
+  <div class="post-meta">
+      
+    <span class="post-date">
+      2020-10-31
+    </span>
+    
+    
+    <span class="post-author">::
+      [CharCharBonkles]
+    </span>
+    
+  </div>
+
+  
+  <span class="post-tags">
+    
+    #<a href="https://charcharbinks.com/tags/posts/">posts</a>&nbsp;
+    
+    #<a href="https://charcharbinks.com/tags/ctf/">CTF</a>&nbsp;
+    
+    #<a href="https://charcharbinks.com/tags/writeup/">Writeup</a>&nbsp;
+    
+  </span>
+  
+
+  
+
+  <div class="post-content"><div>
+        <p>I&rsquo;m super excited to be writing my first CTF challenge writeup! This CTF was a lot of fun, and I learned some new skills!</p>
+<p>If you have questions about a challenge or one of my explanations feel free to poke me: <a href="https://twitter.com/CharCharBonkles">@CharCharBonkles</a></p>
+<p>Table of Contents (The challenges I solved):</p>
+<ul>
+<li><a href="#linux">Linux</a>
+<ul>
+<li><a href="#talking-to-the-dead-1">Talking to the Dead 1</a></li>
+<li><a href="#talking-to-the-dead-2">Talking to the Dead 2</a></li>
+<li><a href="#talking-to-the-dead-3">Talking to the Dead 3</a></li>
+<li><a href="#talking-to-the-dead-4">Talking to the Dead 4</a></li>
+</ul>
+</li>
+<li><a href="#programming">Programming</a>
+<ul>
+<li><a href="#message-in-an-array">Message in an Array</a></li>
+</ul>
+</li>
+<li><a href="#stego">Stego</a>
+<ul>
+<li><a href="#ghost-hunter">Ghost Hunter</a></li>
+<li><a href="#blasphemy">Blasphemy</a></li>
+</ul>
+</li>
+<li><a href="#cryptography">Cryptography</a>
+<ul>
+<li><a href="#hail-caesar">Hail Caesar!</a></li>
+<li><a href="#down-the-wrong-path">Down the Wrong Path</a></li>
+<li><a href="#cover-your-bases">Cover your Bases</a></li>
+</ul>
+</li>
+<li><a href="#sql">SQL</a>
+<ul>
+<li><a href="#past-demons">Past Demons</a></li>
+<li><a href="#address-book">Address Book</a></li>
+<li><a href="#calisota">Calisota</a></li>
+<li><a href="#body-count-null-and-void-fall-classes">Body Count, Null and Void, Fall Classes</a>
+<ul>
+<li><a href="#body-count">Body Count</a></li>
+<li><a href="#null-and-void">Null and Void</a></li>
+<li><a href="#fall-classes">Fall Classes</a></li>
+</ul>
+</li>
+<li><a href="#90s-kids">90&rsquo;s Kids</a></li>
+<li><a href="#jigsaw">Jigsaw</a></li>
+<li><a href="#loading-the-mysql-dump">Loading the MySQL Dump</a></li>
+</ul>
+</li>
+<li><a href="#osint">OSINT</a>
+<ul>
+<li><a href="#creeping-1">Creeping 1</a></li>
+<li><a href="#creeping-2">Creeping 2</a></li>
+<li><a href="#creeping-3">Creeping 3</a></li>
+</ul>
+</li>
+<li><a href="#traffic-analysis">Traffic Analysis</a>
+<ul>
+<li><a href="#remotely-administrated-evil">Remotely Administrated Evil</a>
+<ul>
+<li><a href="#remotely-administrated-evil-1">Remotely Administrated Evil</a></li>
+<li><a href="#remotely-administrated-evil-2">Remotely Administrated Evil 2</a></li>
+<li><a href="#remotely-administrated-evil-3">Remotely Administrated Evil 3</a></li>
+</ul>
+</li>
+<li><a href="#evil-corps-child">Evil Corp&rsquo;s Child</a>
+<ul>
+<li><a href="#evil-corps-child-1">Evil Corp&rsquo;s Child</a></li>
+<li><a href="#evil-corps-child-2">Evil Corp&rsquo;s Child 2</a></li>
+<li><a href="#evil-corps-child-3">Evil Corp&rsquo;s Child 3</a></li>
+<li><a href="#evil-corps-child-4">Evil Corp&rsquo;s Child 4</a></li>
+</ul>
+</li>
+<li><a href="#an-evil-christmas-carrol">An Evil Christmas Carrol</a>
+<ul>
+<li><a href="#an-evil-christmas-carrol-1">An Evil Christmas Carrol</a></li>
+<li><a href="#an-evil-christmas-carrol-2">An Evil Christmas Carrol 2</a></li>
+<li><a href="#an-evil-christmas-carrol-3">An Evil Christmas Carrol 3</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<h1 id="linux">Linux<a href="#linux" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="talking-to-the-dead-1">Talking to the Dead 1<a href="#talking-to-the-dead-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD1-1.png"  alt="Talking to the Dead 1 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>First, log in to the SSH Server using the given credentials:</p>
+<pre><code>ssh hacktober@env.hacktober.io
+</code></pre><p>Then, figure out what&rsquo;s in our current directory, and use the linux find command to locate the flag.</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD1-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Cat the file and submit the flag!</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD1-3.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{cb07e9d6086d50ee11c0d968f1e5c89418c}</code></p>
+<h2 id="talking-to-the-dead-2">Talking to the Dead 2<a href="#talking-to-the-dead-2" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD2-0.png"  alt="Talking to the Dead 2 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Log in and poke around&hellip; This time, run <code>ls -al</code> to get a bit more information than we did last time&hellip;</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD2-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{728ec98bfaa302b2dfc2f716d3de7869f3eadcbf}</code></p>
+<h2 id="talking-to-the-dead-3">Talking to the Dead 3<a href="#talking-to-the-dead-3" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD3-0.png"  alt="Talking to the Dead 3 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>This challenge is a little more complicated&hellip; First, let&rsquo;s find the flag!</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD3-1.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>This time, the flag is in someone else&rsquo;s documents folder. Let&rsquo;s try to cat it:</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD3-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Hmmmmmm, that didn&rsquo;t work. We don&rsquo;t have the correct permissions.  Only spookyboi and members of the spookyboi group can access the flag <sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup> :</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD3-3.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>We aren&rsquo;t in the spookyboi group either:</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD3-4.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>We have to figure out how to log in as the spookyboi user&hellip; If we look at the challenge titles, there&rsquo;s another challenge that might give us some information on spookyboi&hellip; Check out <a href="#past-demons">Past Demons</a> and then come back!</p>
+<p>Now we have spookyboi&rsquo;s password: <code>zxcvbnm</code>, and can su to his user and read the flag!</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD3-5.png"  class="left"  style="border-radis: 8px;"  />
+
+
+<p><code>flag{445b987b5b80e445c3147314dbfa71acd79c2b67}</code></p>
+<h2 id="talking-to-the-dead-4">Talking to the Dead 4<a href="#talking-to-the-dead-4" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>This challenge writeup is by one of my teammates, <a href="https://twitter.com/Geeg007">@Geeg007</a>!</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD4-1.png"  alt="Talking to the Dead 4 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>So obviously its READ questions first&hellip;</p>
+<p>Ohh there are ssh detials provided aha that saves dude from bruteforcing (weak passwords)</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD4-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>So let&rsquo;s login.</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD4-3.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>hehe we&rsquo;re IN, so i&rsquo;m laying hands where possible</p>
+<p>So i searched and aha FIRST sight at flag4.txt
+And yes it&rsquo;s in /root directory so let&rsquo;s goooo!!!</p>
+<pre><code>find / -name flag4.txt
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/TTTD4-4.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Ahhh I thought I had you (flag4.txt)&hellip; I probably need root access to view this file!</p>
+<p>So let&rsquo;s cd to / and look for setuid bits using:</p>
+<pre><code>find . -perm /4000 &amp;2&gt;/dev/null
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/TTTD4-5.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>So everything looks pretty standard yeah? Not quite - I&rsquo;m interested in finding out what ouija is in this box&hellip;</p>
+<p>So <code>cat ./usr/local/bin/ouija</code> apparently gave us a clue for how to use the setUID binary.</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD4-7.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Because the <code>ouija</code> binary has extra permissions, we can use it to view the contents of flag4.txt even though our user doesn&rsquo;t have permissions!</p>
+
+  <img src="../../images/Hacktober2020Writeup/TTTD4-8.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{4781cbff13df6622565d45e790b4aac2a4054dc}</code></p>
+<p>Gotcha!!!
+Thanks to CyberUp &amp; Cyber Hacktics for this wonderful challenge.
+Also to my teammates CharCharBinks (C), J0hn_W1ck &amp; HarleyHacker for having me in the team also providing
+moral &amp; technidcal support. LOVE YA</p>
+<h1 id="programming">Programming<a href="#programming" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="message-in-an-array">Message in an Array<a href="#message-in-an-array" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/Programming-Array1.png"  alt="Message in an Array Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>At first, I didn&rsquo;t see the code in the challenge description, but when I did I copied it to vistual studio code to make it more readable:</p>
+
+  <img src="../../images/Hacktober2020Writeup/Programming-Array2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>This code looks like c++, and it creates an array of strings of length 4:</p>
+<pre><code>string[] str = new string[4] {&quot;DEADFACE&quot;, &quot;Nothing&quot;, &quot;Stop&quot;, &quot;Will&quot;};
+</code></pre><p>And then it prints the contents of the array in a specific order:</p>
+<pre><code>Console.WriteLine(&quot;{1} {3} {2} {0}&quot;, str);
+</code></pre><p>When we re-order the words from the string in the order specified in the <code>Console.WriteLine</code> statement, we get:</p>
+<p>Nothing Will Stop Deadface</p>
+<p>So our flag is:</p>
+<p><code>flag{Nothing Will Stop DEADFACE}</code></p>
+<p>Remember that programming array indices start at zero!</p>
+<h1 id="stego">Stego<a href="#stego" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="ghost-hunter">Ghost Hunter<a href="#ghost-hunter" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/GH1.png"  alt="Ghost Hunter Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Because the challenge description mentioned that it was intercepted on the Ghost Town forum, I decided to look around to find more information. On one of the threads, I found this comment:</p>
+
+  <img src="../../images/Hacktober2020Writeup/GH2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><a href="https://www.ghosttown.xyz/t/haunted-pictures/33/7">https://www.ghosttown.xyz/t/haunted-pictures/33/7</a></p>
+<p>Then I searched google until I found a stego tool that worked!</p>
+<p><a href="http://manytools.org/hacker-tools/steganography-encode-text-into-image/">http://manytools.org/hacker-tools/steganography-encode-text-into-image/</a></p>
+
+  <img src="../../images/Hacktober2020Writeup/GH3.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{8862a805a3140996343da91bdcbda79e}</code></p>
+<h2 id="blasphemy">Blasphemy<a href="#blasphemy" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/Blasphemy1.png"  alt="Blasphemy Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>The challenge description mentions &ldquo;some kind of tool&rdquo; and the most common steganography tool for .jpg files is steghide!</p>
+<p>I always have to look up how exactly to use steghide, and I usually wind up on this page:
+<a href="http://steghide.sourceforge.net/documentation.php">http://steghide.sourceforge.net/documentation.php</a></p>
+
+  <img src="../../images/Hacktober2020Writeup/Blasphemy2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{950634ccc97ca3ef03e22c759a356973}</code></p>
+<h1 id="cryptography">Cryptography<a href="#cryptography" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Shameless plug: I wrote <a href="https://charcharbinks.com/post/ctf_crypto_for_beginners/">this blog post on beginner CTF Cryptography</a>, and it has more information about all of the ciphers used in the challenges that I solved!</p>
+<h2 id="hail-caesar">Hail Caesar!<a href="#hail-caesar" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/Caesar1.png"  alt="Hail Caesar Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>The challenge name and the attached image (a code wheel) are both clues to the type of cipher used to encrypt the message! The correct cipher for this challenge is the caesar cipher.</p>
+<p>I used this tool to decrypt the message:
+<a href="http://rumkin.com/tools/cipher/caesar.php">http://rumkin.com/tools/cipher/caesar.php</a></p>
+
+  <img src="../../images/Hacktober2020Writeup/Caesar2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Our flag is:
+<code>BOO SCARED YOU</code></p>
+<h2 id="down-the-wrong-path">Down the Wrong Path<a href="#down-the-wrong-path" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/WrongPath1.png"  alt="Down the Wrong Path Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>The attached image contains the following text:</p>
+<pre><code>RMTLOBBTERSUXT
+EBOLOOOHWGORTA
+METSKIUETEFNAC
+EREPYATNATOETK
+</code></pre><p>Because the text is arranged in columns (rows) it&rsquo;s likely that the cipher used for this challenge is columnar transposition.</p>
+<p>This is the tool I used to solve this challenge:</p>
+<p><a href="https://www.boxentriq.com/code-breaking/columnar-transposition-cipher">https://www.boxentriq.com/code-breaking/columnar-transposition-cipher</a></p>
+
+  <img src="../../images/Hacktober2020Writeup/WrongPath2.png"  alt="Columnar Transposition Cipher Tool Results"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>The spacing was a bit off, but the top result is what we&rsquo;re looking for!</p>
+<p><code>remember to tell spookyboi about the new targets of our next attack</code></p>
+<p>Because the challenge asks for the intended recipient, our flag is:</p>
+<p><code>spookyboi</code></p>
+<h2 id="cover-your-bases">Cover your Bases<a href="#cover-your-bases" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/CoverYourBases1.png"  alt="Cover your Bases Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Again, the challenge title is a hint! &ldquo;Bases&rdquo; is referring to base 64 encoding. So, all we have to do is use a base64 decoding tool to get the flag!</p>
+<pre><code>ZmxhZ3tzaG91bGRhX21hZGVfdGhpc19vbmVfaGFyZGVyfQ==
+</code></pre><p>The tool I used is: <a href="https://simplycalc.com/base64-decode.php">https://simplycalc.com/base64-decode.php</a></p>
+<p><code>flag{shoulda_made_this_one_harder}</code></p>
+<h1 id="sql">SQL<a href="#sql" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Have I mentioned that I love databases? If you want some foundational information about databases (with a sprinkling of SQL injection), check out <a href="https://charcharbinks.com/post/introductiontodatabasesforhackers-zerotosqli/">An Introduction to Relational Databases for Hackers</a> by yours truly!</p>
+<h2 id="past-demons">Past Demons<a href="#past-demons" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/1-PastDemons0.png"  alt="Past Demons Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>First, let&rsquo;s figure out what kind of database we&rsquo;re dealing with by using the linux <code>file</code> command:</p>
+
+  <img src="../../images/Hacktober2020Writeup/1-PastDemons1.png"  alt="SQLite file type"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>The database dump file we have is for sqlite3.x and fortunately kali linux comes with sqlite 3 installed!</p>
+<p>Using the information from this webpage, we can load the .db file into sqlite and run queries! I was super lazy and didn&rsquo;t want to use a join, so I just ran two separate queries:</p>
+<pre><code>select * from passwd;
+</code></pre><p>and</p>
+<pre><code>select * from users;
+</code></pre><p>In the users table, spookyboi&rsquo;s primary key is 8, so if we match that with the 8th password hash we should have spookyboi&rsquo;s password hash&hellip;</p>
+
+  <img src="../../images/Hacktober2020Writeup/1-PastDemons2.png"  alt="Loaded file into DMBS"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>But the challenge asks for spookyboi&rsquo;s password, so we have to crack it&hellip; My go-to first stop for cracking hashes is <a href="https://crackstation.net/">crackstation</a>.</p>
+<p>Using the hash from the database as input: <code>59DEA36D05AACAA547DE42E9956678E7</code></p>
+
+  <img src="../../images/Hacktober2020Writeup/1-PastDemons3.png"  alt="Crackstation Results"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>And voila! We have spookyboi&rsquo;s password!</p>
+<p><code>flag{zxcvbnm}</code></p>
+<h2 id="address-book">Address Book<a href="#address-book" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/2-AddressBook0.png"  alt="Address Book Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>This SQL challenge involves another type of database dump! According to the linux <code>file</code> command, this is just UTF-8 encoded text&hellip; With very long lines&hellip; So, I opened it up in good ole VS Code:</p>
+
+  <img src="../../images/Hacktober2020Writeup/2-AddressBook1.png"  alt="shallowgraveu.sql file type"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>I know my screenshot is really small, but using information from the intel page (luciafer&rsquo;s first and last name) I used the built in search function to locate Lucia&rsquo;s email address:</p>
+
+  <img src="../../images/Hacktober2020Writeup/2-AddressBook2.png"  alt="VS Code display of file contents"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{luciafer.b4vr0n@shallowgraveu.com}</code></p>
+<h2 id="calisota">Calisota<a href="#calisota" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Before we can complete this challenge, we have to <a href="#loading-the-mysql-dump">Load the MySQL Dump</a> file into a DMBS so we can run queries. Once that&rsquo;s done, we can start querying the database!</p>
+<blockquote>
+<p>Disclaimer: there were scoring issues for this challenge so I didn&rsquo;t end up getting points for it but I believe I did get the correct answer! Without further ado, here&rsquo;s my solution!</p>
+</blockquote>
+
+  <img src="../../images/Hacktober2020Writeup/3-Calisota1.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>First, let&rsquo;s take a look at the fields in the users table:</p>
+<pre><code>select * from users limit 10;
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/3-Calisota2.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>And then, let&rsquo;s take a look at the states table:</p>
+<pre><code>select * from states limit 10;
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/3-Calisota5.png"  alt="Calisota states table"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Now that we know the contents of the users table and the states table, we can write a query to join the two tables together. This will make sure we&rsquo;re pulling the right information out of the tables we&rsquo;re interested in before we start filtering and counting:</p>
+<pre><code>SELECT users.username, states.state_abbrev FROM users
+INNER JOIN states ON users.state_id=states.state_id
+LIMIT 10;
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/3-Calisota3.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>We&rsquo;re getting usernames and state abbreviations, so far so good! Let&rsquo;s add some conditions to our query - we want students from only CA and MN:</p>
+<pre><code>SELECT users.username, states.state_abbrev FROM users
+INNER JOIN states ON users.state_id=states.state_id
+WHERE state_full='California' OR state_full='Minnesota';
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/3-Calisota4.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Now our results are limited to users from CA and MN&hellip; But the challenge asks for the count!</p>
+<p>So now we use the builtin SQL <code>count()</code> function:</p>
+<pre><code>SELECT count(*) FROM users
+INNER JOIN states ON users.state_id=states.state_id
+WHERE state_full='California' OR state_full='Minnesota';
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/3-Calisota6.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Voila! That query should have been a correct answer! However, because the entire query is the answer, there are many many different ways we could have solved this question&hellip; And only one right answer :(</p>
+<h2 id="body-count-null-and-void-fall-classes">Body Count, Null and Void, Fall Classes<a href="#body-count-null-and-void-fall-classes" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h3 id="body-count">Body Count<a href="#body-count" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>Before we can complete this challenge, we have to <a href="#loading-the-mysql-dump">Load the MySQL Dump</a> file into a DMBS so we can run queries. Once that&rsquo;s done, we can start querying the database!</p>
+
+  <img src="../../images/Hacktober2020Writeup/4-BodyCount0.png"  alt="Body Count Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Let&rsquo;s take a look at the users table:</p>
+<pre><code>select * from users limit 10;
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/3-Calisota2.png"  alt="SQL Users Table"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Now that we know what the users table looks like, we can run the following query to get the number of rows (or records) from the users table:</p>
+<pre><code>select count(*) from users;
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/4-BodyCount1.png"  alt="Body Count Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>Flag{900}</code></p>
+<h3 id="null-and-void">Null and Void<a href="#null-and-void" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>Before we can complete this challenge, we have to <a href="#loading-the-mysql-dump">Load the MySQL Dump</a> file into a DMBS so we can run queries. Once that&rsquo;s done, we can start querying the database!</p>
+
+  <img src="../../images/Hacktober2020Writeup/5-NullVoid0.png"  alt="Null and Void Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>This challenge asks us to identify a single command to figure out which fields in the users table can be null.</p>
+<p>My first attempt worked, but it was not considered correct:</p>
+
+  <img src="../../images/Hacktober2020Writeup/5-NullVoid1.png"  alt="Null and Void Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>The <code>DESCRIBE</code> command was the correct answer for this challenge:</p>
+
+  <img src="../../images/Hacktober2020Writeup/5-NullVoid2.png"  alt="Null and Void Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{middle,DESCRIBE}</code></p>
+<h3 id="fall-classes">Fall Classes<a href="#fall-classes" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+<p>Before we can complete this challenge, we have to <a href="#loading-the-mysql-dump">Load the MySQL Dump</a> file into a DMBS so we can run queries. Once that&rsquo;s done, we can start querying the database!</p>
+
+  <img src="../../images/Hacktober2020Writeup/6-FallClasses0.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>First, let&rsquo;s run a couple queries to figure out what kind of data we&rsquo;re dealing with:</p>
+
+  <img src="../../images/Hacktober2020Writeup/6-FallClasses1.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>The data we&rsquo;re slooking for is in the term_courses table - it represents a many to many relationship between courses and terms. We&rsquo;re looking for the number of courses being offered for FALL2020 which means that our term_id must equal 2.  We also don&rsquo;t want any duplicates:</p>
+<pre><code>SELECT COUNT(DISTINCT course_id) from term_courses where term_id=2;
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/6-FallClasses2.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{401}</code></p>
+<h2 id="90s-kids">90&rsquo;s Kids<a href="#90s-kids" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Before we can complete this challenge, we have to <a href="#loading-the-mysql-dump">Load the MySQL Dump</a> file into a DMBS so we can run queries. Once that&rsquo;s done, we can start querying the database!</p>
+
+  <img src="../../images/Hacktober2020Writeup/7-90sKids1.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>First, let&rsquo;s take a look at the users table, and fiddle around with extracting parts of the date field into separate fields so we can filter our results:</p>
+
+  <img src="../../images/Hacktober2020Writeup/7-90sKids2.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Now that we know how to extract information from the date field, we can pull out the month and year separately, which will make writing our <code>WHERE</code> clause much easier:</p>
+
+  <img src="../../images/Hacktober2020Writeup/7-90sKids3.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<pre><code>select username, EXTRACT(YEAR FROM dob) as year, EXTRACT(MONTH FROM dob) as month from users WHERE ((EXTRACT YEAR FROM dob) &gt;= 1990 AND (EXTRACT YEAR FROM dob) &lt;= 1999) AND EXTRACT (MONTH FROM dob) = 10;
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/7-90sKids4.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Now that we&rsquo;ve verified that we&rsquo;re getting correct results (only years in the 1990&rsquo;s and October or 10 for the month) we can clean up our query and count:</p>
+<pre><code>SELECT COUNT(username) FROM users WHERE ((EXTRACT YEAR FROM dob) &gt;= 1990 AND (EXTRACT YEAR FROM dob) &lt;= 1999) AND EXTRACT (MONTH FROM dob) = 10;
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/7-90sKids5.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Bonus screenshot: the full result set:</p>
+
+  <img src="../../images/Hacktober2020Writeup/7-90sKids6.png"  alt="Calisota Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{32}</code></p>
+<h2 id="jigsaw">Jigsaw<a href="#jigsaw" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/8-Jigsaw1.png"  alt="Jigwaw Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>This challenge asks us to match a specific pattern, and what better way to match a very specific pattern than regex! Let&rsquo;s start with the information we know and what we need to know to write some regex, and then a SQL query to give us our answer!</p>
+<p>First, let&rsquo;s create some regex to match the specific pattern we&rsquo;re given:</p>
+<table>
+<thead>
+<tr>
+<th>Condition</th>
+<th>Regex</th>
+<th>Explanation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>The first two characters are K R or I</td>
+<td>[KRIkri]{2}</td>
+<td>We need both upper and lower case because the first letter of the name will be uppercase and the second letter will be lowercase.</td>
+</tr>
+<tr>
+<td>Wildcard - any character except newline</td>
+<td>.</td>
+<td>Pretty self explanatory - the <code>.</code> character represents any character except newline.</td>
+</tr>
+<tr>
+<td>Three letters</td>
+<td>[a-z]{3}</td>
+<td>This regex matches any letter, three times.</td>
+</tr>
+<tr>
+<td>The last letter is e-n inclusive</td>
+<td>[e-n]</td>
+<td>This group matches the letters e-n only once.</td>
+</tr>
+</tbody>
+</table>
+<p>So our full regex statement is: <code>^[KRIkri]{2}.[a-z]{3}[e-n]{1}</code></p>
+<p>Regex is tricky, here are my favorite tools/cheatsheets:</p>
+<p><a href="https://gchq.github.io/CyberChef/#recipe=Regular_expression('User%20defined','',true,true,false,false,false,false,'Highlight%20matches')">CyberChef</a></p>
+<p><a href="https://www.regexplained.co.uk/">Regexplained</a></p>
+<p><a href="https://regexr.com/">Regexr</a></p>
+<p><a href="https://www.rexegg.com/regex-quickstart.html">Regex Cheat Sheet</a></p>
+<p>Here&rsquo;s the &ldquo;regexplanation&rdquo;<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup> for the expression I wrote for this challenge:</p>
+
+  <img src="../../images/Hacktober2020Writeup/8-Jigsaw3.png"  alt="Jigsaw Regexplained"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>If we read the information carefully we can infer that the total length of the last name is seven characters:</p>
+<ul>
+<li>Two first letters</li>
+<li>One wildcard</li>
+<li>Three more letters</li>
+<li>One last letter</li>
+</ul>
+<p>The appropriate SQL query that makes use of all this information is:</p>
+<pre><code>SELECT first, last, username from users where last REGEXP '^[KRIkri]{2}.[a-z]{3}[e-n]{1}' AND LENGTH(last)=7;
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/8-Jigsaw2.png"  alt="Jigsaw Solution"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{image.wa1k3624}</code></p>
+<p>For more information on using regex with MySQL:</p>
+<p><a href="https://dev.mysql.com/doc/refman/8.0/en/regexp.html">https://dev.mysql.com/doc/refman/8.0/en/regexp.html</a></p>
+<p><a href="https://www.geeksforgeeks.org/mysql-regular-expressions-regexp/">https://www.geeksforgeeks.org/mysql-regular-expressions-regexp/</a></p>
+<p><a href="https://www.guru99.com/regular-expressions.html">https://www.guru99.com/regular-expressions.html</a></p>
+<h2 id="loading-the-mysql-dump">Loading the MySQL Dump<a href="#loading-the-mysql-dump" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>We need to be able to load the MySQL Dump file into a DBMS to be able to solve several challenges, and there&rsquo;s enough content so I decided to break this out into its own section!</p>
+<p>First, start the MySql Service and make sure your version is compatible - the same major version should do!</p>
+
+  <img src="../../images/Hacktober2020Writeup/CreatingDB1.png"  alt="Loading the MySQL Dump"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Then, start the service again with <code>--skip-grant-tables</code> because I didn&rsquo;t want to bother with the &ldquo;what in the world is my MySQL root password&rdquo; dance&hellip;</p>
+<p>Then, log in as root because I like to live on the edge (VM Snapshots encourage risky behavior):</p>
+<pre><code>mysql -u root
+</code></pre><p>Create a database to load our data into, and then switch to it:</p>
+<pre><code>CREATE DATABASE hacktober;
+USE hacktober;
+</code></pre><p>Finally, load the MySQL Dump file into our new database:</p>
+<pre><code>SOURCE /path/to/MySQL_DumpFile/shallowgraveu.sql
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/CreatingDB2.png"  alt="Loading the MySQL Dump"  class="left"  style="border-radius: 8px;"  />
+
+
+<h1 id="osint">OSINT<a href="#osint" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<h2 id="creeping-1">Creeping 1<a href="#creeping-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/Creeping1-1.png"  alt="Creeping 1 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Let&rsquo;s be honest&hellip; We love some good ole internet creeping! The best place to find information about people is facebook&hellip; Unfortunately, you have to be logged into an account to be able to solve these challenges.
+I googled Ali Tevlin&rsquo;s handle (alitevlin) that I found on the intel page, and came up with this informaiton from his facebook page:</p>
+
+  <img src="https://speedychickennugget.com/images/Hacktober2020Writeup/Creeping1-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{F. Kreuger Financial}</code></p>
+<h2 id="creeping-2">Creeping 2<a href="#creeping-2" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/Creeping2-1.png"  alt="Creeping 2 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Ali Tevlin&rsquo;s job title is listed under his place of work:</p>
+
+  <img src="https://speedychickennugget.com/images/Hacktober2020Writeup/Creeping1-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{Senior Acquisitions Supervisor}</code></p>
+<h2 id="creeping-3">Creeping 3<a href="#creeping-3" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+
+  <img src="../../images/Hacktober2020Writeup/Creeping3-0.png"  alt="Creeping 3 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Let&rsquo;s find his birthday! It is also listed on facebook:</p>
+
+  <img src="../../images/Hacktober2020Writeup/Creeping3-1.png"  alt="Creeping 3 Facebook Birthday"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{17 06 1973}</code></p>
+<h1 id="traffic-analysis">Traffic Analysis<a href="#traffic-analysis" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h1>
+<p>Time to show wireshark some love!</p>
+<h2 id="remotely-administrated-evil">Remotely Administrated Evil<a href="#remotely-administrated-evil" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h3 id="remotely-administrated-evil-1">Remotely Administrated Evil<a href="#remotely-administrated-evil-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+
+  <img src="../../images/Hacktober2020Writeup/RAE0-1.png"  alt="Remotely Administrated Evil 1 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>The challenge description gives us several clues for what to look for - the most notable being that our answer will be contained in a URL.  Let&rsquo;s filter our traffic for just HTTP Traffic:</p>
+<pre><code>http
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/RAE0-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Our flag is the file name:</p>
+<p><code>Flag{solut.exe}</code></p>
+<h3 id="remotely-administrated-evil-2">Remotely Administrated Evil 2<a href="#remotely-administrated-evil-2" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+
+  <img src="../../images/Hacktober2020Writeup/RAE1-1.png/"  alt="Remotely Administrated Evil 2 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Another day, another pcap! now we&rsquo;re looking for post-infection traffic, specifically a MYDDNS domain that the malware communicates with.  Let&rsquo;s build a bit off of our last challenge to find the traffic we&rsquo;re looking for.  Because of the malicious download that we&rsquo;ve already identified, we know the ip address of the compromised host!</p>
+<pre><code>172.16.1.219
+</code></pre><p>Now we build a traffic filter:</p>
+<pre><code>ip.addr == 172.16.1.219
+</code></pre><p>Set your wireshark preferences to resolve DNS for you:</p>
+
+  <img src="../../images/Hacktober2020Writeup/RAE1-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Then, just scroll through the traffic until you see something related to MYDDNS.  You could probably write a filter for this, but at the time I had no idea what type of traffic would be related to MYDDNS so I just went for it.</p>
+
+  <img src="../../images/Hacktober2020Writeup/RAE1-3.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{solution.myddns.me}</code></p>
+<h3 id="remotely-administrated-evil-3">Remotely Administrated Evil 3<a href="#remotely-administrated-evil-3" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+
+  <img src="../../images/Hacktober2020Writeup/RAE2-1.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Now we have the challenge of identifying the type of malware infection! We know several critical pieces of information:</p>
+<ul>
+<li>The initial delivery method (download url)</li>
+<li>A probable C2 Server</li>
+<li>We could probably even extract the malicious file!</li>
+</ul>
+<p>Let&rsquo;s see what virustotal says about our initial download url:</p>
+
+  <img src="../../images/Hacktober2020Writeup/RAE2-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+
+  <img src="../../images/Hacktober2020Writeup/RAE2-3.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>I poked around for a bit and eventually arrived at this report:</p>
+
+  <img src="../../images/Hacktober2020Writeup/RAE2-4.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><a href="https://bazaar.abuse.ch/sample/b16b3d99441f078e081e2ac0a8f0121ce4dab264bf434e353d1e00a57e54d3aa/">https://bazaar.abuse.ch/sample/b16b3d99441f078e081e2ac0a8f0121ce4dab264bf434e353d1e00a57e54d3aa/</a></p>
+<p><code>flag{netwire}</code></p>
+<h2 id="evil-corps-child">Evil Corp&rsquo;s Child<a href="#evil-corps-child" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h3 id="evil-corps-child-1">Evil Corp&rsquo;s Child<a href="#evil-corps-child-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+
+  <img src="../../images/Hacktober2020Writeup/ECC1-0.png"  alt="Evil Corp&#39;s Child 1 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>We&rsquo;ve got a lot of traffic but not a lot of clues&hellip; A very common method of malware delivery is over HTTP (as seen in the last challenge) so let&rsquo;s start there:</p>
+<pre><code>http
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/ECC1-1.png"  alt="Evil Corp&#39;s Child 1 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>That&rsquo;s interesting&hellip;. the only HTTP request has a&hellip; jpg file? But that doesnt look malicious!
+Let&rsquo;s extract the file and see what it really is:</p>
+
+  <img src="../../images/Hacktober2020Writeup/ECC1-2.png"  alt="Evil Corp&#39;s Child 1 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<pre><code>file picture2.jpg
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/ECC1-3.png"  alt="Evil Corp&#39;s Child 1 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>The linux file command confirms our suspicions&hellip; The image file is actually a windows executable!</p>
+<p><code>flag{picture4.png}</code></p>
+<p>They tried to pull a fast one on us&hellip;</p>
+
+  <img src="../../images/Hacktober2020Writeup/ECC1-4png"  alt="Evil Corp&#39;s Child meme"  class="left"  style="border-radius: 8px;"  />
+
+
+<h3 id="evil-corps-child-2">Evil Corp&rsquo;s Child 2<a href="#evil-corps-child-2" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+
+  <img src="../../images/Hacktober2020Writeup/ECC2-0.png"  alt="Evil Corp&#39;s Child 2 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>This challenge description gives us quite a lot to go on! We know that our malware will be communicating from our compromised IP from the last challenge <code>192.168.1.91</code> and that the traffic we&rsquo;re looking for is over the same port as HTTPS, or port <code>443</code>.</p>
+<p>Building our wireshark filter from this information:</p>
+<pre><code>ip.addr == 192.168.1.91 &amp;&amp; tcp.port == 443
+</code></pre><p>We also want to look at traffic after our initial infection, so we&rsquo;ll start looking after packet No. 231</p>
+<p>This traffic looked suspect, and as it happens it&rsquo;s the right address!</p>
+
+  <img src="../../images/Hacktober2020Writeup/ECC2-1.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{213.136.94.177}</code></p>
+<h3 id="evil-corps-child-3">Evil Corp&rsquo;s Child 3<a href="#evil-corps-child-3" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+
+  <img src="../../images/Hacktober2020Writeup/ECC3-1.png"  alt="Evil Corp&#39;s Child 3 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>For this challenge, we have to hunt down certificate! We&rsquo;re given the ip address that provides the certificate: <code>37.205.9.252</code>.</p>
+<p>Let&rsquo;s filter our traffic by that address and look for a key exchange:</p>
+<pre><code>ip.addr == 37.205.9.252
+</code></pre><p>The bulk of the traffic that we see right away is TLSv1.2. We&rsquo;re looking for information about a certificate, so it makes sense to look in the packet that says it has certificate information</p>
+
+  <img src="../../images/Hacktober2020Writeup/ECC3-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>We&rsquo;re looking for the locality name, so we have to drill down a bit further:</p>
+
+  <img src="../../images/Hacktober2020Writeup/ECC3-3.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>There it is! LocalityName=Mogadishu</p>
+<p><code>flag{Mogadishu}</code></p>
+<h3 id="evil-corps-child-4">Evil Corp&rsquo;s Child 4<a href="#evil-corps-child-4" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+
+  <img src="../../images/Hacktober2020Writeup/ECC4-1.png"  alt="Evil Corp&#39;s Child 4 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<blockquote>
+<p>I&rsquo;ll take malware strain identification for 100, Alex!</p>
+</blockquote>
+<p>Fortunately, we have a malware sample from <a href="#evil-corps-child-1">Evil Corp&rsquo;s Child - Part 1</a> that we can upload to virus total! Behold, it&rsquo;s Dridex!</p>
+
+  <img src="../../images/Hacktober2020Writeup/ECC4-2.png"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{Dridex}</code></p>
+<h2 id="an-evil-christmas-carrol">An Evil Christmas Carrol<a href="#an-evil-christmas-carrol" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<h3 id="an-evil-christmas-carrol-1">An Evil Christmas Carrol 1<a href="#an-evil-christmas-carrol-1" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+
+  <img src="../../images/Hacktober2020Writeup/AECC1-0.png"  alt="An Evil Christmas Carrol 1 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>This time we&rsquo;re looking for a malicious .dll file that was downloaded over HTTP. So, let&rsquo;s filter for http traffic!</p>
+<pre><code>http
+</code></pre>
+  <img src="../../images/Hacktober2020Writeup/AECC1-1.png"  alt="An Evil Christmas Carrol 1 Suspicious Traffic"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>There&rsquo;s our .dll file!</p>
+<p><code>flag{july22.dll}</code></p>
+<h3 id="an-evil-christmas-carrol-2">An Evil Christmas Carrol 2<a href="#an-evil-christmas-carrol-2" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+
+  <img src="../../images/Hacktober2020Writeup/AECC2-1.png"  alt="An Evil Christmas Carrol 2 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>We&rsquo;re looking for another C2 domain, this time the post-infection traffic is over HTTPS and our infected host is <code>10.0.0.163</code>:</p>
+<pre><code>tcp.port == 443 &amp;&amp; ip.addr == 10.0.0.163
+</code></pre><p>We should also enable domain resolution:</p>
+
+  <img src="../../images/Hacktober2020Writeup/RAE1-2.png"  alt="Enable domain resolution"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Here&rsquo;s our filtered traffic, we&rsquo;re looking for post-infection traffic so we&rsquo;ll start looking after packet No. 529:</p>
+<p>Now that&rsquo;s what I call a sketchy looking domain&hellip;</p>
+
+  <img src="../../images/Hacktober2020Writeup/AECC2-2.png"  alt="An Evil Christmas Carrol 2 filtered traffic"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><code>flag{vlcafxbdjtlvlcduwhga.com}</code></p>
+<h3 id="an-evil-christmas-carrol-3">An Evil Christmas Carrol 3<a href="#an-evil-christmas-carrol-3" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h3>
+
+  <img src="../../images/Hacktober2020Writeup/AECC3-1.png"  alt="An Evil Christmas Carrol 3 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>Once again, we&rsquo;re looking for the type of malware infection.  Using logic, and brain cells, we can guess that the domain is pretty important because that&rsquo;s what we had to find for the last challenge.  Looking it up on virustotal, we get some domain information (which isn&rsquo;t all that useful):</p>
+
+  <img src="../../images/Hacktober2020Writeup/AECC3-2.png"  alt="An Evil Christmas Carrol 3 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p>However, if we scroll down to the google results, we find a link to the Malware Bazaar:</p>
+
+  <img src="../../images/Hacktober2020Writeup/AECC3-3.png"  alt="An Evil Christmas Carrol 3 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<p><a href="https://bazaar.abuse.ch/sample/c1532b3d37ff2ec7d70d7f8037b8cdf843d3cdd24adf860f4251d045ddf9d47c/#file_info">https://bazaar.abuse.ch/sample/c1532b3d37ff2ec7d70d7f8037b8cdf843d3cdd24adf860f4251d045ddf9d47c/#file_info</a></p>
+<p><code>flag{zloader}</code></p>
+<hr>
+<p>The Cranberry Defense Team put forth a great effort! 179th out of 1062 isn&rsquo;t bad!</p>
+
+  <img src="https://cdn.discordapp.com/attachments/761311020177686538/767219929161531422/image0.png"  alt="An Evil Christmas Carrol 3 Challenge Description"  class="left"  style="border-radius: 8px;"  />
+
+
+<hr>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p><a href="https://en.wikipedia.org/wiki/File-system_permissions">https://en.wikipedia.org/wiki/File-system_permissions</a> <a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p>Image generated with <a href="https://www.regexplained.co.uk/">https://www.regexplained.co.uk/</a> <a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
+
+      </div></div>
+
+  
+  
+<div class="pagination">
+    <div class="pagination__title">
+        <span class="pagination__title-h">Read other posts</span>
+        <hr />
+    </div>
+    <div class="pagination__buttons">
+        
+        
+        <span class="button next">
+            <a href="https://charcharbinks.com/post/ctf_crypto_for_beginners/">
+                <span class="button__text">CTF Cryptography for Beginners</span>
+                <span class="button__icon">?</span>
+            </a>
+        </span>
+        
+    </div>
+</div>
+
+  
+
+  
+
+</div>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright">
+        <span>© 2020 Powered by <a href="http://gohugo.io">Hugo</a></span>
+    
+        <span>:: Theme made by <a href="https://twitter.com/panr">panr</a></span>
+      </div>
+  </div>
+</footer>
+
+<script src="https://charcharbinks.com/assets/main.js"></script>
+<script src="https://charcharbinks.com/assets/prism.js"></script>
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
+

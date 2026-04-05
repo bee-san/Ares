@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+    <title>huntress ctf 2024 writeups</title>
+  
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Writeups for my favorite challenges from the 2024 Huntress CTF" />
+<meta name="keywords" content="huntress, golang rev, osint" />
+
+
+
+  
+    
+  
+
+<meta name="theme-color" content="#78E2A0">
+
+
+  <meta name="robots" content="noodp" />
+
+<link rel="canonical" href="https://sylvie.fyi/posts/huntress-2024/" />
+
+
+<link rel="stylesheet" href="/custom.css">
+<script src="/custom.js"></script>
+<script src="https://kit.fontawesome.com/081263bd39.js" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="/fonts/Glyphter.css">
+
+
+
+
+
+
+<link rel="stylesheet" href="https://sylvie.fyi/styles.css">
+
+
+
+
+
+
+  <link rel="shortcut icon" href="https://sylvie.fyi/favicon.ico">
+
+
+
+<meta name="twitter:card" content="summary" />
+
+  
+    <meta name="twitter:site" content="" />
+  
+    <meta name="twitter:creator" content="" />
+
+
+
+<meta property="og:locale" content="en" />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Huntress CTF 2024 Writeups">
+<meta property="og:description" content="Writeups for my favorite challenges from the 2024 Huntress CTF" />
+<meta property="og:url" content="https://sylvie.fyi/posts/huntress-2024/" />
+<meta property="og:site_name" content="sylvie" />
+
+  
+  
+  <meta property="og:image" content="https://sylvie.fyi/posts/huntress-2024/cert.png">
+
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="627">
+
+
+  <meta property="article:published_time" content="2024-11-02 03:01:28 -0500 -0500" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+</head>
+<body class="green">
+
+
+
+
+<div class="container center headings--one-size">
+
+  <header class="header">
+  <div class="header__inner">
+    <div class="header__logo">
+      <a href="/" class="header-link">
+  <div class="logo">
+    sylvie.fyi
+  </div>
+</a>
+
+<a href="/posts" class="header-link">
+  <div class="navbar-link">
+    posts
+  </div>
+</a>
+
+<a href="/projects" class="header-link">
+  <div class="navbar-link">
+    projects
+  </div>
+</a>
+
+<a href="/about" class="header-link">
+  <div class="navbar-link">
+    about
+  </div>
+</a>
+
+<a href="/tools" class="header-link">
+  <div class="navbar-link">
+    tools
+  </div>
+</a>
+
+    </div>
+    
+  </div>
+    <div class="banner-image">
+    
+    <img src="/banner.png"/>
+
+  </div>
+</header>
+
+
+  <div class="content">
+    
+<article class="post accent-green">
+  <h1 class="post-title">
+    <a href="https://sylvie.fyi/posts/huntress-2024/">Huntress CTF 2024 Writeups</a>
+  </h1>
+  <style>
+    .header__logo {
+      --accent-override: var(--accent-green);
+    }
+  </style>
+  <div class="post-meta"><time class="post-date">2024-11-02</time><span class="post-reading-time">2413 words</span>
+    <span class="post-tags">
+      
+      <a href="https://sylvie.fyi/tags/ctf/" class="highlight"><i class="fas fa-tag"></i>&emsp14;ctf</a>
+      
+      <a href="https://sylvie.fyi/tags/writeup/" class="highlight"><i class="fas fa-tag"></i>&emsp14;writeup</a>
+      
+      <a href="https://sylvie.fyi/tags/osint/" class="highlight"><i class="fas fa-tag"></i>&emsp14;osint</a>
+      
+      <a href="https://sylvie.fyi/tags/rev/" class="highlight"><i class="fas fa-tag"></i>&emsp14;rev</a>
+      
+    </span>
+    
+  </div>
+  
+    
+    <img src="https://sylvie.fyi/posts/huntress-2024/cert.png"
+      class="post-cover"
+      alt=" "
+      title=" " />
+  
+
+
+
+  
+
+  <div class="post-content"><div>
+        <p>This October, Huntress ran a month-long CTF with challenges releasing every day. It was a team event, but participated solo. I ended up in overall 7th place.</p>
+<p>I wrote up my solutions to a small selection of my favorites.</p>
+<h2 id="base-p-">Base-p-<a href="#base-p-" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>Here we&rsquo;re given a file called <code>based.txt</code> that contains the following content</p>
+<pre tabindex="0"><code>楈繳籁萰杁癣怯蘲詶歴蝕絪敪ꕘ橃鹲𠁢腂𔕃饋𓁯𒁊鹓湵蝱硦楬驪腉繓鵃舱𒅡繃絎罅陰罌繖𔕱蝔浃虄眵虂𒄰𓉋詘襰ꅥ破ꌴ顂𔑫硳蕈訶𒀹饡鵄腦蔷樸𠁺襐浸椱欱蹌ꍣ鱙癅腏葧𔕇鱋鱸𓁮聊聍ꄸꈴ陉𔕁框ꅔ𔕩𔕃驂虪祑𓅁聨朸聣摸眲葮𖠳鵺穭𒁭豍摮饱恕𓉮詔葉鰸葭楷洳面𔕃𔑒踳𔐸杅𐙥湳橹驳陪楴氹橬𓄱蝔晏稸ꄸ防癓ꉁ𖡩鵱聲ꍆ稸鬶魚𓉯艭𔕬輷茳筋𔑭湰𓄲怸艈恧襺陷项譶ꍑ衮汮蹆杗筌蹙怰晘缸睰脹蹃鹬ꕓ脶湏赑魶繡罢𒉁荶腳ꌳ蕔𔐶橊欹𖥇繋赡𐙂饎罒鵡𒉮腙ꍮ楑恤魌虢昹𒅶效楙衎𔕙ꉨ𓈸𔑭樯筶筚絮𓁗浈豱ꉕ魔魧蕕聘筣鹖樫ꍖ汸湖萰腪轪𓉱艱絍笹艨魚詇腁𒁮陴顮虂癁
+</code></pre><p>Given the name of the challenge and from previous experience, I deduced that this was base65536 encoded data. Using an <a href="https://www.better-converter.com/Encoders-Decoders/Base65536-Decode">online tool</a> I decoded the data to get the following.</p>
+<pre tabindex="0"><code>H4sIAG0OA2cA/+2QvUt6URjHj0XmC5ribzBLCwKdorJoSiu9qRfCl4jeILSICh1MapCINHEJpaLJVIqwTRC8DQ5BBQ0pKtXUpTej4C4lBckvsCHP6U9oadDhfL7P85zzPTx81416LYclYgEAOLgOGwKgxgnrJKMK8j4kIaAwF3TjiwCwBejQQDAshK82cKx/2BnO3xzhmEmoMWn/qdU+ntTUIO8gmOw438bbCwRv3Y8vE2ens9y5sejat497l51sTRO18E8j2aSAAkixqhrKFl8E6fZfotmMlw7Z3NKFmvp92s8+HMg+zTwaycvVQlnSn7FYW2LFYY0+X18JpB9LCYliSm6LO9QXvfaIbJAqvNsL3lTP6vJ596GyKIaXBnNdRJahnqYLnlQ4d+LfbQ91vpH0Y4NSYwhk8tmv/5vFZFnHWrH8qWUkTfgfUPXKcFVi+5Vlx7V90OjLjZqtqMMH9FhMZfGUALnotancBQAA
+</code></pre><p>This seemed like normal base64, I put it into CyberChef, which immediately identified it as a PNG image that had been gziped and encoded in b64.</p>
+<p><img alt="cyberchef screenshot with &ldquo;from base64&rdquo;, &ldquo;gunzip&rdquo;, and &ldquo;render image&rdquo;" src="/posts/huntress-2024/base-p-/cyberchef.png"></p>
+<p>This was the output image</p>
+<p><img alt="13 colorful squares" src="/posts/huntress-2024/base-p-/pixels.png"></p>
+<p>This image appeared to be 13 squares of various colors next to each other in a line. This number was notable to me because the length of the flag (38 chars, <code>flag{}</code> plus an md5 hash) is very close to 3 times 13. Every color can be represented by 6 hex digits, and 2 hex digits represent a byte, so I made the obvious connection that the hex codes for the pixels encoded the flag. I used an online color picker tool to copy the hex codes for the pixels, which gave me this</p>
+<pre tabindex="0"><code>666c61677b35383663663863383439633937333065613762323131326666663339666636617d20
+</code></pre><p>I ran this through &ldquo;from hex&rdquo; in CyberChef to get the flag, <code>flag{586cf8c849c9730ea7b2112fff39ff6a}</code></p>
+<h2 id="ran-somewhere">Ran Somewhere<a href="#ran-somewhere" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>An OSINT challenge, it starts by giving us a file <code>ran_somewhere.eml</code>. Upon opening it we can an email between <code><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="fd90988f929394bdb4b9cccda993928e92918889949293d3939889">[email&#160;protected]</a></code> and <code><a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="84ece1e8f4e0e1f7efc4cdd0e0ebe1f7eaebf0e1fcedf7f0aaf0e1e7ec">[email&#160;protected]</a></code> which included several base64-encoded attachments. The first one decoded to</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-html" data-lang="html"><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">div</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;font-family: Arial, sans-serif; font-size: 14px;&#34;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">span</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height:1.5;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0);font-family:system-ui, sans-serif&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    Help Me IT!! My USB was stolen! I was headed into town for some work and stopped by a client&#39;s coffee shop to get work done. Everything was fine; I was working and drinking coffee. I got up to use the restroom; when I returned, I saw that my computer had been tampered with! All my work was closed out, and my flash drive with my projects was gone! I can&#39;t lose this; there was very important work on it! I thought the security tools you put in place would stop something like this!!
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">div</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height:1.5;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0);font-family:system-ui, sans-serif&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">span</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0)&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">        When I was looking at the desktop, I noticed three new files that were not there before. I opened one to see if they were my files, but they are a jumbled mess. I can&#39;t make any sense of it. I think it is that &#34;ran somewhere&#34; that your team keeps warning us about. I still don&#39;t know what it is, but please reverse this and get my USB back. I can&#39;t believe this happened!
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">span</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height:1.5;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0);font-family:system-ui, sans-serif&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    I am attaching those files so you can fix them.<span class="ni">&amp;nbsp;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">div</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height: 1.5; scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0) rgba(0, 0, 0, 0); font-family: system-ui, sans-serif; background-color: rgb(255, 255, 255);&#34;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">div</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height: 1.5; scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0) rgba(0, 0, 0, 0); font-family: system-ui, sans-serif; background-color: rgb(255, 255, 255);&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">br</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0)&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">div</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height: 1.5; scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0) rgba(0, 0, 0, 0); font-family: system-ui, sans-serif; background-color: rgb(255, 255, 255);&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    -
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">span</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height:normal;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0);font-size:12pt&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">        Mack Eroni
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">div</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height: 1.5; scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0) rgba(0, 0, 0, 0); font-family: system-ui, sans-serif; background-color: rgb(255, 255, 255);&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">span</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height:normal;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0);font-size:12pt&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="ni">&amp;nbsp;</span>President
+</span></span><span class="line"><span class="cl">        <span class="p">&lt;</span><span class="nt">br</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height:1.5;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0)&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">&lt;</span><span class="nt">br</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height:1.5;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0)&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">div</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height: 1.5; scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0) rgba(0, 0, 0, 0); font-family: system-ui, sans-serif; background-color: rgb(255, 255, 255);&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">span</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height:normal;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0);font-size:13.5pt&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">        <span class="p">&lt;</span><span class="nt">a</span> <span class="na">rel</span><span class="o">=</span><span class="s">&#34;noreferrer nofollow noopener&#34;</span> <span class="na">target</span><span class="o">=</span><span class="s">&#34;_blank&#34;</span> <span class="na">href</span><span class="o">=</span><span class="s">&#34;https://sites.google.com/view/id-10-t/home&#34;</span> <span class="na">title</span><span class="o">=</span><span class="s">&#34;Check out our new website!&#34;</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height:1.5;text-decoration:underline;cursor:pointer;scrollbar-width:thin;scrollbar-color:rgba(0, 0, 0, 0) rgba(0, 0, 0, 0)&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">            Check out our new website!
+</span></span><span class="line"><span class="cl">        <span class="p">&lt;/</span><span class="nt">a</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;/</span><span class="nt">span</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">div</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;line-height: 1.5; scrollbar-width: thin; scrollbar-color: rgba(0, 0, 0, 0) rgba(0, 0, 0, 0); font-family: system-ui, sans-serif; background-color: rgb(255, 255, 255);&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">img</span> <span class="na">alt</span><span class="o">=</span><span class="s">&#34;company logo.png&#34;</span> <span class="na">class</span><span class="o">=</span><span class="s">&#34;proton-embedded&#34;</span> <span class="na">src</span><span class="o">=</span><span class="s">&#34;cid:<a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="284e111e1b1d4e181868585a475c474606454d">[email&#160;protected]</a>&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">br</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&#34;protonmail_signature_block&#34;</span> <span class="na">style</span><span class="o">=</span><span class="s">&#34;font-family: Arial, sans-serif; font-size: 14px;&#34;</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl">    <span class="p">&lt;</span><span class="nt">div</span> <span class="na">class</span><span class="o">=</span><span class="s">&#34;protonmail_signature_block-proton&#34;</span><span class="p">&gt;&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span><span class="line"><span class="cl"><span class="p">&lt;/</span><span class="nt">div</span><span class="p">&gt;</span>
+</span></span></code></pre></div><p>This gives some context to the challenge and explains the pun in the title. The important information here is the URL to the company&rsquo;s website in the email signature, <a href="https://sites.google.com/view/id-10-t/home">https://sites.google.com/view/id-10-t/home</a>. Visiting this site shows a very basic mock company landing page, and also <code>Not Licensed to provide solutions to anyone or anywhere, especially Maryland</code> in the footer.</p>
+<p>The next chunk was the company logo, which we can ignore, but the one after that was more interesting. It was base64-encoded hex-encoded text, which when decoded read as follows</p>
+<pre tabindex="0"><code>Hey There! You should be more careful next time and not leave your computer unlocked and unattended! You never know what might happen. Well in this case, you lost your flash drive. Don&#39;t worry, I will keep it safe and sound. Actually you could say it is now &#39;fortified&#39;. You can come retrieve it, but you got to find it. I left a couple of files that should help.
+- Vigil Ante
+</code></pre><p>There was one last file in the email, and it was much larger than the previous ones. The start of the base64 (<code>/9j/4AA</code>) made it obviously an image, I decoded it to get this.</p>
+<p><img alt="an image of somewhere outdoors, looking at somewhere that looks like a castle. there are trees and an interesting stone path" src="/posts/huntress-2024/ran_somewhere/mystery_place.jpg"></p>
+<p>I put this through Google Lens, and saw a bunch of stuff that looked kinda similar but wasn&rsquo;t quite right. I then narrowed down the search by adding &ldquo;Maryland&rdquo; (from the company website) as a search term and saw this.</p>
+<p><img alt="screenshot of google lens, with a tripadvisor link as the first result" src="/posts/huntress-2024/ran_somewhere/lens.png"></p>
+<p>The first result was a link to <a href="https://www.tripadvisor.com/Attraction_Review-g40997-d23758274-Reviews-Frederick_Ward_Park-Bel_Air_Maryland.html">TripAdvisor</a> which called it &ldquo;Frederick Ward Park&rdquo;. I put this into the challenge website and was told it was wrong, so I looked further. Googling the park name led me to this <a href="https://www.frederickward.com/parks-and-recreation-projects/reckord-armory-frederick-ward-park">website</a>, which had another picture that included the colored brick path, and also the name &ldquo;Reckord Armory&rdquo;. I tried <code>flag{Rekord Armory}</code> as the answer, and it worked like a charm. As an aside, I got first blood on this challenge which felt nice.</p>
+<p><img alt="🗡️🩸meowmeowmeow First Blooded OSINT/Ran Somewhere 🩸🗡️" src="/posts/huntress-2024/ran_somewhere/blood.png"></p>
+<h2 id="zimmer-down">Zimmer Down<a href="#zimmer-down" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>For this challenge we were presented with a file called <code>NTUSER.DAT</code>. Upon inspecting the file, it is obviously a
+Windows registry hive file. The challenge name is <code>Zimmer Down</code>, which appears like a reference to <a href="https://ericzimmerman.github.io/#!index.md">Zimmerman Tools</a>. One of the tools is called <code>RegistryExplorer.exe</code>, upon opening it we can import <code>NTUSER.DAT</code>. The challenge description includes &ldquo;A user interacted with a suspicious file on one of our hosts&rdquo;, so I searched for &ldquo;RecentDocs&rdquo; and saw this.</p>
+<p><img alt="screenshot showing registry explorer.exe and several recent files" src="/posts/huntress-2024/zimmer_down/regexplorer.png"></p>
+<p>The first thing that caught my eye was the file called <code>VJGSuERgCoVhl6mJg1x87faFOPIqacI3Eby4oP5MyBYKQy5paDF.b62</code>. <code>.b62</code>
+is a file extension I&rsquo;ve never heard of before, but it felt like it could be a reference to base-62 encoding. I copied <code>VJGSuERgCoVhl6mJg1x87faFOPIqacI3Eby4oP5MyBYKQy5paDF</code> into CyberChef and got the flag as an output.</p>
+<p><img alt="screenshot of cyberchef using &ldquo;from base62&rdquo;" src="/posts/huntress-2024/zimmer_down/cyberchef.png"></p>
+<p>The flag is right here, <code>flag{4b676ccc1070be66b1a15dB601c8d500}</code></p>
+<h2 id="thats-life">That&rsquo;s Life<a href="#thats-life" class="hanchor" ariaLabel="Anchor">&#8983;</a> </h2>
+<p>This challenge provides us with a link to a web service that gives a file download along with an option for uploading a file, and the message &ldquo;Download the gameoflife program, solve the challenge, and upload the solving file to receive the flag.&rdquo;</p>
+<p>The file provided is a Go binary, and upon running it prompts the user to zoom out their terminal window</p>
+<p><img alt="warning to zoom out the terminal" src="/posts/huntress-2024/thats_life/zoomout.png"></p>
+<p>After doing so and pressing enter, we&rsquo;re presented with a grid that seems to be displaying a multicolor implementation of <a href="https://en.wikipedia.org/wiki/Conway%27s_Game_of_Life">Conway&rsquo;s Game of Life</a></p>
+<p><img alt="conway&rsquo;s game of life in multicolor" src="/posts/huntress-2024/thats_life/gameoflife.gif"></p>
+<p>For those unfamiliar, Conway&rsquo;s Game of Life is represented by an infinite grid, each cell being able to be either alive or dead. From each frame to the next, there are several rules used to determine how the game state will advance.</p>
+<ol>
+<li>A living cell with one or fewer living adjacent cells dies</li>
+<li>A living cell with four or more living adjacent cells dies</li>
+<li>A dead cell with precisely three living adjacent cells becomes alive</li>
+</ol>
+<p>Some interesting facts about the Game of Life are that it&rsquo;s Turing complete, and also that it&rsquo;s an undecideable problem, meaning that there is no algorithmic way to determine if a certain pattern will ever arise from another pattern at some point in the future.</p>
+<p>After messing around with it for a bit I couldn&rsquo;t see any input the user could provide to the program, at which point I began disassembling it with Ghidra.</p>
+<p>Ghidra tends to make a mess of Golang code, but luckily this one wasn&rsquo;t garbled too much, and the decompiler was able to identify the <code>main.main</code> function.</p>
+<p><img alt="start of main function" src="/posts/huntress-2024/thats_life/main.png"></p>
+<p>At the start of <code>main.main</code> I can see references to <code>main.generateWinCriteria()</code>, <code>main.promptToZoomTerminalOut()</code>, <code>main.clearScreen()</code>, <code>main.deserializeFromFile()</code>, <code>main.newGrid()</code>, and <code>main.Grid.display()</code>. Lower down in the function I see a block of code for printing a win message, code for saving the game state to a file, and a loop that appears to check win conditions.</p>
+<p>From observing what the program does, and making some educated guesses, I can presume that this code is effectively doing the following</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-go" data-lang="go"><span class="line"><span class="cl"><span class="kd">func</span> <span class="nf">main</span><span class="p">(){</span>
+</span></span><span class="line"><span class="cl">    <span class="nf">generateWinCriteria</span><span class="p">()</span> <span class="c1">// Load the win criteria into memory
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">promptToZoomTerminalOut</span><span class="p">()</span> <span class="c1">// Print &#34;[*] Zoom your terminal way out and press ENTER to begin &gt;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="nf">clearScreen</span><span class="p">()</span> <span class="c1">// Clear the screen
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="k">for</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">err</span> <span class="o">:=</span> <span class="nf">deserializeFromFile</span><span class="p">()</span> <span class="c1">// Attempt to read the game state from game_state.pb
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="k">if</span> <span class="nx">err</span> <span class="o">!=</span> <span class="kc">nil</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nf">newGrid</span><span class="p">()</span> <span class="c1">// Generate a new game state from scratch
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Grid</span><span class="p">.</span><span class="nf">display</span><span class="p">()</span> <span class="c1">// Render the game
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">wincon</span> <span class="o">:=</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="nx">i</span> <span class="o">:=</span> <span class="k">range</span> <span class="mi">12</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="nx">criteria</span> <span class="o">:=</span> <span class="nx">winCriteria</span><span class="p">[</span><span class="nx">i</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">            <span class="k">if</span> <span class="p">(</span><span class="cm">/*win criteria check fails*/</span><span class="p">){</span>
+</span></span><span class="line"><span class="cl">                <span class="nx">wincon</span> <span class="p">=</span> <span class="kc">false</span>
+</span></span><span class="line"><span class="cl">            <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="k">if</span> <span class="nx">wincon</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">            <span class="c1">// Print win message
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>            <span class="k">return</span>
+</span></span><span class="line"><span class="cl">        <span class="p">}</span>
+</span></span><span class="line"><span class="cl">        <span class="nx">Grid</span><span class="p">.</span><span class="nf">next</span><span class="p">()</span> <span class="c1">// Advance the game to the next frame
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>        <span class="nx">Grid</span><span class="p">.</span><span class="nf">serializeToFile</span><span class="p">()</span> <span class="c1">// Save the new game state back to a file
+</span></span></span><span class="line"><span class="cl"><span class="c1"></span>    <span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">}</span>
+</span></span></code></pre></div><p>It seems that in order to &ldquo;win&rdquo;, the game needs to exist in a state that meets 12 specific conditions. Additionally, the game is encoding its state using protobufs, and saving it to a file. A good starting point would be to figure out the protobuf schema so that I can read the saved game states myself.</p>
+<p>Looking around in Ghidra, I did a search for <code>pb</code> in the Data Type Manager, and found something that looked helpful.</p>
+<p><img alt="Grid, CellRow, and Cell protobuf types" src="/posts/huntress-2024/thats_life/protobuftypes.png"></p>
+<p>Looking at these closer, Ghidra tells me that a <code>Grid</code> object contains two int32 fields for <code>Width</code> and <code>Height</code>, and a RepeatedField of <code>CellRow</code> called <code>Rows</code>. A <code>CellRow</code> object just contains a RepeatedField of <code>Cell</code>, and a <code>Cell</code> consists of a boolean called <code>Alive</code> and an int32 called <code>Color</code>. This information was more than enough for me to reconstruct the entire protobuf schema myself.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-protobuf" data-lang="protobuf"><span class="line"><span class="cl"><span class="n">syntax</span> <span class="o">=</span> <span class="s">&#34;proto3&#34;</span><span class="p">;</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="kn">package</span> <span class="nn">main</span><span class="p">;</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="kd">message</span> <span class="nc">Grid</span> <span class="p">{</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span>    <span class="kt">uint32</span> <span class="n">width</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span>    <span class="kt">uint32</span> <span class="n">height</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>   <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span>    <span class="k">repeated</span> <span class="n">CellRow</span> <span class="n">rows</span> <span class="o">=</span> <span class="mi">3</span><span class="p">;</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="p">}</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="kd">message</span> <span class="nc">CellRow</span> <span class="p">{</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span>    <span class="k">repeated</span> <span class="n">Cell</span> <span class="n">cells</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="p">}</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="kd">message</span> <span class="nc">Cell</span> <span class="p">{</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span>    <span class="kt">uint32</span> <span class="n">alive</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span>    <span class="kt">uint32</span> <span class="n">color</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span><span class="err">
+</span></span></span><span class="line"><span class="cl"><span class="err"></span><span class="p">}</span><span class="err">
+</span></span></span></code></pre></div><p>Using this schema I was able to successfully parse the saved game state into something readable myself, and also generate my own arbitrary state to load into the game. Notably, the <code>color</code> field is in the form of an <a href="https://en.wikipedia.org/wiki/ANSI_escape_code">ANSI escape code</a>, meaning 31 is red, 32 is green, 33 is yellow, and so on.</p>
+<p>From here, the next step was to investigate what the specific win conditions are that it checks against. I looked inside the <code>generateWinCriteria()</code> function and saw this.</p>
+<p><img alt="generate win criteria function" src="/posts/huntress-2024/thats_life/generatewincriteria.png"></p>
+<p>This function appears to create a 12-long array of <code>WinCriteria</code> structs (which lines up with the win check looping 12 times in <code>main</code>), and then copies some data into it. Going to the location where it copies from, we can see a block of 384 bytes of data, most of which are <code>\x00</code>. Checking the definition for <code>WinCriteria</code> in Ghidra I can see it&rsquo;s 32 bytes long and consists of an int64 (8 bytes) named <code>x</code>, an int64 named <code>y</code>, an int64 named <code>color</code>, a boolean (1 byte) named <code>matched</code>, and 7 bytes of padding. This lines up with the 384 byte data chunk, because 12 * 32 = 384.</p>
+<p>Using a hex editor I copied the data in question out of the binary, and using a python program I parsed it according to that struct definition.</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="kn">import</span> <span class="nn">struct</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;
+</span></span></span><span class="line"><span class="cl"><span class="s2">type WinCriteria struct { // 0x20 bytes
+</span></span></span><span class="line"><span class="cl"><span class="s2">	x       int64 //0x0
+</span></span></span><span class="line"><span class="cl"><span class="s2">	y       int64 //0x8
+</span></span></span><span class="line"><span class="cl"><span class="s2">	color   int64 //0x10
+</span></span></span><span class="line"><span class="cl"><span class="s2">	matched bool  //0x18
+</span></span></span><span class="line"><span class="cl"><span class="s2">    // padding (0x7)
+</span></span></span><span class="line"><span class="cl"><span class="s2">}
+</span></span></span><span class="line"><span class="cl"><span class="s2">&#34;&#34;&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">ANSI_BASE</span> <span class="o">=</span> <span class="s2">&#34;</span><span class="se">\033</span><span class="s2">[0;&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="n">ANSI_END</span>  <span class="o">=</span> <span class="s2">&#34;</span><span class="se">\033</span><span class="s2">[0m&#34;</span>
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;windata.dat&#34;</span><span class="p">,</span> <span class="s2">&#34;rb&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">conditions</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">:</span><span class="n">i</span><span class="o">+</span><span class="mh">0x20</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">),</span> <span class="mh">0x20</span><span class="p">)]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">x</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&lt;q&#39;</span><span class="p">,</span><span class="n">c</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mh">0x8</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">y</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&lt;q&#39;</span><span class="p">,</span><span class="n">c</span><span class="p">[</span><span class="mh">0x8</span><span class="p">:</span><span class="mh">0x10</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">color</span> <span class="o">=</span> <span class="n">struct</span><span class="o">.</span><span class="n">unpack</span><span class="p">(</span><span class="s1">&#39;&lt;q&#39;</span><span class="p">,</span><span class="n">c</span><span class="p">[</span><span class="mh">0x10</span><span class="p">:</span><span class="mh">0x18</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="n">matched</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="mh">0x18</span><span class="p">:</span><span class="mh">0x19</span><span class="p">]</span> <span class="o">==</span> <span class="sa">b</span><span class="s1">&#39;</span><span class="se">\x01</span><span class="s1">&#39;</span> <span class="k">else</span> <span class="kc">False</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="n">parsed</span> <span class="o">=</span> <span class="p">{</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="n">x</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="n">y</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="n">color</span><span class="p">,</span>
+</span></span><span class="line"><span class="cl">        <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="n">matched</span>
+</span></span><span class="line"><span class="cl">    <span class="p">}</span>
+</span></span><span class="line"><span class="cl">    <span class="nb">print</span><span class="p">(</span><span class="n">ANSI_BASE</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">color</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;m &#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">parsed</span><span class="p">)</span> <span class="o">+</span> <span class="n">ANSI_END</span><span class="p">)</span>
+</span></span></code></pre></div><p>I added the ANSI color codes to this for fun, to make it easier to visualize what the <code>color</code> field meant. Running this script gave me this output.</p>
+<p><img alt="alt text" src="/posts/huntress-2024/thats_life/wincon.png"></p>
+<p>I still have no idea what <code>matched</code> means, but generally this data makes sense, and the logical conclusion from here is that we&rsquo;re supposed to make a game save file that meets these specific criteria. As an aside, I think the challenge author got <code>x</code> and <code>y</code> backwards.</p>
+<p>I generated a python file with the proto definitions, and then wrote the following script to create a protobuf file containing the winning game state</p>
+<div class="highlight"><pre tabindex="0" class="chroma"><code class="language-py" data-lang="py"><span class="line"><span class="cl"><span class="kn">from</span> <span class="nn">poggers_pb2</span> <span class="kn">import</span> <span class="n">Grid</span><span class="p">,</span> <span class="n">Cell</span><span class="p">,</span> <span class="n">CellRow</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="n">wincons</span> <span class="o">=</span> <span class="p">[</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">31</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">33</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">40</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">45</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">34</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">50</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">55</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">36</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">60</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">37</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">65</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">31</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">45</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">70</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">75</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">33</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">80</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">34</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span>
+</span></span><span class="line"><span class="cl">    <span class="p">{</span><span class="s1">&#39;x&#39;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;y&#39;</span><span class="p">:</span> <span class="mi">85</span><span class="p">,</span> <span class="s1">&#39;color&#39;</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span> <span class="s1">&#39;matched&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+</span></span><span class="line"><span class="cl"><span class="p">]</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">def</span> <span class="nf">make_game_state</span><span class="p">():</span>
+</span></span><span class="line"><span class="cl">    <span class="n">grid</span> <span class="o">=</span> <span class="n">Grid</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">    <span class="n">grid</span><span class="o">.</span><span class="n">width</span> <span class="o">=</span> <span class="mi">400</span>
+</span></span><span class="line"><span class="cl">    <span class="n">grid</span><span class="o">.</span><span class="n">height</span> <span class="o">=</span> <span class="mi">50</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">y</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">height</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">        <span class="n">row</span> <span class="o">=</span> <span class="n">CellRow</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">        <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">grid</span><span class="o">.</span><span class="n">width</span><span class="p">):</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cell</span> <span class="o">=</span> <span class="n">Cell</span><span class="p">()</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cell</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">            <span class="n">cell</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="mi">0</span>
+</span></span><span class="line"><span class="cl">            <span class="n">row</span><span class="o">.</span><span class="n">cells</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cell</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">        <span class="n">grid</span><span class="o">.</span><span class="n">rows</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+</span></span><span class="line"><span class="cl">    <span class="k">for</span> <span class="n">w</span> <span class="ow">in</span> <span class="n">wincons</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">        <span class="n">grid</span><span class="o">.</span><span class="n">rows</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">alive</span> <span class="o">=</span> <span class="mi">1</span>
+</span></span><span class="line"><span class="cl">        <span class="n">grid</span><span class="o">.</span><span class="n">rows</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="s1">&#39;x&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">cells</span><span class="p">[</span><span class="n">w</span><span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">]]</span><span class="o">.</span><span class="n">color</span> <span class="o">=</span> <span class="n">w</span><span class="p">[</span><span class="s1">&#39;color&#39;</span><span class="p">]</span>
+</span></span><span class="line"><span class="cl">    <span class="k">return</span> <span class="n">grid</span>
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl"><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&#34;game_state.pb&#34;</span><span class="p">,</span> <span class="s2">&#34;wb&#34;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+</span></span><span class="line"><span class="cl">    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">make_game_state</span><span class="p">()</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">())</span>
+</span></span></code></pre></div><p>After doing this I ran the game again, and it printed out</p>
+<pre tabindex="0"><code>[+++] Congratulations! You&#39;ve won!
+[+++] Submit the winning game_state.pb file to the grading server!
+</code></pre><p>I submitted this file to the website, and was greeted with the flag</p>
+<p><img alt="flag" src="/posts/huntress-2024/thats_life/flag.png"></p>
+<p><code>flag{fe2765f32414c8c621bc3c77d04fb85e}</code></p>
+
+      </div></div>
+
+  
+    
+<div class="pagination">
+    <div class="pagination__title">
+        <span class="pagination__title-h">read other posts</span>
+        <hr />
+    </div>
+    <div class="pagination__buttons">
+        
+
+        <span class="button previous
+            
+                
+                    accent-orange
+                
+            ">
+            <a href="https://sylvie.fyi/posts/bloatware/">
+                <span class="button__icon">←</span>
+                <span class="button__text">Simplifying MBA Expressions to Solve a CTF</span>
+            </a>
+        </span>
+        
+        
+        <span class="button next
+            
+                
+                    accent-purple
+                
+            ">
+            <a href="https://sylvie.fyi/posts/pogo-re/">
+                <span class="button__text">Reverse Engineering Pokémon GO</span>
+                <span class="button__icon">→</span>
+            </a>
+        </span>
+        
+    </div>
+</div>
+
+  
+
+  
+    
+
+  
+</article>
+
+  </div>
+
+  
+    <footer class="footer">
+  <div class="footer__inner">
+    
+      <div class="copyright copyright--user">
+        <span>© 2025 Sylvie</span>
+    
+      
+      </div>
+  </div>
+</footer>
+
+
+
+
+
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script type="text/javascript" src="/bundle.min.js"></script>
+
+
+
+
+
+
+
+
+  
+</div>
+
+</body>
+</html>
+

@@ -1,0 +1,686 @@
+
+
+<!DOCTYPE html>
+<html lang="en" data-default-color-scheme=&#34;auto&#34;>
+
+
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="apple-touch-icon" sizes="76x76" href="/Blog/img/logo-dark.png">
+  <link rel="icon" type="image/png" href="/Blog/img/logo-dark.png">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  
+  <meta name="theme-color" content="#2f4154">
+  <meta name="description" content="">
+  <meta name="author" content="Bhuvanesh Mishra">
+  <meta name="keywords" content="">
+  <title>CyberYoddha CTF Writeup - Bhuvanesh&#39;s Blog</title>
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css" />
+
+
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.min.css" />
+  <link  rel="stylesheet" href="/Blog/lib/hint/hint.min.css" />
+
+  
+    
+    
+      
+      <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlight.js@10.4.0/styles/xt256.min.css" />
+    
+  
+
+  
+    <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.css" />
+  
+
+
+
+<!-- ????????,?????? -->
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1749284_ba1fz6golrf.css">
+
+
+
+<link rel="stylesheet" href="//at.alicdn.com/t/font_1736178_kmeydafke9r.css">
+
+
+<link  rel="stylesheet" href="/Blog/css/main.css" />
+
+<!-- ??????????? -->
+
+
+  <script id="fluid-configs">
+    var Fluid = window.Fluid || {};
+    var CONFIG = {"hostname":"bhuvanesh01.github.io","root":"/Blog/","version":"1.8.7","typing":{"enable":true,"typeSpeed":70,"cursorChar":"_","loop":false},"anchorjs":{"enable":true,"element":"h1,h2,h3,h4,h5,h6","placement":"right","visible":"hover","icon":""},"progressbar":{"enable":true,"height_px":3,"color":"#29d","options":{"showSpinner":false,"trickleSpeed":100}},"copy_btn":true,"image_zoom":{"enable":true},"toc":{"enable":true,"headingSelector":"h1,h2,h3,h4,h5,h6","collapseDepth":0},"lazyload":{"enable":true,"onlypost":false},"web_analytics":{"enable":false,"baidu":null,"google":null,"gtag":null,"tencent":{"sid":null,"cid":null},"woyaola":null,"cnzz":null,"leancloud":{"app_id":null,"app_key":null,"server_url":null}}};
+  </script>
+  <script  src="/Blog/js/utils.js" ></script>
+  <script  src="/Blog/js/color-schema.js" ></script>
+<meta name="generator" content="Hexo 5.3.0"></head>
+
+
+<body>
+  <header style="height: 70vh;">
+    <nav id="navbar" class="navbar fixed-top  navbar-expand-lg navbar-dark scrolling-navbar">
+  <div class="container">
+    <a class="navbar-brand"
+       href="/Blog/">&nbsp;<strong>Bhuvanesh's Blog</strong>&nbsp;</a>
+
+    <button id="navbar-toggler-btn" class="navbar-toggler" type="button" data-toggle="collapse"
+            data-target="#navbarSupportedContent"
+            aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <div class="animated-icon"><span></span><span></span><span></span></div>
+    </button>
+
+    <!-- Collapsible content -->
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav ml-auto text-center">
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/Blog/">
+                <i class="iconfont icon-home-fill"></i>
+                Home
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/Blog/archives/">
+                <i class="iconfont icon-archive-fill"></i>
+                Archives
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/Blog/categories/">
+                <i class="iconfont icon-category-fill"></i>
+                Categories
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/Blog/tags/">
+                <i class="iconfont icon-tags-fill"></i>
+                Tags
+              </a>
+            </li>
+          
+        
+          
+          
+          
+          
+            <li class="nav-item">
+              <a class="nav-link" href="/Blog/about/">
+                <i class="iconfont icon-user-fill"></i>
+                About
+              </a>
+            </li>
+          
+        
+        
+          <li class="nav-item" id="search-btn">
+            <a class="nav-link" data-toggle="modal" data-target="#modalSearch">&nbsp;<i
+                class="iconfont icon-search"></i>&nbsp;</a>
+          </li>
+        
+        
+          <li class="nav-item" id="color-toggle-btn">
+            <a class="nav-link" href="javascript:">&nbsp;<i
+                class="iconfont icon-dark" id="color-toggle-icon"></i>&nbsp;</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+</nav>
+
+    <div class="banner" id="banner" parallax=true
+         style="background: url('/Blog/img/ctf-cover.jpg') no-repeat center center;
+           background-size: cover;">
+      <div class="full-bg-img">
+        <div class="mask flex-center" style="background-color: rgba(0, 0, 0, 0.3)">
+          <div class="page-header text-center fade-in-up">
+            <span class="h2" id="subtitle" title="CyberYoddha CTF Writeup">
+              
+            </span>
+
+            
+              <div class="mt-3">
+  
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-author" aria-hidden="true"></i>
+      Bhuvanesh Mishra
+    </span>
+  
+  
+    <span class="post-meta">
+      <i class="iconfont icon-date-fill" aria-hidden="true"></i>
+      <time datetime="2020-11-03 03:40" pubdate>
+        November 3, 2020
+      </time>
+    </span>
+  
+</div>
+
+<div class="mt-1">
+  
+
+  
+    
+    <span class="post-meta mr-2">
+      <i class="iconfont icon-clock-fill"></i>
+      
+      
+      13
+       mins
+    </span>
+  
+
+  
+  
+</div>
+
+            
+          </div>
+
+          
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    
+      
+
+<div class="container-fluid nopadding-x">
+  <div class="row nomargin-x">
+    <div class="d-none d-lg-block col-lg-2"></div>
+    <div class="col-lg-8 nopadding-x-md">
+      <div class="container nopadding-x-md" id="board-ctn">
+        <div class="py-5" id="board">
+          <article class="post-content mx-auto">
+            <!-- SEO header -->
+            <h1 style="display: none">CyberYoddha CTF Writeup</h1>
+            
+            <div class="markdown-body">
+              <p>  I played this CTF as a solo player and i finished 84<sup>th</sup>/727 teams. It was great fun participating in this CTF. Let’s see how I solved some challenges.</p>
+<h2 id="WELCOME"><a href="#WELCOME" class="headerlink" title="WELCOME"></a>WELCOME</h2><h3 id="Welcome"><a href="#Welcome" class="headerlink" title="Welcome"></a>Welcome</h3><p><img src="Welcome.png" srcset="/Blog/img/loading.gif"></p>
+<p>  Type “?flag” in the discord server, carlbot would DM you the flag.</p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{W3lc0m3_t0_Cyb3rY0ddh@_CTF_2020!}</p>
+</blockquote>
+<h2 id="TRIVIA"><a href="#TRIVIA" class="headerlink" title="TRIVIA"></a>TRIVIA</h2><h3 id="Trivia-1"><a href="#Trivia-1" class="headerlink" title="Trivia 1"></a>Trivia 1</h3><p><img src="Trivia-1.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: Linus Torvalds</p>
+</blockquote>
+<h3 id="Trivia-2"><a href="#Trivia-2" class="headerlink" title="Trivia 2"></a>Trivia 2</h3><p><img src="Trivia-2.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>:Gary Kildall</p>
+</blockquote>
+<h3 id="Trivia-3"><a href="#Trivia-3" class="headerlink" title="Trivia 3"></a>Trivia 3</h3><p><img src="Trivia-3.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: Yahoo</p>
+</blockquote>
+<h3 id="Trivia-4"><a href="#Trivia-4" class="headerlink" title="Trivia 4"></a>Trivia 4</h3><p><img src="Trivia-4.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: Honeypot</p>
+</blockquote>
+<h3 id="Trivia-5"><a href="#Trivia-5" class="headerlink" title="Trivia 5"></a>Trivia 5</h3><p><img src="Trivia-5.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: Shoulder Surfing</p>
+</blockquote>
+<h3 id="Trivia-6"><a href="#Trivia-6" class="headerlink" title="Trivia 6"></a>Trivia 6</h3><p><img src="Trivia-6.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: Logic Bomb</p>
+</blockquote>
+<h3 id="Trivia-7"><a href="#Trivia-7" class="headerlink" title="Trivia 7"></a>Trivia 7</h3><p><img src="Trivia-7.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: System File Checker</p>
+</blockquote>
+<h3 id="Trivia-8"><a href="#Trivia-8" class="headerlink" title="Trivia 8"></a>Trivia 8</h3><p><img src="Trivia-8.png" srcset="/Blog/img/loading.gif"></p>
+<p>LOGO:</p>
+<p><img src="Logo.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: Haskell</p>
+</blockquote>
+<h2 id="SHEBANG"><a href="#SHEBANG" class="headerlink" title="SHEBANG"></a>SHEBANG</h2><h3 id="Shebang0"><a href="#Shebang0" class="headerlink" title="Shebang0"></a>Shebang0</h3><p><img src="Shebang-0-1.png" srcset="/Blog/img/loading.gif"></p>
+<p>  As the challenge description says we have to connect to the server via ssh for solving these challenges.</p>
+<figure class="highlight powershell"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs powershell"><span class="hljs-number">1</span>. <span class="hljs-string">&quot;ssh shebang1@cyberyoddha.baycyber.net -p 1337&quot;</span><span class="hljs-string">&quot; with password shebang0.</span><br><span class="hljs-string">2. &quot;</span><span class="hljs-built_in">ls</span> <span class="hljs-literal">-al</span><span class="hljs-string">&quot; reveals flag.txt.</span><br><span class="hljs-string">3. &quot;</span><span class="hljs-built_in">cat</span> .flag.txt<span class="hljs-string">&quot; gives you the flag.</span><br></code></pre></div></td></tr></table></figure>
+<p><img src="Shebang-0.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{w3ll_1_gu3$$_b@sh_1s_e@zy}</p>
+</blockquote>
+<h3 id="Shebang1"><a href="#Shebang1" class="headerlink" title="Shebang1"></a>Shebang1</h3><figure class="highlight sqf"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs sqf"><span class="hljs-number">1</span>. <span class="hljs-string">&quot;ssh shebang1@cyberyoddha.baycyber.net -p 1337&quot;</span> <span class="hljs-keyword">with</span> password [previous <span class="hljs-built_in">Flag</span>].<br><span class="hljs-number">2</span>. <span class="hljs-string">&quot;ls&quot;</span> reveals <span class="hljs-built_in">flag</span>.txt, but cat <span class="hljs-built_in">flag</span>.txt shows a lot of garbage output.<br><span class="hljs-number">3</span>. <span class="hljs-string">&quot;cat flag.txt | grep &#x27;CYCTF&#x27;&quot;</span> gives you the <span class="hljs-built_in">flag</span>.<br></code></pre></div></td></tr></table></figure>
+<p><img src="Shebang-1.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{w3ll_1_gu3$$_y0u_kn0w_h0w_t0_gr3p}</p>
+</blockquote>
+<h3 id="Shebang2"><a href="#Shebang2" class="headerlink" title="Shebang2"></a>Shebang2</h3><figure class="highlight livecodeserver"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs livecodeserver"><span class="hljs-number">1.</span> <span class="hljs-string">&quot;ssh shebang2@cyberyoddha.baycyber.net -p 1337&quot;</span> <span class="hljs-keyword">with</span> password [previous Flag].<br><span class="hljs-number">2.</span> <span class="hljs-string">&quot;ls&quot;</span> reveals <span class="hljs-keyword">a</span> ton <span class="hljs-keyword">of</span> <span class="hljs-built_in">files</span>.<br><span class="hljs-number">3.</span> <span class="hljs-string">&quot;grep &quot;</span>CYCTF<span class="hljs-string">&quot; -R &#123;&quot;</span> gets <span class="hljs-keyword">the</span> flag (grep <span class="hljs-keyword">with</span> -R does <span class="hljs-keyword">a</span> recursive search <span class="hljs-keyword">of</span> all <span class="hljs-built_in">files</span> <span class="hljs-keyword">in</span> <span class="hljs-built_in">directory</span>).<br></code></pre></div></td></tr></table></figure>
+<p><img src="Shebang-2.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{W0w_th@t$_@_l0t_0f_f1l3s}</p>
+</blockquote>
+<h3 id="Shebang3"><a href="#Shebang3" class="headerlink" title="Shebang3"></a>Shebang3</h3><figure class="highlight prolog"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs prolog"><span class="hljs-number">1.</span> <span class="hljs-string">&quot;ssh shebang3@cyberyoddha.baycyber.net -p 1337&quot;</span> with password [previous <span class="hljs-symbol">Flag</span>].<br><span class="hljs-number">2.</span> <span class="hljs-string">&quot;ls&quot;</span> and cat reveals <span class="hljs-number">2</span> large similar files...<br><span class="hljs-number">3.</span> <span class="hljs-string">&quot;diff file.txt file2.txt&quot;</span> reveals the <span class="hljs-symbol">FLAG</span>.<br></code></pre></div></td></tr></table></figure>
+<p><img src="Shebang-3.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{SPOT_TH3_D1FF}</p>
+</blockquote>
+<h3 id="Shebang4"><a href="#Shebang4" class="headerlink" title="Shebang4"></a>Shebang4</h3><figure class="highlight applescript"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs applescript"><span class="hljs-number">1.</span> <span class="hljs-string">&quot;ssh shebang3@cyberyoddha.baycyber.net -p 1337&quot;</span> <span class="hljs-keyword">with</span> password [previous Flag].<br><span class="hljs-number">2.</span> <span class="hljs-string">&quot;ls&quot;</span> reveals <span class="hljs-keyword">that</span> <span class="hljs-keyword">the</span> flag <span class="hljs-keyword">is</span> a png <span class="hljs-built_in">file</span>.<br><span class="hljs-number">3.</span> <span class="hljs-string">&quot;scp -P 1337 shebang4@cyberyoddha.baycyber.net:flag.png ./&quot;</span> allows you <span class="hljs-keyword">to</span> <span class="hljs-keyword">copy</span> <span class="hljs-built_in">file</span> <span class="hljs-keyword">over</span> ssh.<br><span class="hljs-number">4.</span> opening <span class="hljs-string">&quot;flag.png&quot;</span> reveals FLAG.<br></code></pre></div></td></tr></table></figure>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{W3ll_1_gu3$$_th@t_w@s_actually_easy}</p>
+</blockquote>
+<h2 id="WEB-EXPLOITATION"><a href="#WEB-EXPLOITATION" class="headerlink" title="WEB EXPLOITATION"></a>WEB EXPLOITATION</h2><h3 id="Look-Closely"><a href="#Look-Closely" class="headerlink" title="Look Closely"></a>Look Closely</h3><p><img src="Look-Closely.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On opening the link we got:</p>
+<p><img src="Look-Closely-Sol-1.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On searching for “cyctf” on the source page i got the flag.</p>
+<p><img src="Look-Closely-Sol-2.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>:  CYCTF{1nSp3t_eL3M3nt?}</p>
+</blockquote>
+<h3 id="Disallow"><a href="#Disallow" class="headerlink" title="Disallow"></a>Disallow</h3><p><img src="Disallow.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On visiting link i was presented with this page:</p>
+<p><img src="Disallow-Sol-1.png" srcset="/Blog/img/loading.gif"></p>
+<p>  So challenge name is Disallow so the first thought that comes to mind is to search for the robots.txt file. ( robots.txt file contain disallow feature)</p>
+<p><img src="Disallow-Sol-2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  Got the flag by opening the link found in robots.txt.</p>
+<p><img src="Disallow-Sol-3.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{d33r0b0t$_r_sUp3r10r}</p>
+</blockquote>
+<h3 id="Data-Store"><a href="#Data-Store" class="headerlink" title="Data Store"></a>Data Store</h3><p><img src="Data-Store.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On Visiting the link we are presented with a Login Page.</p>
+<p><img src="Data-Store-Sol-1.png" srcset="/Blog/img/loading.gif"></p>
+<p>  First thing i tried is default username and password like “Admin:Password” this didn’t work<br>  the second thing that came to my mind is SQL Injection so i started trying SQLi Payloads and<br>  the “admin ‘ OR 1 – -“ got me logged in.</p>
+<p><img src="Data-Store-Sol-2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On the next page i got the flag.</p>
+<p><img src="Data-Store-Sol-3.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{1_l0v3_$q1i}</p>
+</blockquote>
+<h3 id="Something-Sw33t"><a href="#Something-Sw33t" class="headerlink" title="Something Sw33t"></a>Something Sw33t</h3><p><img src="Something-Sw33t.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On visiting the link i got this page:</p>
+<p><img src="Something-Sw33t-Sol-1.png" srcset="/Blog/img/loading.gif"></p>
+<p>  After checking the source code i found nothing. Then i looked at the cookies for this webpage and found a intresting cookie named “don’t look here”.</p>
+<p><img src="Something-Sw33t-Sol-2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On inspecting the cookie i came to know that it is a flask cookie so i used a “flask-unsign” a tool which decodes the flask cookies. On decoding the cookie i found a bunch of base4 encoded strings.</p>
+<p><img src="Something-Sw33t-Sol-3.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On decoding these base64 encoded strings i got the flag.</p>
+<p><img src="Something-Sw33t-Sol-4.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>:  CYCTF{0k_1_see_you_maybe_you_are_smart}</p>
+</blockquote>
+<h3 id="Data-Store-2"><a href="#Data-Store-2" class="headerlink" title="Data Store 2"></a>Data Store 2</h3><p><img src="Data-Store-2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On visiting the link i got the same login page as the Data Store challenge </p>
+<p><img src="Data-Store-2-Sol-1.png" srcset="/Blog/img/loading.gif"></p>
+<p>  This time a file was provided on reading which i got to know that this the username field is sanitised and thus cannot be used for SQLi.</p>
+<p><img src="Data-Store-2-Sol-2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  Using the same payload used in previous challenge in the password field got me logged in.<br>  On the next page i got the flag.</p>
+<p><img src="Data-Store-2-Sol-3.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>:  CYCTF{S@n1t1ze_@11_U$3R_1npu7$}</p>
+</blockquote>
+<h3 id="Data-Store-3"><a href="#Data-Store-3" class="headerlink" title="Data Store 3"></a>Data Store 3</h3><p><img src="Data-Store-3.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On visiting the link i got a login page with a single password field </p>
+<p><img src="Data-Store-3-Sol-1.png" srcset="/Blog/img/loading.gif"></p>
+<p>  Using the payload “‘=0–+” in the password field got me logged in.</p>
+<p><img src="Data-Store-3-Sol-2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  On the next page i got the Flag.</p>
+<p><img src="Data-Store-3-Sol-3.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>:  CYCTF{D0n7_M@k3_D3bug_Publ1c}</p>
+</blockquote>
+<h2 id="CRYPTO"><a href="#CRYPTO" class="headerlink" title="CRYPTO"></a>CRYPTO</h2><h3 id="Beware-the-Idles-of-March"><a href="#Beware-the-Idles-of-March" class="headerlink" title="Beware the Idles of March"></a>Beware the Idles of March</h3><p><img src="Beware-Ides-of-March.png" srcset="/Blog/img/loading.gif"></p>
+<p>  It looks like a rotation cipher so put the string “JFJAM{j@3$@y_j!wo3y}” in <a target="_blank" rel="noopener" href="https://gchq.github.io/CyberChef">cyberchef</a> and applied Rotation,on the rotation of 19 got the flag.</p>
+<p><img src="Beware-Ides-of-March-Sol-1.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{c@3$@r_c!ph3r}</p>
+</blockquote>
+<h3 id="Home-Base"><a href="#Home-Base" class="headerlink" title="Home Base"></a>Home Base</h3><p><img src="Home-Base.png" srcset="/Blog/img/loading.gif"></p>
+<p>  Put the string in cyberchef and converted it From Hex &gt; Base 32 &gt; Base 64 &gt; Base 85, and got the flag.</p>
+<p><img src="Home-Base-Sol.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{it5_@_H0m3_2un!}</p>
+</blockquote>
+<h3 id="Sus"><a href="#Sus" class="headerlink" title="Sus"></a>Sus</h3><p><img src="Sus.png" srcset="/Blog/img/loading.gif"></p>
+<p>  The Hint gives the idea that it can be vigenere cipher so i put the string “ooflgqofllcedopwvtnhyacwllhehdl” in cyberchef and used vigenere decoder and got the flag. Key is SALAD but you can just do auto decryption at <a target="_blank" rel="noopener" href="https://www.dcode.fr/vigenere-cipher">dcode.fr</a> to get “wouldyoulikesomevinegarwiththat”.</p>
+<p><img src="Sus-Sol.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{wouldyoulikesomevinegarwiththat}</p>
+</blockquote>
+<h3 id="Rak-1"><a href="#Rak-1" class="headerlink" title="Rak 1"></a>Rak 1</h3><p><img src="Rak1.png" srcset="/Blog/img/loading.gif"></p>
+<p>  The Hint tells that it is an Advanced encryption, so in cyberchef i tried AES decode and got the flag.</p>
+<ul>
+<li>Cipher Text = “df 48 b8 6e 14 87 f6 8b a8 9c 2c c8 d3 2b ec 73 06 01 0a 01 e2 75 26 fe 38 d5 67 59 e6 55 33 b2 aa e0 2d 67 34 48 7d 52 8a 18 0d 36 d7 f2 18 8f” </li>
+<li>Key = “B55D3CE3183E06928 BA82F8980B661A30A 6C4B2BA499062CF6A 31EB1CD581E55” </li>
+<li>IV = “00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f”</li>
+</ul>
+<p><img src="Rak-1-Sol.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{wh0_kn3w_yU0_w3r3_sO_sm@r7}</p>
+</blockquote>
+<h2 id="MISC"><a href="#MISC" class="headerlink" title="MISC"></a>MISC</h2><h3 id="Lorem-Ipsum"><a href="#Lorem-Ipsum" class="headerlink" title="Lorem Ipsum"></a>Lorem Ipsum</h3><p><img src="Lorem-Ipsum.png" srcset="/Blog/img/loading.gif"></p>
+<p>  I compared the given text with original Lorem ipsum text and found that there are some words which are extra in the given text. So After comparing the whole text i got cyctflatiniscool which is our flag.</p>
+<blockquote>
+<p> <strong>FLAG</strong>: cyctf{latiniscool}</p>
+</blockquote>
+<h2 id="FORENSICS"><a href="#FORENSICS" class="headerlink" title="FORENSICS"></a>FORENSICS</h2><h3 id="Image-Viewer"><a href="#Image-Viewer" class="headerlink" title="Image Viewer"></a>Image Viewer</h3><p><img src="Image-Viewer.png" srcset="/Blog/img/loading.gif"></p>
+<p>  Used Exiftool on the image and got the flag.<br><img src="Image-Viewer-Sol.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{h3h3h3_1m@g3_M3t@d@t@_v13w3r_ICU}</p>
+</blockquote>
+<h3 id="The-row-beneath"><a href="#The-row-beneath" class="headerlink" title="The row beneath"></a>The row beneath</h3><p><img src="The-Row-Beneath.png" srcset="/Blog/img/loading.gif"></p>
+<figure class="highlight vim"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs vim">Used <span class="hljs-string">&quot;Strings plan.png | grep &quot;</span>CYCTF<span class="hljs-comment">&quot; and got the flag.</span><br></code></pre></div></td></tr></table></figure>
+<p><img src="The-Row-Beneath-Sol.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{L00k_1n_th3_h3x_13h54d56}</p>
+</blockquote>
+<h3 id="What’s-the-password"><a href="#What’s-the-password" class="headerlink" title="What’s the password?"></a>What’s the password?</h3><p><img src="What's-the-Password.png" srcset="/Blog/img/loading.gif"></p>
+<p>  Used “steghide extract -sf sudo.jpg” with “sudo” as password to get flag.</p>
+<p><img src="What's-the-Password-Sol.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{U$3_sud0_t0_achi3v3_y0ur_dr3@m$!}</p>
+</blockquote>
+<h3 id="Flag-delivery"><a href="#Flag-delivery" class="headerlink" title="Flag delivery"></a>Flag delivery</h3><p><img src="Flag-Delivery.png" srcset="/Blog/img/loading.gif"></p>
+<p>  Replaced characters with .  and - since it is morse code, used morse decoder and got the flag.</p>
+<p><img src="Flag-Delivery-Sol.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{R3@D_B3TW33N_TH3_L1N3S}</p>
+</blockquote>
+<h3 id="Flag-delivery-2"><a href="#Flag-delivery-2" class="headerlink" title="Flag delivery 2"></a>Flag delivery 2</h3><p><img src="Flag-Delivery-2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  The challenge gave us a corrupted file and on opening it in the hex editor i got to know that it is a png file, so i fixed the wrong header and the data part.</p>
+<p><img src="Flag-Delivery-2-Sol-1.png" srcset="/Blog/img/loading.gif"><br><img src="Flag-Delivery-2-Sol-2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  I got the flag after exporting the file from hex editor.</p>
+<p><img src="Flag-Delivery-2-Sol-3.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{Br0k3n_1m@g3s_@r3_@_p@1n_1n_th3_b@ck}</p>
+</blockquote>
+<h3 id="Steg-2"><a href="#Steg-2" class="headerlink" title="Steg 2"></a>Steg 2</h3><p><img src="Steg-2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  I used stegsolve and changed the colour plane found the flag in Red Plane 1.</p>
+<p><img src="Steg2-Sol.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{l$b_st3g@n0gr@phy_f0r_th3_w1n}</p>
+</blockquote>
+<h3 id="Steg-Ultimate"><a href="#Steg-Ultimate" class="headerlink" title="Steg Ultimate"></a>Steg Ultimate</h3><p><img src="Steg-Ultimate.png" srcset="/Blog/img/loading.gif"></p>
+<p>  First i used steghide to extract a text file embedded in given image.</p>
+<p><img src="Steg-Ultimate-Sol-1.png" srcset="/Blog/img/loading.gif"></p>
+<p>  The embedded file gave a link which gave us base64 encoded strings.</p>
+<p><img src="Steg-Ultimate-Sol-2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  When i converted the base64 encoded string to file with a online decoder i got the flag.</p>
+<p><img src="Steg-Ultimate-Sol-3.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{2_f0r_th3_pr1c3_0f_1_b64}</p>
+</blockquote>
+<h2 id="REVERSE-ENGINEERING"><a href="#REVERSE-ENGINEERING" class="headerlink" title="REVERSE ENGINEERING"></a>REVERSE ENGINEERING</h2><h3 id="Password-1"><a href="#Password-1" class="headerlink" title="Password 1"></a>Password 1</h3><p><img src="Password1.png" srcset="/Blog/img/loading.gif"></p>
+<p>   Challenge provides the following code:</p>
+  <figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python"><span class="hljs-keyword">import</span> random<br><br><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">checkPassword</span>(<span class="hljs-params">password</span>):</span><br>    <span class="hljs-keyword">if</span>(<span class="hljs-built_in">len</span>(password) != <span class="hljs-number">43</span>):<br>      <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span><br>    <span class="hljs-keyword">if</span>(password[<span class="hljs-number">26</span>] == <span class="hljs-string">&#x27;r&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">33</span>] == <span class="hljs-string">&#x27;t&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">32</span>] == <span class="hljs-string">&#x27;3&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">16</span>] == <span class="hljs-string">&#x27;3&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">4</span>] == <span class="hljs-string">&#x27;F&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">21</span>] == <span class="hljs-string">&#x27;r&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">38</span>] == <span class="hljs-string">&#x27;1&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">18</span>] == <span class="hljs-string">&#x27;c&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">22</span>] == <span class="hljs-string">&#x27;@&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">31</span>] == <span class="hljs-string">&#x27;g&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">7</span>] == <span class="hljs-string">&#x27;u&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">0</span>] == <span class="hljs-string">&#x27;C&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">6</span>] == <span class="hljs-string">&#x27;p&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">39</span>] == <span class="hljs-string">&#x27;3&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">3</span>] == <span class="hljs-string">&#x27;T&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">25</span>] == <span class="hljs-string">&#x27;3&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">29</span>] == <span class="hljs-string">&#x27;t&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">42</span>] == <span class="hljs-string">&#x27;&#125;&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">12</span>] == <span class="hljs-string">&#x27;g&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">23</span>] == <span class="hljs-string">&#x27;c&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">30</span>] == <span class="hljs-string">&#x27;0&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">40</span>] == <span class="hljs-string">&#x27;3&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">28</span>] == <span class="hljs-string">&#x27;_&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">20</span>] == <span class="hljs-string">&#x27;@&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">27</span>] == <span class="hljs-string">&#x27;$&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">17</span>] == <span class="hljs-string">&#x27;_&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">35</span>] == <span class="hljs-string">&#x27;3&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">8</span>] == <span class="hljs-string">&#x27;7&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">24</span>] == <span class="hljs-string">&#x27;t&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">41</span>] == <span class="hljs-string">&#x27;7&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">13</span>] == <span class="hljs-string">&#x27;_&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">5</span>] == <span class="hljs-string">&#x27;&#123;&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">2</span>] == <span class="hljs-string">&#x27;C&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">11</span>] == <span class="hljs-string">&#x27;n&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">9</span>] == <span class="hljs-string">&#x27;7&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">15</span>] == <span class="hljs-string">&#x27;h&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">34</span>] == <span class="hljs-string">&#x27;h&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">1</span>] == <span class="hljs-string">&#x27;Y&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">10</span>] == <span class="hljs-string">&#x27;1&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">37</span>] == <span class="hljs-string">&#x27;_&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">14</span>] == <span class="hljs-string">&#x27;t&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">36</span>] == <span class="hljs-string">&#x27;r&#x27;</span> <span class="hljs-keyword">and</span> <br>      password[<span class="hljs-number">19</span>] == <span class="hljs-string">&#x27;h&#x27;</span>):<br>      <span class="hljs-keyword">return</span> <span class="hljs-literal">True</span><br>    <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span><br><br>password = <span class="hljs-built_in">input</span>(<span class="hljs-string">&quot;Enter password: &quot;</span>)<br><span class="hljs-keyword">if</span>(checkPassword(password)):<br>  print(<span class="hljs-string">&quot;PASSWORD ACCEPTED\n&quot;</span>)<br><span class="hljs-keyword">else</span>:<br>  print(<span class="hljs-string">&quot;PASSWORD DENIED\n&quot;</span>)<br></code></pre></div></td></tr></table></figure>
+<p>  I changed the code to the following code and got the flag.</p>
+  <figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python">password=[<span class="hljs-string">&#x27;a&#x27;</span>]*<span class="hljs-number">43</span><br>password[<span class="hljs-number">26</span>] = <span class="hljs-string">&#x27;r&#x27;</span><br>password[<span class="hljs-number">33</span>] = <span class="hljs-string">&#x27;t&#x27;</span><br>password[<span class="hljs-number">32</span>] = <span class="hljs-string">&#x27;3&#x27;</span><br>password[<span class="hljs-number">16</span>] = <span class="hljs-string">&#x27;3&#x27;</span>  <br>password[<span class="hljs-number">4</span>] = <span class="hljs-string">&#x27;F&#x27;</span>  <br>password[<span class="hljs-number">21</span>] = <span class="hljs-string">&#x27;r&#x27;</span> <br>password[<span class="hljs-number">38</span>] = <span class="hljs-string">&#x27;1&#x27;</span>  <br>password[<span class="hljs-number">18</span>] = <span class="hljs-string">&#x27;c&#x27;</span>  <br>password[<span class="hljs-number">22</span>] = <span class="hljs-string">&#x27;@&#x27;</span>  <br>password[<span class="hljs-number">31</span>] = <span class="hljs-string">&#x27;g&#x27;</span>  <br>password[<span class="hljs-number">7</span>] = <span class="hljs-string">&#x27;u&#x27;</span>  <br>password[<span class="hljs-number">0</span>] = <span class="hljs-string">&#x27;C&#x27;</span>  <br>password[<span class="hljs-number">6</span>] = <span class="hljs-string">&#x27;p&#x27;</span>  <br>password[<span class="hljs-number">39</span>] = <span class="hljs-string">&#x27;3&#x27;</span>  <br>password[<span class="hljs-number">3</span>] = <span class="hljs-string">&#x27;T&#x27;</span>  <br>password[<span class="hljs-number">25</span>] = <span class="hljs-string">&#x27;3&#x27;</span>  <br>password[<span class="hljs-number">29</span>] = <span class="hljs-string">&#x27;t&#x27;</span>  <br>password[<span class="hljs-number">42</span>] = <span class="hljs-string">&#x27;&#125;&#x27;</span>  <br>password[<span class="hljs-number">12</span>] = <span class="hljs-string">&#x27;g&#x27;</span>  <br>password[<span class="hljs-number">23</span>] = <span class="hljs-string">&#x27;c&#x27;</span>  <br>password[<span class="hljs-number">30</span>] = <span class="hljs-string">&#x27;0&#x27;</span>  <br>password[<span class="hljs-number">40</span>] = <span class="hljs-string">&#x27;3&#x27;</span>  <br>password[<span class="hljs-number">28</span>] = <span class="hljs-string">&#x27;_&#x27;</span>  <br>password[<span class="hljs-number">20</span>] = <span class="hljs-string">&#x27;@&#x27;</span>  <br>password[<span class="hljs-number">27</span>] = <span class="hljs-string">&#x27;$&#x27;</span>  <br>password[<span class="hljs-number">17</span>] = <span class="hljs-string">&#x27;_&#x27;</span>  <br>password[<span class="hljs-number">35</span>] = <span class="hljs-string">&#x27;3&#x27;</span>  <br>password[<span class="hljs-number">8</span>] = <span class="hljs-string">&#x27;7&#x27;</span>  <br>password[<span class="hljs-number">24</span>] = <span class="hljs-string">&#x27;t&#x27;</span>  <br>password[<span class="hljs-number">41</span>] = <span class="hljs-string">&#x27;7&#x27;</span>  <br>password[<span class="hljs-number">13</span>] = <span class="hljs-string">&#x27;_&#x27;</span>  <br>password[<span class="hljs-number">5</span>] = <span class="hljs-string">&#x27;&#123;&#x27;</span>  <br>password[<span class="hljs-number">2</span>] = <span class="hljs-string">&#x27;C&#x27;</span>  <br>password[<span class="hljs-number">11</span>] = <span class="hljs-string">&#x27;n&#x27;</span>  <br>password[<span class="hljs-number">9</span>] = <span class="hljs-string">&#x27;7&#x27;</span>  <br>password[<span class="hljs-number">15</span>] = <span class="hljs-string">&#x27;h&#x27;</span>  <br>password[<span class="hljs-number">34</span>] = <span class="hljs-string">&#x27;h&#x27;</span>  <br>password[<span class="hljs-number">1</span>] = <span class="hljs-string">&#x27;Y&#x27;</span>  <br>password[<span class="hljs-number">10</span>] = <span class="hljs-string">&#x27;1&#x27;</span>  <br>password[<span class="hljs-number">37</span>] = <span class="hljs-string">&#x27;_&#x27;</span>  <br>password[<span class="hljs-number">14</span>] = <span class="hljs-string">&#x27;t&#x27;</span>  <br>password[<span class="hljs-number">36</span>] = <span class="hljs-string">&#x27;r&#x27;</span>  <br>password[<span class="hljs-number">19</span>] = <span class="hljs-string">&#x27;h&#x27;</span><br>print(password)<br><span class="hljs-keyword">for</span> char <span class="hljs-keyword">in</span> password:<br>    print(char, end=<span class="hljs-string">&quot;&quot;</span>)<br></code></pre></div></td></tr></table></figure>
+<p><img src="Password1-Sol-4.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{pu771ng_th3_ch@r@ct3r$_t0g3th3r_1337}</p>
+</blockquote>
+<h3 id="Password-2"><a href="#Password-2" class="headerlink" title="Password 2"></a>Password 2</h3><p><img src="Password2.png" srcset="/Blog/img/loading.gif"></p>
+<p>  Challenge provides the following code:</p>
+  <figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python"><span class="hljs-keyword">import</span> random<br><br><span class="hljs-function"><span class="hljs-keyword">def</span> <span class="hljs-title">checkPassword</span>(<span class="hljs-params">password</span>):</span><br>    <span class="hljs-keyword">if</span>(<span class="hljs-built_in">len</span>(password) != <span class="hljs-number">47</span>):<br>      <span class="hljs-keyword">return</span> <span class="hljs-literal">False</span><br>    newPass = <span class="hljs-built_in">list</span>(password)<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">0</span>,<span class="hljs-number">9</span>):<br>      newPass[i] = password[i]<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">9</span>,<span class="hljs-number">24</span>):<br>      newPass[i] = password[<span class="hljs-number">32</span>-i]<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">24</span>,<span class="hljs-number">47</span>,<span class="hljs-number">2</span>):<br>      newPass[i] = password[<span class="hljs-number">70</span>-i]<br>    <span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">45</span>,<span class="hljs-number">25</span>,-<span class="hljs-number">2</span>):<br>      newPass[i] = password[i]<br>    password = <span class="hljs-string">&quot;&quot;</span>.join(newPass);<br>    <span class="hljs-keyword">return</span> password == <span class="hljs-string">&quot;CYCTF&#123;ju$@rcs_3l771l_@_t&#125;bd3cfdr0y_u0t__03_0l3m&quot;</span><br><br>print(password)<br><span class="hljs-keyword">for</span> char <span class="hljs-keyword">in</span> password:<br>    print(char,end=<span class="hljs-string">&#x27;&#x27;</span>)<br></code></pre></div></td></tr></table></figure>
+
+<p>  I changed the code to the following code and got the flag.</p>
+  <figure class="highlight python"><table><tr><td class="gutter hljs"><div class="hljs code-wrapper"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></div></td><td class="code"><div class="hljs code-wrapper"><pre><code class="hljs python">password = <span class="hljs-string">&quot;CYCTF&#123;ju$@rcs_3l771l_@_t&#125;bd3cfdr0y_u0t__03_0l3m&quot;</span><br>newPass = <span class="hljs-built_in">list</span>(password)<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">0</span>,<span class="hljs-number">9</span>):<br>    newPass[i] = password[i]<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">9</span>,<span class="hljs-number">24</span>):<br>    newPass[i] = password[<span class="hljs-number">32</span>-i]<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">24</span>,<span class="hljs-number">47</span>,<span class="hljs-number">2</span>):<br>    newPass[i] = password[<span class="hljs-number">70</span>-i]<br><span class="hljs-keyword">for</span> i <span class="hljs-keyword">in</span> <span class="hljs-built_in">range</span>(<span class="hljs-number">45</span>,<span class="hljs-number">25</span>,-<span class="hljs-number">2</span>):<br>    newPass[i] = password[i]<br>print(newPass)<br><span class="hljs-keyword">for</span> char <span class="hljs-keyword">in</span> newPass:<br>    print(char, end=<span class="hljs-string">&#x27;&#x27;</span>)<br></code></pre></div></td></tr></table></figure>
+<p><img src="Password2-Sol-3.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{ju$t_@_l177l3_scr@mbl3_f0r_y0u_t0_d3c0d3}</p>
+</blockquote>
+<h2 id="PASSWORD-CRACKING"><a href="#PASSWORD-CRACKING" class="headerlink" title="PASSWORD CRACKING"></a>PASSWORD CRACKING</h2><h3 id="secure-I-think"><a href="#secure-I-think" class="headerlink" title="secure (I think?)"></a>secure (I think?)</h3><p>  I used crackstation on the given hash and got the flag.</p>
+<p><img src="Secure-(I-think!).png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: securepassword</p>
+</blockquote>
+<h3 id="Crack-the-Zip"><a href="#Crack-the-Zip" class="headerlink" title="Crack the Zip!"></a>Crack the Zip!</h3><p>  Run “fcrackzip -Du -p /usr/share/wordlists/rockyou.txt flag.zip” on the given zip and i got the password for the zip, opened the zip and got the flag in the file inside the zip.</p>
+<p><img src="Crack-the-Zip!.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: cyctf{y0u_cr@ck3d_th3_z!p…}</p>
+</blockquote>
+<h3 id="supa-secure"><a href="#supa-secure" class="headerlink" title="supa secure"></a>supa secure</h3><p>  Run “hashcat -m 20 -a 0 -o cracked.txt hash.txt /usr/share/wordlists/rockyou.txt –force” with [given hash]:[given salt (cyctf)] in the hash.txt gets the flag.</p>
+<p><img src="Supa-Secur3.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: cyctf{ilovesalt}</p>
+</blockquote>
+<h3 id="Me-Myself-and-I"><a href="#Me-Myself-and-I" class="headerlink" title="Me, Myself, and I"></a>Me, Myself, and I</h3><p>  Used <a target="_blank" rel="noopener" href="https://crackstation.net/">crackstation</a> on the given hash</p>
+<p><img src="Me,Myself-and-I.png" srcset="/Blog/img/loading.gif"></p>
+<blockquote>
+<p> <strong>FLAG</strong>: CYCTF{whoami}</p>
+</blockquote>
+
+            </div>
+            <hr>
+            <div>
+              <div class="post-metas mb-3">
+                
+                  <div class="post-meta mr-3">
+                    <i class="iconfont icon-category"></i>
+                    
+                      <a class="hover-with-bg" href="/Blog/categories/Hacking/">Hacking</a>
+                    
+                      <a class="hover-with-bg" href="/Blog/categories/Hacking/CTF/">CTF</a>
+                    
+                  </div>
+                
+                
+                  <div class="post-meta">
+                    <i class="iconfont icon-tags"></i>
+                    
+                      <a class="hover-with-bg" href="/Blog/tags/CTF-Writeups/">CTF Writeups</a>
+                    
+                  </div>
+                
+              </div>
+              
+                <p class="note note-warning">All articles in this blog except for special statements,Both adopt <a target="_blank" href="https://creativecommons.org/licenses/by-sa/4.0/deed.en" rel="nofollow noopener noopener">CC BY-SA 4.0 protocol</a>, Please indicate the source!</p>
+              
+              
+                <div class="post-prevnext">
+                  <article class="post-prev col-6">
+                    
+                    
+                      <a href="/Blog/2020/11/21/ADB-Installation-Guide/">
+                        <i class="iconfont icon-arrowleft"></i>
+                        <span class="hidden-mobile">A Simple Guide to Setup ADB</span>
+                        <span class="visible-mobile">Previous</span>
+                      </a>
+                    
+                  </article>
+                  <article class="post-next col-6">
+                    
+                    
+                  </article>
+                </div>
+              
+            </div>
+
+            
+          </article>
+        </div>
+      </div>
+    </div>
+    
+      <div class="d-none d-lg-block col-lg-2 toc-container" id="toc-ctn">
+        <div id="toc">
+  <p class="toc-header"><i class="iconfont icon-list"></i>&nbsp;TOC</p>
+  <div class="toc-body" id="toc-body"></div>
+</div>
+
+      </div>
+    
+  </div>
+</div>
+
+<!-- Custom -->
+
+
+    
+
+    
+      <a id="scroll-top-button" href="#" role="button">
+        <i class="iconfont icon-arrowup" aria-hidden="true"></i>
+      </a>
+    
+
+    
+      <div class="modal fade" id="modalSearch" tabindex="-1" role="dialog" aria-labelledby="ModalLabel"
+     aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-lg" role="document">
+    <div class="modal-content">
+      <div class="modal-header text-center">
+        <h4 class="modal-title w-100 font-weight-bold">Search</h4>
+        <button type="button" id="local-search-close" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body mx-3">
+        <div class="md-form mb-5">
+          <input type="text" id="local-search-input" class="form-control validate">
+          <label data-error="x" data-success="v"
+                 for="local-search-input">keyword</label>
+        </div>
+        <div class="list-group" id="local-search-result"></div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+
+    
+  </main>
+
+  <footer class="text-center mt-5 py-3">
+  <div class="footer-content">
+     <a href="https://hexo.io" target="_blank" rel="nofollow noopener"><span>Hexo</span></a> <i class="iconfont icon-love"></i> <a href="https://github.com/fluid-dev/hexo-theme-fluid" target="_blank" rel="nofollow noopener"><span>Fluid</span></a> 
+  </div>
+  
+
+  
+
+  
+</footer>
+
+<!-- SCRIPTS -->
+
+  <script  src="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.js" ></script>
+  <link  rel="stylesheet" href="https://cdn.jsdelivr.net/npm/nprogress@0.2.0/nprogress.min.css" />
+
+  <script>
+    NProgress.configure({"showSpinner":false,"trickleSpeed":100})
+    NProgress.start()
+    window.addEventListener('load', function() {
+      NProgress.done();
+    })
+  </script>
+
+
+<script  src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" ></script>
+<script  src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/js/bootstrap.min.js" ></script>
+<script  src="/Blog/js/debouncer.js" ></script>
+<script  src="/Blog/js/events.js" ></script>
+<script  src="/Blog/js/plugins.js" ></script>
+
+<!-- Plugins -->
+
+
+  
+    <script  src="/Blog/js/lazyload.js" ></script>
+  
+
+
+
+  
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/tocbot@4.12.0/dist/tocbot.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@3.5.7/dist/jquery.fancybox.min.js" ></script>
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/anchor-js@4.3.0/anchor.min.js" ></script>
+
+
+
+  <script defer src="https://cdn.jsdelivr.net/npm/clipboard@2.0.6/dist/clipboard.min.js" ></script>
+
+
+
+
+
+
+  <script  src="https://cdn.jsdelivr.net/npm/typed.js@2.0.11/lib/typed.min.js" ></script>
+  <script>
+    (function (window, document) {
+      var typing = Fluid.plugins.typing;
+      var title = document.getElementById('subtitle').title;
+      
+      typing(title)
+      
+    })(window, document);
+  </script>
+
+
+
+  <script  src="/Blog/js/local-search.js" ></script>
+  <script>
+    (function () {
+      var path = "/Blog/local-search.xml";
+      var inputArea = document.querySelector("#local-search-input");
+      inputArea.onclick = function () {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+        this.onclick = null
+      }
+    })()
+  </script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ?????? ?????? -->
+<script  src="/Blog/js/boot.js" ></script>
+
+
+
+</body>
+</html>
+

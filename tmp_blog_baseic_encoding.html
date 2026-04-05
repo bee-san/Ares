@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>BSidesNYC CTFd Writeup - BASEic Encoding</title>
+    <link rel="stylesheet" href="/assets/built/screen.css?v=adcd526589">
+
+    <meta name="description" content="This document outlines the steps to solve the &quot;BASEic Encoding&quot; challenge, which involves decoding a string of complex Unicode characters to reveal the flag.
+
+Challenge String: ꍦ鱡𓍻普散桤鵟ꌰ橤𓅟頳桲𓄷敟鑦鵴樱靟樴𠌳">
+    <link rel="icon" href="https://blog.osiris.cyber.nyu.edu/content/images/2024/06/OSIRIS-Logo--1-.ico" type="image/x-icon">
+    <link rel="canonical" href="https://blog.osiris.cyber.nyu.edu/bsidesnyc-ctfd-writeup-baseic-encoding/">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    
+    <meta property="og:site_name" content="OSIRIS Blog">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="BSidesNYC CTFd Writeup - BASEic Encoding">
+    <meta property="og:description" content="This document outlines the steps to solve the &quot;BASEic Encoding&quot; challenge, which involves decoding a string of complex Unicode characters to reveal the flag.
+
+Challenge String: ꍦ鱡𓍻普散桤鵟ꌰ橤𓅟頳桲𓄷敟鑦鵴樱靟樴𠌳">
+    <meta property="og:url" content="https://blog.osiris.cyber.nyu.edu/bsidesnyc-ctfd-writeup-baseic-encoding/">
+    <meta property="og:image" content="https://blog.osiris.cyber.nyu.edu/content/images/2025/10/bsidesnyc-3.png">
+    <meta property="article:published_time" content="2025-11-25T08:03:49.000Z">
+    <meta property="article:modified_time" content="2025-11-25T08:03:49.000Z">
+    <meta property="article:publisher" content="https://www.facebook.com/osirislab/">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="BSidesNYC CTFd Writeup - BASEic Encoding">
+    <meta name="twitter:description" content="This document outlines the steps to solve the &quot;BASEic Encoding&quot; challenge, which involves decoding a string of complex Unicode characters to reveal the flag.
+
+Challenge String: ꍦ鱡𓍻普散桤鵟ꌰ橤𓅟頳桲𓄷敟鑦鵴樱靟樴𠌳">
+    <meta name="twitter:url" content="https://blog.osiris.cyber.nyu.edu/bsidesnyc-ctfd-writeup-baseic-encoding/">
+    <meta name="twitter:image" content="https://blog.osiris.cyber.nyu.edu/content/images/2025/10/bsidesnyc-3.png">
+    <meta name="twitter:label1" content="Written by">
+    <meta name="twitter:data1" content="j3rry">
+    <meta name="twitter:site" content="@osirislab">
+    <meta property="og:image:width" content="748">
+    <meta property="og:image:height" content="363">
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "OSIRIS Blog",
+        "url": "https://blog.osiris.cyber.nyu.edu/",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://blog.osiris.cyber.nyu.edu/content/images/2024/06/OSIRIS-Logo--1--3.png",
+            "width": 60,
+            "height": 60
+        }
+    },
+    "author": {
+        "@type": "Person",
+        "name": "j3rry",
+        "image": {
+            "@type": "ImageObject",
+            "url": "https://blog.osiris.cyber.nyu.edu/content/images/2025/10/WhatsApp-Image-2023-01-25-at-9.32.25-PM.jpeg",
+            "width": 785,
+            "height": 507
+        },
+        "url": "https://blog.osiris.cyber.nyu.edu/author/j3rry/",
+        "sameAs": [
+            "https://anmol-vats-portfolio.vercel.app/"
+        ]
+    },
+    "headline": "BSidesNYC CTFd Writeup - BASEic Encoding",
+    "url": "https://blog.osiris.cyber.nyu.edu/bsidesnyc-ctfd-writeup-baseic-encoding/",
+    "datePublished": "2025-11-25T08:03:49.000Z",
+    "dateModified": "2025-11-25T08:03:49.000Z",
+    "image": {
+        "@type": "ImageObject",
+        "url": "https://blog.osiris.cyber.nyu.edu/content/images/2025/10/bsidesnyc-3.png",
+        "width": 748,
+        "height": 363
+    },
+    "description": "This document outlines the steps to solve the &quot;BASEic Encoding&quot; challenge, which involves decoding a string of complex Unicode characters to reveal the flag.\n\nChallenge String: ꍦ鱡𓍻普散桤鵟ꌰ橤𓅟頳桲𓄷敟鑦鵴樱靟樴𠌳",
+    "mainEntityOfPage": "https://blog.osiris.cyber.nyu.edu/bsidesnyc-ctfd-writeup-baseic-encoding/"
+}
+    </script>
+
+    <meta name="generator" content="Ghost 5.109">
+    <link rel="alternate" type="application/rss+xml" title="OSIRIS Blog" href="https://blog.osiris.cyber.nyu.edu/rss/">
+    <script defer src="https://cdn.jsdelivr.net/ghost/portal@~2.49/umd/portal.min.js" data-i18n="true" data-ghost="https://blog.osiris.cyber.nyu.edu/" data-key="8986882c997142847fe9689cad" data-api="https://blog.osiris.cyber.nyu.edu/ghost/api/content/" data-locale="en" crossorigin="anonymous"></script><style id="gh-members-styles">.gh-post-upgrade-cta-content,
+.gh-post-upgrade-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    text-align: center;
+    width: 100%;
+    color: #ffffff;
+    font-size: 16px;
+}
+
+.gh-post-upgrade-cta-content {
+    border-radius: 8px;
+    padding: 40px 4vw;
+}
+
+.gh-post-upgrade-cta h2 {
+    color: #ffffff;
+    font-size: 28px;
+    letter-spacing: -0.2px;
+    margin: 0;
+    padding: 0;
+}
+
+.gh-post-upgrade-cta p {
+    margin: 20px 0 0;
+    padding: 0;
+}
+
+.gh-post-upgrade-cta small {
+    font-size: 16px;
+    letter-spacing: -0.2px;
+}
+
+.gh-post-upgrade-cta a {
+    color: #ffffff;
+    cursor: pointer;
+    font-weight: 500;
+    box-shadow: none;
+    text-decoration: underline;
+}
+
+.gh-post-upgrade-cta a:hover {
+    color: #ffffff;
+    opacity: 0.8;
+    box-shadow: none;
+    text-decoration: underline;
+}
+
+.gh-post-upgrade-cta a.gh-btn {
+    display: block;
+    background: #ffffff;
+    text-decoration: none;
+    margin: 28px 0 0;
+    padding: 8px 18px;
+    border-radius: 4px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.gh-post-upgrade-cta a.gh-btn:hover {
+    opacity: 0.92;
+}</style>
+    <script defer src="https://cdn.jsdelivr.net/ghost/sodo-search@~1.5/umd/sodo-search.min.js" data-key="8986882c997142847fe9689cad" data-styles="https://cdn.jsdelivr.net/ghost/sodo-search@~1.5/umd/main.css" data-sodo-search="https://blog.osiris.cyber.nyu.edu/" data-locale="en" crossorigin="anonymous"></script>
+    
+    <link href="https://blog.osiris.cyber.nyu.edu/webmentions/receive/" rel="webmention">
+    <script defer src="/public/cards.min.js?v=adcd526589"></script>
+    <link rel="stylesheet" type="text/css" href="/public/cards.min.css?v=adcd526589">
+    <script defer src="/public/comment-counts.min.js?v=adcd526589" data-ghost-comments-counts-api="https://blog.osiris.cyber.nyu.edu/members/api/comments/counts/"></script>
+    <script defer src="/public/member-attribution.min.js?v=adcd526589"></script><style>:root {--ghost-accent-color: #4aaa9a;}</style>
+    <style>
+  .gh-footer-copyright {
+    display: none;
+  }
+  .post-template .gh-content p {
+    text-align: justify;
+  }
+  .gh-cta-inner, .gh-footer-bar, .gh-footer-signup, .gh-navigation-members { display: none;}
+  
+</style>
+<script src="https://cdn.jsdelivr.net/npm/prismjs/prism.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs/plugins/autoloader/prism-autoloader.min.js" defer></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs/themes/prism-funky.min.css">
+</head>
+
+<body class="post-template is-head-middle-logo">
+<div class="gh-site">
+
+    <header id="gh-head" class="gh-head gh-outer">
+        <div class="gh-head-inner gh-inner">
+            <div class="gh-head-brand">
+                <div class="gh-head-brand-wrapper">
+                    <a class="gh-head-logo" href="https://blog.osiris.cyber.nyu.edu">
+                            <img src="https://blog.osiris.cyber.nyu.edu/content/images/2024/06/OSIRIS-Logo--1--3.png" alt="OSIRIS Blog">
+                    </a>
+                </div>
+                <button class="gh-search gh-icon-btn" aria-label="Search this site" data-ghost-search><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button>
+                <button class="gh-burger" aria-label="Toggle menu"></button>
+            </div>
+
+            <nav class="gh-head-menu">
+                <ul class="nav">
+    <li class="nav-home"><a href="https://blog.osiris.cyber.nyu.edu/">Home</a></li>
+    <li class="nav-about"><a href="https://blog.osiris.cyber.nyu.edu/about/">About</a></li>
+</ul>
+
+            </nav>
+
+            <div class="gh-head-actions">
+                    <button class="gh-search gh-icon-btn" aria-label="Search this site" data-ghost-search><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" width="20" height="20"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></button>
+                    <div class="gh-head-members">
+                                <a class="gh-head-link" href="#/portal/signin" data-portal="signin">Sign in</a>
+                                <a class="gh-head-btn gh-btn gh-primary-btn" href="#/portal/signup" data-portal="signup">Subscribe</a>
+                    </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="site-content">
+        
+<main class="site-main">
+
+
+    <article class="gh-article post">
+
+        <header class="gh-article-header gh-canvas">
+            <span class="gh-article-meta">
+                By <a href="/author/j3rry/">j3rry</a>
+                —
+                <time datetime="2025-11-25">25 Nov 2025</time>
+            </span>
+
+            <h1 class="gh-article-title">BSidesNYC CTFd Writeup - BASEic Encoding</h1>
+
+                <p class="gh-article-excerpt">This document outlines the steps to solve the &quot;BASEic Encoding&quot; challenge, which involves decoding a string of complex Unicode characters to reveal the flag.
+
+Challenge String: ꍦ鱡𓍻普散桤鵟ꌰ橤𓅟頳桲𓄷敟鑦鵴樱靟樴𠌳</p>
+
+                <figure class="gh-article-image kg-width-wide">
+        <img
+            srcset="/content/images/size/w400/2025/10/bsidesnyc-3.png 400w,
+                    /content/images/size/w720/2025/10/bsidesnyc-3.png 720w,
+                    /content/images/size/w960/2025/10/bsidesnyc-3.png 960w,
+                    /content/images/size/w1200/2025/10/bsidesnyc-3.png 1200w,
+                    /content/images/size/w2000/2025/10/bsidesnyc-3.png 2000w"
+            sizes="(max-width: 1200px) 100vw, 1200px"
+            src="/content/images/size/w1200/2025/10/bsidesnyc-3.png"
+            alt="BSidesNYC CTFd Writeup - BASEic Encoding"
+        >
+    </figure>
+        </header>
+
+        <div class="gh-content gh-canvas">
+            <h3 id="step-1-identifying-the-encoding">Step 1: Identifying the Encoding</h3><p>The primary clue is the string itself. It contains a vast range of characters that fall outside the standard ASCII or even common UTF-8 text, including characters from various scripts and symbols (e.g., CJK Unified Ideographs, Egyptian Hieroglyphs).</p><p>This is a classic indicator of <strong>Base65536 encoding</strong>. Unlike more common encodings like Base64, which uses a 64-character set, Base65536 utilizes a massive range of 65,536 Unicode characters to represent binary data more compactly. The challenge's title, "BASEic Encoding," and the hint "just BASEs hehe" directly point to a number base system, and this is a particularly large one.</p><h3 id="step-2-decoding-the-string">Step 2: Decoding the String</h3><p>Once Base65536 is identified as the encoding scheme, you can decode the string using several methods.</p><p>For CTF challenges, online tools are often the quickest way to test a hypothesis.</p><ol><li>Navigate to a Base65536 decoder. A functional one is <a href="https://www.better-converter.com/Encoders-Decoders/Base65536-Decode?ref=blog.osiris.cyber.nyu.edu">better-converter.com</a>.</li><li>Input the string. Copy the challenge string <code>ꍦ鱡𓍻普散桤鵟ꌰ橤𓅟頳桲𓄷敟鑦鵴樱靟樴𠌳</code> into the input field.</li><li>Decode. Execute the decoding function on the website.</li></ol><p>The tool will process the string and output the decoded flag.</p><p><strong>Result:</strong></p><pre><code>flag{un1c0d3_h0ld5_s3cr37s_0f_th15_b453}
+</code></pre>
+        </div>
+
+    </article>
+
+    <div class="gh-canvas">
+    <div class="navigation">
+            <a class="navigation-item navigation-previous" href="/bsidesnyc-ctfd-writeup-secure/">
+                <span class="navigation-label">Previous</span>
+                <h4 class="navigation-title">BSidesNYC CTFd Writeup - Secure</h4>
+            </a>
+            <a class="navigation-item navigation-next" href="/bsidesnyc-ctfd-writeup-rush/">
+                <span class="navigation-label">Next</span>
+                <h4 class="navigation-title">BSidesNYC CTFd Writeup - Rush</h4>
+            </a>
+    </div>
+</div>
+        <div class="gh-comments gh-canvas">
+            
+        <script defer src="https://cdn.jsdelivr.net/ghost/comments-ui@~1.0/umd/comments-ui.min.js" data-locale="en" data-ghost-comments="https://blog.osiris.cyber.nyu.edu/" data-api="https://blog.osiris.cyber.nyu.edu/ghost/api/content/" data-admin="https://blog.osiris.cyber.nyu.edu/ghost/" data-key="8986882c997142847fe9689cad" data-title="null" data-count="true" data-post-id="68f4fe9210279c0001eae7d5" data-color-scheme="auto" data-avatar-saturation="60" data-accent-color="#4aaa9a" data-comments-enabled="all" data-publication="OSIRIS Blog" crossorigin="anonymous"></script>
+    
+        </div>
+
+
+        <div class="related-wrapper gh-outer">
+</div>
+</main>
+    </div>
+
+    <footer class="gh-foot gh-outer">
+        <div class="gh-foot-inner gh-inner">
+            <div class="gh-copyright">
+                OSIRIS Blog © 2026
+            </div>
+                <nav class="gh-foot-menu">
+                    <ul class="nav">
+    <li class="nav-sign-up"><a href="#/portal/">Sign up</a></li>
+</ul>
+
+                </nav>
+            <div class="gh-powered-by">
+                <a href="https://ghost.org/" target="_blank" rel="noopener">Powered by Ghost</a>
+            </div>
+        </div>
+    </footer>
+
+</div>
+
+    <div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="pswp__bg"></div>
+
+    <div class="pswp__scroll-wrap">
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        <div class="pswp__ui pswp__ui--hidden">
+            <div class="pswp__top-bar">
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)"></button>
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)"></button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="/assets/built/main.min.js?v=adcd526589"></script>
+
+<!-- Remove 'Powered by Ghost' on Portal -->
+<script>
+  const parentElement = document.querySelector('body');
+
+  const observer = new MutationObserver(function (mutations) {
+    mutations.forEach(function (mutation) {
+      if (mutation.type !== 'childList') {
+        return;
+      }
+
+      const portalFrame = document.querySelector('iframe[data-testid="portal-popup-frame"]');
+
+      if (portalFrame) {
+        portalFrame.onload = function () {
+          const doc = portalFrame.contentWindow.document;
+          const style = document.createElement('style');
+          style.textContent = '.gh-portal-powered { display: none; }';
+          doc.head.appendChild(style);
+        }
+      }
+    });
+  });
+
+  const config = { childList: true, subtree: true };
+
+  observer.observe(parentElement, config);
+
+</script>
+
+</body>
+</html>

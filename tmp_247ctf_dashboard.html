@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+      <title>247CTF - Dashboard</title>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/css/bootstrap.min.css" integrity="sha512-oc9+XSs1H243/FRN9Rw62Fn8EtxjEYWHXRvjS43YtueEewbS6ObfXcJNyohjHqVKFPoXXUxwc+q1K7Dee6vv9g==" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flag-icon-css/3.5.0/css/flag-icon.min.css" integrity="sha512-Cv93isQdFwaKBV+Z4X8kaVBYWHST58Xb/jVOcV9aRsGSArZsgAnFIhMpDoMDcFNoUtday1hdjn0nGp3+KZyyFw==" crossorigin="anonymous">
+        
+        <link rel="stylesheet" href="/static/css/packed.css?ed6e1e5f">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Overpass+Mono" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Slab" crossorigin="anonymous">
+        <meta name="description" content="247CTF is a security learning environment where hackers can test their abilities across a number of different Capture The Flag (CTF) challenge categories including web, cryptography, networking, reversing and exploitation." />
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content="247CTF - The game never stops" />
+        <meta property="og:description" content="247CTF is a security learning environment where hackers can test their abilities across a number of different Capture The Flag (CTF) challenge categories including web, cryptography, networking, reversing and exploitation." />
+        <meta property="og:url" content="https://247ctf.com/" />
+        <meta property="og:site_name" content="247CTF" />
+        <meta property="og:image" content="https://247ctf.com/static/images/slogan.png" />
+        <meta name="twitter:card" content="summary" />
+        <meta name="twitter:description" content="247CTF is a security learning environment where hackers can test their abilities across a number of different Capture The Flag (CTF) challenge categories including web, cryptography, networking, reversing and exploitation." />
+        <meta name="twitter:title" content="247CTF - The game never stops" />
+        <meta name="twitter:site" content="@247CTF" />
+        <meta name="twitter:image" content="https://247ctf.com/static/images/capture.png" />
+    </head>
+    <body>
+      
+<nav class="navbar navbar-expand nav-style">
+    <div class="container">
+        <div class="collapse navbar-collapse">
+          <ul class="navbar-nav nav-fill w-100">
+            <li class="nav-item">
+              <a class="nav-link active rounded" href="/dashboard"><span class="align">Dashboard</span></a>
+            </li>
+            
+            <li class="nav-item">
+              <a class="nav-link " href="/scoreboard"><span class="align">Scoreboard</span></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link " href="/activity"><span class="align">Activity</span></a>
+            </li>
+            
+            <li class="nav-item">
+              <a class="nav-link " href="/about"><span class="align">About</span></a>
+            </li>
+            
+            <li class="nav-item">
+              <a class="nav-link rounded" href="#" data-toggle="modal" data-target="#loginModal"><span class="align">Login</span></a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link rounded unauth" href="#" data-toggle="modal" data-target="#joinModal"><span class="align">Join</span></a>
+            </li>
+            
+       </ul>
+   </div>
+</div>
+</nav>
+
+  <div class="container ie-notice">
+    <div class="rounded text-center p-2 mt-3 sitewide">
+      <span class="align">Internet Explorer is not supported. Please use an alternative browser.</span>
+    </div>
+  </div>
+  <div class="container none" id="fetch-error">
+    <div class="rounded text-center p-2 mt-3 sitewide">
+      <span class="align">Error during challenge fetch. Please reload or use an alternative browser.</span>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col">
+      <div class="row ">
+	<div class="col">
+    	<h2 class="pt-2 text-center">
+        	<span class="header">
+            	
+            		Dashboard
+            	
+          	</span>
+        </h2>
+        
+    </div>
+</div>
+      <div class="container-fluid p-0 d-none d-md-block">
+        <div class="row">
+          <div class="col p-1 d-flex">
+            <div class="card card-body rounded justify-content-center">
+              <div class="row align-items-center">
+                <div class="col-3">
+                  <i class="icon pe-7s-display1"></i>
+                </div>
+                <div class="col-9 text-center">
+                  <h4>72</h4>
+                  <span class="text-uppercase card-size">Total Challenges</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col p-1 d-flex">
+            <div class="card card-body rounded justify-content-center">
+              <div class="row align-items-center">
+                <div class="col-3">
+                  <i class="icon pe-7s-users"></i>
+                </div>
+                <div class="col-9 text-center">
+                  <h4>28,740</h4>
+                  <span class="text-uppercase card-size">Total Users</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col p-1 d-flex">
+            <div class="card card-body rounded justify-content-center">
+              <div class="row align-items-center">
+                <div class="col-3">
+                  <i class="icon pe-7s-check"></i>
+                </div>
+                <div class="col-9 text-center">
+                  <h4 id="total-solves">98,467</h4>
+                  <span class="text-uppercase card-size">Total Solves</span>
+                </div>
+              </div>
+            </div>
+          </div>          
+          <div class="col p-1 d-flex">
+            <div class="card card-body rounded justify-content-center">
+              <div class="row align-items-center">
+                <div class="col-3">
+                  <i class="icon pe-7s-graph1"></i>
+                </div>
+                <div class="col-9 text-center">
+                  <h4 id="monthly-solves">106</h4>
+                  <span class="text-uppercase card-size">Monthly Solves</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="row">
+        <div class="col p-1 mb-2">
+          <div id="accordion">
+           
+           <div class="card">
+            <div class="card-header" id="heading-9">
+              <h5 class="mb-0">
+                <a role="button" data-toggle="collapse" href="#collapse-9" aria-expanded="false" aria-controls="collapse-9">
+                  
+                  <span class="align-middle rounded p-1 badge-header"><span class="align">8 challenges</span></span>
+                  
+                  <span class="align-middle type-header"><span class="align"> Beginner Tutorial</span></span>
+               </a>
+             </h5>
+           </div>
+           <div id="collapse-9" class="collapse" aria-labelledby="heading-9">
+             <div class="card-body load-challenge" type="9">
+              <div class="challenge-loader text-center">
+                <i class="loading pe-spin pe-7s-refresh-2"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+           <div class="card">
+            <div class="card-header" id="heading-6">
+              <h5 class="mb-0">
+                <a role="button" data-toggle="collapse" href="#collapse-6" aria-expanded="false" aria-controls="collapse-6">
+                  
+                  <span class="align-middle rounded p-1 badge-header"><span class="align">9 challenges</span></span>
+                  
+                  <span class="align-middle type-header"><span class="align"> Cryptography</span></span>
+               </a>
+             </h5>
+           </div>
+           <div id="collapse-6" class="collapse" aria-labelledby="heading-6">
+             <div class="card-body load-challenge" type="6">
+              <div class="challenge-loader text-center">
+                <i class="loading pe-spin pe-7s-refresh-2"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+           <div class="card">
+            <div class="card-header" id="heading-5">
+              <h5 class="mb-0">
+                <a role="button" data-toggle="collapse" href="#collapse-5" aria-expanded="false" aria-controls="collapse-5">
+                  
+                  <span class="align-middle rounded p-1 badge-header"><span class="align">11 challenges</span></span>
+                  
+                  <span class="align-middle type-header"><span class="align"> Miscellaneous</span></span>
+               </a>
+             </h5>
+           </div>
+           <div id="collapse-5" class="collapse" aria-labelledby="heading-5">
+             <div class="card-body load-challenge" type="5">
+              <div class="challenge-loader text-center">
+                <i class="loading pe-spin pe-7s-refresh-2"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+           <div class="card">
+            <div class="card-header" id="heading-4">
+              <h5 class="mb-0">
+                <a role="button" data-toggle="collapse" href="#collapse-4" aria-expanded="false" aria-controls="collapse-4">
+                  
+                  <span class="align-middle rounded p-1 badge-header"><span class="align">8 challenges</span></span>
+                  
+                  <span class="align-middle type-header"><span class="align"> Networking</span></span>
+               </a>
+             </h5>
+           </div>
+           <div id="collapse-4" class="collapse" aria-labelledby="heading-4">
+             <div class="card-body load-challenge" type="4">
+              <div class="challenge-loader text-center">
+                <i class="loading pe-spin pe-7s-refresh-2"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+           <div class="card">
+            <div class="card-header" id="heading-3">
+              <h5 class="mb-0">
+                <a role="button" data-toggle="collapse" href="#collapse-3" aria-expanded="false" aria-controls="collapse-3">
+                  
+                  <span class="align-middle rounded p-1 badge-header"><span class="align">13 challenges</span></span>
+                  
+                  <span class="align-middle type-header"><span class="align"> Pwnable</span></span>
+               </a>
+             </h5>
+           </div>
+           <div id="collapse-3" class="collapse" aria-labelledby="heading-3">
+             <div class="card-body load-challenge" type="3">
+              <div class="challenge-loader text-center">
+                <i class="loading pe-spin pe-7s-refresh-2"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+           <div class="card">
+            <div class="card-header" id="heading-8">
+              <h5 class="mb-0">
+                <a role="button" data-toggle="collapse" href="#collapse-8" aria-expanded="false" aria-controls="collapse-8">
+                  
+                  <span class="align-middle rounded p-1 badge-header"><span class="align">9 challenges</span></span>
+                  
+                  <span class="align-middle type-header"><span class="align"> Reversing</span></span>
+               </a>
+             </h5>
+           </div>
+           <div id="collapse-8" class="collapse" aria-labelledby="heading-8">
+             <div class="card-body load-challenge" type="8">
+              <div class="challenge-loader text-center">
+                <i class="loading pe-spin pe-7s-refresh-2"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+           <div class="card">
+            <div class="card-header" id="heading-1">
+              <h5 class="mb-0">
+                <a role="button" data-toggle="collapse" href="#collapse-1" aria-expanded="false" aria-controls="collapse-1">
+                  
+                  <span class="align-middle rounded p-1 badge-header"><span class="align">14 challenges</span></span>
+                  
+                  <span class="align-middle type-header"><span class="align"> Web</span></span>
+               </a>
+             </h5>
+           </div>
+           <div id="collapse-1" class="collapse" aria-labelledby="heading-1">
+             <div class="card-body load-challenge" type="1">
+              <div class="challenge-loader text-center">
+                <i class="loading pe-spin pe-7s-refresh-2"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+      
+        <div id="loginModal" class="modal fade modal-center" tabindex="-1" role="dialog" aria-hidden="true" aria-labelledby="loginModal">
+  <div class="modal-dialog">
+    <div class="modal-content p-2">
+      <div class="modal-body rounded">
+        <form action="/login" method="post">
+          <div class="form-group d-none">
+            <div class="response rounded p-2"></div>
+          </div>
+          <input id="login-csrf_token" name="login-csrf_token" type="hidden" value="ImFjOWE0MjAwZGE2NDU5N2M1MGY3YzI5YzllOGIwZjcwY2RjZDdlMWYi.adDakQ.DVHcDTaXI_eECpGGc4ZrTp82tIE">
+          <div class="form-group">
+            <input class="form-control" id="login-username" name="login-username" placeholder="USERNAME" required type="text" value="">
+          </div>
+          <div class="form-group">
+            <input autocomplete="off" class="form-control" id="login-password" name="login-password" placeholder="PASSWORD" required type="password" value="">
+          </div>
+          <div class="form-group">
+            
+<script src='https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit' async defer></script>
+<div class="g-recaptcha" data-sitekey="6LedrbAUAAAAADWAXhGtBq6DDzQdMLIeaWeuhaE_" data-theme="dark"></div>
+
+          </div>
+          <button type="submit" class="btn btn-block load-btns loader"><span class="align">Submit</span></button>
+          <div class="text-center pt-3">
+            <a id="forgot-link" href="#">Forgot your password?</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="resetModal" class="modal fade modal-center" tabindex="-1" role="dialog" aria-hidden="true" aria-labelledby="resetModal">
+  <div class="modal-dialog">
+    <div class="modal-content p-2">
+      <div class="modal-body rounded">
+        <form action="/reset" method="post">
+          <div class="form-group d-none">
+            <div class="response rounded p-2"></div>
+          </div>
+          <input id="reset-csrf_token" name="reset-csrf_token" type="hidden" value="ImFjOWE0MjAwZGE2NDU5N2M1MGY3YzI5YzllOGIwZjcwY2RjZDdlMWYi.adDakQ.DVHcDTaXI_eECpGGc4ZrTp82tIE">
+          <div class="form-group">
+            <input class="form-control" id="reset-email" name="reset-email" placeholder="EMAIL" required type="text" value="">
+          </div>
+          <div class="form-group">
+            
+<script src='https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit' async defer></script>
+<div class="g-recaptcha" data-sitekey="6LedrbAUAAAAADWAXhGtBq6DDzQdMLIeaWeuhaE_" data-theme="dark"></div>
+
+          </div>
+          <button type="submit" class="btn btn-block load-btns loader"><span class="align">Submit</span></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="joinModal" class="modal fade modal-center" tabindex="-1" role="dialog" aria-hidden="true" aria-labelledby="joinModal">
+  <div class="modal-dialog">
+    <div class="modal-content p-2">
+      <div class="modal-body rounded">
+        <form action="/register" method="post">
+          <div class="form-group d-none">
+            <div class="response rounded p-2"></div>
+          </div>
+          <input id="register-csrf_token" name="register-csrf_token" type="hidden" value="ImFjOWE0MjAwZGE2NDU5N2M1MGY3YzI5YzllOGIwZjcwY2RjZDdlMWYi.adDakQ.DVHcDTaXI_eECpGGc4ZrTp82tIE">
+          <div class="form-group">
+            <input class="form-control" id="register-username" name="register-username" placeholder="USERNAME" required type="text" value="">
+          </div>
+          <div class="form-group">
+            <input class="form-control" id="register-email" name="register-email" placeholder="EMAIL" required type="text" value="">
+          </div>
+          <div class="form-group">
+            <label class="pop-label" id="avatarLabel" data-toggle="tooltip" data-html="true" data-placement="top" title="PASSWORD MUST BE BETWEEN 8 AND 128 CHARACTERS">
+              <input autocomplete="off" class="form-control" id="register-password" name="register-password" placeholder="PASSWORD" required type="password" value="">
+            </label>
+          </div>
+          <div class="form-group">
+            
+<script src='https://www.google.com/recaptcha/api.js?onload=onloadCallback&render=explicit' async defer></script>
+<div class="g-recaptcha" data-sitekey="6LedrbAUAAAAADWAXhGtBq6DDzQdMLIeaWeuhaE_" data-theme="dark"></div>
+
+          </div>
+          <div class="form-group text-center">
+            <a id="privacy" class="pb-3" href="/privacy">By registering, you agree to our privacy policy</a>
+          </div>
+          <button type="submit" class="btn btn-block load-btns loader"><span class="align">Submit</span></button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pace/1.2.3/pace.min.js" integrity="sha512-TJX3dl0dqF2pUpKKtV60kECO4y8blw4ZPIZNEkfUnFepRKfx4nfiI37IqFa1TEsRQJkPGTIK4BBJ2k/lmsK7HA==" crossorigin="anonymous"></script>        
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.1/umd/popper.min.js" integrity="sha512-ubuT8Z88WxezgSqf3RLuNi5lmjstiJcyezx34yIU2gAHonIi27Na7atqzUZCOoY4CExaoFumzOsFQ2Ch+I/HCw==" crossorigin="anonymous"></script>    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.5.3/js/bootstrap.min.js" integrity="sha512-8qmis31OQi6hIRgvkht0s6mCOittjMa9GMqtK9hes5iEQBQE/Ca6yGE5FsW36vyipGoWQswBj/QBm2JR086Rkw==" crossorigin="anonymous"></script>
+    <script src="https://browser.sentry-cdn.com/5.29.2/bundle.min.js" integrity="sha512-EH3+VmLfR76Y80AXdRCq2nOmAo6B6goeXzvIZWZQ/FuHtPLpGuvs3bsy1yDRbmq/5GDNEWGC/WWuRp05bfYn8A==" crossorigin="anonymous"></script>
+    <script src="/static/js/packed.js?d4231db0"></script>
+    
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-145425261-1"></script>
+    </body>
+</html>

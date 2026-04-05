@@ -1,0 +1,92 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8" /><title>Challenges – W3Challs Hacking Challenges</title><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" /><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" /><meta name="HandheldFriendly" content="True" /><meta name="MobileOptimized" content="320" /><meta http-equiv="align-language" content="en" /><meta name="language" content="en" /><meta name="title" content="W3Challs" /><meta name="owner" content="W3Challs" /><meta name="author" content="awe" /><meta name="Identifier-URL" content="https://w3challs.com" /><meta name="publisher" content="w3challs" /><meta name="robots" content="all" /><meta name="category" content="challenges,hacking,reversing,shellcoding,wargame,pwning,forensics,cryptography" /><meta name="keywords" content="challenge,challenges,hacking,wargame,pwning,reversing,shellcoding,pwnable,exploit,vulnerability,forensics,cryptography,realistic" /><meta name="description" content="Hacking Challenges: binary pwnables, web hacking, reverse engineering, crypto & forensics. No simulation. No Guessing." /><meta name="copyright" content="w3challs" /><link rel="shortcut icon" href="/static/images/favicon.ico" /><link rel="apple-touch-icon" href="/static/ink/img/touch-icon.57.png" /><link rel="apple-touch-icon" sizes="72x72" href="/static/ink/img/touch-icon.72.png" /><link rel="apple-touch-icon" sizes="114x114" href="/static/ink/img/touch-icon.114.png" /><link rel="apple-touch-startup-image" href="/static/ink/img/splash.320x460.png" media="screen and (min-device-width: 200px) and (max-device-width: 320px) and (orientation:portrait)" /><link rel="apple-touch-startup-image" href="/static/ink/img/splash.768x1004.png" media="screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:portrait)" /><link rel="apple-touch-startup-image" href="/static/ink/img/splash.1024x748.png" media="screen and (min-device-width: 481px) and (max-device-width: 1024px) and (orientation:landscape)" /><link rel="start" title="Home" href="/" /><link rel="alternate" type="application/rss+xml" title="Latest challenges" href="/feeds/challenges/latest" /><link rel="stylesheet" href="/static/cache/css/output.dab4b0c13744.css" type="text/css"><link rel="stylesheet" href="/static/cache/css/output.5d4d9f262ca9.css" type="text/css"><link rel="stylesheet" href="/static/cache/css/output.d7d1cc93dde5.css" type="text/css"><!--[if lt IE 9]><script nonce="-YV2RBG6ARR7Cg==" type="text/javascript" src="/static/ink/js/html5shiv.js"></script><script nonce="-YV2RBG6ARR7Cg==" type="text/javascript" src="/static/ink/js/html5shiv-printshiv.js"></script><![endif]--><!--[if IE 7 ]><link rel="stylesheet" href="/static/ink/css/ink-ie7.css" type="text/css" media="screen" title="no title" charset="utf-8" /><![endif]--><script nonce="-YV2RBG6ARR7Cg==" type="text/javascript" src="/static/cache/js/output.a8526fb7bb5d.js"></script></head><body class="ink-drawer"><input type="hidden" name="csrfmiddlewaretoken" value="7SnQ7x8UQwpoiHyLa6j8GZVJvGt1ZEkUvOgI52B5oJJ4SSuyWcjpt9vr2lUqpvqe"><script nonce="-YV2RBG6ARR7Cg==" type="text/javascript">$(document).ready(function(){$("#form_login").submit(function(event){event.preventDefault();ajaxPost('/account/login',$("#form_login").serialize(),function(data){notify_redirect_on_success(data,"",document.getElementById('login_notification'),0);});});render_last_challenges("/challenges/last_challenges-1775293703","/static/challenges/images/",document.getElementById('last_challenges'));const images={section_base:"/static/forum/images/sections/",subsection_base:"/static/forum/images/subsections/",}
+render_last_forum_posts("/forum/last_forum_posts_preauth-1775265152",images,document.getElementById('last_forum_posts'));});;</script><nav id="site_menu" class="ink-navigation ie7"><ul class="menu horizontal flat black shadowed push-left medium-push-center small-push-center tiny-push-center"><li class="hide-all show-tiny show-small show-medium"><button class="fa fa-bars left-drawer-trigger"></button></li><li class="logo_menu"><div id="logo"><img src="/static/images/logo.png" alt="W3Challs" /></div></li></ul><ul class="menu horizontal flat black shadowed push-left hide-small hide-tiny hide-medium"><li><a href="/"><i class="fa fa-home"></i></a></li><li><a href="/forum/">Forum</a></li><li><a href="/irc/">IRC</a></li><li><a href="/challenges/">Challenges <i class="fa fa-caret-down"></i></a><ul class="submenu"><li><a href="/challenges/list/crypto"><img src="/static/challenges/images/crypto.png" alt="" /> Crypto</a></li><li><a href="/challenges/list/forensics"><img src="/static/challenges/images/forensics.png" alt="" /> Forensics</a></li><li><a href="/challenges/list/misc"><img src="/static/challenges/images/misc.png" alt="" /> Misc</a></li><li><a href="/challenges/list/pwn"><img src="/static/challenges/images/pwn.png" alt="" /> Pwning</a></li><li><a href="/challenges/list/reversing"><img src="/static/challenges/images/reversing.png" alt="" /> Reversing</a></li><li><a href="/challenges/list/web"><img src="/static/challenges/images/web.png" alt="" /> Web</a></li></ul></li><li><a href="/ranking/">Ranking</a></li></ul><ul class="menu horizontal flat black shadowed right"><li id="menu_twitter"><a href="https://twitter.com/w3challs"><i class="fa fa-twitter fa-lg"></i></a></li></ul></nav><div id="site_menu_mobile" class="ink-navigation left-drawer"><ul class="menu vertical black shadowed"><li><a href="/">Home</a></li><li><a href="/forum/">Forum</a></li><li><a href="/irc/">IRC</a></li><li><a href="/challenges/">Challenges <i class="fa fa-caret-down"></i></a><ul class="submenu"><li><a href="/challenges/list/crypto"><img src="/static/challenges/images/crypto.png" alt="" /> Crypto</a></li><li><a href="/challenges/list/forensics"><img src="/static/challenges/images/forensics.png" alt="" /> Forensics</a></li><li><a href="/challenges/list/misc"><img src="/static/challenges/images/misc.png" alt="" /> Misc</a></li><li><a href="/challenges/list/pwn"><img src="/static/challenges/images/pwn.png" alt="" /> Pwning</a></li><li><a href="/challenges/list/reversing"><img src="/static/challenges/images/reversing.png" alt="" /> Reversing</a></li><li><a href="/challenges/list/web"><img src="/static/challenges/images/web.png" alt="" /> Web</a></li></ul></li><li><a href="/ranking/">Ranking</a></li><li class="hide-all show-medium show-small show-tiny"><a class="loginModalTrigger">Login</a></li></ul></div><div id="loginModalShade" class="ink-shade fade"><div id="loginModal" class="ink-modal fade" role="dialog" aria-hidden="true" aria-labelled-by="modal-title"><div class="modal-header"><button class="modal-close ink-dismiss"></button><h3 id="modal-title">Log in</h3></div><div class="modal-body" id="loginmodalContent"><form id="form_login" method="post" action="" class="ink-form"><div class="control-group"><label for="id_username"><strong>Username:</strong></label><div class="control prepend-symbol"><span><input type="text" name="username" placeholder="Enter your login" data-rules="required|text" maxlength="50" required id="id_username"><i class="fa fa-user"></i></span></div><label for="id_password"><strong>Password:</strong></label><div class="control prepend-symbol"><span><input type="password" name="password" placeholder="Enter your password" data-rules="required|text" autocomplete="off" required id="id_password"><i class="fa fa-key"></i></span></div></div><div id="login_notification"></div><button id="signin_btn" class="ink-button blue push-right align-center"><i class="fa fa-sign-in"></i>Log in</button><br /><a href="/account/signup/">Register</a><br /></form><hr />
+                Forgot your password? <a href="/account/password/reset/">Reset your password</a><br /></div></div></div><div id="alert_messages"></div><div id="site_content" class="ink-grid content-drawer"><div class="column-group gutters"><div class="all-100 large-70 xlarge-75"><div class="container"><div class="container_header hide-medium hide-small hide-tiny">Challenges</div><div class="container_body"><script nonce="-YV2RBG6ARR7Cg==" type="text/javascript">$(document).ready(function(){render_solvers_table("/challenges/last_solved/","/static/challenges/images/","#last_solvers_pagination",10,true,document.getElementById('last_solvers'));$("#tagsearch").change(function(){const tag=$("#tagsearch");if(tag.val()!=''){document.location="/challenges/tags/"+tag.val();}});$('#progress_bar').css("width","None%");});;</script><nav class="ink-navigation"><ul class="breadcrumbs"><li><a href="/">Home</a></li><li class="active"><a href="#">Challenges</a></li></ul></nav><br /><div class="center">
+    There is currently a total of <strong><span class="number">98</span></strong> challenges available.
+    <br />
+    Do you want to contribute? <a href="/challenges/proposal/">Propose a challenge</a>!<br /><br /></div><h3 class="underline_title">Challenge categories<span class="right-space"></span></h3><div class="align-center"><i class="fa-globe fa-lg fa"></i><a href="/challenges/list/all">All challenges</a></div><br /><div class="ink-grid"><div class="column-group half-gutters"><div class="all-50 small-100 tiny-100"><div class="challenge_catmenu"><img src="/static/challenges/images/96x96/crypto.png" alt="Crypto" /></div><div class="challenge_catmenu_description"><a href="/challenges/list/crypto">Crypto</a> —
+				 
+				 19 challenges<br /><small>Attacks against bad implementations of well-known cryptosystems, poorly designed algorithms, side-channels...</small></div></div><div class="all-50 small-100 tiny-100"><div class="challenge_catmenu"><img src="/static/challenges/images/96x96/forensics.png" alt="Forensics" /></div><div class="challenge_catmenu_description"><a href="/challenges/list/forensics">Forensics</a> —
+				 
+				 3 challenges<br /><small>Digital investigations: dump analysis, data recovery, malware analysis</small></div></div></div><div class="column-group half-gutters"><div class="all-50 small-100 tiny-100"><div class="challenge_catmenu"><img src="/static/challenges/images/96x96/misc.png" alt="Misc" /></div><div class="challenge_catmenu_description"><a href="/challenges/list/misc">Misc</a> —
+				 
+				 6 challenges<br /><small>Hax that doesn&#39;t fit anywhere else, mostly because it&#39;s not HTTP!</small></div></div><div class="all-50 small-100 tiny-100"><div class="challenge_catmenu"><img src="/static/challenges/images/96x96/pwn.png" alt="Pwning" /></div><div class="challenge_catmenu_description"><a href="/challenges/list/pwn">Pwning</a> —
+				 
+				 44 challenges<br /><small>Binary exploitation on user programs and against the kernel: from basic buffer overflows to advanced ROP and heap exploits.</small></div></div></div><div class="column-group half-gutters"><div class="all-50 small-100 tiny-100"><div class="challenge_catmenu"><img src="/static/challenges/images/96x96/reversing.png" alt="Reversing" /></div><div class="challenge_catmenu_description"><a href="/challenges/list/reversing">Reversing</a> —
+				 
+				 9 challenges<br /><small>Reverse Engineering of binaries and bypass anti-RE techniques</small></div></div><div class="all-50 small-100 tiny-100"><div class="challenge_catmenu"><img src="/static/challenges/images/96x96/web.png" alt="Web" /></div><div class="challenge_catmenu_description"><a href="/challenges/list/web">Web</a> —
+				 
+				 17 challenges<br /><small>Attacks against Web applications, for both  client-side and server-side vulnerabilities</small></div></div></div></div><dl><dt><i class="fa fa-tags"></i>Search by tag:</dt><dd>
+    Some challenges require skills in more than one category.
+    The <q>tag</q> mechanism allows you to search in other categories — including <q>virtual categories</q> — for challenges that require the skills that you want to practice.
+	You can search challenges by tag using the select box below, or just browse them all <a href="/challenges/tags/">here</a>.
+    </dd></dl><div class="align-center img-24"><form method="" action="" class="ink-form"><select class="imgselect" name="tagsearch" id="tagsearch" tabindex="1"><option value="" class="align-left">Search by tag</option><option value="baby" title="/static/challenges/images/tags/baby.png">Baby
+              
+                (24)
+              
+            </option><option value="crypto" title="/static/challenges/images/tags/crypto.png">Crypto
+              
+                (0)
+              
+            </option><option value="windows" title="/static/challenges/images/tags/windows.png">Windows
+              
+                (6)
+              
+            </option><option value="web" title="/static/challenges/images/tags/web.png">Web
+              
+                (4)
+              
+            </option><option value="network" title="/static/challenges/images/tags/network.png">Network
+              
+                (2)
+              
+            </option><option value="linux" title="/static/challenges/images/tags/linux.png">Linux
+              
+                (51)
+              
+            </option><option value="pwn" title="/static/challenges/images/tags/pwn.png">Pwn
+              
+                (0)
+              
+            </option><option value="reversing" title="/static/challenges/images/tags/reversing.png">Reversing
+              
+                (3)
+              
+            </option><option value="android" title="/static/challenges/images/tags/android.png">Android
+              
+                (1)
+              
+            </option><option value="python" title="/static/challenges/images/tags/python.png">Python
+              
+                (5)
+              
+            </option><option value="jail" title="/static/challenges/images/tags/jail.png">Jail
+              
+                (6)
+              
+            </option><option value="arm" title="/static/challenges/images/tags/arm.png">ARM
+              
+                (3)
+              
+            </option><option value="mips" title="/static/challenges/images/tags/mips.png">MIPS
+              
+                (2)
+              
+            </option><option value="flash" title="/static/challenges/images/tags/flash.png">Flash
+              
+                (1)
+              
+            </option><option value="php" title="/static/challenges/images/tags/php.png">PHP
+              
+                (15)
+              
+            </option><option value="dotnet" title="/static/challenges/images/tags/dotnet.png">.NET
+              
+                (1)
+              
+            </option><option value="java" title="/static/challenges/images/tags/java.png">Java
+              
+                (1)
+              
+            </option></select></form></div><h3 class="underline_title">Last challenges solved<span class="right-space"></span></h3><div id="last_solvers"><i class="fa fa-refresh fa-spin"></i>loading...</div><nav class="ink-navigation" id="last_solvers_pagination"><ul class="pagination"></ul></nav></div></div><div class="column-group gutters hide-medium hide-small hide-tiny"><div class="all-20"></div><div class="all-60"><div id="footer" class="container"><div class="center"><strong>Copyright © W3Challs 2026</strong></div></div></div><div class="all-20"></div></div></div><div class="all-100 large-30 xlarge-25 hide-medium hide-small hide-tiny"><div class="container"><div class="container_header">Login</div><div class="container_body"><br /><div class="center"><button id="login_button" class="ink-button blue loginModalTrigger"><i class="fa fa-sign-in"></i>Login</button></div><br /><span class="left-space">No account yet? <a href="/account/signup/">Register</a>.</span></div></div><div class="container"><div class="container_header">Last challenges</div><div class="container_body"><div id="last_challenges"></div></div></div><div class="vspace"></div><div class="container"><div class="container_header">Last forum posts</div><div class="container_body"><br /><div id="last_forum_posts"></div></div></div></div></div></div><script nonce="-YV2RBG6ARR7Cg==" type="text/javascript" src="/static/cache/js/output.7bc6c485849e.js"></script><script nonce="-YV2RBG6ARR7Cg==" type="text/javascript">function removeLoginModalShade(){document.getElementById('loginModalShade').style.display='none';}
+Ink.requireModules(['Ink.Dom.Selector_1','Ink.UI.Modal_1'],function(Selector,Modal){var modalElement=Ink.s('#loginModal');var options={onDismiss:removeLoginModalShade,responsive:true,width:'520px',height:'460px',autoDisplay:false,};var modalObj=new Modal(modalElement,options);$('.loginModalTrigger').click(function(){modalObj.open();window.dispatchEvent(new Event('resize'));});});;</script></body></html>
+

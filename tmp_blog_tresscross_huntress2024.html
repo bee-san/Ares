@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+	<meta charset="utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+
+	<title>Huntress CTF 2024 Write-up</title>
+	<meta name="HandheldFriendly" content="True" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+	<link rel="stylesheet" type="text/css" href="/assets/css/style.css?v=5de168ffcf" />
+
+	<script>
+			var siteUrl = 'https://tresscross.blog';
+	</script>
+
+	<script>
+			var localTheme = localStorage.getItem('attila_theme');
+			switch (localTheme) {
+					case 'dark':
+							document.documentElement.classList.add('theme-dark');
+							break;
+					case 'light':
+							document.documentElement.classList.add('theme-light');
+							break;
+					default:
+							break;
+			}
+	</script>
+
+		<script>localStorage.setItem('attila_theme', 'dark');</script>
+		<style>.js-theme {display:none!important;}</style>
+
+
+
+			<style>
+				.theme-dark:root {
+				  --ghost-accent-color: #15ff00;
+				}
+				@media (prefers-color-scheme: dark) {
+				  html:not(.theme-light):root {
+				    --ghost-accent-color: #15ff00;
+				  }
+				}
+			</style>
+
+	<link rel="icon" href="https://tresscross.blog/content/images/size/w256h256/format/jpeg/2024/10/tails.jpg" type="image/jpeg">
+    <link rel="canonical" href="https://tresscross.blog/huntress-ctf-2024-write-up/">
+    <meta name="referrer" content="no-referrer-when-downgrade">
+    
+    <meta property="og:site_name" content="tresscross / jason walker">
+    <meta property="og:type" content="article">
+    <meta property="og:title" content="Huntress CTF 2024 Write-up">
+    <meta property="og:description" content="This is my first time participating in an actual capture-the-flag event, and I am definitely happy to have gotten as far as I did. I worked alongside a team of colleagues at my work, so I did not solve every challenge myself (not for lack of trying). Throughout my work">
+    <meta property="og:url" content="https://tresscross.blog/huntress-ctf-2024-write-up/">
+    <meta property="og:image" content="https://tresscross.blog/content/images/2024/11/pngtree-d-render-of-random-numbers-in-green-matrix-coding-a-digital-picture-image_5818224.jpg">
+    <meta property="article:published_time" content="2024-11-06T22:57:47.000Z">
+    <meta property="article:modified_time" content="2025-06-09T21:48:06.000Z">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Huntress CTF 2024 Write-up">
+    <meta name="twitter:description" content="This is my first time participating in an actual capture-the-flag event, and I am definitely happy to have gotten as far as I did. I worked alongside a team of colleagues at my work, so I did not solve every challenge myself (not for lack of trying). Throughout my work">
+    <meta name="twitter:url" content="https://tresscross.blog/huntress-ctf-2024-write-up/">
+    <meta name="twitter:image" content="https://tresscross.blog/content/images/2024/11/pngtree-d-render-of-random-numbers-in-green-matrix-coding-a-digital-picture-image_5818224.jpg">
+    <meta name="twitter:label1" content="Written by">
+    <meta name="twitter:data1" content="Jason Walker">
+    <meta name="twitter:site" content="@tresscrossnet">
+    <meta name="twitter:creator" content="@tresscrosstech">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="673">
+    
+    <script type="application/ld+json">
+{
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "publisher": {
+        "@type": "Organization",
+        "name": "tresscross / jason walker",
+        "url": "https://tresscross.blog/",
+        "logo": {
+            "@type": "ImageObject",
+            "url": "https://tresscross.blog/content/images/size/w256h256/format/jpeg/2024/10/tails.jpg",
+            "width": 60,
+            "height": 60
+        }
+    },
+    "author": {
+        "@type": "Person",
+        "name": "Jason Walker",
+        "image": {
+            "@type": "ImageObject",
+            "url": "https://tresscross.blog/content/images/2024/10/tails-1.jpg",
+            "width": 190,
+            "height": 190
+        },
+        "url": "https://tresscross.blog/author/jason/",
+        "sameAs": [
+            "https://x.com/tresscrosstech"
+        ]
+    },
+    "headline": "Huntress CTF 2024 Write-up",
+    "url": "https://tresscross.blog/huntress-ctf-2024-write-up/",
+    "datePublished": "2024-11-06T22:57:47.000Z",
+    "dateModified": "2025-06-09T21:48:06.000Z",
+    "image": {
+        "@type": "ImageObject",
+        "url": "https://tresscross.blog/content/images/2024/11/pngtree-d-render-of-random-numbers-in-green-matrix-coding-a-digital-picture-image_5818224.jpg",
+        "width": 1200,
+        "height": 673
+    },
+    "description": "This is my first time participating in an actual capture-the-flag event, and I am definitely happy to have gotten as far as I did. I worked alongside a team of colleagues at my work, so I did not solve every challenge myself (not for lack of trying). Throughout my work I did however work to document my own solves, the result of which is below.\n\n\nPing Me\n\nWe found this file in the autoruns of a host that seemed to have a lot of network activity... can you figure out what it was doing?\nAttachments",
+    "mainEntityOfPage": "https://tresscross.blog/huntress-ctf-2024-write-up/"
+}
+    </script>
+
+    <meta name="generator" content="Ghost 6.23">
+    <link rel="alternate" type="application/rss+xml" title="tresscross / jason walker" href="https://tresscross.blog/rss/">
+    
+    <script defer src="https://cdn.jsdelivr.net/ghost/sodo-search@~1.8/umd/sodo-search.min.js" data-key="ed50a1952965d8de2da4ea3392" data-styles="https://cdn.jsdelivr.net/ghost/sodo-search@~1.8/umd/main.css" data-sodo-search="https://tresscross.blog/" data-locale="en" crossorigin="anonymous"></script>
+    
+    <link href="https://tresscross.blog/webmentions/receive/" rel="webmention">
+    <script defer src="/public/cards.min.js?v=5de168ffcf"></script><style>:root {--ghost-accent-color: #139400;}</style>
+    <link rel="stylesheet" type="text/css" href="/public/cards.min.css?v=5de168ffcf">
+</head>
+
+<body class="post-template">
+
+	<div class="viewport">
+		<div class="nav-header">
+			<nav class="nav-wrapper" aria-label="Main">
+				<ul>
+		<li class="nav-home"><a href="https://tresscross.blog/"><span>home</span></a></li>
+		<li class="nav-about-me"><a href="https://tresscross.blog/about/"><span>about me</span></a></li>
+		<li class="nav-projects"><a href="https://tresscross.blog/projects/"><span>projects</span></a></li>
+</ul>
+
+				<a class="nav-search" title="Search" aria-label="Search" data-ghost-search><i class="icon icon-search" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M16.2148 18.3361C14.7436 19.3838 12.9437 20 11 20C6.02944 20 2 15.9706 2 11C2 6.02944 6.02944 2 11 2C15.9706 2 20 6.02944 20 11C20 12.9437 19.3838 14.7436 18.3361 16.2148L23.1213 21L21 23.1213L16.2148 18.3361ZM11 17.25C14.4518 17.25 17.25 14.4518 17.25 11C17.25 7.54822 14.4518 4.75 11 4.75C7.54822 4.75 4.75 7.54822 4.75 11C4.75 14.4518 7.54822 17.25 11 17.25Z" fill="currentColor"/>
+</svg>
+</i></a>
+			</nav>
+
+			<div class="nav-wrapper-control">
+				<div class="inner">
+					<a class="nav-menu" role="button"><i class="icon icon-menu" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M1.5 19H22.5V17H1.5V19ZM1.5 13H22.5V11H1.5V13ZM1.5 5V7H22.5V5H1.5Z" fill="currentColor"/>
+</svg>
+</i> Menu</a>
+					<a class="nav-search" title="Search" aria-label="Search" role="button" data-ghost-search><i class="icon icon-search" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M16.2148 18.3361C14.7436 19.3838 12.9437 20 11 20C6.02944 20 2 15.9706 2 11C2 6.02944 6.02944 2 11 2C15.9706 2 20 6.02944 20 11C20 12.9437 19.3838 14.7436 18.3361 16.2148L23.1213 21L21 23.1213L16.2148 18.3361ZM11 17.25C14.4518 17.25 17.25 14.4518 17.25 11C17.25 7.54822 14.4518 4.75 11 4.75C7.54822 4.75 4.75 7.54822 4.75 11C4.75 14.4518 7.54822 17.25 11 17.25Z" fill="currentColor"/>
+</svg>
+</i></a>
+				</div>
+			</div>
+		</div>
+		<div class="nav-close" role="button" aria-label="Close"></div>
+
+		<section class="page-wrapper">
+
+			
+
+<div class="progress-container">
+	<span class="progress-bar"></span>
+</div>
+
+<header class="post-header  has-cover ">
+	<div class="inner">
+		<span class="post-info">
+			<span class="post-type">Article</span>
+		</span>
+		<h1 class="post-title">Huntress CTF 2024 Write-up</h1>
+		<div class="post-meta">
+			<div class="post-meta-avatars">
+						<figure class="post-meta-avatar">
+							<a href="/author/jason/" class="author-avatar">
+								<img class="author-profile-image" src="/content/images/2024/10/tails-1.jpg" alt="Jason Walker" />
+							</a>
+						</figure>
+			</div>
+			<h4 class="post-meta-author"><a href="/author/jason/">Jason Walker</a></h4>
+			<time datetime="06-11-2024">06 Nov 2024</time> &bull; 12 min read
+		</div>
+		<div class="post-cover cover">
+			<img
+			srcset="/content/images/size/w320/2024/11/pngtree-d-render-of-random-numbers-in-green-matrix-coding-a-digital-picture-image_5818224.jpg 320w,
+              /content/images/size/w640/2024/11/pngtree-d-render-of-random-numbers-in-green-matrix-coding-a-digital-picture-image_5818224.jpg 640w,
+              /content/images/size/w960/2024/11/pngtree-d-render-of-random-numbers-in-green-matrix-coding-a-digital-picture-image_5818224.jpg 960w,
+              /content/images/size/w1920/2024/11/pngtree-d-render-of-random-numbers-in-green-matrix-coding-a-digital-picture-image_5818224.jpg 1920w"
+      src="/content/images/size/w1920/2024/11/pngtree-d-render-of-random-numbers-in-green-matrix-coding-a-digital-picture-image_5818224.jpg"
+			alt="Huntress CTF 2024 Write-up" />
+		</div>
+	</div>
+</header>
+
+<main class="content" role="main">
+	<article class="post">
+		<div class="inner">
+
+			<section class="post-content">
+				<p>This is my first time participating in an actual capture-the-flag event, and I am definitely happy to have gotten as far as I did. I worked alongside a team of colleagues at my work, so I did not solve every challenge myself (not for lack of trying). Throughout my work I did however work to document my own solves, the result of which is below.</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/11/image.png" class="kg-image" alt="" loading="lazy" width="1920" height="1080" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image.png 600w, https://tresscross.blog/content/images/size/w1000/2024/11/image.png 1000w, https://tresscross.blog/content/images/size/w1600/2024/11/image.png 1600w, https://tresscross.blog/content/images/2024/11/image.png 1920w" sizes="(min-width: 720px) 720px"></figure><h2 id="ping-me">Ping Me</h2><blockquote>We found this file in the autoruns of a host that seemed to have a lot of network activity... can you figure out what it was doing?<br>Attachments: ping_me.vbs</blockquote><p>Going into this challenge my first though was setting up FlareVM to both capture the network traffic in Wireshark and examining the process execution events of the visual basic script within Procmon. In past challenges Huntress provided a warning if a provided attachment would brick a machine, so I went with the assumption that I would be able to view the procmon details post-execution.</p><p>First though I went through the initial steps to make sure I was dealing with the correct filetype and to see if there was anything interesting within the .vbs after examining the file contents.</p><figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://tresscross.blog/content/images/2024/10/-9A36AB9C-E769-4B70-B794-675B382BE37F-.png" class="kg-image" alt="" loading="lazy" width="814" height="85" srcset="https://tresscross.blog/content/images/size/w600/2024/10/-9A36AB9C-E769-4B70-B794-675B382BE37F-.png 600w, https://tresscross.blog/content/images/2024/10/-9A36AB9C-E769-4B70-B794-675B382BE37F-.png 814w" sizes="(min-width: 720px) 720px"><figcaption><span style="white-space: pre-wrap;">Expected for a vbs script, though the char count for that line can indicate obfuscation</span></figcaption></figure><figure class="kg-card kg-image-card kg-card-hascaption"><img src="https://tresscross.blog/content/images/2024/10/-10011A25-C4B0-473D-9D34-1097B817B5E8-.png" class="kg-image" alt="" loading="lazy" width="1000" height="692" srcset="https://tresscross.blog/content/images/size/w600/2024/10/-10011A25-C4B0-473D-9D34-1097B817B5E8-.png 600w, https://tresscross.blog/content/images/2024/10/-10011A25-C4B0-473D-9D34-1097B817B5E8-.png 1000w" sizes="(min-width: 720px) 720px"><figcaption><span style="white-space: pre-wrap;">Opening the script reveals an obviously obfuscated script preceded by an execute command</span></figcaption></figure><p>At this point I am just ready to go fire the script, I have my FlareVM machine ready. I create a pre-detonation snapshot of the FlareVM, open Procmon and Wireshark, and launch the script.</p><p>After executing I wait for a little while to let the script run. I don't really observe much happen on my screens outside of what's appearing within Wireshark and Procmon. After a minute or so I stop the capture on Wireshark and Procmon and begin looking through the process events. First I begin to scroll down until I see anything that doesn't look like normal windows activity, eventually noticing wscript events that detail when I launched the .vbs file.</p><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/10/-EDB5C921-0D65-4355-B02E-88E8964B40D7-.png" class="kg-image" alt="" loading="lazy" width="1318" height="259" srcset="https://tresscross.blog/content/images/size/w600/2024/10/-EDB5C921-0D65-4355-B02E-88E8964B40D7-.png 600w, https://tresscross.blog/content/images/size/w1000/2024/10/-EDB5C921-0D65-4355-B02E-88E8964B40D7-.png 1000w, https://tresscross.blog/content/images/2024/10/-EDB5C921-0D65-4355-B02E-88E8964B40D7-.png 1318w" sizes="(min-width: 1200px) 1200px"></figure><p>At this point I know it's likely that wscript is going to spawn child processes to perform other functions (my guess at the time was ping commands based on the challenge name and description). In Procmon you can view the process tree of the present events. I opened that and looks for a wscript.exe process with the same process ID 5824 and we found it.</p><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/10/-B4FB91C4-3164-4D14-B1A8-A27CB14D9F01-.png" class="kg-image" alt="" loading="lazy" width="1260" height="408" srcset="https://tresscross.blog/content/images/size/w600/2024/10/-B4FB91C4-3164-4D14-B1A8-A27CB14D9F01-.png 600w, https://tresscross.blog/content/images/size/w1000/2024/10/-B4FB91C4-3164-4D14-B1A8-A27CB14D9F01-.png 1000w, https://tresscross.blog/content/images/2024/10/-B4FB91C4-3164-4D14-B1A8-A27CB14D9F01-.png 1260w" sizes="(min-width: 1200px) 1200px"></figure><p>Looking at this it's clear the script is sending ping commands through cmd.exe to various different IP addresses. Still looking through procmon, I clicked the wscript parent process and clicked 'Select Subtree' button to filter for all process events originating from the initial wscript process. I manually scrolled a bunch through these events but I wasn't able to find anything that pointed me towards where a potential flag would be. From here I pivoted to analyzing the Wireshark capture traffic. First looking through it I observe various ICMP requests to several different IPs. When looking at the requests they don't seem abnormal immediately. I can see no pattern when looking through the events and I am mostly stumped.</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/10/-1FB947B8-7601-40E0-AA6F-63BEBBD60B9C-.png" class="kg-image" alt="" loading="lazy" width="1073" height="402" srcset="https://tresscross.blog/content/images/size/w600/2024/10/-1FB947B8-7601-40E0-AA6F-63BEBBD60B9C-.png 600w, https://tresscross.blog/content/images/size/w1000/2024/10/-1FB947B8-7601-40E0-AA6F-63BEBBD60B9C-.png 1000w, https://tresscross.blog/content/images/2024/10/-1FB947B8-7601-40E0-AA6F-63BEBBD60B9C-.png 1073w" sizes="(min-width: 720px) 720px"></figure><p>After looking for a while I see something in the ASCII of a packet that is important:</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/10/image-3.png" class="kg-image" alt="" loading="lazy" width="180" height="119"></figure><p>You see in the middle of the data the 'flag' string. When double clicking that string it brings me to the corresponding data in the packet view, which happens to be the IP address 102[.]108[.]97[.]103! At this point this clicks in my head that the flag is likely some combination of the IP addresses converted from decimal into ASCII text. But how do I know the correct order, especially considering that when reviewing the wireshark packets the IPs do not follow a particular pattern and repeat irregularly. To answer that we have to go back to the procmon events and review the order in which the .vbs file pinged the IP addresses. This gives us the following list:</p><ul><li><em>102[.]108[.]97[.]103</em></li><li><em>123[.]54[.]100[.]49</em></li><li><em>98[.]54[.]48[.]52</em></li><li><em>98[.]98[.]49[.]98</em></li><li><em>54[.]100[.]97[.]51</em></li><li><em>50[.]98[.]56[.]98</em></li><li><em>98[.]99[.]97[.]57</em></li><li><em>101[.]50[.]54[.]100</em></li><li><em>53[.]49[.]53[.]56</em></li><li><em>57[.]125[.]35[.]35</em></li></ul><p>From here we need to manipulate the data into correct decimal format and then convert it, I did so using the cyberchef recipe here (the input IPs were defanged):</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/10/-9AE9C492-F4BB-4272-9C4C-264A606C8E32-.png" class="kg-image" alt="" loading="lazy" width="790" height="599" srcset="https://tresscross.blog/content/images/size/w600/2024/10/-9AE9C492-F4BB-4272-9C4C-264A606C8E32-.png 600w, https://tresscross.blog/content/images/2024/10/-9AE9C492-F4BB-4272-9C4C-264A606C8E32-.png 790w" sizes="(min-width: 720px) 720px"></figure><p>The output of this provided me with <code>flag{6d1b604bb1b6da32b8bbca9e26d51589}##</code>, inputting that without the two pounds at the end into the CTF challenge input resulted in a solve.</p><h2 id="1200-transmissions">1200 Transmissions</h2><blockquote>1200 Transmissions<br>Author: @daveAThuntress<br>Wait, there aren't actually 1200 transmissions in this file, are there?<br>Attachments: transmissions.wav</blockquote><p>So the attachment is a .wav file and the the challenge title has 'transmissions' in it, from here I am assuming that there is a flag encoded in some sort of modulation scheme within the .wav file. I know very little about this topic so tons of googling was involved in solving this challenge. Listening to the file it does not appear that this is related to Dual-tone multi-frequency signaling (DTMF), a common CTF challenge. The audio itself is simply noise with no peaks or patters present.</p><p>Confirming that there is abnormalities in the .wav file, I open it in audacity to view the waveform and spectrogram of the file.</p><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/10/image-4.png" class="kg-image" alt="" loading="lazy" width="1193" height="177" srcset="https://tresscross.blog/content/images/size/w600/2024/10/image-4.png 600w, https://tresscross.blog/content/images/size/w1000/2024/10/image-4.png 1000w, https://tresscross.blog/content/images/2024/10/image-4.png 1193w"></figure><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/10/image-5.png" class="kg-image" alt="" loading="lazy" width="2000" height="657" srcset="https://tresscross.blog/content/images/size/w600/2024/10/image-5.png 600w, https://tresscross.blog/content/images/size/w1000/2024/10/image-5.png 1000w, https://tresscross.blog/content/images/size/w1600/2024/10/image-5.png 1600w, https://tresscross.blog/content/images/2024/10/image-5.png 2223w" sizes="(min-width: 1200px) 1200px"></figure><p>Looking at these we can tell this isn't a normal audio file, and that likely there is some encoding going on given the context of this being a CTF event. At this point I am googling different encoding tools for wav files relating to frequency modulation. </p><p>I eventually land on <a href="https://github.com/kamalmostafa/minimodem?ref=tresscross.blog" rel="noreferrer">minimodem</a>,  which is "a command-line program which decodes (or generates) audio modem tones at any specified baud rate, using various framing protocols". The program is designed to transfer data between computers via an audio cable, but here it's adapted to encode the data on a saved file to store it. Pretty neat.</p><p>In order to encode/decode using minimodem, the program requires a few parameters:</p><ul><li>--rx<ul><li>this flag indicates recieve mode, used to decode audio tones</li></ul></li><li>--mark and --space<ul><li>you need to specify what is essentially the 0's and 1's of the encoded data. this is done by specifying frequencies to use when decoding</li><li>if you review the spectrogram above you can see the frequencies on the left-hand side</li><li>while there are plenty of ways to do this (and i believe minimodem can do it for you) I threw the image of the spectrogram into ChatGPT and asked for the values to try</li></ul></li><li>-f &lt;file&gt;<ul><li>this flag inputs the value following it as the input file to decode</li></ul></li></ul><p>Putting together the command to hopefully pull out the flag I came up with this command:</p><blockquote>minimodem --rx 1200 --mark 1200 --space 2200 -f transmissions.wav</blockquote><p>And output for that is:</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/10/image-6.png" class="kg-image" alt="" loading="lazy" width="672" height="504" srcset="https://tresscross.blog/content/images/size/w600/2024/10/image-6.png 600w, https://tresscross.blog/content/images/2024/10/image-6.png 672w"></figure><p>Neat!</p><h2 id="echo-chamber">Echo Chamber</h2><blockquote>Author: @JohnHammond#6971<br>Is anyone there? Is anyone there? I'm sending myself the flag! I'm sending myself the flag!<br>Attachments:&nbsp;&nbsp;echo_chamber.pcap</blockquote><p>Opening the pcap in Wireshark the file is full of ICMP ping requests. Looking within the packets, in the ICMP section there is a 'data' field that includes a two character repeating string. </p><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/11/image-1.png" class="kg-image" alt="" loading="lazy" width="2000" height="832" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image-1.png 600w, https://tresscross.blog/content/images/size/w1000/2024/11/image-1.png 1000w, https://tresscross.blog/content/images/size/w1600/2024/11/image-1.png 1600w, https://tresscross.blog/content/images/2024/11/image-1.png 2252w" sizes="(min-width: 1200px) 1200px"></figure><p>I added the Data field to the presented table, from there I exported the table to a CSV via File &gt; Export Packet Dissections &lt; as CSV. I did this because I figured that the values of the data field is somewhat related to the flag and I wanted to have workable data. The CSV didn't need any of the other fields so I removed those after the download, leaving just the data column.</p><p>I then imported this CSV into CyberChef and was able to make out PNG when converting from Hex. Using a more complicate recipe to clean the data then render a PNG we are able to get the flag:</p><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/11/image-2.png" class="kg-image" alt="" loading="lazy" width="2000" height="1063" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image-2.png 600w, https://tresscross.blog/content/images/size/w1000/2024/11/image-2.png 1000w, https://tresscross.blog/content/images/size/w1600/2024/11/image-2.png 1600w, https://tresscross.blog/content/images/size/w2400/2024/11/image-2.png 2400w" sizes="(min-width: 1200px) 1200px"></figure><h2 id="ran-somewhere">Ran Somewhere</h2><blockquote>Ran Somewhere<br>Author: @Spyderwall<br>Thanks for joining the help desk! Here's your first ticket of the day; can you help the client out?<br>Attachments:&nbsp;&nbsp;ran_somewhere.eml</blockquote><p>The challenge was listed as OSINT and we are provided with a .eml file, so likely that there are images and details from the email we need to extract. In the email there are two images and a note included.</p><p>The 'ransom' note:</p><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/11/image-3.png" class="kg-image" alt="" loading="lazy" width="1262" height="98" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image-3.png 600w, https://tresscross.blog/content/images/size/w1000/2024/11/image-3.png 1000w, https://tresscross.blog/content/images/2024/11/image-3.png 1262w" sizes="(min-width: 1200px) 1200px"></figure><p>There was also contents in the body of the .eml, mostly junk but there was a link included: <a href="https://sites.google.com/view/id-10-t/home?ref=tresscross.blog">https://sites.google.com/view/id-10-t/home</a> This website included the following in the footer:</p><p><code>&gt; Licensed to provide solutions to anyone or anywhere, especially Maryland</code></p><p>Okay so we might have a potential location from here. Pulling up the images we get the following two images:</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/11/66-69-6e-64-20-69-74-20-79-65-74--1-.jpeg" class="kg-image" alt="" loading="lazy" width="2000" height="2667" srcset="https://tresscross.blog/content/images/size/w600/2024/11/66-69-6e-64-20-69-74-20-79-65-74--1-.jpeg 600w, https://tresscross.blog/content/images/size/w1000/2024/11/66-69-6e-64-20-69-74-20-79-65-74--1-.jpeg 1000w, https://tresscross.blog/content/images/size/w1600/2024/11/66-69-6e-64-20-69-74-20-79-65-74--1-.jpeg 1600w, https://tresscross.blog/content/images/size/w2400/2024/11/66-69-6e-64-20-69-74-20-79-65-74--1-.jpeg 2400w" sizes="(min-width: 720px) 720px"></figure><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/11/69-6d-20-6e-65-61-72-62-79--1-.jpeg" class="kg-image" alt="" loading="lazy" width="2000" height="2688" srcset="https://tresscross.blog/content/images/size/w600/2024/11/69-6d-20-6e-65-61-72-62-79--1-.jpeg 600w, https://tresscross.blog/content/images/size/w1000/2024/11/69-6d-20-6e-65-61-72-62-79--1-.jpeg 1000w, https://tresscross.blog/content/images/size/w1600/2024/11/69-6d-20-6e-65-61-72-62-79--1-.jpeg 1600w, https://tresscross.blog/content/images/size/w2400/2024/11/69-6d-20-6e-65-61-72-62-79--1-.jpeg 2400w" sizes="(min-width: 720px) 720px"></figure><p>Now from here I can tell the following:</p><ul><li>The area looks like courtyard of some sort</li><li>From arial view it's likely you will be able to make out the red path, the checkerboard on the right elevated platform,. and the distinctive historical architecture of the buildings.</li></ul><p>Research confirms that there are historical buildings in several parts of Maryland, giving a little more credence to the idea. After doing detailed visual analysis, we can zoom in on a plaque in the second image:</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/11/image-4.png" class="kg-image" alt="" loading="lazy" width="358" height="358"></figure><p>So we have the phrases 'Frederick' and 'Reck' that are cut off. Research reveals that Frederick is a rather large city in Maryland, so from here I wanted to try and find any historical sites matching the 'Reck' phrase. Didn't find anything within Frederick so I moved to looking up historical areas matching that name and came across Fort Frederick also in Maryland, which also came up with nothing. </p><p>Doing more looking I found out that this type of plaque is likely a historical marker, which helps me google for a match. Eventually the right google search comes up with the matching plaque:</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/11/image-5.png" class="kg-image" alt="" loading="lazy" width="544" height="398"></figure><p>Giving us <code>Record Armory</code> as the correct flag.</p><h2 id="base-p">Base-p-</h2><blockquote>Author: Izzy Spering<br>That looks like a weird encoding, I wonder what it's based on.<br>Attachments: based.txt</blockquote><p>So this challenge is in reference to <code>nmap -p-</code> command, which scans every port ranging from 1 to 65535. I googled Base65535 and it turns out Base65536 exists as 2 to the 16th power is 65536. </p><p>Inputting the text we get from the attached .txt into this online decoder we get this:</p><p><code>H4sIAG0OA2cA/+2QvUt6URjHj0XmC5ribzBLCwKdorJoSiu9qRfCl4jeILSICh1MapCINHEJpaLJVIqwTRC8DQ5BBQ0pKtXUpTej4C4lBckvsCHP6U9oadDhfL7P85zzPTx81416LYclYgEAOLgOGwKgxgnrJKMK8j4kIaAwF3TjiwCwBejQQDAshK82cKx/2BnO3xzhmEmoMWn/qdU+ntTUIO8gmOw438bbCwRv3Y8vE2ens9y5sejat497l51sTRO18E8j2aSAAkixqhrKFl8E6fZfotmMlw7Z3NKFmvp92s8+HMg+zTwaycvVQlnSn7FYW2LFYY0+X18JpB9LCYliSm6LO9QXvfaIbJAqvNsL3lTP6vJ596GyKIaXBnNdRJahnqYLnlQ4d+LfbQ91vpH0Y4NSYwhk8tmv/5vFZFnHWrH8qWUkTfgfUPXKcFVi+5Vlx7V90OjLjZqtqMMH9FhMZfGUALnotancBQAA</code></p><p>This still looks encoded but just by looking at it I don't see a clear indicator of what mechanism(s) was used. Using the 'Magic' operation in CyberChef it gives us a recipe of Decode Base64&gt;Gunzip&gt;Render Image which is the following:</p><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/11/image-6.png" class="kg-image" alt="" loading="lazy" width="1400" height="200" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image-6.png 600w, https://tresscross.blog/content/images/size/w1000/2024/11/image-6.png 1000w, https://tresscross.blog/content/images/2024/11/image-6.png 1400w" sizes="(min-width: 1200px) 1200px"></figure><p>I ran strings and exiftool on the above image but nothing stood out. Turns out if you take color pick the hex code from each color and combine them into a string we get the flag.</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/11/image-7.png" class="kg-image" alt="" loading="lazy" width="1183" height="304" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image-7.png 600w, https://tresscross.blog/content/images/size/w1000/2024/11/image-7.png 1000w, https://tresscross.blog/content/images/2024/11/image-7.png 1183w" sizes="(min-width: 720px) 720px"></figure><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/11/image-9.png" class="kg-image" alt="" loading="lazy" width="1608" height="344" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image-9.png 600w, https://tresscross.blog/content/images/size/w1000/2024/11/image-9.png 1000w, https://tresscross.blog/content/images/size/w1600/2024/11/image-9.png 1600w, https://tresscross.blog/content/images/2024/11/image-9.png 1608w" sizes="(min-width: 1200px) 1200px"></figure><h2 id="i-cant-ssh">I Can't SSH</h2><blockquote>I Can't SSH<br>Author: @JohnHammond<br>I've got this private key... but why can't I SSH?<br>Attachments: id_rsa</blockquote><p>Downloading and opening the attachment in a notepad this appears to be a normal  RSA key, but attempting to connect gives an error indicating that the key isn't formatted correctly. At this point I wondered if there was weird characters that looked ASCII but were some other format that needed to be replace. I went and copied from my own notepad into id_rsa the following:</p><pre><code>-----BEGIN OPENSSH PRIVATE KEY-----</code></pre><p>Saved and attempted to SSH with the key and I was able to authenticate and find a flag.txt sitting in the home directory. Looking after the fact, it looks like the provided RSA key file was missing a newline at the end of the first line.</p><h2 id="the-void">The Void</h2><blockquote>The Void<br>Author: @JohnHammond#6971<br>When you gaze long into the void, the void gazes also into you...</blockquote><p>The challenge provided you with a server to netcat into. Whenever you did the input would constantly add whitespace, to the point where it was difficult to type and execute a character. Honestly I feel like the intended way to solve this challenge was to pipe a command after the connection command and look for a flag, but I ended up grabbing it differently.</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/11/image-10.png" class="kg-image" alt="" loading="lazy" width="685" height="420" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image-10.png 600w, https://tresscross.blog/content/images/2024/11/image-10.png 685w"></figure><p>I typed ls and enter really quick, then I copied output that I assumed was hidden and I had copied the flag. Oops.</p><h2 id="discount-programming-devices">Discount Programming Devices</h2><blockquote>Author: @sudo_Rem<br>I used a tool on the internet to obfuscate my script!<br>But I lost it, and I don't know how to get it back.<br>Maybe you can help?<br>Attachments: oops.py</blockquote><p>We are provided with an obfuscated python script. Payload is base64 encoded, reversed, and then compressed with zlib. I ran the script in Visual Studio and it gave me the flag. I am glad I didn't need to do more than that.</p><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/11/-06434062-EF2E-4DD1-82D4-19FE38A17859-.png" class="kg-image" alt="" loading="lazy" width="1354" height="312" srcset="https://tresscross.blog/content/images/size/w600/2024/11/-06434062-EF2E-4DD1-82D4-19FE38A17859-.png 600w, https://tresscross.blog/content/images/size/w1000/2024/11/-06434062-EF2E-4DD1-82D4-19FE38A17859-.png 1000w, https://tresscross.blog/content/images/2024/11/-06434062-EF2E-4DD1-82D4-19FE38A17859-.png 1354w" sizes="(min-width: 1200px) 1200px"></figure><p></p><h2 id="malibu">Malibu</h2><blockquote>Author: Truman Kain<br>What do you bring to the beach?</blockquote><p>The challenge provides us with a web server with a flag somewhere within. The challenge description lets us know that we don't need to (and they don't want us to) brute force anything to get this challenge.</p><p>I worked on this challenge with my team and a lot of focus in the beginning was enumerating what type of web server was being ran, attempting to login with default credentials to an admin page, sending different types of HTTP GET requests hoping to find some sort of funny response.</p><p>At some point it was realized that this likely was related to AWS and that we needed to use the AWS CLI to interact somehow. This involved needing to find an exposed bucket or account. We tried checking if cross-account authorization was enabled but nothing was successful.</p><p>Further manual enumeration revealed /bucket was exposed, and that there was objects in the bucket available to download. Using the AWS CLI we can download every file within the bucket, then using a combination of find &amp; grep we can look for a 'flag' string:</p><p><code>aws --endpoint-url </code><a href="http://challenge.ctf.games:31316/?ref=tresscross.blog" rel="noopener noreferrer"><code>http://challenge.ctf.games:31316</code></a><code> s3 cp </code><a href="s3://bucket" rel="noopener noreferrer"><code>s3://bucket</code></a><code> ./ --recursive --no-sign-request</code></p><p><code>find ~/Desktop/s3 -type f -exec strings {} \; | grep -i "flag"</code></p><h2 id="obfuscation-station">Obfuscation Station</h2><blockquote>Author: @resume<br>You've reached the Obfuscation Station!<br>Can you decode this PowerShell to find the flag?<br>Archive password: infected-station<br>Attachments: Challenge.zip</blockquote><p>So opening the provided .ps1 file we see the following:</p><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/11/image-11.png" class="kg-image" alt="" loading="lazy" width="991" height="143" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image-11.png 600w, https://tresscross.blog/content/images/2024/11/image-11.png 991w"></figure><p>This script doesn't seem particularly complicated. We have a Base64 string present that is decoded, then ran through a decompress function. Following that we see a new object being made but I didn't bother with that too much.</p><p>I grabbed the Base64 string and threw it in CyberChef, decoding and inflating provided the flag.</p><figure class="kg-card kg-image-card kg-width-wide"><img src="https://tresscross.blog/content/images/2024/11/image-12.png" class="kg-image" alt="" loading="lazy" width="1384" height="309" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image-12.png 600w, https://tresscross.blog/content/images/size/w1000/2024/11/image-12.png 1000w, https://tresscross.blog/content/images/2024/11/image-12.png 1384w" sizes="(min-width: 1200px) 1200px"></figure><h2 id="typo">Typo</h2><blockquote>Author: @JohnHammond<br>Gosh darnit, I keep entering a typo in my Linux command prompt!</blockquote><p>This challenge provides us with a server to SSH into. Upon doing so you get this nifty little animated train if you haven't experienced it before:</p><figure class="kg-card kg-image-card"><img src="https://tresscross.blog/content/images/2024/11/image-13.png" class="kg-image" alt="" loading="lazy" width="800" height="437" srcset="https://tresscross.blog/content/images/size/w600/2024/11/image-13.png 600w, https://tresscross.blog/content/images/2024/11/image-13.png 800w" sizes="(min-width: 720px) 720px"></figure><p>When the train finished going across your screen, the connection is terminated. The title 'Typo' of this challenge refers to the command that gives you this ASCII train. If you type <code>sl</code> into the linux terminal, you get the train. I am assuming the typo is that users typically type <code>ls</code> when trying to list directories. Whoever created the challenge simply set the profile to run <code>sl</code> whenever the connection was initiated.</p><p>In order to bypass this, we need to load without a profile. At the end of your ssh command you need to append <code>--noprofile --norc</code> to the request and you will load without the profile. This allows you to cat for flag.txt in the home directory.</p>
+			</section>
+
+			<section class="post-footer">
+
+
+					<div class="post-share">
+						<span class="post-info-label">Share</span>
+						<a title="Twitter" aria-label="Twitter" class="twitter" href="https://twitter.com/share?text=Huntress CTF 2024 Write-up&url=https://tresscross.blog/huntress-ctf-2024-write-up/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+							<i class="icon icon-twitter" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.2856 10.1635L23.2216 0H21.1048L13.3424 8.82302L7.1472 0H0L9.3704 13.3432L0 23.9999H2.1168L10.3088 14.6805L16.8528 23.9999H24M2.8808 1.56189H6.1328L21.1032 22.5148H17.8504" fill="currentColor"/>
+</svg>
+</i>
+						</a>
+						<a title="Facebook" aria-label="Facebook" class="facebook" href="https://www.facebook.com/sharer/sharer.php?u=https://tresscross.blog/huntress-ctf-2024-write-up/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+							<i class="icon icon-facebook" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M0 12C0 17.94 4.32 22.86 10.02 23.88L10.0909 23.822C10.0872 23.8214 10.0836 23.8207 10.08 23.8201V15.3601H7.07996V12.0001H10.08V9.36005C10.08 6.36005 12 4.68005 14.76 4.68005C15.6 4.68005 16.56 4.80005 17.4 4.92005V7.98005H15.84C14.4 7.98005 14.04 8.70005 14.04 9.66005V12.0001H17.22L16.68 15.3601H14.04V23.8201C14.0034 23.8267 13.9669 23.8331 13.9304 23.8394L13.98 23.88C19.68 22.86 24 17.94 24 12C24 5.4 18.6 0 12 0C5.4 0 0 5.4 0 12Z" fill="currentColor"/>
+</svg>
+</i>
+						</a>
+						<a title="LinkedIn" aria-label="LinkedIn" class="linkedin" href="https://www.linkedin.com/shareArticle?mini=true&amp;url=https://tresscross.blog/huntress-ctf-2024-write-up//&amp;title=Huntress CTF 2024 Write-up" onclick="window.open(this.href, 'linkedin-share', 'width=930,height=720');return false;">
+							<i class="icon icon-linkedin" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M1.77094 0.00165573H22.2223V0.000152031C23.1842 -0.0125151 23.9871 0.768018 24 1.73008V22.2678C23.9871 23.2302 23.1852 24.0116 22.2223 23.9995H1.77094C0.810378 24.0098 0.0112716 23.2283 0 22.2678V1.73147C0.011701 0.771453 0.810915 -0.00918651 1.77094 0.00165573ZM16.8934 20.4494H20.4495L20.451 14.1669C20.451 11.0827 19.7865 8.71199 16.1822 8.71199C14.8062 8.66089 13.509 9.37337 12.8139 10.5618H12.766V8.99679H9.35224V20.449H12.9083V14.7836C12.9083 13.2897 13.1917 11.8428 15.0439 11.8428C16.8697 11.8428 16.8934 13.5524 16.8934 14.8804V20.4494ZM3.27565 5.36775C3.27565 6.49985 4.20766 7.43132 5.33976 7.43132C6.47165 7.43121 7.403 6.49921 7.403 5.36732C7.40279 4.23544 6.47132 3.30408 5.33932 3.30408C4.20722 3.30408 3.27565 4.23565 3.27565 5.36775ZM3.55798 20.4494H7.11778V8.99679H3.55798V20.4494Z" fill="currentColor"/>
+</svg>
+</i>
+						</a>
+						<a title="Email" aria-label="Email" class="email" href="mailto:?subject=Huntress CTF 2024 Write-up&amp;body=https://tresscross.blog/huntress-ctf-2024-write-up/">
+							<i class="icon icon-mail" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M2 8L12 14L22 8V18C22 18.5523 21.5523 19 21 19H3C2.44772 19 2 18.5523 2 18V8ZM2 5C2 4.44772 2.44772 4 3 4H21C21.5523 4 22 4.44772 22 5V6L12 12L2 6V5Z" fill="currentColor"/>
+</svg>
+</i>
+						</a>
+					</div>
+
+
+			</section>
+
+
+
+
+			<aside class="post-nav">
+
+					<a class="post-nav-next" href="/sans-holiday-hack-2024/">
+						<section class="post-nav-teaser">
+							<i class="icon icon-arrow-left" aria-label="Next post"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M7.41412 13L13.4141 19L11.9999 20.4142L3.58569 12L11.9999 3.58578L13.4141 5L7.41412 11H19.9999V13H7.41412Z" fill="currentColor"/>
+</svg>
+</i>
+							<h2 class="post-nav-title">SANS Holiday Hack 2024</h2>
+							<p class="post-nav-excerpt">This year I worked to complete challenges in the SANS Holiday Hack&hellip;</p>
+							<p class="post-nav-meta"><time datetime="04-12-2024">04 Dec 2024</time></p>
+						</section>
+					</a>
+
+					<a class="post-nav-prev" href="/understanding-adversary-in-the-middle-aitm-phishing-as-a-soc-analyst/">
+						<section class="post-nav-teaser">
+							<i class="icon icon-arrow-right" aria-label="Previous post"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path fill-rule="evenodd" clip-rule="evenodd" d="M4 13V11H17.5858L11.5858 5L13 3.58578L21.4142 12L13 20.4142L11.5858 19L17.5858 13H4Z" fill="currentColor"/>
+</svg>
+</i>
+							<h2 class="post-nav-title">Understanding Adversary-in-the-Middle (AiTM) Phishing as a SOC Analyst</h2>
+							<p class="post-nav-excerpt">It’s 2024 — Anybody who has ever worked in a corporate role&hellip;</p>
+							<p class="post-nav-meta"><time datetime="28-10-2024">28 Oct 2024</time></p>
+						</section>
+					</a>
+				<div class="clear"></div>
+			</aside>
+
+		</div>
+	</article>
+</main>
+
+
+
+
+			<div class="nav-footer">
+				<nav class="nav-wrapper" aria-label="Footer">
+					<span class="nav-copy">
+						
+						<span class="nav-title">tresscross / jason walker &copy; 2026</span>
+						<a aria-label="RSS" href="https://tresscross.blog/rss/" title="RSS"><i class="icon icon-rss" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M1 1V5C10.93 5 19 13.07 19 23H23C23 10.85 13.15 1 1 1ZM1 8V12C7.07 12 12 16.93 12 23H16C16 14.72 9.28 8 1 8ZM4 17C3.20435 17 2.44129 17.3161 1.87868 17.8787C1.31607 18.4413 1 19.2044 1 20C1 20.7956 1.31607 21.5587 1.87868 22.1213C2.44129 22.6839 3.20435 23 4 23C4.79565 23 5.55871 22.6839 6.12132 22.1213C6.68393 21.5587 7 20.7956 7 20C7 19.2044 6.68393 18.4413 6.12132 17.8787C5.55871 17.3161 4.79565 17 4 17Z" fill="currentColor"/>
+</svg>
+</i></a>
+						<a aria-label="Twitter" href="https://x.com/tresscrossnet" title="@tresscrossnet"><i class="icon icon-twitter" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<path d="M14.2856 10.1635L23.2216 0H21.1048L13.3424 8.82302L7.1472 0H0L9.3704 13.3432L0 23.9999H2.1168L10.3088 14.6805L16.8528 23.9999H24M2.8808 1.56189H6.1328L21.1032 22.5148H17.8504" fill="currentColor"/>
+</svg>
+</i></a>
+						
+					</span>
+					<span class="nav-credits">Published with <a href="https://ghost.org">Ghost</a> &bull; Theme <a href="https://github.com/zutrinken/attila">Attila</a> &bull; <a class="menu-item js-theme" href="#" data-system="System theme" data-dark="Dark theme" data-light="Light theme"><span class="theme-icon"></span><span class="theme-text">System theme</span> </a> </span>
+				</nav>
+			</div>
+
+		</section>
+	</div>
+
+	<script type="text/javascript" src="/assets/js/script.js?v=5de168ffcf"></script>
+
+	<script>
+  $(document).ready(function () {
+		var viewport = $(window);
+		var post = $('.post-content');
+		// Responsive videos with fitVids
+    post.fitVids();
+		// Format code blocks and add line numbers
+		function codestyling() {
+	    $('pre code').each(function(i, e) {
+				// Code highlight
+	      hljs.highlightElement(e);
+	      // No lines for plain text blocks
+	      if (!$(this).hasClass('language-text')) {
+	        var code = $(this);
+					// Calculate amount of lines
+	        var lines = code.html().split(/\n(?!$)/g).length;
+	        var numbers = [];
+	        if (lines > 1) {
+	          lines++;
+	        }
+	        for (i = 1; i < lines; i++) {
+	          numbers += '<span class="line" aria-hidden="true">' + i + '</span>';
+	        }
+	        code.parent().append('<div class="lines">' + numbers + '</div>');
+	      }
+	    });
+	  }
+	  codestyling();
+		// Reading progress bar on window top
+	  function readingProgress() {
+			var postBottom = post.offset().top + post.height();
+			var viewportHeight = viewport.height();
+      var progress = 100 - (((postBottom - (viewport.scrollTop() + viewportHeight) + viewportHeight / 3) / (postBottom - viewportHeight + viewportHeight / 3)) * 100);
+      $('.progress-bar').css('width', progress + '%');
+      (progress > 100) ? $('.progress-container').addClass('complete'): $('.progress-container').removeClass('complete');
+	  }
+	  readingProgress();
+		// Trigger reading progress
+	  viewport.on({
+	    'scroll': function() {
+	      readingProgress();
+	    },
+	    'resize': function() {
+	      readingProgress();
+	    },
+	    'orientationchange': function() {
+	      readingProgress();
+	    }
+	  });
+
+
+  });
+</script>
+
+
+	<div style="text-align: center;">
+    <!-- Histats.com  (div with counter) -->
+    <div id="histats_counter"></div>
+    <!-- Histats.com  START  (aync) -->
+    <script type="text/javascript">
+        var _Hasync = _Hasync || [];
+        _Hasync.push(['Histats.start', '1,4914465,4,138,112,33,00000010']);
+        _Hasync.push(['Histats.fasi', '1']);
+        _Hasync.push(['Histats.track_hits', '']);
+        _Hasync.push(['Histats.framed_page', '']);
+        (function() {
+            var hs = document.createElement('script'); hs.type = 'text/javascript'; hs.async = true;
+            hs.src = ('//s10.histats.com/js15_as.js');
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(hs);
+        })();
+    </script>
+    <noscript>
+        <a href="/" target="_blank">
+            <img src="//sstatic1.histats.com/0.gif?4914465&101" alt="stat counters" border="0">
+        </a>
+    </noscript>
+    <!-- Histats.com  END  -->
+</div>
+
+</body>
+</html>
+

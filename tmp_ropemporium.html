@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Learn return-oriented programming">
+    <meta name="author" content="Max Kamper">
+
+    <link rel="shortcut icon" href="favicon/favicon.ico">
+    <link rel="icon" sizes="16x16 32x32 64x64" href="favicon/favicon.ico">
+    <link rel="icon" type="image/png" sizes="196x196" href="favicon/favicon-192.png">
+    <link rel="icon" type="image/png" sizes="160x160" href="favicon/favicon-160.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="favicon/favicon-96.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="favicon/favicon-64.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon/favicon-16.png">
+    <link rel="apple-touch-icon" href="favicon/favicon-57.png">
+    <link rel="apple-touch-icon" sizes="114x114" href="favicon/favicon-114.png">
+    <link rel="apple-touch-icon" sizes="72x72" href="favicon/favicon-72.png">
+    <link rel="apple-touch-icon" sizes="144x144" href="favicon/favicon-144.png">
+    <link rel="apple-touch-icon" sizes="60x60" href="favicon/favicon-60.png">
+    <link rel="apple-touch-icon" sizes="120x120" href="favicon/favicon-120.png">
+    <link rel="apple-touch-icon" sizes="76x76" href="favicon/favicon-76.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="favicon/favicon-152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="favicon/favicon-180.png">
+    <meta name="msapplication-TileColor" content="#FFFFFF">
+    <meta name="msapplication-TileImage" content="favicon/favicon-144.png">
+    <meta name="msapplication-config" content="favicon/browserconfig.xml">
+    
+    <title>ROP Emporium</title>
+
+    <style type="text/css">body{background-color: #1b1b1b !important};</style>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+  </head>
+
+  <body>
+    <div class="container text-light">
+      <div class="text-center mt-4">
+        <h1 class="display-1">ROP Emporium</h1>
+        <p class="lead mt-3">Learn return-oriented programming through a series of challenges.</p>
+      </div>
+      <div class="d-grid gap-2 col-sm-6 col-md-5 col-lg-4 col-xl-3 mx-auto my-5">
+        <a href="guide.html" class="btn btn-lg btn-outline-light">View Beginners' guide</a>
+        <a href="binary/rop_emporium_all_challenges.zip" class="btn btn-lg btn-outline-light">Download all challenges</a>
+      </div>
+
+      <div class="row row-cols-1 row-cols-md-2 gy-4 justify-content-center text-center">
+        <div class="col col-xl-5">
+          <a href="challenge/ret2win.html" class="card h-100 bg-dark text-decoration-none text-reset">
+            <div class="card-header">Challenge 1</div>
+            <div class="card-body">
+              <h5 class="card-title text-warning">ret2win</h5>
+              <p class="card-text">ret2win means "return here to win" and it's recommended you start with this challenge. Visit the challenge page by clicking this card to learn more.</p>
+            </div>
+          </a>
+        </div>
+        <div class="col col-xl-5">
+          <a href="challenge/split.html" class="card h-100 bg-dark text-decoration-none text-reset">
+            <div class="card-header">Challenge 2</div>
+            <div class="card-body">
+              <h5 class="card-title text-warning">split</h5>
+              <p class="card-text">Combine elements from the ret2win challenge that have been split apart to beat this challenge. Learn how to use another tool whilst crafting a short ROP chain.</p>
+            </div>
+          </a>
+        </div>
+        <div class="col col-xl-5">
+          <a href="challenge/callme.html" class="card h-100 bg-dark text-decoration-none text-reset">
+            <div class="card-header">Challenge 3</div>
+            <div class="card-body">
+              <h5 class="card-title text-warning">callme</h5>
+              <p class="card-text">Chain calls to multiple imported methods with specific arguments and see how the differences between 64 & 32 bit calling conventions affect your ROP chain.</p>
+            </div>
+          </a>
+        </div>
+        <div class="col col-xl-5">
+          <a href="challenge/write4.html" class="card h-100 bg-dark text-decoration-none text-reset">
+            <div class="card-header">Challenge 4</div>
+            <div class="card-body">
+              <h5 class="card-title text-warning">write4</h5>
+              <p class="card-text">Find and manipulate gadgets to construct an arbitrary write primitive, then use it to learn where and how to get your data into process memory.</p>
+            </div>
+          </a>
+        </div>
+        <div class="col col-xl-5">
+          <a href="challenge/badchars.html" class="card h-100 bg-dark text-decoration-none text-reset">
+            <div class="card-header">Challenge 5</div>
+            <div class="card-body">
+              <h5 class="card-title text-warning">badchars</h5>
+              <p class="card-text">Learn to deal with "badchars": characters that will not make it into process memory intact or cause other issues such as premature chain termination.</p>
+            </div>
+          </a>
+        </div>
+        <div class="col col-xl-5">
+          <a href="challenge/fluff.html" class="card h-100 bg-dark text-decoration-none text-reset">
+            <div class="card-header">Challenge 6</div>
+            <div class="card-body">
+              <h5 class="card-title text-warning">fluff</h5>
+              <p class="card-text">Sort the useful gadgets from the fluff to construct another write primitive in this challenge. You'll have to get creative though, the gadgets aren't straightforward.</p>
+            </div>
+          </a>
+        </div>
+        <div class="col col-xl-5">
+          <a href="challenge/pivot.html" class="card h-100 bg-dark text-decoration-none text-reset">
+            <div class="card-header">Challenge 7</div>
+            <div class="card-body">
+              <h5 class="card-title text-warning">pivot</h5>
+              <p class="card-text">Stack space is at a premium in this challenge and you'll have to pivot the stack onto a second ROP chain elsewhere in memory to ensure your success.</p>
+            </div>
+          </a>
+        </div>
+        <div class="col col-xl-5">
+          <a href="challenge/ret2csu.html" class="card h-100 bg-dark text-decoration-none text-reset">
+            <div class="card-header">Challenge 8</div>
+            <div class="card-body">
+              <h5 class="card-title text-warning">ret2csu</h5>
+              <p class="card-text">Learn a ROP technique that lets you populate useful calling convention registers like rdi, rsi and rdx even in an environment where gadgets are sparse.</p>
+            </div>
+          </a>
+        </div>
+      </div>
+
+      <div class="col col-md-7 col-xl-6 mx-auto mt-5">
+        <div class="card bg-dark">
+          <div class="card-body text-center">
+            <h5 class="card-title">Linux heap exploitation</h5>
+            <h6 class="card-subtitle mb-2 text-muted">with HeapLAB</h6>
+            <p class="card-text">Enjoyed the ROP Emporium challenges but still looking to improve your exploit development skills?
+              I created HeapLAB to teach hands-on, modern Linux heap exploitation techniques.
+            </p>
+            <a href="https://www.udemy.com/course/linux-heap-exploitation-part-1/?referralCode=362370A773BCC3F2730A" style="color: powderblue" class="card-link" target="_blank">Part 1</a>
+            <a href="https://www.udemy.com/course/linux-heap-exploitation-part-2/?referralCode=7E97706D7D4AEF7476C8" style="color: powderblue" class="card-link" target="_blank">Part 2</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="text-center my-3">
+        <a class="text-light" href="#">Back to top</a>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4" crossorigin="anonymous"></script>
+  </body>
+</html>

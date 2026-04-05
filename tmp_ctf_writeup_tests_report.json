@@ -1,0 +1,22 @@
+{
+  "inventory_items": 13234,
+  "remaining_items": 13234,
+  "workers": 2,
+  "existing_generated_tests": 0,
+  "added": 0,
+  "added_this_run": 0,
+  "skipped": 2,
+  "agent_errors": 0,
+  "validation_failures": 0,
+  "test_failures": 0,
+  "accepted_tests": [],
+  "codex_binary": "C:\\nvm4w\\nodejs\\codex.CMD",
+  "cargo_binary": "C:\\Users\\Bee\\.cargo\\bin\\cargo.EXE",
+  "output_path": "C:\\Users\\Bee\\Documents\\Ares\\tests\\ctf_writeups_generated.rs",
+  "report_file": "C:\\Users\\Bee\\Documents\\Ares\\tmp_ctf_writeup_tests_report.json",
+  "max_retries": 2,
+  "retry_backoff_seconds": 2.0,
+  "resume_detected": false,
+  "aborted": false,
+  "abort_reason": ""
+}

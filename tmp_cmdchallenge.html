@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html class="no-js" lang="">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+    <link href="./css/jquery.terminal.min.css" rel="stylesheet"/>
+    <title></title>
+
+    <meta name="description" content="One-line shell challenges, to help improve your skill on the commandline."/>
+  <script>
+    window.goatcounter = {no_onload: true}
+    window.addEventListener('hashchange', function(e) {
+      switch (location.host.split('.')[0]) {
+        case "oops":
+          emoji = "🤭";
+          break;
+        case "12days":
+          emoji = "🎄";
+          break;
+        default:
+          emoji = "";
+      }
+      window.goatcounter.count({
+          path: emoji + location.pathname + location.search + location.hash,
+      })
+    })
+  </script>
+    <script data-goatcounter="https://s.cmdchallenge.com/c"
+          async src="//s.cmdchallenge.com/cjs"></script>
+    <script type="module" crossorigin src="/assets/index-e4affdb0.js"></script>
+    <link rel="stylesheet" href="/assets/index-f00fedb4.css">
+  </head>
+  <body>
+      <noscript>
+          It looks like you don't have javascript enabled which is required for cmdchallenge.
+          <img src="//s.cmdchallenge.com/c?p=/no-script">
+      </noscript>
+
+      <div class="navbar">
+        <div id="links">
+          <ul>
+          <li class="link">
+            <a href="https://flyemoji.com">
+              Create a reaction survey in your browser!
+            </a>
+          </li>
+          <li class="link"><a href="https://cmdchallenge.com"><img src="img/cmdchallenge-round.png" alt="cmdchallenge" /></a></li><li class="link"><a href="https://oops.cmdchallenge.com"><img src="img/emojis/1F92D.png" alt="oops" /></a></li><li class="link"><a href="https://12days.cmdchallenge.com"><img src="img/emojis/1F384.png" alt="12days" /></a></li><li class="link"><a href="https://gitlab.com/jarv/cmdchallenge"><img src="img/gitlab.png" alt="gitlab" /></a></li><li class="link"><a href="mailto:info@cmdchallenge.com"><img src="img/email.png" alt="email" /></a></li></ul>
+        </div>
+        <div id="header">
+          <div class="image">
+            <a id="header-img" href="/"></a>
+          </div>
+          <div class="title">
+            <div><a id="header-text" href="/"></a></div>
+            <div class="won"></div>
+          </div>
+        </div>
+      </div>
+      <div class="wrapper">
+        <div id="badges"></div>
+
+        <div id="solution-box" class="row">
+          <div class="col">
+            <div class="tabs">
+              <div class="tab">
+                <input type="checkbox" id="chck1">
+                <label class="tab-label" for="chck1">View Solutions</label>
+                <div class="tab-content">
+                  <div id="solutions-wrapper">
+                    <div class="solutions-status"></div>
+                  <pre><code id="solutions" class="language-bash bash hljs"></code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="learn-box" class="row">
+          <div class="col">
+            <div class="tabs-learn">
+              <div class="tab">
+                <input type="checkbox" id="chck2">
+                <label class="tab-label" for="chck2">Learn</label>
+                <div class="tab-content">
+                  <div id="learn">
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <div id="challenge-desc">
+          <div class="img-container"></div>
+          <div class="desc-container"></div>
+        </div>
+
+
+        <div id="term-spinner" style="display: none;"><img src="img/spinner.gif" alt="" /></div>
+        <div id="term-challenge"></div>
+        <div id="info-wrapper">
+          <div id="info-box">
+            <div class="img"></div>
+            <div class="text"></div>
+            <div class="gradient"></div>
+          </div>
+          <div id="completions"></div>
+        </div>
+        <pre id="challenge-output"></pre>
+      </div>
+      <div class="footer">
+        <p>
+        Site built with ♡ using <a href="https://terminal.jcubic.pl/">jquery.terminal</a> / <a href="https://openmoji.org/">Openmoji</a> / <a href="https://golang.org/">Golang</a><br />
+        <a href="https://jarv.org/tags/cmdchallenge/">Read more about cmdchallenge</a>
+        </p>
+      </div>
+      <script src="js/jquery.min.js"></script>
+      <script src="js/jquery.mousewheel-min.js"></script>
+      <script src="js/keyboard-polyfill-0.1.42.js"></script>
+      <script src="js/jquery.terminal.min.js"></script>
+      
+  </body>
+</html>
+
