@@ -1,0 +1,353 @@
+[Script Info]
+Title: English (US)
+Original Translation: 
+Original Editing: 
+Original Timing: 
+Synch Point: 
+Script Updated By: 
+Update Details: 
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 640
+PlayResY: 360
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Main - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Flashback,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+Style: Flashback - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+Style: Lyrics,Trebuchet MS,24,&H001EC4CF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,18,0
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:15.14,0:00:16.53,Flashback,Ai,0,0,0,,Ao-chan...
+Dialogue: 0,0:01:52.42,0:01:55.57,Flashback,Ao,0,0,0,,You can see the Shichieichou?
+Dialogue: 0,0:01:56.06,0:01:58.99,Main - Italics,Hairi,0,0,0,,She never really told me what was going on.
+Dialogue: 0,0:01:58.99,0:02:00.70,Main - Italics,Hairi,0,0,0,,What was that butterfly?
+Dialogue: 0,0:02:01.73,0:02:02.70,Default,Umi,0,0,0,,What do you think?
+Dialogue: 0,0:02:02.70,0:02:03.70,Default,Hairi,0,0,0,,It's not good.
+Dialogue: 0,0:02:03.70,0:02:04.62,Default,Umi,0,0,0,,How dare you?!
+Dialogue: 0,0:02:04.62,0:02:06.98,Default,Hairi,0,0,0,,Sorry, I didn't mean to say that out loud.
+Dialogue: 0,0:02:06.98,0:02:09.75,Default,Umi,0,0,0,,That doesn't make me feel any better!
+Dialogue: 0,0:02:09.77,0:02:12.75,Default,Sign,0,0,0,,{\shad0\fax.2\fnArial Black\c&H8C7AF1&\3c&HFFFEFF&\pos(372.338,117.962)\frz347}Shaved Ice
+Dialogue: 0,0:02:10.04,0:02:12.75,Default,Granny,0,0,0,,Ao-chan should be here around noon.
+Dialogue: 0,0:02:13.03,0:02:15.74,Default,Granny,0,0,0,,Have something cold while you wait for her.
+Dialogue: 0,0:02:15.74,0:02:17.13,Default,Hairi,0,0,0,,Thank you.
+Dialogue: 0,0:02:26.13,0:02:27.60,Default,Granny,0,0,0,,That was the last one.
+Dialogue: 0,0:02:31.79,0:02:32.86,Default,Hairi,0,0,0,,Hang on!
+Dialogue: 0,0:02:34.90,0:02:36.65,Default,Shiroha,0,0,0,,Are you curious about Ao?
+Dialogue: 0,0:02:36.65,0:02:38.56,Default,Hairi,0,0,0,,Huh? Wh-Why do you ask?
+Dialogue: 0,0:02:38.56,0:02:41.27,Default,Shiroha,0,0,0,,You seem to be hanging around a lot lately.
+Dialogue: 0,0:02:42.73,0:02:45.27,Default,Hairi,0,0,0,,What do the Sorakado family's duties involve?
+Dialogue: 0,0:02:45.27,0:02:46.66,Default,Shiroha,0,0,0,,Dunno.
+Dialogue: 0,0:02:46.66,0:02:48.50,Default,Hairi,0,0,0,,It's an island thing, though.
+Dialogue: 0,0:02:48.50,0:02:52.83,Default,Shiroha,0,0,0,,We aren't supposed to go up onto \Nthe mountain during the ritual.
+Dialogue: 0,0:02:52.83,0:02:55.01,Default,Hairi,0,0,0,,Ao mentioned something about that.
+Dialogue: 0,0:02:58.17,0:03:02.68,Default,Shiroha,0,0,0,,A long time ago, there were three families\Nhere they called the Three Houses.
+Dialogue: 0,0:03:03.39,0:03:08.35,Default,Shiroha,0,0,0,,The Sorakado family, the Naruse family, \Nand I don't remember the third one.
+Dialogue: 0,0:03:08.35,0:03:11.81,Default,Shiroha,0,0,0,,But the Sorakado family's been\Nperforming their duties all this time.
+Dialogue: 0,0:03:11.81,0:03:12.91,Default,Hairi,0,0,0,,Hang on.
+Dialogue: 0,0:03:12.91,0:03:16.69,Default,Hairi,0,0,0,,Did you just say Naruse?\NIsn't that your family?
+Dialogue: 0,0:03:17.00,0:03:18.60,Default,Shiroha,0,0,0,,It was a long time ago.
+Dialogue: 0,0:03:18.60,0:03:20.44,Default,Shiroha,0,0,0,,We don't do anything anymore.
+Dialogue: 0,0:03:23.29,0:03:26.45,Default,Ao,0,0,0,,Sorakado of the skies, Naruse of the seas,
+Dialogue: 0,0:03:26.45,0:03:28.49,Default,Ao,0,0,0,,something-something of the mountains...
+Dialogue: 0,0:03:29.39,0:03:30.70,Default,Ao,0,0,0,,Huh.
+Dialogue: 0,0:03:30.70,0:03:34.96,Default,Ao,0,0,0,,It's not often that I see you \Nhanging out with anyone, Shiroha.
+Dialogue: 0,0:03:48.37,0:03:50.72,Default,Hairi,0,0,0,,Hey, about last night...
+Dialogue: 0,0:03:50.72,0:03:51.74,Default,Ao,0,0,0,,What do you mean?
+Dialogue: 0,0:03:51.74,0:03:54.15,Default,Ao,0,0,0,,I went to bed early last night.
+Dialogue: 0,0:03:54.15,0:03:55.56,Default,Ao,0,0,0,,You must have been hallucinating.
+Dialogue: 0,0:03:55.87,0:03:57.30,Default,Hairi,0,0,0,,Hallucinating?
+Dialogue: 0,0:03:57.30,0:04:02.49,Default,Hairi,0,0,0,,True, you did look rather \Nbeautiful and divine last night.
+Dialogue: 0,0:04:02.49,0:04:05.44,Default,Ao,0,0,0,,B-Beautiful and divine?
+Dialogue: 0,0:04:05.44,0:04:10.02,Default,Ao,0,0,0,,I-If you think I'll buy\N that flattery, y-you're wrong.
+Dialogue: 0,0:04:10.02,0:04:11.53,Default,Hairi,0,0,0,,So it was you after all.
+Dialogue: 0,0:04:11.53,0:04:15.46,Default,Ao,0,0,0,,I mean, that's what I {\i1}would{\i0} say if was!
+Dialogue: 0,0:04:15.46,0:04:17.96,Default,Hairi,0,0,0,,Could you at least put\Na little effort into the lie?
+Dialogue: 0,0:04:17.96,0:04:19.86,Default,Hairi,0,0,0,,I can't even pretend to be fooled.
+Dialogue: 0,0:04:19.86,0:04:22.68,Default,Ao,0,0,0,,I-I-I'm not lying!
+Dialogue: 0,0:04:22.68,0:04:23.98,Default,Ao,0,0,0,,It's true!
+Dialogue: 0,0:04:23.98,0:04:25.84,Default,Ao,0,0,0,,Honestly, it's really true!
+Dialogue: 0,0:04:25.84,0:04:30.44,Default,Ao,0,0,0,,A-A-Anyway, don't go up on the \Nmountain at night anymore.
+Dialogue: 0,0:04:30.44,0:04:32.92,Default,Ao,0,0,0,,Respect this island's customs, will you?
+Dialogue: 0,0:04:36.11,0:04:38.84,Default,Hairi,0,0,0,,That yawn just now says it all.
+Dialogue: 0,0:04:38.84,0:04:42.61,Default,Hairi,0,0,0,,At least now I know why \Nyou're so sleep-deprived.
+Dialogue: 0,0:04:42.61,0:04:45.57,Default,Ao,0,0,0,,Crap, I'm gonna run out of battery.
+Dialogue: 0,0:04:45.57,0:04:47.36,Default,Hairi,0,0,0,,Wanna lie on my lap?
+Dialogue: 0,0:04:48.26,0:04:50.62,Default,Ao,0,0,0,,Thanks, just for a bit, then.
+Dialogue: 0,0:05:00.34,0:05:01.36,Default,Hairi,0,0,0,,Seriously?
+Dialogue: 0,0:05:02.80,0:05:04.68,Default,Ryoichi,0,0,0,,Hey—
+Dialogue: 0,0:05:11.72,0:05:13.40,Default,Ryoichi,0,0,0,,Let's bounce, Tenzen.
+Dialogue: 0,0:05:13.40,0:05:14.68,Default,Tenzen,0,0,0,,Didn't you want unmaibo?
+Dialogue: 0,0:05:14.68,0:05:19.04,Default,Ryoichi,0,0,0,,Bros know when to give each other some space.
+Dialogue: 0,0:05:19.04,0:05:21.14,Default,Ryoichi,0,0,0,,Later, bud. Have a good time!
+Dialogue: 0,0:05:21.14,0:05:23.09,Default,Ryoichi,0,0,0,,Tenzen, dash!
+Dialogue: 0,0:05:23.09,0:05:24.69,Default,Tenzen,0,0,0,,Sir!
+Dialogue: 0,0:05:26.82,0:05:28.70,Default,Shiroha,0,0,0,,Thanks for the treat.
+Dialogue: 0,0:05:30.74,0:05:31.83,Default,Hairi,0,0,0,,Huh?
+Dialogue: 0,0:05:31.83,0:05:32.79,Default,Hairi,0,0,0,,Wh-What?
+Dialogue: 0,0:05:33.02,0:05:36.27,Default,Shiroha,0,0,0,,You shouldn't go near the mountain at night.
+Dialogue: 0,0:05:36.27,0:05:39.92,Default,Shiroha,0,0,0,,You should probably listen to what Ao says.
+Dialogue: 0,0:05:51.69,0:05:54.26,Default,Hairi,0,0,0,,She really does fall asleep anywhere.
+Dialogue: 0,0:06:09.86,0:06:11.24,Default,Hairi,0,0,0,,This could get ugly.
+Dialogue: 0,0:06:25.38,0:06:26.61,Main - Italics,Hairi,0,0,0,,What's going on?!
+Dialogue: 0,0:06:26.61,0:06:27.88,Main - Italics,Hairi,0,0,0,,Her face is so close!
+Dialogue: 0,0:06:27.88,0:06:29.62,Main - Italics,Hairi,0,0,0,,Everything's so soft!
+Dialogue: 0,0:06:29.62,0:06:31.68,Main - Italics,Hairi,0,0,0,,And something smells nice!
+Dialogue: 0,0:06:37.64,0:06:39.46,Default,Hairi,0,0,0,,Um, this isn't...
+Dialogue: 0,0:06:39.46,0:06:41.60,Default,Shiroha,0,0,0,,Do enjoy yourselves.
+Dialogue: 0,0:06:49.94,0:06:50.89,Default,Hairi,0,0,0,,Morning.
+Dialogue: 0,0:06:53.18,0:06:54.79,Default,Ao,0,0,0,,Wh-Wh-Wh-Wh-What is this?!
+Dialogue: 0,0:06:54.79,0:06:55.62,Default,Ao,0,0,0,,What gives?!
+Dialogue: 0,0:06:55.62,0:06:59.11,Default,Ao,0,0,0,,I-I wanted my first to be a girl!
+Dialogue: 0,0:06:59.11,0:07:00.10,Default,Hairi,0,0,0,,Calm down.
+Dialogue: 0,0:07:00.10,0:07:03.94,Default,Ao,0,0,0,,I-I don't mind it rough, \Nbut we're outside right now!
+Dialogue: 0,0:07:03.94,0:07:05.86,Default,Hairi,0,0,0,,Calm down, I said!
+Dialogue: 0,0:07:05.86,0:07:08.88,Default,Hairi,0,0,0,,You're really holding me tight right now...
+Dialogue: 0,0:07:12.35,0:07:13.22,Default,Ao,0,0,0,,Let me go!
+Dialogue: 0,0:07:13.22,0:07:15.80,Default,Hairi,0,0,0,,{\i1}You{\i0} let {\i1}me{\i0} go!
+Dialogue: 0,0:07:18.46,0:07:20.73,Default,Ao,0,0,0,,U-Um, I'm sorry, I guess.
+Dialogue: 0,0:07:20.73,0:07:22.73,Default,Hairi,0,0,0,,No, it's fine.
+Dialogue: 0,0:07:22.73,0:07:25.67,Default,Hairi,0,0,0,,Were you up late with your \Nduties again last night?
+Dialogue: 0,0:07:25.67,0:07:27.33,Default,Ao,0,0,0,,Something like that.
+Dialogue: 0,0:07:27.33,0:07:28.36,Default,Hairi,0,0,0,,Same tonight?
+Dialogue: 0,0:07:29.52,0:07:33.48,Default,Ao,0,0,0,,I will reiterate. You {\i1}cannot{\i0}\Nenter the mountain at night.
+Dialogue: 0,0:07:33.48,0:07:36.37,Default,Ao,0,0,0,,I'm telling you for your own good, you know?
+Dialogue: 0,0:07:38.39,0:07:41.01,Main - Italics,Hairi,0,0,0,,Or so she said, but here I am.
+Dialogue: 0,0:07:46.08,0:07:47.12,Default,Hairi,0,0,0,,Ao?
+Dialogue: 0,0:07:53.84,0:07:56.68,Default,Hairi,0,0,0,,Oh, hey. Ao was touching this butterfly.
+Dialogue: 0,0:07:59.58,0:08:01.98,Flashback,Man,0,0,0,,How could this have happened?
+Dialogue: 0,0:08:01.98,0:08:03.55,Flashback,Man,0,0,0,,Give her back...
+Dialogue: 0,0:08:03.55,0:08:04.80,Flashback,Man,0,0,0,,Give me back my wife!
+Dialogue: 0,0:08:04.80,0:08:06.23,Flashback,Man,0,0,0,,My daughter!
+Dialogue: 0,0:08:06.67,0:08:08.82,Flashback,Man,0,0,0,,Why did I survive?
+Dialogue: 0,0:08:10.04,0:08:12.90,Flashback,Man,0,0,0,,Relieve me of this suffering.
+Dialogue: 0,0:08:14.50,0:08:15.58,Main - Italics,Hairi,0,0,0,,I'm coming.
+Dialogue: 0,0:08:16.02,0:08:19.29,Main - Italics,Hairi,0,0,0,,I'll be with you soon.
+Dialogue: 0,0:08:18.43,0:08:21.08,Main - Top + Italics,Hairi,0,0,0,,My body's moving on its own.
+Dialogue: 0,0:08:21.08,0:08:23.03,Main - Top + Italics,Hairi,0,0,0,,What's happening?
+Dialogue: 0,0:08:23.03,0:08:25.29,Main - Italics,Hairi,0,0,0,,But now I can...
+Dialogue: 0,0:08:26.19,0:08:27.71,Main - Italics,Hairi,0,0,0,,I can finally be free.
+Dialogue: 0,0:08:39.67,0:08:40.64,Default,Ao,0,0,0,,Hairi!
+Dialogue: 0,0:08:42.21,0:08:43.10,Default,Ao,0,0,0,,You idiot!
+Dialogue: 0,0:08:53.35,0:08:56.18,Default,Ao,0,0,0,,I told you not to come \Nto the mountain at night!
+Dialogue: 0,0:08:56.89,0:08:58.05,Default,Hairi,0,0,0,,Ao?
+Dialogue: 0,0:08:58.05,0:08:58.88,Default,Hairi,0,0,0,,Was I...
+Dialogue: 0,0:08:58.88,0:09:03.00,Default,Ao,0,0,0,,Someone else's memories entered your \Nmind because you touched the Shichieichou.
+Dialogue: 0,0:09:04.79,0:09:07.96,Default,Hairi,0,0,0,,What are the Shichieichou anyway?
+Dialogue: 0,0:09:07.96,0:09:12.77,Default,Ao,0,0,0,,Residual memories of those \Nwith unfinished business.
+Dialogue: 0,0:09:13.48,0:09:17.22,Default,Ao,0,0,0,,Touching one makes you relive their memories.
+Dialogue: 0,0:09:17.62,0:09:22.51,Default,Ao,0,0,0,,These butterflies are normally only visible\Nto animals and emotionally sensitive people.
+Dialogue: 0,0:09:22.77,0:09:23.68,Default,Hairi,0,0,0,,Ao...
+Dialogue: 0,0:09:23.68,0:09:26.83,Default,Hairi,0,0,0,,What exactly are your duties?
+Dialogue: 0,0:09:28.74,0:09:32.94,Default,Ao,0,0,0,,I gather wandering Shichieichou and \Nguide them back to where they belong.
+Dialogue: 0,0:09:33.44,0:09:35.78,Default,Ao,0,0,0,,That is the job of the Sorakados.
+Dialogue: 0,0:09:36.49,0:09:39.52,Default,Ao,0,0,0,,You can make it back \Non your own from here.
+Dialogue: 0,0:09:39.52,0:09:41.20,Default,Hairi,0,0,0,,Are you not leaving yet?
+Dialogue: 0,0:09:41.65,0:09:44.16,Default,Ao,0,0,0,,I have to continue my work.
+Dialogue: 0,0:09:44.16,0:09:47.27,Default,Ao,0,0,0,,Now you know how treacherous \Nthe mountain can be at night.
+Dialogue: 0,0:09:47.27,0:09:48.74,Default,Ao,0,0,0,,Don't come near it anymore.
+Dialogue: 0,0:09:48.74,0:09:50.10,Default,Hairi,0,0,0,,Hang on a second!
+Dialogue: 0,0:09:50.71,0:09:51.67,Default,Ao,0,0,0,,What?
+Dialogue: 0,0:09:51.98,0:09:54.22,Default,Hairi,0,0,0,,Those Shichi-whatsits...
+Dialogue: 0,0:09:54.22,0:09:55.67,Default,Hairi,0,0,0,,You touched them too.
+Dialogue: 0,0:09:56.02,0:09:57.62,Default,Hairi,0,0,0,,Do they not affect you?
+Dialogue: 0,0:09:58.18,0:10:00.51,Default,Ao,0,0,0,,I've been touching them for a long time.
+Dialogue: 0,0:10:00.51,0:10:02.68,Default,Ao,0,0,0,,I've built up a tolerance.
+Dialogue: 0,0:10:02.99,0:10:04.73,Default,Hairi,0,0,0,,Is that part of your duties?
+Dialogue: 0,0:10:06.48,0:10:10.47,Default,Ao,0,0,0,,There's a memory I have to find.
+Dialogue: 0,0:10:10.47,0:10:13.11,Default,Hairi,0,0,0,,Is that really worth endangering yourself?
+Dialogue: 0,0:10:23.57,0:10:26.87,Default,Ao,0,0,0,,Hey, do you have some time tomorrow?
+Dialogue: 0,0:10:33.88,0:10:34.77,Default,Text,0,0,0,,{\an1\fnArial\fs14\shad0\3c&HE6E8E8&\c&H646766&\b1\pos(340.56,132.497)}Sorakado Ai
+Dialogue: 0,0:10:35.40,0:10:37.28,Default,Text,0,0,0,,{\an1\fnArial\fs14\shad0\3c&HE6E8E8&\c&H646766&\b1\pos(340.56,132.497)}Sorakado Ai
+Dialogue: 0,0:10:36.26,0:10:37.26,Default,Ao,0,0,0,,This is it.
+Dialogue: 0,0:10:38.16,0:10:39.01,Default,Ao,0,0,0,,It's Ao.
+Dialogue: 0,0:10:39.46,0:10:40.72,Default,Ao,0,0,0,,I'm coming in.
+Dialogue: 0,0:10:44.26,0:10:45.95,Default,Hairi,0,0,0,,Excuse me.
+Dialogue: 0,0:10:48.10,0:10:50.00,Default,Ao,0,0,0,,I'm here, Ai.
+Dialogue: 0,0:10:50.00,0:10:50.79,Default,Hairi,0,0,0,,Ai?
+Dialogue: 0,0:10:50.79,0:10:51.47,Default,Ao,0,0,0,,Yeah.
+Dialogue: 0,0:10:51.47,0:10:52.81,Default,Ao,0,0,0,,Sorakado Ai.
+Dialogue: 0,0:10:52.81,0:10:54.85,Default,Ao,0,0,0,,She's my elder twin sister.
+Dialogue: 0,0:11:00.47,0:11:05.28,Flashback - Italics,Old Woman,0,0,0,,She must be at Ai-chan's \Nplace today for a checkup.
+Dialogue: 0,0:11:05.61,0:11:08.78,Default,Ao,0,0,0,,I brought a friend with me today.
+Dialogue: 0,0:11:08.78,0:11:10.78,Default,Ao,0,0,0,,I told you about him\N the other day, remember?
+Dialogue: 0,0:11:10.78,0:11:14.00,Default,Ao,0,0,0,,Y'know, the late Grandma Katou's relative.
+Dialogue: 0,0:11:15.77,0:11:19.29,Default,Ao,0,0,0,,Ai was in a bit of an accident.
+Dialogue: 0,0:11:19.29,0:11:21.72,Default,Ao,0,0,0,,She's been asleep ever since.
+Dialogue: 0,0:11:21.72,0:11:22.55,Default,Hairi,0,0,0,,Uh...
+Dialogue: 0,0:11:22.85,0:11:28.13,Default,Ao,0,0,0,,I told you yesterday that there's \Na memory I need to find.
+Dialogue: 0,0:11:28.75,0:11:31.31,Default,Ao,0,0,0,,It's Ai's memory.
+Dialogue: 0,0:11:32.53,0:11:37.84,Default,Ao,0,0,0,,Grandma Katou told me an old \Nstory about a strange butterfly
+Dialogue: 0,0:11:37.84,0:11:43.32,Default,Ao,0,0,0,,that woke up someone\Nwho'd been asleep for a long time.
+Dialogue: 0,0:11:43.32,0:11:45.03,Default,Hairi,0,0,0,,My grandma told you that?
+Dialogue: 0,0:11:45.03,0:11:48.67,Default,Ao,0,0,0,,She might've made it up\N to make me feel better.
+Dialogue: 0,0:11:49.17,0:11:54.63,Default,Ao,0,0,0,,But when I think about the Sorakado family \Nduties and about the Shichieichou,
+Dialogue: 0,0:11:54.63,0:11:56.62,Default,Ao,0,0,0,,it's hard for me to dismiss it.
+Dialogue: 0,0:11:57.17,0:12:01.66,Default,Ao,0,0,0,,Which is why I touch the Shichieichou \Nas I'm doing my job.
+Dialogue: 0,0:12:01.66,0:12:03.66,Default,Ao,0,0,0,,I'm looking for Ai's memories.
+Dialogue: 0,0:12:05.48,0:12:06.50,Default,Hairi,0,0,0,,Are you sleepy?
+Dialogue: 0,0:12:06.50,0:12:10.68,Default,Ao,0,0,0,,Sorry, is it all right if I take a nap?
+Dialogue: 0,0:12:10.68,0:12:12.13,Default,Hairi,0,0,0,,Yeah, sure.
+Dialogue: 0,0:12:12.13,0:12:16.02,Default,Ao,0,0,0,,Wake me up in half an hour or so.
+Dialogue: 0,0:12:36.88,0:12:38.38,Default,Hairi,0,0,0,,Hey. Good evening.
+Dialogue: 0,0:12:40.13,0:12:41.62,Default,Hairi,0,0,0,,Heya, Inari.
+Dialogue: 0,0:12:41.62,0:12:43.01,Default,Inari,0,0,0,,Pon!
+Dialogue: 0,0:12:43.01,0:12:46.51,Default,Ao,0,0,0,,Didn't I tell you not \Nto come near the mountain?
+Dialogue: 0,0:12:46.51,0:12:47.86,Default,Hairi,0,0,0,,You did.
+Dialogue: 0,0:12:47.86,0:12:49.50,Default,Hairi,0,0,0,,But I never said I wouldn't.
+Dialogue: 0,0:12:49.50,0:12:51.89,Default,Ao,0,0,0,,Why can't you get it through your skull?
+Dialogue: 0,0:12:51.89,0:12:55.29,Default,Ao,0,0,0,,Looking for Shichieichou is super dangerous!
+Dialogue: 0,0:12:55.29,0:12:56.34,Default,Hairi,0,0,0,,That's exactly why.
+Dialogue: 0,0:12:57.19,0:12:59.72,Default,Hairi,0,0,0,,If you're putting yourself in danger,
+Dialogue: 0,0:12:59.72,0:13:02.15,Default,Hairi,0,0,0,,I at least want to be nearby.
+Dialogue: 0,0:13:03.02,0:13:04.32,Default,Ao,0,0,0,,I...
+Dialogue: 0,0:13:05.30,0:13:08.00,Default,Ao,0,0,0,,Ah, I see. I get it.
+Dialogue: 0,0:13:08.00,0:13:09.99,Default,Ao,0,0,0,,Have you fallen in love with me?
+Dialogue: 0,0:13:09.99,0:13:11.68,Default,Hairi,0,0,0,,I guess so.
+Dialogue: 0,0:13:11.68,0:13:13.54,Default,Hairi,0,0,0,,More than a little, I think.
+Dialogue: 0,0:13:14.74,0:13:17.37,Default,Ao,0,0,0,,Uh... A-Are you serious?
+Dialogue: 0,0:13:17.37,0:13:18.36,Default,Hairi,0,0,0,,Does that bother you?
+Dialogue: 0,0:13:18.36,0:13:20.79,Default,Ao,0,0,0,,M-More than a little.
+Dialogue: 0,0:13:21.14,0:13:23.30,Default,Hairi,0,0,0,,I'm kind of shocked, to be honest.
+Dialogue: 0,0:13:23.30,0:13:28.08,Default,Ao,0,0,0,,I mean, I don't have the capacity \Nfor that kind of thing right now.
+Dialogue: 0,0:13:28.08,0:13:31.47,Default,Ao,0,0,0,,I'm too preoccupied looking \Nfor Ai's Shichieichou.
+Dialogue: 0,0:13:31.71,0:13:32.44,Default,Hairi,0,0,0,,Yeah.
+Dialogue: 0,0:13:32.44,0:13:35.23,Default,Hairi,0,0,0,,But then, all the better to have \Nsomeone with you, right?
+Dialogue: 0,0:13:36.93,0:13:41.04,Default,Hairi,0,0,0,,The islanders won't come to the mountain \Nbecause of the custom and all.
+Dialogue: 0,0:13:41.04,0:13:43.20,Default,Hairi,0,0,0,,But I'm not an islander.
+Dialogue: 0,0:13:43.20,0:13:45.32,Default,Hairi,0,0,0,,So I can help you out.
+Dialogue: 0,0:13:49.70,0:13:51.58,Default,Ao,0,0,0,,A-All right, fine.
+Dialogue: 0,0:13:51.88,0:13:56.40,Default,Ao,0,0,0,,I don't think I could stop \Nyou if I tried anyway.
+Dialogue: 0,0:13:56.40,0:14:00.83,Default,Ao,0,0,0,,But you have to promise \Nme you'll stay by my side.
+Dialogue: 0,0:14:00.83,0:14:02.05,Default,Hairi,0,0,0,,Got it.
+Dialogue: 0,0:14:06.51,0:14:09.18,Default,Hairi,0,0,0,,I'll never leave your side.
+Dialogue: 0,0:14:14.30,0:14:20.45,Main - Italics,Hairi,0,0,0,,And so, Ao, Inari, and I began \Nsearching for Ai's Shichieichou.
+Dialogue: 0,0:14:59.73,0:15:01.81,Default,Text,0,0,0,,{\fax.4\fnArial\an1\fs10\shad0\b1\frz34.18\c&H94B6A1&\3c&HAAC0C8&\move(238.08,203.232,232.391,208.919)}Kinky\N\hNude\N\h\hGravure
+Dialogue: 0,0:15:39.83,0:15:43.31,Default,Ao,0,0,0,,Mayoi Tachibana is the Sorakado \Nfamily's sacred tree.
+Dialogue: 0,0:15:43.78,0:15:47.82,Default,Ao,0,0,0,,Tachibana trees normally \Nflower before summer.
+Dialogue: 0,0:15:47.82,0:15:50.18,Default,Ao,0,0,0,,But this one's always a bit late.
+Dialogue: 0,0:15:50.18,0:15:52.50,Default,Ao,0,0,0,,It's slightly offset from the real world.
+Dialogue: 0,0:15:52.50,0:15:54.54,Default,Ao,0,0,0,,Slightly out of sync.
+Dialogue: 0,0:15:54.54,0:15:58.28,Default,Ao,0,0,0,,It was deemed sacred because it sits on the\Nborder between this world and the next.
+Dialogue: 0,0:16:11.52,0:16:17.03,Default,Ao,0,0,0,,I can only guide the Shichieichou with \Nmy lantern while the tree is in bloom.
+Dialogue: 0,0:16:17.03,0:16:20.35,Default,Hairi,0,0,0,,So that's the window for your work.
+Dialogue: 0,0:16:23.38,0:16:24.13,Default,Ao,0,0,0,,Yeah.
+Dialogue: 0,0:16:27.98,0:16:32.11,Default,Ao,0,0,0,,And then Nomiki turned beet red \Nand totally clammed up.
+Dialogue: 0,0:16:32.11,0:16:37.46,Default,Hairi,0,0,0,,Say, what's the goal in talking\N to her while she's asleep like that?
+Dialogue: 0,0:16:38.67,0:16:41.55,Default,Ao,0,0,0,,Sleep-learning, kinda, I guess?
+Dialogue: 0,0:16:41.55,0:16:45.70,Default,Ao,0,0,0,,I figure maybe if she remembers \Nwhat I said when she wakes up,
+Dialogue: 0,0:16:45.70,0:16:48.00,Default,Ao,0,0,0,,it'll be like we were \Nhanging out the whole time.
+Dialogue: 0,0:16:48.00,0:16:49.55,Default,Ao,0,0,0,,Oh, I know!
+Dialogue: 0,0:16:49.55,0:16:52.34,Default,Ao,0,0,0,,Why don't you try talking to her too?
+Dialogue: 0,0:16:53.35,0:16:56.01,Default,Hairi,0,0,0,,I guess I should. Let me introduce myself.
+Dialogue: 0,0:16:57.48,0:16:58.47,Default,Hairi,0,0,0,,I'm Ao's...
+Dialogue: 0,0:16:58.47,0:17:01.01,Default,Hairi,0,0,0,,b-boyfriend, Takahara Hairi!
+Dialogue: 0,0:17:01.01,0:17:02.89,Default,Ao,0,0,0,,H-H-How are you my boyfriend?!
+Dialogue: 0,0:17:02.89,0:17:04.08,Default,Ao,0,0,0,,Not so fast!
+Dialogue: 0,0:17:04.08,0:17:07.77,Default,Hairi,0,0,0,,I thought I'd get her on \Nboard for when she wakes up.
+Dialogue: 0,0:17:08.79,0:17:14.18,Default,Ao,0,0,0,,I mean, I do appreciate you saying that...
+Dialogue: 0,0:17:14.18,0:17:17.99,Default,Ao,0,0,0,,I've properly fallen for you too.
+Dialogue: 0,0:17:18.24,0:17:19.22,Default,Hairi,0,0,0,,Ao...
+Dialogue: 0,0:17:20.19,0:17:21.98,Default,Ao,0,0,0,,But I'm sorry.
+Dialogue: 0,0:17:22.97,0:17:27.33,Default,Ao,0,0,0,,I can't find happiness for myself\Nwhile Ai's still asleep.
+Dialogue: 0,0:17:27.83,0:17:32.93,Default,Ao,0,0,0,,I know this is selfish, but I hope \Nyou can wait until Ai wakes up.
+Dialogue: 0,0:17:34.20,0:17:35.51,Default,Hairi,0,0,0,,Yikes.
+Dialogue: 0,0:17:36.10,0:17:36.99,Default,Ao,0,0,0,,Sorry.
+Dialogue: 0,0:17:36.99,0:17:40.78,Default,Hairi,0,0,0,,Finding Ai's memory isn't \Njust a favor anymore.
+Dialogue: 0,0:17:40.78,0:17:42.03,Default,Ao,0,0,0,,Huh?
+Dialogue: 0,0:17:42.03,0:17:46.29,Default,Hairi,0,0,0,,We can date once she wakes up, right?
+Dialogue: 0,0:17:46.29,0:17:49.02,Default,Hairi,0,0,0,,So that's my goal.
+Dialogue: 0,0:17:49.02,0:17:52.36,Default,Ao,0,0,0,,I-Is that how it works?
+Dialogue: 0,0:17:52.70,0:17:53.71,Default,Hairi,0,0,0,,Yeah.
+Dialogue: 0,0:17:53.71,0:17:55.37,Default,Hairi,0,0,0,,Now I'm {\i1}really{\i0} motivated.
+Dialogue: 0,0:18:02.52,0:18:05.87,Default,Hairi,0,0,0,,Hey, Kyouko-san, could I ask you a question?
+Dialogue: 0,0:18:05.87,0:18:07.30,Default,Kyouko,0,0,0,,How can I help?
+Dialogue: 0,0:18:07.30,0:18:14.02,Default,Hairi,0,0,0,,I heard there's an old island story\Nabout a butterfly that can wake people up.
+Dialogue: 0,0:18:14.02,0:18:15.88,Default,Kyouko,0,0,0,,The Shichieichou?
+Dialogue: 0,0:18:15.88,0:18:17.88,Default,Ao,0,0,0,,You're kidding! There's a book?
+Dialogue: 0,0:18:17.88,0:18:19.54,Default,Hairi,0,0,0,,Apparently.
+Dialogue: 0,0:18:19.54,0:18:22.88,Default,Hairi,0,0,0,,I asked Kyouko-san to dig it out of the shed.
+Dialogue: 0,0:18:22.88,0:18:24.14,Default,Ao,0,0,0,,Of course!
+Dialogue: 0,0:18:24.14,0:18:26.79,Default,Ao,0,0,0,,You mean Grandma Katou's shed. \NThat makes sense.
+Dialogue: 0,0:18:26.79,0:18:28.08,Default,Hairi,0,0,0,,Wanna come over tomorrow?
+Dialogue: 0,0:18:28.08,0:18:29.91,Default,Ao,0,0,0,,Yeah, I'll be there!
+Dialogue: 0,0:18:29.91,0:18:33.09,Default,Ao,0,0,0,,All right, I'm feeling pumped for tonight!
+Dialogue: 0,0:18:33.09,0:18:34.75,Default,Hairi,0,0,0,,Yeah! Let's do this!
+Dialogue: 0,0:18:34.75,0:18:35.65,Default,Inari,0,0,0,,Pon!
+Dialogue: 0,0:18:38.65,0:18:39.65,Default,Ao,0,0,0,,I'm sleepy...
+Dialogue: 0,0:18:39.65,0:18:41.73,Default,Hairi,0,0,0,,Looks like you're spent for the night.
+Dialogue: 0,0:18:41.73,0:18:43.69,Default,Ao,0,0,0,,I'm not done yet.
+Dialogue: 0,0:18:43.69,0:18:45.66,Default,Ao,0,0,0,,Onward, Inari.
+Dialogue: 0,0:18:48.39,0:18:50.34,Default,Hairi,0,0,0,,Wanna hold hands on our way down?
+Dialogue: 0,0:18:51.06,0:18:53.62,Default,Ao,0,0,0,,That doesn't sound like a bad idea.
+Dialogue: 0,0:18:53.62,0:18:55.26,Default,Hairi,0,0,0,,What? Really?
+Dialogue: 0,0:18:56.34,0:18:58.87,Default,Ao,0,0,0,,Huh? Did I say something?
+Dialogue: 0,0:18:58.87,0:19:00.51,Default,Hairi,0,0,0,,Just how you really feel, I think.
+Dialogue: 0,0:19:00.51,0:19:02.34,Default,Ao,0,0,0,,N-N-No way!
+Dialogue: 0,0:19:02.34,0:19:03.10,Default,Ao,0,0,0,,We're outside!
+Dialogue: 0,0:19:03.10,0:19:04.60,Default,Ao,0,0,0,,That's going too far!
+Dialogue: 0,0:19:05.04,0:19:08.02,Default,Ao,0,0,0,,I need our first time to be\N somewhere with a pillow.
+Dialogue: 0,0:19:08.02,0:19:11.23,Default,Hairi,0,0,0,,Sorry, I think that was more \Nthan just slipping out.
+Dialogue: 0,0:19:11.23,0:19:13.78,Default,Hairi,0,0,0,,You're obviously past your limit, though.
+Dialogue: 0,0:19:13.78,0:19:14.62,Default,Hairi,0,0,0,,Let's go home.
+Dialogue: 0,0:19:17.02,0:19:18.86,Default,Ao,0,0,0,,O-Okay.
+Dialogue: 0,0:19:32.67,0:19:35.78,Flashback,Umi,0,0,0,,Demon Lord Grudge Death Beam Dragon Wave!
+Dialogue: 0,0:19:35.78,0:19:39.71,Default,Hairi,0,0,0,,Huh? Demon Lord... Dragon Wave?
+Dialogue: 0,0:19:39.71,0:19:41.30,Default,Umi,0,0,0,,What are you doing?
+Dialogue: 0,0:19:41.30,0:19:42.53,Default,Hairi,0,0,0,,Umi-chan.
+Dialogue: 0,0:19:42.53,0:19:44.18,Default,Umi,0,0,0,,I kept trying to wake you up.
+Dialogue: 0,0:19:44.18,0:19:46.18,Default,Umi,0,0,0,,Breakfast is all gone now.
+Dialogue: 0,0:19:46.67,0:19:47.96,Default,Hairi,0,0,0,,Sorry.
+Dialogue: 0,0:19:47.96,0:19:49.60,Default,Hairi,0,0,0,,I don't know why I couldn't wake up.
+Dialogue: 0,0:19:49.60,0:19:52.30,Default,Umi,0,0,0,,Because you keep going out at night.
+Dialogue: 0,0:19:56.34,0:19:57.87,Default,Hairi,0,0,0,,A Shichieichou?
+Dialogue: 0,0:20:02.14,0:20:03.39,Default,Kyouko,0,0,0,,Hairi-kun.
+Dialogue: 0,0:20:03.39,0:20:04.16,Default,Hairi,0,0,0,,Yes?
+Dialogue: 0,0:20:04.16,0:20:05.61,Default,Kyouko,0,0,0,,You have a guest.
+Dialogue: 0,0:20:06.59,0:20:08.41,Default,Ao,0,0,0,,U-Um...
+Dialogue: 0,0:20:09.29,0:20:11.06,Default,Ao,0,0,0,,Thanks for having me over.
+Dialogue: 0,0:20:13.12,0:20:14.58,Default,Hairi,0,0,0,,Why are you so tense?
+Dialogue: 0,0:20:15.01,0:20:18.36,Default,Ao,0,0,0,,I've never been in a boy's room before.
+Dialogue: 0,0:20:18.36,0:20:21.80,Default,Ao,0,0,0,,Plus, you already had a futon ready...
+Dialogue: 0,0:20:21.80,0:20:23.01,Default,Hairi,0,0,0,,Hang on.
+Dialogue: 0,0:20:23.01,0:20:24.73,Default,Hairi,0,0,0,,Kyouko-san and Umi-chan are here.
+Dialogue: 0,0:20:24.73,0:20:26.25,Default,Hairi,0,0,0,,What did you think I was doing?
+Dialogue: 0,0:20:26.25,0:20:28.73,Default,Ao,0,0,0,,Huh? R-Right, of course!
+Dialogue: 0,0:20:31.11,0:20:32.49,Default,Hairi,0,0,0,,Anyway, here.
+Dialogue: 0,0:20:31.25,0:20:34.48,Default,Text,0,0,0,,{\fax.1\fnTimes NEw Roman\fs16\shad0\fad(750,1)\frz17.47\c&H49595C&\3c&HA5ACB1&\pos(319.249,79.418)}Twelve Stories of the Divine Mountain
+Dialogue: 0,0:20:32.49,0:20:34.48,Default,Hairi,0,0,0,,Kyouko-san found the book.
+Dialogue: 0,0:20:34.96,0:20:38.70,Default,Hairi,0,0,0,,It's so old, I couldn't make any sense of it.
+Dialogue: 0,0:20:43.98,0:20:45.86,Default,Ao,0,0,0,,It's from the Tenpo era.
+Dialogue: 0,0:20:45.86,0:20:47.41,Default,Hairi,0,0,0,,You can read it?
+Dialogue: 0,0:20:47.41,0:20:52.04,Default,Ao,0,0,0,,You know how you relive people's memories \Nwhen you touch their Shichieichou?
+Dialogue: 0,0:20:52.04,0:20:54.68,Default,Ao,0,0,0,,You can learn all kinds of things that way.
+Dialogue: 0,0:20:54.68,0:20:56.26,Default,Hairi,0,0,0,,That's kind of amazing.
+Dialogue: 0,0:20:56.26,0:20:57.38,Default,Ao,0,0,0,,Didn't I tell you?
+Dialogue: 0,0:20:57.67,0:20:59.91,Default,Ao,0,0,0,,I'm pretty knowledgeable.
+Dialogue: 0,0:21:04.60,0:21:05.26,Default,Ao,0,0,0,,No way!
+Dialogue: 0,0:21:05.26,0:21:09.39,Default,Ao,0,0,0,,It says how to return a \NShichieichou to a sleeping body!
+Dialogue: 0,0:21:09.81,0:21:10.51,Default,Hairi,0,0,0,,Really?
+Dialogue: 0,0:21:11.46,0:21:14.02,Default,Ao,0,0,0,,This is what I've been \Nlooking for all this time!
+Dialogue: 0,0:21:14.02,0:21:15.54,Default,Ao,0,0,0,,Yes!
+Dialogue: 0,0:21:16.57,0:21:19.52,Default,Hairi,0,0,0,,A-Ao! You're touching me \Nwith all sorts of parts...
+Dialogue: 0,0:21:20.52,0:21:22.32,Default,Ao,0,0,0,,S-Sorry.
+Dialogue: 0,0:21:22.86,0:21:25.16,Default,Ao,0,0,0,,I got a bit too excited.
+Dialogue: 0,0:21:25.16,0:21:28.24,Default,Hairi,0,0,0,,Yeah. I'm thrilled too, so it's all good.
+Dialogue: 0,0:21:28.78,0:21:30.03,Default,Hairi,0,0,0,,So, how does it work?
+Dialogue: 0,0:21:31.19,0:21:32.49,Default,Ao,0,0,0,,Well...
+Dialogue: 0,0:21:32.49,0:21:37.17,Default,Ao,0,0,0,,We find Ai's Shichieichou, and at the Ro...
+Dialogue: 0,0:21:37.43,0:21:38.37,Default,Hairi,0,0,0,,The Ro?
+Dialogue: 0,0:21:38.37,0:21:42.09,Default,Ao,0,0,0,,A-Anyway, we have to find Ai's Shichieichou.
+Dialogue: 0,0:21:42.09,0:21:43.76,Default,Ao,0,0,0,,That'll solve everything.
+Dialogue: 0,0:21:44.14,0:21:45.28,Default,Hairi,0,0,0,,True enough.
+Dialogue: 0,0:21:46.17,0:21:48.41,Default,Ao,0,0,0,,Thank you, Hairi.
+

@@ -1,0 +1,1 @@
+Reminded of Vignere cipher so I put it into cyberchef and encrypted a word, then used the ciphertext as a key, found out the key was hard-coded to a single letter ("e" in my case). picoCTF{ChEeSy6320b114}

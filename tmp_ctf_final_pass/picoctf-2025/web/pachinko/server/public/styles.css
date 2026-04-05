@@ -1,0 +1,190 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: #1a1a1a;
+    color: #e0e0e0;
+    font-family: 'Press Start 2P', cursive;
+    font-size: 12px;
+    text-align: center;
+    overflow: hidden;
+}
+
+h1 {
+    font-size: 28px;
+    color: #ffcc00;
+    text-shadow: 2px 2px #000;
+    margin-top: 20px;
+}
+
+.description {
+    color: #b3b3b3;
+    max-width: 600px;
+    line-height: 1.5;
+    margin: 0 auto 20px;
+}
+
+#game-container {
+    width: 900px;
+    height: 600px;
+    margin: 0 auto;
+    position: relative;
+    overflow: hidden;
+    background-color: #333;
+    border: 2px solid #fff;
+    border-radius: 10px;
+    box-shadow: 0 0 10px #000;
+}
+
+.node {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    background-color: #ffcc00;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    color: black;
+    cursor: move;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    user-select: none;
+    touch-action: none;
+    will-change: transform, left, top;
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 2;
+}
+
+.node:hover {
+    transform: scale(1.2);
+    box-shadow: 0 0 10px #ffcc00;
+}
+
+.node.selected {
+    background-color: #ff9900;
+    box-shadow: 0 0 15px #ff9900;
+    transform: scale(1.1);
+    border: 2px solid white;
+}
+
+.connection {
+    position: absolute;
+    height: 2px;
+    background: linear-gradient(to right, rgba(255, 204, 0, 1), rgba(255, 204, 0, 0.3));
+    transform-origin: left center;
+    pointer-events: none;
+    box-shadow: 0 0 5px rgba(255, 204, 0, 0.5);
+    z-index: 1;
+}
+
+button {
+    background-color: #ffcc00;
+    color: #000;
+    border: none;
+    padding: 10px 20px;
+    font-family: inherit;
+    cursor: pointer;
+    margin: 5px;
+    border-radius: 5px;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+button:hover {
+    background-color: #fff;
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+#reset-btn {
+    background-color: #e63946;
+}
+
+#reset-btn:hover {
+    background-color: #ff6b6b;
+}
+
+#play-btn {
+    background-color: #38b000;
+}
+
+#play-btn:hover {
+    background-color: #70e000;
+}
+
+.ball {
+    width: 12px;
+    height: 12px;
+    position: absolute;
+    background-color: #ffcc00;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 100;
+    will-change: transform, left, top;
+    transition: transform 0.5s ease-in-out, left 0.5s ease-in-out, top 0.5s ease-in-out;
+}
+
+.tooltip {
+    position: absolute;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.goal-display {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.game-wrapper {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-start;
+}
+
+.circuit-info, .truth-table {
+    padding: 1.5rem;
+    min-width: 300px;
+}
+
+.circuit-info {
+    background-color: #2a2a2a;
+    border-radius: 10px;
+    margin-right: 1rem;
+}
+
+.circuit-info h2 {
+    color: #ffcc00;
+    margin-bottom: 1rem;
+    font-size: 18px;
+}
+
+#circuit-serialization {
+    font-family: monospace;
+    text-align: left;
+    padding: 1rem;
+    background-color: #1a1a1a;
+    border-radius: 5px;
+    line-height: 1.5;
+    white-space: pre;
+}
+
+.truth-table table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+    font-family: monospace;
+}
+
+.truth-table th, .truth-table td {
+    padding: 0.75rem;
+    text-align: center;
+} 

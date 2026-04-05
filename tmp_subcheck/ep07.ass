@@ -1,0 +1,414 @@
+[Script Info]
+Title: English (US)
+Original Translation: 
+Original Editing: 
+Original Timing: 
+Synch Point: 
+Script Updated By: 
+Update Details: 
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 640
+PlayResY: 360
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Main - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Flashback,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+Style: Flashback - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:00.91,0:00:03.87,Default,A,0,0,0,,Long ago, when I was little,
+Dialogue: 0,0:00:03.87,0:00:06.78,Default,A,0,0,0,,I ran through a seemingly endless summer.
+Dialogue: 0,0:00:07.29,0:00:10.00,Default,A,0,0,0,,With my family. With my friends.
+Dialogue: 0,0:00:10.00,0:00:13.24,Default,A,0,0,0,,I could play forever \Nand still have more to do.
+Dialogue: 0,0:00:13.24,0:00:17.56,Default,A,0,0,0,,The sun gleamed down on us, \Nwatching over every day.
+Dialogue: 0,0:00:18.35,0:00:22.49,Default,A,0,0,0,,Eventually, that memory became \Na figment of the distant past.
+Dialogue: 0,0:00:23.38,0:00:27.54,Default,A,0,0,0,,Yet I still remember the bright \Nlight on my eyelids.
+Dialogue: 0,0:00:28.20,0:00:31.82,Default,A,0,0,0,,I flew in search of that brightness.
+Dialogue: 0,0:00:32.78,0:00:33.81,Default,A,0,0,0,,Just a little...
+Dialogue: 0,0:00:34.36,0:00:36.29,Default,A,0,0,0,,Just a little more, and I'd make it there.
+Dialogue: 0,0:00:36.98,0:00:38.28,Default,A,0,0,0,,To that summer.
+Dialogue: 0,0:00:54.61,0:00:55.51,Default,Kyouko,0,0,0,,Come in.
+Dialogue: 0,0:00:55.83,0:00:57.51,Default,Kyouko,0,0,0,,I've heard all about you.
+Dialogue: 0,0:01:00.01,0:01:01.91,Default,Umi,0,0,0,,Thank you for having me.
+Dialogue: 0,0:01:03.27,0:01:08.27,Main - Top + Italics,Ferry Announcement,0,0,0,,We will now be arriving at Torishirojima \NFishing Port, Torishirojima Island.
+Dialogue: 0,0:01:08.27,0:01:13.11,Main - Top + Italics,Ferry Announcement,0,0,0,,We may experience a strong \Nimpact upon docking.
+Dialogue: 0,0:01:11.81,0:01:14.28,Default,Hairi,0,0,0,,Torishirojima, huh?
+Dialogue: 0,0:01:13.11,0:01:16.49,Main - Top + Italics,Ferry Announcement,0,0,0,,Please remain seated until further notice.
+Dialogue: 0,0:01:17.69,0:01:21.53,Default,Hairi,0,0,0,,Guess this makes me a songless canary.
+Dialogue: 0,0:01:22.02,0:01:23.21,Default,Kido's Grandmother,0,0,0,,Say what?
+Dialogue: 0,0:03:27.85,0:03:31.08,Main - Italics,Hairi,0,0,0,,What am I even doing?
+Dialogue: 0,0:03:31.47,0:03:34.81,Main - Italics,Hairi,0,0,0,,And what is this place?
+Dialogue: 0,0:03:36.88,0:03:38.26,Default,Umi,0,0,0,,Hello.
+Dialogue: 0,0:03:38.26,0:03:40.09,Default,Umi,0,0,0,,Hello?
+Dialogue: 0,0:03:40.09,0:03:41.95,Default,Umi,0,0,0,,Hello!
+Dialogue: 0,0:03:42.69,0:03:46.85,Default,Umi,0,0,0,,Get up, will you? Hairi-san!
+Dialogue: 0,0:03:50.54,0:03:51.75,Default,Umi,0,0,0,,Sheesh.
+Dialogue: 0,0:03:51.75,0:03:53.10,Default,Umi,0,0,0,,It's already eight.
+Dialogue: 0,0:03:55.35,0:03:56.88,Default,Hairi,0,0,0,,Good morning, Umi-chan.
+Dialogue: 0,0:03:58.06,0:03:59.61,Default,Hairi,0,0,0,,I'm digging in.
+Dialogue: 0,0:03:59.61,0:04:00.54,Default,Umi,0,0,0,,What do you think?
+Dialogue: 0,0:04:00.54,0:04:03.03,Default,Umi,0,0,0,,I made that fried rice myself.
+Dialogue: 0,0:04:03.35,0:04:05.03,Default,Hairi,0,0,0,,Wow, you did, huh?
+Dialogue: 0,0:04:08.80,0:04:10.40,Default,Hairi,0,0,0,,It's good, I think.
+Dialogue: 0,0:04:11.66,0:04:12.78,Default,Umi,0,0,0,,Boo.
+Dialogue: 0,0:04:14.39,0:04:15.58,Default,Kyouko,0,0,0,,Don't worry about it yet.
+Dialogue: 0,0:04:15.86,0:04:18.10,Default,Kyouko,0,0,0,,I'll ask for your help eventually.
+Dialogue: 0,0:04:20.88,0:04:24.43,Default,Kyouko,0,0,0,,Make yourself at home, okay, Hairi-kun?
+Dialogue: 0,0:04:24.74,0:04:25.89,Default,Hairi,0,0,0,,Okay...
+Dialogue: 0,0:04:29.61,0:04:33.14,Main - Italics,Hairi,0,0,0,,It's been a few days since I \Narrived here on Torishirojima.
+Dialogue: 0,0:04:33.69,0:04:36.42,Main - Italics,Hairi,0,0,0,,I came to help sort through\Nmy late grandmother's belongings.
+Dialogue: 0,0:04:36.42,0:04:40.02,Main - Italics,Hairi,0,0,0,,Or so I thought, but I still \Nhaven't gotten to do anything.
+Dialogue: 0,0:04:41.23,0:04:46.41,Main - Italics,Hairi,0,0,0,,Meanwhile, I'm getting to know all the \Npeople my age who live here.
+Dialogue: 0,0:04:47.14,0:04:48.99,Main - Italics,Hairi,0,0,0,,They all seem all right.
+Dialogue: 0,0:04:49.95,0:04:53.79,Main - Italics,Hairi,0,0,0,,Although they are pretty eccentric...
+Dialogue: 0,0:04:54.58,0:04:56.00,Main - Italics,Hairi,0,0,0,,Especially her.
+Dialogue: 0,0:04:56.64,0:04:58.10,Main - Italics,Hairi,0,0,0,,Naruse Shiroha.
+Dialogue: 0,0:04:58.79,0:05:00.04,Default,Shiroha,0,0,0,,Dosukoi!
+Dialogue: 0,0:05:00.04,0:05:04.16,Main - Italics,Hairi,0,0,0,,Apparently, that means "you're annoying \Nas hell" in the local dialect.
+Dialogue: 0,0:05:04.16,0:05:07.36,Main - Italics,Hairi,0,0,0,,It's not a nice thing to say to people.
+Dialogue: 0,0:05:07.88,0:05:10.05,Main - Italics,Hairi,0,0,0,,What'd I even do to do deserve it?
+Dialogue: 0,0:05:11.68,0:05:14.25,Default,Hairi,0,0,0,,What am I doing here?
+Dialogue: 0,0:05:14.25,0:05:16.63,Default,Juliet,0,0,0,,That's him! The guy Grandma Kido mentioned.
+Dialogue: 0,0:05:16.63,0:05:19.06,Default,Juliet,0,0,0,,The canary who forgot how to sing.
+Dialogue: 0,0:05:19.06,0:05:21.01,Default,Misaki,0,0,0,,A canary that sings rock.
+Dialogue: 0,0:05:21.01,0:05:22.92,Default,Reiko,0,0,0,,A canarian rocker!
+Dialogue: 0,0:05:22.92,0:05:25.19,Main - Italics,Hairi,0,0,0,,I definitely never put it like that!
+Dialogue: 0,0:05:39.28,0:05:41.67,Default,Hairi,0,0,0,,This was farther than I expected.
+Dialogue: 0,0:06:07.91,0:06:09.42,Default,Hairi,0,0,0,,Hey!
+Dialogue: 0,0:06:10.92,0:06:11.82,Default,Tsumugi,0,0,0,,Mugyu?
+Dialogue: 0,0:06:12.09,0:06:13.20,Default,Hairi,0,0,0,,"Mugyu"?
+Dialogue: 0,0:06:13.67,0:06:16.38,Default,Hairi,0,0,0,,What are you doing up there?
+Dialogue: 0,0:06:16.97,0:06:19.36,Default,Tsumugi,0,0,0,,I'm looking for something!
+Dialogue: 0,0:06:19.36,0:06:21.34,Default,Hairi,0,0,0,,What are you looking for?
+Dialogue: 0,0:06:21.86,0:06:23.71,Default,Tsumugi,0,0,0,,Myself!
+Dialogue: 0,0:06:25.12,0:06:30.16,Default,Tsumugi,0,0,0,,I'm also trying to find my purpose!
+Dialogue: 0,0:06:34.22,0:06:37.64,Default,Hairi,0,0,0,,I don't think it's safe up there!
+Dialogue: 0,0:06:37.91,0:06:38.91,Default,Tsumugi,0,0,0,,Mugyu?
+Dialogue: 0,0:06:39.59,0:06:41.98,Default,Tsumugi,0,0,0,,It isn't dangerous!
+Dialogue: 0,0:06:41.98,0:06:45.35,Default,Hairi,0,0,0,,You could die if you fall!
+Dialogue: 0,0:06:45.35,0:06:47.55,Default,Tsumugi,0,0,0,,I won't die!
+Dialogue: 0,0:06:47.55,0:06:49.78,Default,Hairi,0,0,0,,What are you, invincible?
+Dialogue: 0,0:06:50.18,0:06:52.45,Default,Tsumugi,0,0,0,,I'm invincible, yeah!
+Dialogue: 0,0:06:55.66,0:06:57.41,Main - Italics,Hairi,0,0,0,,I envy her.
+Dialogue: 0,0:07:07.70,0:07:08.88,Default,Hairi,0,0,0,,The bath?
+Dialogue: 0,0:07:08.88,0:07:10.35,Default,Kyouko,0,0,0,,Unfortunately.
+Dialogue: 0,0:07:10.35,0:07:12.59,Default,Kyouko,0,0,0,,The water just shut off all of a sudden.
+Dialogue: 0,0:07:12.59,0:07:14.88,Default,Hairi,0,0,0,,I can survive a night without a bath.
+Dialogue: 0,0:07:14.88,0:07:15.85,Default,Umi,0,0,0,,No way!
+Dialogue: 0,0:07:16.13,0:07:19.48,Default,Umi,0,0,0,,Skipping a bath in the summer? \NYou can't be serious!
+Dialogue: 0,0:07:34.71,0:07:36.88,Default,Hairi,0,0,0,,You sure took your time, Umi-chan...
+Dialogue: 0,0:07:37.77,0:07:39.29,Default,Shiroha,0,0,0,,That was normal, okay?
+Dialogue: 0,0:07:39.29,0:07:41.50,Default,Hairi,0,0,0,,N-No, I meant...
+Dialogue: 0,0:07:44.66,0:07:46.25,Default,Umi,0,0,0,,Thanks for waiting!
+Dialogue: 0,0:07:49.03,0:07:50.94,Default,Umi,0,0,0,,Nice to meet you.
+Dialogue: 0,0:07:50.94,0:07:52.26,Default,Shiroha,0,0,0,,Nice to meet you too.
+Dialogue: 0,0:07:52.26,0:07:53.33,Default,Shiroha,0,0,0,,If you'll excuse me.
+Dialogue: 0,0:07:58.51,0:08:00.31,Default,Umi,0,0,0,,Puberty?
+Dialogue: 0,0:08:00.31,0:08:02.06,Default,Hairi,0,0,0,,What? Who?
+Dialogue: 0,0:08:02.49,0:08:04.48,Default,Umi,0,0,0,,This feels great!
+Dialogue: 0,0:08:04.48,0:08:08.47,Default,Umi,0,0,0,,I'm gonna get my license when I turn sixteen!
+Dialogue: 0,0:08:08.47,0:08:09.48,Default,Hairi,0,0,0,,Huh?
+Dialogue: 0,0:08:09.48,0:08:12.49,Default,Hairi,0,0,0,,It's night, and the light's not on.
+Dialogue: 0,0:08:12.79,0:08:14.99,Default,Umi,0,0,0,,You mean the lighthouse?
+Dialogue: 0,0:08:14.99,0:08:19.58,Default,Umi,0,0,0,,From what I've heard, no one maintains it,\Nso it's out of service.
+Dialogue: 0,0:08:19.86,0:08:21.23,Default,Hairi,0,0,0,,It is, is it?
+Dialogue: 0,0:08:30.50,0:08:32.71,Flashback,Tsumugi,0,0,0,,I'm looking for something!
+Dialogue: 0,0:08:33.09,0:08:35.16,Default,Tsumugi,0,0,0,,Looking for something, huh?
+Dialogue: 0,0:08:39.22,0:08:40.66,Default,Shizuku,0,0,0,,Goodness me.
+Dialogue: 0,0:08:42.98,0:08:44.22,Default,Hairi,0,0,0,,Here you are.
+Dialogue: 0,0:08:45.39,0:08:47.37,Default,Shizuku,0,0,0,,My, thank you.
+Dialogue: 0,0:08:51.67,0:08:54.53,Default,Shizuku,0,0,0,,Are you looking for something too?
+Dialogue: 0,0:08:54.53,0:08:56.09,Default,Shizuku,0,0,0,,Indeed, you must be.
+Dialogue: 0,0:08:56.09,0:08:58.61,Default,Shizuku,0,0,0,,You seek the never-before-seen...
+Dialogue: 0,0:08:58.61,0:08:59.45,Default,Shizuku,0,0,0,,boobies.
+Dialogue: 0,0:09:01.92,0:09:03.19,Main - Italics,Hairi,0,0,0,,Huh?
+Dialogue: 0,0:09:03.19,0:09:04.74,Main - Italics,Hairi,0,0,0,,Did she just say "boobies"?
+Dialogue: 0,0:09:04.74,0:09:07.49,Default,Shizuku,0,0,0,,Anyway, what's your name?
+Dialogue: 0,0:09:09.70,0:09:11.30,Default,Hairi,0,0,0,,I'm Takahara Hairi.
+Dialogue: 0,0:09:11.30,0:09:12.40,Default,Shizuku,0,0,0,,I see.
+Dialogue: 0,0:09:12.40,0:09:14.17,Default,Shizuku,0,0,0,,Takahara Pairi-kun.
+Dialogue: 0,0:09:15.26,0:09:17.38,Default,Hairi,0,0,0,,Wait, I said my name's Hairi.
+Dialogue: 0,0:09:17.38,0:09:18.71,Default,Shizuku,0,0,0,,I understand.
+Dialogue: 0,0:09:18.71,0:09:21.39,Default,Shizuku,0,0,0,,Pairi-kun is simply Pairi-kun.
+Dialogue: 0,0:09:21.39,0:09:23.57,Default,Shizuku,0,0,0,,Isn't that right, Pairi-kun?
+Dialogue: 0,0:09:25.19,0:09:27.57,Default,Shizuku,0,0,0,,I'm Mizuori Shizuku.
+Dialogue: 0,0:09:27.57,0:09:29.36,Default,Shizuku,0,0,0,,Call me Shizuku if you'd like.
+Dialogue: 0,0:09:29.36,0:09:31.36,Default,Shizuku,0,0,0,,Or Boobies-san, if you'd prefer.
+Dialogue: 0,0:09:33.13,0:09:34.18,Default,Hairi,0,0,0,,Shizuku it is.
+Dialogue: 0,0:09:34.18,0:09:36.92,Default,Shizuku,0,0,0,,Oh... That's a shame.
+Dialogue: 0,0:09:36.92,0:09:39.11,Default,Tsumugi,0,0,0,,Shizuku!
+Dialogue: 0,0:09:39.11,0:09:40.39,Default,Tsumugi,0,0,0,,Mugyu-gyu-gyu...
+Dialogue: 0,0:09:40.39,0:09:42.35,Default,Tsumugi,0,0,0,,G-Give me a hand!
+Dialogue: 0,0:09:43.12,0:09:43.69,Default,Tsumugi,0,0,0,,Mugyu?
+Dialogue: 0,0:09:43.69,0:09:45.00,Default,Hairi,0,0,0,,A-Are you all right?
+Dialogue: 0,0:09:45.00,0:09:47.04,Default,Tsumugi,0,0,0,,Yes, sorry.
+Dialogue: 0,0:09:47.04,0:09:48.83,Default,Tsumugi,0,0,0,,Oh, we met yesterday.
+Dialogue: 0,0:09:50.55,0:09:51.92,Default,Tsumugi,0,0,0,,You're...
+Dialogue: 0,0:09:51.92,0:09:53.64,Default,Tsumugi,0,0,0,,Who are you again?
+Dialogue: 0,0:09:55.22,0:09:57.63,Default,Shizuku,0,0,0,,Thanks for helping me out.
+Dialogue: 0,0:09:57.63,0:10:00.07,Default,Hairi,0,0,0,,No worries. I had the time.
+Dialogue: 0,0:10:00.07,0:10:03.89,Default,Tsumugi,0,0,0,,Thank you so much, um...
+Dialogue: 0,0:10:03.89,0:10:08.45,Default,Tsumugi,0,0,0,,Takahara Hairi-san!
+Dialogue: 0,0:10:08.45,0:10:10.83,Default,Hairi,0,0,0,,You forgot my name, didn't you?
+Dialogue: 0,0:10:10.83,0:10:11.40,Default,Tsumugi,0,0,0,,Yup.
+Dialogue: 0,0:10:11.40,0:10:14.40,Default,Tsumugi,0,0,0,,I remember it now, though. Takahara-san!
+Dialogue: 0,0:10:15.77,0:10:19.57,Default,Hairi,0,0,0,,Anyway, I'm surprised you two have\N managed so much by yourselves.
+Dialogue: 0,0:10:19.57,0:10:24.66,Default,Shizuku,0,0,0,,Tsumugi insisted on gathering trash \Nfrom the beach because it might be fun.
+Dialogue: 0,0:10:25.42,0:10:28.97,Default,Shizuku,0,0,0,,I mean, you have to support your \Nfriends in their endeavors, right?
+Dialogue: 0,0:10:28.97,0:10:30.17,Default,Hairi,0,0,0,,Friends, huh?
+Dialogue: 0,0:10:30.59,0:10:31.77,Default,Hairi,0,0,0,,Well?
+Dialogue: 0,0:10:31.77,0:10:32.82,Default,Hairi,0,0,0,,Was it fun?
+Dialogue: 0,0:10:32.82,0:10:34.54,Default,Tsumugi,0,0,0,,It wasn't any fun at all.
+Dialogue: 0,0:10:35.55,0:10:38.90,Default,Tsumugi,0,0,0,,Why did I even decide to do this?
+Dialogue: 0,0:10:38.90,0:10:40.47,Default,Tsumugi,0,0,0,,I'm filled with regret.
+Dialogue: 0,0:10:40.84,0:10:42.14,Default,Hairi,0,0,0,,Was it that bad?
+Dialogue: 0,0:10:42.14,0:10:44.72,Default,Tsumugi,0,0,0,,Well, I do have new friends now!
+Dialogue: 0,0:10:45.73,0:10:48.40,Default,Hairi,0,0,0,,First things first, \Ngotta sort through all this.
+Dialogue: 0,0:10:48.40,0:10:50.48,Default,Shizuku,0,0,0,,Hey, what about this one?
+Dialogue: 0,0:10:50.48,0:10:53.23,Default,Text,0,0,0,,{\fnArial Black\shad0\b1\fs20\frz316.3\c&HF2F3EB&\3c&H323131&\frx2\fry0\move(308.062,258.464,309.388,173.602,1,890)}Yumyum Flavor
+Dialogue: 0,0:10:51.12,0:10:53.23,Default,Hairi,0,0,0,,An empty Paringles can?
+Dialogue: 0,0:10:53.53,0:10:54.72,Default,Tsumugi,0,0,0,,Mugyu-gyu...
+Dialogue: 0,0:10:54.72,0:10:57.93,Default,Tsumugi,0,0,0,,The body is made of paper,\Nso it goes with the combustibles.
+Dialogue: 0,0:10:57.93,0:11:00.87,Default,Tsumugi,0,0,0,,But the bottom appears to be metal.
+Dialogue: 0,0:11:00.87,0:11:03.24,Default,Hairi,0,0,0,,Then we can't just pitch it.
+Dialogue: 0,0:11:03.24,0:11:04.36,Default,Shizuku,0,0,0,,I suppose not.
+Dialogue: 0,0:11:04.36,0:11:06.70,Default,Shizuku,0,0,0,,It'd be good if we could recycle it.
+Dialogue: 0,0:11:07.03,0:11:08.20,Default,Tsumugi,0,0,0,,Mugyu...
+Dialogue: 0,0:11:08.20,0:11:10.87,Default,Tsumugi,0,0,0,,Recycling, huh?
+Dialogue: 0,0:11:11.33,0:11:15.25,Default,Tsumugi,0,0,0,,Thank you for all your \Nhelp today, Takahara-san.
+Dialogue: 0,0:11:15.78,0:11:19.24,Default,Shizuku,0,0,0,,Now, as a token of our gratitude,
+Dialogue: 0,0:11:19.24,0:11:22.01,Default,Shizuku,0,0,0,,we'll show you around the \Nisland's tourist attractions.
+Dialogue: 0,0:11:22.01,0:11:23.43,Default,Shizuku,0,0,0,,Look over there.
+Dialogue: 0,0:11:23.71,0:11:25.61,Default,Shizuku,0,0,0,,The famed Boobie Boulders.
+Dialogue: 0,0:11:25.61,0:11:27.10,Default,Shizuku,0,0,0,,I came up with the name!
+Dialogue: 0,0:11:27.38,0:11:29.32,Default,Hairi,0,0,0,,That's an atrocious name.
+Dialogue: 0,0:11:29.32,0:11:31.17,Default,Tsumugi,0,0,0,,Shizuku, I have a question.
+Dialogue: 0,0:11:31.17,0:11:32.99,Default,Tsumugi,0,0,0,,I see three boulders.
+Dialogue: 0,0:11:32.99,0:11:35.36,Default,Tsumugi,0,0,0,,Don't people normally have two boobies?
+Dialogue: 0,0:11:35.36,0:11:36.69,Default,Shizuku,0,0,0,,Tsumugi!
+Dialogue: 0,0:11:36.69,0:11:38.86,Default,Shizuku,0,0,0,,Who says you can't have three?
+Dialogue: 0,0:11:38.86,0:11:41.32,Default,Tsumugi,0,0,0,,That would actually be even better!
+Dialogue: 0,0:11:42.85,0:11:44.68,Default,Hairi,0,0,0,,And this is another tourist attraction?
+Dialogue: 0,0:11:44.68,0:11:45.70,Default,Shizuku,0,0,0,,Yes.
+Dialogue: 0,0:11:45.70,0:11:47.62,Default,Tsumugi,0,0,0,,Someone powerful used to live here.
+Dialogue: 0,0:11:47.62,0:11:49.22,Default,Hairi,0,0,0,,Someone powerful?
+Dialogue: 0,0:11:49.22,0:11:50.32,Default,Tsumugi,0,0,0,,Yes.
+Dialogue: 0,0:11:50.32,0:11:53.55,Default,Tsumugi,0,0,0,,They were ruined a long time ago, though.
+Dialogue: 0,0:11:53.55,0:11:55.54,Default,Tsumugi,0,0,0,,No one lives there anymore.
+Dialogue: 0,0:12:09.15,0:12:10.52,Default,Shizuku,0,0,0,,What do you think?
+Dialogue: 0,0:12:10.52,0:12:12.27,Default,Hairi,0,0,0,,How am I supposed to answer that?
+Dialogue: 0,0:12:12.27,0:12:13.91,Default,Tsumugi,0,0,0,,You look fantastic, Shizuku.
+Dialogue: 0,0:12:13.91,0:12:15.90,Default,Tsumugi,0,0,0,,You're pure boobies!
+Dialogue: 0,0:12:15.90,0:12:16.89,Default,Shizuku,0,0,0,,My!
+Dialogue: 0,0:12:16.89,0:12:19.92,Default,Shizuku,0,0,0,,What a lovely compliment, Tsumugi!
+Dialogue: 0,0:12:20.94,0:12:22.90,Default,Shizuku,0,0,0,,All right, see you soon!
+Dialogue: 0,0:12:24.66,0:12:27.65,Default,Hairi,0,0,0,,I came along because you said there \Nwas something you wanted to do.
+Dialogue: 0,0:12:27.65,0:12:28.87,Default,Hairi,0,0,0,,You meant swimming, huh?
+Dialogue: 0,0:12:28.87,0:12:31.91,Default,Tsumugi,0,0,0,,I don't care as long as Shizuku's having fun.
+Dialogue: 0,0:12:32.32,0:12:34.50,Default,Hairi,0,0,0,,Are you going in in that outfit, Tsumugi?
+Dialogue: 0,0:12:34.50,0:12:35.67,Default,Tsumugi,0,0,0,,I suppose so.
+Dialogue: 0,0:12:35.67,0:12:37.87,Default,Tsumugi,0,0,0,,I didn't bring a swimming suit,
+Dialogue: 0,0:12:37.87,0:12:40.00,Default,Tsumugi,0,0,0,,so I think I'll just dip my feet in.
+Dialogue: 0,0:12:41.15,0:12:43.51,Default,Tsumugi,0,0,0,,Let's join her, Takahara-san!
+Dialogue: 0,0:12:47.53,0:12:48.56,Default,Hairi,0,0,0,,I...
+Dialogue: 0,0:12:49.24,0:12:50.11,Default,Hairi,0,0,0,,I'll pass.
+Dialogue: 0,0:12:50.11,0:12:50.98,Default,Tsumugi,0,0,0,,Mugyu?
+Dialogue: 0,0:12:50.98,0:12:53.77,Default,Tsumugi,0,0,0,,Do you not like getting in the water?
+Dialogue: 0,0:12:53.77,0:12:55.76,Default,Hairi,0,0,0,,Yeah, you could say that.
+Dialogue: 0,0:12:57.25,0:12:59.98,Default,Tsumugi,0,0,0,,Well, everyone's got their reasons.
+Dialogue: 0,0:13:00.70,0:13:02.02,Default,Hairi,0,0,0,,Yeah...
+Dialogue: 0,0:13:02.02,0:13:03.46,Default,Hairi,0,0,0,,I've got my reasons.
+Dialogue: 0,0:13:04.11,0:13:07.18,Default,Tsumugi,0,0,0,,Why don't you give it a try today, though?
+Dialogue: 0,0:13:07.86,0:13:12.09,Default,Tsumugi,0,0,0,,I think it'll nurture our friendship \Nif we take a dip together.
+Dialogue: 0,0:13:12.09,0:13:14.17,Default,Tsumugi,0,0,0,,Splashing each other and stuff.
+Dialogue: 0,0:13:14.17,0:13:16.71,Default,Tsumugi,0,0,0,,We'd be nurturing the crap out of our friendship!
+Dialogue: 0,0:13:16.71,0:13:19.62,Default,Tsumugi,0,0,0,,I bet it'll be fun!
+Dialogue: 0,0:13:24.67,0:13:29.22,Default,Tsumugi,0,0,0,,Let me show you what I'm made of!\NHere we go!
+Dialogue: 0,0:13:30.46,0:13:31.68,Default,Hairi,0,0,0,,Hey!
+Dialogue: 0,0:13:33.22,0:13:34.45,Default,Hairi,0,0,0,,F-Fine!
+Dialogue: 0,0:13:34.45,0:13:36.01,Default,Hairi,0,0,0,,I'll dip my feet in!
+Dialogue: 0,0:13:36.83,0:13:38.01,Default,Tsumugi,0,0,0,,Mugyu!
+Dialogue: 0,0:13:39.02,0:13:40.44,Default,Shizuku,0,0,0,,Tsumugi!
+Dialogue: 0,0:13:40.71,0:13:41.87,Default,Hairi,0,0,0,,Are you okay?
+Dialogue: 0,0:13:43.44,0:13:46.26,Default,Shizuku,0,0,0,,My... You're soaked.
+Dialogue: 0,0:13:46.26,0:13:49.52,Default,Tsumugi,0,0,0,,Oh, this is embarrassing.
+Dialogue: 0,0:13:51.26,0:13:52.60,Default,Tsumugi,0,0,0,,You're in the water.
+Dialogue: 0,0:13:56.10,0:13:58.90,Default,Tsumugi,0,0,0,,Takahara-san, you're in the water!
+Dialogue: 0,0:14:05.24,0:14:09.34,Default,Hairi,0,0,0,,I lost what I wanted to do this summer.
+Dialogue: 0,0:14:09.98,0:14:11.75,Default,Hairi,0,0,0,,So I've been thinking...
+Dialogue: 0,0:14:11.75,0:14:16.18,Default,Hairi,0,0,0,,Maybe I came here to find what I lost.
+Dialogue: 0,0:14:16.18,0:14:17.76,Default,Tsumugi,0,0,0,,What a coincidence.
+Dialogue: 0,0:14:17.76,0:14:20.10,Default,Tsumugi,0,0,0,,I've been looking for something too.
+Dialogue: 0,0:14:20.10,0:14:22.18,Default,Tsumugi,0,0,0,,For what I want to do.
+Dialogue: 0,0:14:22.18,0:14:25.26,Default,Tsumugi,0,0,0,,And for why I'm here, too.
+Dialogue: 0,0:14:25.26,0:14:26.69,Default,Hairi,0,0,0,,For why you're here?
+Dialogue: 0,0:14:27.33,0:14:30.34,Default,Tsumugi,0,0,0,,It's always felt like too much to me.
+Dialogue: 0,0:14:31.20,0:14:36.08,Default,Tsumugi,0,0,0,,But with the two of you here, \NI think I can find something!
+Dialogue: 0,0:14:36.67,0:14:37.73,Default,Hairi,0,0,0,,Okay.
+Dialogue: 0,0:14:37.73,0:14:41.97,Default,Hairi,0,0,0,,I don't know if we'll actually find it, \Nbut wanna search together?
+Dialogue: 0,0:14:41.97,0:14:43.38,Default,Hairi,0,0,0,,Let's find what you want to do.
+Dialogue: 0,0:14:43.38,0:14:44.29,Default,Tsumugi,0,0,0,,Mugyu!
+Dialogue: 0,0:14:44.29,0:14:46.44,Default,Tsumugi,0,0,0,,Thank you very much!
+Dialogue: 0,0:14:46.44,0:14:50.04,Default,Tsumugi,0,0,0,,So, what is it that I want to do?
+Dialogue: 0,0:14:50.04,0:14:52.26,Default,Hairi,0,0,0,,Straight to brass tacks, huh?
+Dialogue: 0,0:14:52.26,0:14:57.16,Default,Shizuku,0,0,0,,Let's do anything Tsumugi's \Neven slightly interested in.
+Dialogue: 0,0:14:57.16,0:14:58.27,Default,Shizuku,0,0,0,,Any ideas?
+Dialogue: 0,0:14:58.81,0:15:00.45,Default,Tsumugi,0,0,0,,Let me think...
+Dialogue: 0,0:15:00.45,0:15:02.24,Default,Tsumugi,0,0,0,,Oh, I have an idea!
+Dialogue: 0,0:15:02.24,0:15:03.65,Default,Hairi,0,0,0,,That was surprisingly quick.
+Dialogue: 0,0:15:04.70,0:15:08.58,Default,Tsumugi,0,0,0,,I want to hang out with the \Ntwo of you like this forever!
+Dialogue: 0,0:15:08.58,0:15:15.62,Default,Tsumugi,0,0,0,,We can eat together, stargaze \Nat night, and talk lots and lots!
+Dialogue: 0,0:15:15.62,0:15:18.46,Default,Shizuku,0,0,0,,You mean like a sleepover, then?
+Dialogue: 0,0:15:18.46,0:15:20.41,Default,Tsumugi,0,0,0,,Hey, that's my Shizuku!
+Dialogue: 0,0:15:20.41,0:15:22.12,Default,Tsumugi,0,0,0,,That's it exactly!
+Dialogue: 0,0:15:22.12,0:15:23.50,Main - Italics,Hairi,0,0,0,,A sleepover?
+Dialogue: 0,0:15:23.80,0:15:25.24,Default,Hairi,0,0,0,,Are you sure, though?
+Dialogue: 0,0:15:25.24,0:15:27.46,Default,Hairi,0,0,0,,You're cool having me over when we just met?
+Dialogue: 0,0:15:27.46,0:15:29.21,Default,Shizuku,0,0,0,,I don't mind.
+Dialogue: 0,0:15:29.21,0:15:30.74,Default,Tsumugi,0,0,0,,I don't either.
+Dialogue: 0,0:15:30.74,0:15:33.28,Default,Tsumugi,0,0,0,,I like you, Takahara-san.
+Dialogue: 0,0:15:33.99,0:15:34.84,Default,Hairi,0,0,0,,You do?
+Dialogue: 0,0:15:34.84,0:15:37.35,Default,Tsumugi,0,0,0,,Yeah! It's not even hard to.
+Dialogue: 0,0:15:38.40,0:15:41.02,Default,Hairi,0,0,0,,It's not, huh?
+Dialogue: 0,0:15:42.92,0:15:45.60,Default,Tsumugi,0,0,0,,Welcome, Takahara-san!
+Dialogue: 0,0:15:46.23,0:15:47.19,Default,Hairi,0,0,0,,What's up with that?
+Dialogue: 0,0:15:49.14,0:15:50.19,Default,Tsumugi,0,0,0,,I'm a cat.
+Dialogue: 0,0:15:50.57,0:15:51.70,Default,Hairi,0,0,0,,Yeah, you sure are.
+Dialogue: 0,0:15:51.70,0:15:54.11,Default,Tsumugi,0,0,0,,We also have a cow.
+Dialogue: 0,0:15:54.11,0:15:55.78,Default,Shizuku,0,0,0,,Moo.
+Dialogue: 0,0:15:58.09,0:16:00.79,Default,Hairi,0,0,0,,So you really do live \Nat the lighthouse, Tsumugi?
+Dialogue: 0,0:16:01.26,0:16:03.79,Default,Hairi,0,0,0,,It's pretty cute in here, too.
+Dialogue: 0,0:16:03.79,0:16:05.25,Default,Tsumugi,0,0,0,,Is it?
+Dialogue: 0,0:16:05.25,0:16:07.03,Default,Tsumugi,0,0,0,,You're making me blush.
+Dialogue: 0,0:16:07.03,0:16:09.22,Default,Shizuku,0,0,0,,Why don't we have dinner?
+Dialogue: 0,0:16:09.22,0:16:10.17,Default,Tsumugi,0,0,0,,Okay!
+Dialogue: 0,0:16:10.17,0:16:11.46,Default,Tsumugi,0,0,0,,Mugyu!
+Dialogue: 0,0:16:11.77,0:16:16.88,Default,Tsumugi,0,0,0,,I'm used to being by myself, \Nso I only made one serving.
+Dialogue: 0,0:16:16.88,0:16:19.96,Default,Tsumugi,0,0,0,,We're all going to starve to death!
+Dialogue: 0,0:16:19.96,0:16:21.24,Default,Shizuku,0,0,0,,Oh, relax.
+Dialogue: 0,0:16:21.24,0:16:23.23,Default,Shizuku,0,0,0,,Not eating for a day won't kill us.
+Dialogue: 0,0:16:25.08,0:16:26.65,Default,Shizuku,0,0,0,,Maybe it will...
+Dialogue: 0,0:16:27.54,0:16:29.72,Default,Hairi,0,0,0,,I brought some snacks.
+Dialogue: 0,0:16:30.31,0:16:31.50,Default,Shizuku,0,0,0,,Paringles!
+Dialogue: 0,0:16:31.50,0:16:32.26,Default,Tsumugi,0,0,0,,Mugyu!
+Dialogue: 0,0:16:32.26,0:16:34.40,Default,Tsumugi,0,0,0,,Nice going, Takahara-san!
+Dialogue: 0,0:16:35.62,0:16:36.91,Default,Tsumugi,0,0,0,,Mugyu...
+Dialogue: 0,0:16:36.91,0:16:39.03,Default,Tsumugi,0,0,0,,Mugyu-gyu...
+Dialogue: 0,0:16:39.03,0:16:41.92,Default,Tsumugi,0,0,0,,Oh, I have an idea.
+Dialogue: 0,0:16:41.92,0:16:42.75,Default,Tsumugi,0,0,0,,Takahara-san.
+Dialogue: 0,0:16:43.17,0:16:43.89,Default,Hairi,0,0,0,,Yes?
+Dialogue: 0,0:16:47.21,0:16:49.68,Default,Tsumugi,0,0,0,,Pweeve feev me!
+Dialogue: 0,0:16:49.68,0:16:50.97,Default,Shizuku,0,0,0,,Me too!
+Dialogue: 0,0:16:50.97,0:16:52.34,Default,Shizuku,0,0,0,,Ah!
+Dialogue: 0,0:16:52.34,0:16:55.09,Default,Hairi,0,0,0,,I-I guess I'm doing this, huh?
+Dialogue: 0,0:16:55.22,0:16:57.68,Default,Shizuku,0,0,0,,Yum!
+Dialogue: 0,0:16:57.80,0:17:00.60,Default,Tsumugi,0,0,0,,Nothing beats Paringles!
+Dialogue: 0,0:17:03.77,0:17:05.63,Default,Hairi,0,0,0,,Don't I get any?
+Dialogue: 0,0:17:07.50,0:17:10.57,Default,Hairi,0,0,0,,I had no idea there were so many stars.
+Dialogue: 0,0:17:10.89,0:17:13.53,Default,Shizuku,0,0,0,,This is one of the nice \Nthings about the island.
+Dialogue: 0,0:17:13.53,0:17:15.74,Default,Tsumugi,0,0,0,,I can almost grab them.
+Dialogue: 0,0:17:15.74,0:17:17.15,Default,Tsumugi,0,0,0,,Mugyu...
+Dialogue: 0,0:17:18.07,0:17:20.12,Default,Tsumugi,0,0,0,,Not today, I guess.
+Dialogue: 0,0:17:25.75,0:17:29.72,Default,Hairi,0,0,0,,You were singing that the \Nfirst time we met too.
+Dialogue: 0,0:17:29.72,0:17:34.36,Default,Shizuku,0,0,0,,She sings it when she's happy and having fun.
+Dialogue: 0,0:17:35.30,0:17:36.51,Default,Hairi,0,0,0,,What's it called?
+Dialogue: 0,0:17:36.51,0:17:37.56,Default,Tsumugi,0,0,0,,Mugyu?
+Dialogue: 0,0:17:38.94,0:17:40.71,Default,Tsumugi,0,0,0,,I don't know.
+Dialogue: 0,0:17:40.71,0:17:42.60,Default,Hairi,0,0,0,,You don't know the name\Nof the song you sing?
+Dialogue: 0,0:17:42.60,0:17:43.24,Default,Tsumugi,0,0,0,,That's right.
+Dialogue: 0,0:17:43.24,0:17:45.64,Default,Tsumugi,0,0,0,,I don't know what it's called or the lyrics.
+Dialogue: 0,0:17:46.20,0:17:51.07,Default,Tsumugi,0,0,0,,But I've loved it forever.
+Dialogue: 0,0:17:51.76,0:17:56.92,Default,Tsumugi,0,0,0,,Singing this song makes me \Nfeel like I can find myself.
+Dialogue: 0,0:17:56.92,0:17:59.74,Default,Tsumugi,0,0,0,,Like I'll find my purpose.
+Dialogue: 0,0:18:00.30,0:18:02.49,Default,Tsumugi,0,0,0,,It gives me hope.
+Dialogue: 0,0:18:02.49,0:18:06.43,Default,Shizuku,0,0,0,,Why don't we investigate the song?
+Dialogue: 0,0:18:06.43,0:18:08.46,Default,Tsumugi,0,0,0,,Mugyu? The song?
+Dialogue: 0,0:18:08.46,0:18:09.83,Default,Hairi,0,0,0,,Sounds good.
+Dialogue: 0,0:18:09.83,0:18:12.50,Default,Hairi,0,0,0,,We'll run the song by the islanders.
+Dialogue: 0,0:18:12.85,0:18:14.96,Default,Hairi,0,0,0,,Maybe that'll turn up something.
+Dialogue: 0,0:18:14.96,0:18:17.84,Default,Tsumugi,0,0,0,,You want the islanders to hear my song?
+Dialogue: 0,0:18:17.84,0:18:20.80,Default,Tsumugi,0,0,0,,You mean you're going \Nto set up a concert for me?
+Dialogue: 0,0:18:21.89,0:18:23.70,Default,Hairi,0,0,0,,That's a tall order.
+Dialogue: 0,0:18:23.70,0:18:27.06,Default,Tsumugi,0,0,0,,I'm glad I got to spend time with you.
+Dialogue: 0,0:18:27.06,0:18:31.56,Default,Tsumugi,0,0,0,,I'm so excited, I don't want to go to sleep.
+Dialogue: 0,0:18:32.71,0:18:37.70,Default,Shizuku,0,0,0,,Then maybe this sleepover is the \Nthing you've been wanting to do.
+Dialogue: 0,0:18:37.70,0:18:38.44,Default,Tsumugi,0,0,0,,Huh?
+Dialogue: 0,0:18:42.68,0:18:45.45,Default,Shizuku,0,0,0,,I don't think that's really quite it.
+Dialogue: 0,0:18:46.16,0:18:48.37,Default,Shizuku,0,0,0,,But I do want to do this again!
+Dialogue: 0,0:18:48.37,0:18:52.24,Default,Shizuku,0,0,0,,Oh, is it all right if I invite \Nsomeone else next time?
+Dialogue: 0,0:18:52.24,0:18:54.29,Default,Shizuku,0,0,0,,A dear friend of mine.
+Dialogue: 0,0:18:54.29,0:18:56.14,Default,Tsumugi,0,0,0,,Of course.
+Dialogue: 0,0:18:56.14,0:18:57.26,Default,Hairi,0,0,0,,What're they like?
+Dialogue: 0,0:18:57.26,0:19:01.80,Default,Tsumugi,0,0,0,,They're not good at making friends.
+Dialogue: 0,0:19:02.23,0:19:05.66,Default,Tsumugi,0,0,0,,But they're very kind...
+Dialogue: 0,0:19:06.81,0:19:08.02,Default,Shizuku,0,0,0,,Goodness me.
+Dialogue: 0,0:19:08.02,0:19:09.47,Default,Shizuku,0,0,0,,She fell asleep.
+Dialogue: 0,0:19:09.47,0:19:11.69,Default,Hairi,0,0,0,,Right after she said she didn't want to.
+Dialogue: 0,0:19:12.39,0:19:14.19,Default,Hairi,0,0,0,,Oh well.
+Dialogue: 0,0:19:15.01,0:19:18.68,Default,Hairi,0,0,0,,We've still got plenty of summer left.
+Dialogue: 0,0:19:21.57,0:19:23.07,Default,Tsumugi,0,0,0,,You're going home?
+Dialogue: 0,0:19:23.42,0:19:26.18,Default,Hairi,0,0,0,,I gotta head back sometime.
+Dialogue: 0,0:19:26.18,0:19:28.45,Default,Shizuku,0,0,0,,His family's going to be worried.
+Dialogue: 0,0:19:28.90,0:19:29.92,Default,Tsumugi,0,0,0,,But...
+Dialogue: 0,0:19:29.92,0:19:31.93,Default,Shizuku,0,0,0,,Don't be so down.
+Dialogue: 0,0:19:31.93,0:19:36.44,Default,Shizuku,0,0,0,,We should get plenty of rest today so we \Ncan have lots of fun starting tomorrow.
+Dialogue: 0,0:19:36.44,0:19:37.74,Default,Tsumugi,0,0,0,,You're right.
+Dialogue: 0,0:19:37.74,0:19:39.75,Default,Tsumugi,0,0,0,,See you tomorrow.
+Dialogue: 0,0:19:43.50,0:19:45.09,Main - Italics,Hairi,0,0,0,,"See you tomorrow," huh?
+Dialogue: 0,0:19:46.02,0:19:52.48,Main - Italics,Hairi,0,0,0,,I wonder if Tsumugi and Shizuku and I \Nare going to be doing this all summer.
+Dialogue: 0,0:19:59.66,0:20:01.55,Default,Umi,0,0,0,,You're finally up!
+Dialogue: 0,0:20:01.55,0:20:03.36,Default,Umi,0,0,0,,The sun's already setting!
+Dialogue: 0,0:20:04.11,0:20:05.07,Default,Hairi,0,0,0,,Seriously?
+Dialogue: 0,0:20:05.07,0:20:07.83,Default,Umi,0,0,0,,Leave your laundry out, please.
+Dialogue: 0,0:20:10.86,0:20:11.83,Default,Hairi,0,0,0,,Huh?
+Dialogue: 0,0:20:12.77,0:20:16.38,Default,Hairi,0,0,0,,Sorry, Tsumugi. I forgot...
+Dialogue: 0,0:20:18.82,0:20:19.82,Default,Hairi,0,0,0,,Tsumugi?
+Dialogue: 0,0:20:19.82,0:20:20.77,Default,Tsumugi,0,0,0,,Mugyu?
+Dialogue: 0,0:20:21.28,0:20:22.90,Default,Tsumugi,0,0,0,,Takahara-san.
+Dialogue: 0,0:20:22.90,0:20:23.76,Default,Tsumugi,0,0,0,,Why are you here?
+Dialogue: 0,0:20:23.76,0:20:25.19,Default,Hairi,0,0,0,,More than that...
+Dialogue: 0,0:20:25.19,0:20:26.26,Default,Hairi,0,0,0,,Is something wrong?
+Dialogue: 0,0:20:26.26,0:20:29.75,Default,Tsumugi,0,0,0,,N-No, it's nothing.
+Dialogue: 0,0:20:29.75,0:20:30.27,Default,Hairi,0,0,0,,But...
+Dialogue: 0,0:20:31.33,0:20:33.56,Default,Tsumugi,0,0,0,,Hey, Takahara-san...
+Dialogue: 0,0:20:33.56,0:20:35.86,Default,Tsumugi,0,0,0,,Would you like to stay the night again?
+Dialogue: 0,0:20:38.27,0:20:39.85,Default,Hairi,0,0,0,,I mean...
+Dialogue: 0,0:20:39.85,0:20:43.88,Default,Hairi,0,0,0,,It'd be one thing if Shizuku were here,\Nbut I dunno about just the two of us.
+Dialogue: 0,0:20:43.88,0:20:45.22,Default,Tsumugi,0,0,0,,So you can't?
+Dialogue: 0,0:20:45.22,0:20:47.90,Default,Hairi,0,0,0,,Hey, the summer's still young.
+Dialogue: 0,0:20:47.90,0:20:49.64,Default,Hairi,0,0,0,,We'll have plenty of chances.
+Dialogue: 0,0:20:50.26,0:20:51.49,Default,Tsumugi,0,0,0,,I won't.
+Dialogue: 0,0:20:52.58,0:20:55.42,Default,Tsumugi,0,0,0,,I don't have much time.
+Dialogue: 0,0:20:55.84,0:21:00.67,Default,Tsumugi,0,0,0,,I have to go home soon.
+Dialogue: 0,0:21:02.60,0:21:03.55,Default,Hairi,0,0,0,,Huh?
+Dialogue: 0,0:21:03.55,0:21:05.07,Default,Hairi,0,0,0,,What did you just say?
+Dialogue: 0,0:21:05.07,0:21:08.55,Default,Hairi,0,0,0,,B-But we can meet up again, right?
+Dialogue: 0,0:21:08.55,0:21:10.96,Default,Hairi,0,0,0,,We can call or write letters \Nor whatever else...
+Dialogue: 0,0:21:10.96,0:21:12.02,Default,Tsumugi,0,0,0,,We can't.
+Dialogue: 0,0:21:14.01,0:21:16.52,Default,Tsumugi,0,0,0,,It's very far away.
+Dialogue: 0,0:21:17.29,0:21:20.27,Default,Tsumugi,0,0,0,,Once I leave, we'll probably never meet again.
+Dialogue: 0,0:21:20.53,0:21:23.32,Default,Hairi,0,0,0,,You mean when the summer's over...
+Dialogue: 0,0:21:23.32,0:21:25.32,Default,Hairi,0,0,0,,Is that it?
+Dialogue: 0,0:21:25.32,0:21:27.66,Default,Tsumugi,0,0,0,,I've been meaning to tell you.
+Dialogue: 0,0:21:28.18,0:21:33.04,Default,Tsumugi,0,0,0,,I thought you might both stop \Nplaying with me if I did.
+Dialogue: 0,0:21:34.03,0:21:42.15,Default,Tsumugi,0,0,0,,But before I leave, I want to play\N with you and Shizuku more.
+Dialogue: 0,0:21:42.65,0:21:43.42,Default,Tsumugi,0,0,0,,So...
+Dialogue: 0,0:21:44.41,0:21:45.53,Default,Tsumugi,0,0,0,,So...
+Dialogue: 0,0:21:47.40,0:21:48.32,Default,Hairi,0,0,0,,Sorry.
+Dialogue: 0,0:21:48.83,0:21:50.51,Default,Hairi,0,0,0,,I can't stay tonight.
+Dialogue: 0,0:21:51.38,0:21:52.24,Default,Hairi,0,0,0,,But...
+Dialogue: 0,0:21:54.14,0:21:59.18,Default,Hairi,0,0,0,,I'll spend the rest of the time I have on you.
+Dialogue: 0,0:22:00.81,0:22:02.93,Default,Hairi,0,0,0,,The rest of my summer break...
+Dialogue: 0,0:22:02.93,0:22:05.28,Default,Hairi,0,0,0,,It's all yours, Tsumugi.
+Dialogue: 0,0:22:07.14,0:22:08.49,Default,Tsumugi,0,0,0,,Hairi-san...
+

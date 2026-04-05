@@ -1,0 +1,888 @@
+[
+  {
+    "_index": "packets-2025-03-05",
+    "_type": "doc",
+    "_score": null,
+    "_source": {
+      "layers": {
+        "frame": {
+          "frame.encap_type": "129",
+          "frame.time": "Mar  5, 2025 22:31:35.796143000 EST",
+          "frame.time_utc": "Mar  6, 2025 03:31:35.796143000 UTC",
+          "frame.time_epoch": "1741231895.796143000",
+          "frame.offset_shift": "0.000000000",
+          "frame.time_delta": "0.000000000",
+          "frame.time_delta_displayed": "0.000000000",
+          "frame.time_relative": "0.000000000",
+          "frame.number": "1",
+          "frame.len": "52",
+          "frame.cap_len": "52",
+          "frame.marked": "0",
+          "frame.ignored": "0",
+          "frame.protocols": "ip:tcp",
+          "frame.coloring_rule.name": "HTTP",
+          "frame.coloring_rule.string": "http || tcp.port == 80 || http2"
+        },
+        "ip": {
+          "ip.version": "4",
+          "ip.hdr_len": "20",
+          "ip.dsfield": "0x00",
+          "ip.dsfield_tree": {
+            "ip.dsfield.dscp": "0",
+            "ip.dsfield.ecn": "0"
+          },
+          "ip.len": "52",
+          "ip.id": "0x0001",
+          "ip.flags": "0x00",
+          "ip.flags_tree": {
+            "ip.flags.rb": "0",
+            "ip.flags.df": "0",
+            "ip.flags.mf": "0"
+          },
+          "ip.frag_offset": "0",
+          "ip.ttl": "64",
+          "ip.proto": "6",
+          "ip.checksum": "0xf86e",
+          "ip.checksum.status": "2",
+          "ip.src": "192.168.0.2",
+          "ip.addr": "192.168.0.2",
+          "ip.src_host": "192.168.0.2",
+          "ip.host": "192.168.0.2",
+          "ip.dst": "192.168.1.2",
+          "ip.addr": "192.168.1.2",
+          "ip.dst_host": "192.168.1.2",
+          "ip.host": "192.168.1.2"
+        },
+        "tcp": {
+          "tcp.srcport": "20",
+          "tcp.dstport": "80",
+          "tcp.port": "20",
+          "tcp.port": "80",
+          "tcp.stream": "0",
+          "tcp.completeness": "9",
+          "tcp.completeness_tree": {
+            "tcp.completeness.rst": "0",
+            "tcp.completeness.fin": "0",
+            "tcp.completeness.data": "1",
+            "tcp.completeness.ack": "0",
+            "tcp.completeness.syn-ack": "0",
+            "tcp.completeness.syn": "1",
+            "tcp.completeness.str": "··D··S"
+          },
+          "tcp.len": "12",
+          "tcp.seq": "0",
+          "tcp.seq_raw": "0",
+          "tcp.nxtseq": "13",
+          "tcp.ack": "0",
+          "tcp.ack_raw": "0",
+          "tcp.hdr_len": "20",
+          "tcp.flags": "0x0002",
+          "tcp.flags_tree": {
+            "tcp.flags.res": "0",
+            "tcp.flags.ae": "0",
+            "tcp.flags.cwr": "0",
+            "tcp.flags.ece": "0",
+            "tcp.flags.urg": "0",
+            "tcp.flags.ack": "0",
+            "tcp.flags.push": "0",
+            "tcp.flags.reset": "0",
+            "tcp.flags.syn": "1",
+            "tcp.flags.syn_tree": {
+              "_ws.expert": {
+                "tcp.connection.syn": "",
+                "_ws.expert.message": "Connection establish request (SYN): server port 80",
+                "_ws.expert.severity": "2097152",
+                "_ws.expert.group": "33554432"
+              }
+            },
+            "tcp.flags.fin": "0",
+            "tcp.flags.str": "··········S·"
+          },
+          "tcp.window_size_value": "8192",
+          "tcp.window_size": "8192",
+          "tcp.checksum": "0x055b",
+          "tcp.checksum.status": "2",
+          "tcp.urgent_pointer": "0",
+          "Timestamps": {
+            "tcp.time_relative": "0.000000000",
+            "tcp.time_delta": "0.000000000"
+          },
+          "tcp.analysis": {
+            "tcp.analysis.bytes_in_flight": "12",
+            "tcp.analysis.push_bytes_sent": "12"
+          },
+          "tcp.payload": "65:7a:46:30:58:33:63:30:63:77:3d:3d",
+          "tcp.segment_data": "65:7a:46:30:58:33:63:30:63:77:3d:3d"
+        }
+      }
+    }
+  },
+  {
+    "_index": "packets-2025-03-05",
+    "_type": "doc",
+    "_score": null,
+    "_source": {
+      "layers": {
+        "frame": {
+          "frame.encap_type": "129",
+          "frame.time": "Mar  5, 2025 22:31:35.795918000 EST",
+          "frame.time_utc": "Mar  6, 2025 03:31:35.795918000 UTC",
+          "frame.time_epoch": "1741231895.795918000",
+          "frame.offset_shift": "0.000000000",
+          "frame.time_delta": "-0.000225000",
+          "frame.time_delta_displayed": "-0.000225000",
+          "frame.time_relative": "-0.000225000",
+          "frame.number": "2",
+          "frame.len": "52",
+          "frame.cap_len": "52",
+          "frame.marked": "0",
+          "frame.ignored": "0",
+          "frame.protocols": "ip:tcp",
+          "frame.coloring_rule.name": "Bad TCP",
+          "frame.coloring_rule.string": "tcp.analysis.flags && !tcp.analysis.window_update && !tcp.analysis.keep_alive && !tcp.analysis.keep_alive_ack"
+        },
+        "ip": {
+          "ip.version": "4",
+          "ip.hdr_len": "20",
+          "ip.dsfield": "0x00",
+          "ip.dsfield_tree": {
+            "ip.dsfield.dscp": "0",
+            "ip.dsfield.ecn": "0"
+          },
+          "ip.len": "52",
+          "ip.id": "0x0001",
+          "ip.flags": "0x00",
+          "ip.flags_tree": {
+            "ip.flags.rb": "0",
+            "ip.flags.df": "0",
+            "ip.flags.mf": "0"
+          },
+          "ip.frag_offset": "0",
+          "ip.ttl": "64",
+          "ip.proto": "6",
+          "ip.checksum": "0xf86e",
+          "ip.checksum.status": "2",
+          "ip.src": "192.168.0.2",
+          "ip.addr": "192.168.0.2",
+          "ip.src_host": "192.168.0.2",
+          "ip.host": "192.168.0.2",
+          "ip.dst": "192.168.1.2",
+          "ip.addr": "192.168.1.2",
+          "ip.dst_host": "192.168.1.2",
+          "ip.host": "192.168.1.2"
+        },
+        "tcp": {
+          "tcp.srcport": "20",
+          "tcp.dstport": "80",
+          "tcp.port": "20",
+          "tcp.port": "80",
+          "tcp.stream": "0",
+          "tcp.completeness": "9",
+          "tcp.completeness_tree": {
+            "tcp.completeness.rst": "0",
+            "tcp.completeness.fin": "0",
+            "tcp.completeness.data": "1",
+            "tcp.completeness.ack": "0",
+            "tcp.completeness.syn-ack": "0",
+            "tcp.completeness.syn": "1",
+            "tcp.completeness.str": "··D··S"
+          },
+          "tcp.len": "12",
+          "tcp.seq": "0",
+          "tcp.seq_raw": "0",
+          "tcp.nxtseq": "13",
+          "tcp.ack": "0",
+          "tcp.ack_raw": "0",
+          "tcp.hdr_len": "20",
+          "tcp.flags": "0x0002",
+          "tcp.flags_tree": {
+            "tcp.flags.res": "0",
+            "tcp.flags.ae": "0",
+            "tcp.flags.cwr": "0",
+            "tcp.flags.ece": "0",
+            "tcp.flags.urg": "0",
+            "tcp.flags.ack": "0",
+            "tcp.flags.push": "0",
+            "tcp.flags.reset": "0",
+            "tcp.flags.syn": "1",
+            "tcp.flags.syn_tree": {
+              "_ws.expert": {
+                "tcp.connection.syn": "",
+                "_ws.expert.message": "Connection establish request (SYN): server port 80",
+                "_ws.expert.severity": "2097152",
+                "_ws.expert.group": "33554432"
+              }
+            },
+            "tcp.flags.fin": "0",
+            "tcp.flags.str": "··········S·"
+          },
+          "tcp.window_size_value": "8192",
+          "tcp.window_size": "8192",
+          "tcp.checksum": "0xfd41",
+          "tcp.checksum.status": "2",
+          "tcp.urgent_pointer": "0",
+          "Timestamps": {
+            "tcp.time_relative": "-0.000225000",
+            "tcp.time_delta": "-0.000225000"
+          },
+          "tcp.analysis": {
+            "tcp.analysis.bytes_in_flight": "12",
+            "tcp.analysis.push_bytes_sent": "24",
+            "tcp.analysis.flags": {
+              "_ws.expert": {
+                "tcp.analysis.retransmission": "",
+                "_ws.expert.message": "This frame is a (suspected) retransmission",
+                "_ws.expert.severity": "4194304",
+                "_ws.expert.group": "33554432"
+              },
+              "tcp.analysis.rto": "-0.000225000",
+              "tcp.analysis.rto_frame": "1"
+            }
+          },
+          "tcp.payload": "63:47:6c:6a:62:30:4e:55:52:67:3d:3d",
+          "tcp.segment_data": "63:47:6c:6a:62:30:4e:55:52:67:3d:3d"
+        }
+      }
+    }
+  },
+  {
+    "_index": "packets-2025-03-05",
+    "_type": "doc",
+    "_score": null,
+    "_source": {
+      "layers": {
+        "frame": {
+          "frame.encap_type": "129",
+          "frame.time": "Mar  5, 2025 22:31:35.796375000 EST",
+          "frame.time_utc": "Mar  6, 2025 03:31:35.796375000 UTC",
+          "frame.time_epoch": "1741231895.796375000",
+          "frame.offset_shift": "0.000000000",
+          "frame.time_delta": "0.000457000",
+          "frame.time_delta_displayed": "0.000457000",
+          "frame.time_relative": "0.000232000",
+          "frame.number": "3",
+          "frame.len": "52",
+          "frame.cap_len": "52",
+          "frame.marked": "0",
+          "frame.ignored": "0",
+          "frame.protocols": "ip:tcp",
+          "frame.coloring_rule.name": "Bad TCP",
+          "frame.coloring_rule.string": "tcp.analysis.flags && !tcp.analysis.window_update && !tcp.analysis.keep_alive && !tcp.analysis.keep_alive_ack"
+        },
+        "ip": {
+          "ip.version": "4",
+          "ip.hdr_len": "20",
+          "ip.dsfield": "0x00",
+          "ip.dsfield_tree": {
+            "ip.dsfield.dscp": "0",
+            "ip.dsfield.ecn": "0"
+          },
+          "ip.len": "52",
+          "ip.id": "0x0001",
+          "ip.flags": "0x00",
+          "ip.flags_tree": {
+            "ip.flags.rb": "0",
+            "ip.flags.df": "0",
+            "ip.flags.mf": "0"
+          },
+          "ip.frag_offset": "0",
+          "ip.ttl": "64",
+          "ip.proto": "6",
+          "ip.checksum": "0xf86e",
+          "ip.checksum.status": "2",
+          "ip.src": "192.168.0.2",
+          "ip.addr": "192.168.0.2",
+          "ip.src_host": "192.168.0.2",
+          "ip.host": "192.168.0.2",
+          "ip.dst": "192.168.1.2",
+          "ip.addr": "192.168.1.2",
+          "ip.dst_host": "192.168.1.2",
+          "ip.host": "192.168.1.2"
+        },
+        "tcp": {
+          "tcp.srcport": "20",
+          "tcp.dstport": "80",
+          "tcp.port": "20",
+          "tcp.port": "80",
+          "tcp.stream": "0",
+          "tcp.completeness": "9",
+          "tcp.completeness_tree": {
+            "tcp.completeness.rst": "0",
+            "tcp.completeness.fin": "0",
+            "tcp.completeness.data": "1",
+            "tcp.completeness.ack": "0",
+            "tcp.completeness.syn-ack": "0",
+            "tcp.completeness.syn": "1",
+            "tcp.completeness.str": "··D··S"
+          },
+          "tcp.len": "12",
+          "tcp.seq": "0",
+          "tcp.seq_raw": "0",
+          "tcp.nxtseq": "13",
+          "tcp.ack": "0",
+          "tcp.ack_raw": "0",
+          "tcp.hdr_len": "20",
+          "tcp.flags": "0x0002",
+          "tcp.flags_tree": {
+            "tcp.flags.res": "0",
+            "tcp.flags.ae": "0",
+            "tcp.flags.cwr": "0",
+            "tcp.flags.ece": "0",
+            "tcp.flags.urg": "0",
+            "tcp.flags.ack": "0",
+            "tcp.flags.push": "0",
+            "tcp.flags.reset": "0",
+            "tcp.flags.syn": "1",
+            "tcp.flags.syn_tree": {
+              "_ws.expert": {
+                "tcp.connection.syn": "",
+                "_ws.expert.message": "Connection establish request (SYN): server port 80",
+                "_ws.expert.severity": "2097152",
+                "_ws.expert.group": "33554432"
+              }
+            },
+            "tcp.flags.fin": "0",
+            "tcp.flags.str": "··········S·"
+          },
+          "tcp.window_size_value": "8192",
+          "tcp.window_size": "8192",
+          "tcp.checksum": "0xeb52",
+          "tcp.checksum.status": "2",
+          "tcp.urgent_pointer": "0",
+          "Timestamps": {
+            "tcp.time_relative": "0.000232000",
+            "tcp.time_delta": "0.000457000"
+          },
+          "tcp.analysis": {
+            "tcp.analysis.bytes_in_flight": "12",
+            "tcp.analysis.push_bytes_sent": "36",
+            "tcp.analysis.flags": {
+              "_ws.expert": {
+                "tcp.analysis.retransmission": "",
+                "_ws.expert.message": "This frame is a (suspected) retransmission",
+                "_ws.expert.severity": "4194304",
+                "_ws.expert.group": "33554432"
+              },
+              "tcp.analysis.rto": "0.000232000",
+              "tcp.analysis.rto_frame": "1"
+            }
+          },
+          "tcp.payload": "62:6e:52:66:64:47:67:30:64:41:3d:3d",
+          "tcp.segment_data": "62:6e:52:66:64:47:67:30:64:41:3d:3d"
+        }
+      }
+    }
+  },
+  {
+    "_index": "packets-2025-03-05",
+    "_type": "doc",
+    "_score": null,
+    "_source": {
+      "layers": {
+        "frame": {
+          "frame.encap_type": "129",
+          "frame.time": "Mar  5, 2025 22:31:35.796941000 EST",
+          "frame.time_utc": "Mar  6, 2025 03:31:35.796941000 UTC",
+          "frame.time_epoch": "1741231895.796941000",
+          "frame.offset_shift": "0.000000000",
+          "frame.time_delta": "0.002933000",
+          "frame.time_delta_displayed": "0.000566000",
+          "frame.time_relative": "0.000798000",
+          "frame.number": "7",
+          "frame.len": "52",
+          "frame.cap_len": "52",
+          "frame.marked": "0",
+          "frame.ignored": "0",
+          "frame.protocols": "ip:tcp",
+          "frame.coloring_rule.name": "Bad TCP",
+          "frame.coloring_rule.string": "tcp.analysis.flags && !tcp.analysis.window_update && !tcp.analysis.keep_alive && !tcp.analysis.keep_alive_ack"
+        },
+        "ip": {
+          "ip.version": "4",
+          "ip.hdr_len": "20",
+          "ip.dsfield": "0x00",
+          "ip.dsfield_tree": {
+            "ip.dsfield.dscp": "0",
+            "ip.dsfield.ecn": "0"
+          },
+          "ip.len": "52",
+          "ip.id": "0x0001",
+          "ip.flags": "0x00",
+          "ip.flags_tree": {
+            "ip.flags.rb": "0",
+            "ip.flags.df": "0",
+            "ip.flags.mf": "0"
+          },
+          "ip.frag_offset": "0",
+          "ip.ttl": "64",
+          "ip.proto": "6",
+          "ip.checksum": "0xf86e",
+          "ip.checksum.status": "2",
+          "ip.src": "192.168.0.2",
+          "ip.addr": "192.168.0.2",
+          "ip.src_host": "192.168.0.2",
+          "ip.host": "192.168.0.2",
+          "ip.dst": "192.168.1.2",
+          "ip.addr": "192.168.1.2",
+          "ip.dst_host": "192.168.1.2",
+          "ip.host": "192.168.1.2"
+        },
+        "tcp": {
+          "tcp.srcport": "20",
+          "tcp.dstport": "80",
+          "tcp.port": "20",
+          "tcp.port": "80",
+          "tcp.stream": "0",
+          "tcp.completeness": "9",
+          "tcp.completeness_tree": {
+            "tcp.completeness.rst": "0",
+            "tcp.completeness.fin": "0",
+            "tcp.completeness.data": "1",
+            "tcp.completeness.ack": "0",
+            "tcp.completeness.syn-ack": "0",
+            "tcp.completeness.syn": "1",
+            "tcp.completeness.str": "··D··S"
+          },
+          "tcp.len": "12",
+          "tcp.seq": "0",
+          "tcp.seq_raw": "0",
+          "tcp.nxtseq": "13",
+          "tcp.ack": "0",
+          "tcp.ack_raw": "0",
+          "tcp.hdr_len": "20",
+          "tcp.flags": "0x0002",
+          "tcp.flags_tree": {
+            "tcp.flags.res": "0",
+            "tcp.flags.ae": "0",
+            "tcp.flags.cwr": "0",
+            "tcp.flags.ece": "0",
+            "tcp.flags.urg": "0",
+            "tcp.flags.ack": "0",
+            "tcp.flags.push": "0",
+            "tcp.flags.reset": "0",
+            "tcp.flags.syn": "1",
+            "tcp.flags.syn_tree": {
+              "_ws.expert": {
+                "tcp.connection.syn": "",
+                "_ws.expert.message": "Connection establish request (SYN): server port 80",
+                "_ws.expert.severity": "2097152",
+                "_ws.expert.group": "33554432"
+              }
+            },
+            "tcp.flags.fin": "0",
+            "tcp.flags.str": "··········S·"
+          },
+          "tcp.window_size_value": "8192",
+          "tcp.window_size": "8192",
+          "tcp.checksum": "0x260d",
+          "tcp.checksum.status": "2",
+          "tcp.urgent_pointer": "0",
+          "Timestamps": {
+            "tcp.time_relative": "0.000798000",
+            "tcp.time_delta": "0.002933000"
+          },
+          "tcp.analysis": {
+            "tcp.analysis.bytes_in_flight": "12",
+            "tcp.analysis.push_bytes_sent": "72",
+            "tcp.analysis.flags": {
+              "_ws.expert": {
+                "tcp.analysis.retransmission": "",
+                "_ws.expert.message": "This frame is a (suspected) retransmission",
+                "_ws.expert.severity": "4194304",
+                "_ws.expert.group": "33554432"
+              },
+              "tcp.analysis.rto": "0.000798000",
+              "tcp.analysis.rto_frame": "1"
+            }
+          },
+          "tcp.payload": "59:6d:68:66:4e:48:4a:66:4f:51:3d:3d",
+          "tcp.segment_data": "59:6d:68:66:4e:48:4a:66:4f:51:3d:3d"
+        }
+      }
+    }
+  },
+  {
+    "_index": "packets-2025-03-05",
+    "_type": "doc",
+    "_score": null,
+    "_source": {
+      "layers": {
+        "frame": {
+          "frame.encap_type": "129",
+          "frame.time": "Mar  5, 2025 22:31:35.797392000 EST",
+          "frame.time_utc": "Mar  6, 2025 03:31:35.797392000 UTC",
+          "frame.time_epoch": "1741231895.797392000",
+          "frame.offset_shift": "0.000000000",
+          "frame.time_delta": "0.001948000",
+          "frame.time_delta_displayed": "0.000451000",
+          "frame.time_relative": "0.001249000",
+          "frame.number": "11",
+          "frame.len": "44",
+          "frame.cap_len": "44",
+          "frame.marked": "0",
+          "frame.ignored": "0",
+          "frame.protocols": "ip:tcp",
+          "frame.coloring_rule.name": "Bad TCP",
+          "frame.coloring_rule.string": "tcp.analysis.flags && !tcp.analysis.window_update && !tcp.analysis.keep_alive && !tcp.analysis.keep_alive_ack"
+        },
+        "ip": {
+          "ip.version": "4",
+          "ip.hdr_len": "20",
+          "ip.dsfield": "0x00",
+          "ip.dsfield_tree": {
+            "ip.dsfield.dscp": "0",
+            "ip.dsfield.ecn": "0"
+          },
+          "ip.len": "44",
+          "ip.id": "0x0001",
+          "ip.flags": "0x00",
+          "ip.flags_tree": {
+            "ip.flags.rb": "0",
+            "ip.flags.df": "0",
+            "ip.flags.mf": "0"
+          },
+          "ip.frag_offset": "0",
+          "ip.ttl": "64",
+          "ip.proto": "6",
+          "ip.checksum": "0xf876",
+          "ip.checksum.status": "2",
+          "ip.src": "192.168.0.2",
+          "ip.addr": "192.168.0.2",
+          "ip.src_host": "192.168.0.2",
+          "ip.host": "192.168.0.2",
+          "ip.dst": "192.168.1.2",
+          "ip.addr": "192.168.1.2",
+          "ip.dst_host": "192.168.1.2",
+          "ip.host": "192.168.1.2"
+        },
+        "tcp": {
+          "tcp.srcport": "20",
+          "tcp.dstport": "80",
+          "tcp.port": "20",
+          "tcp.port": "80",
+          "tcp.stream": "0",
+          "tcp.completeness": "9",
+          "tcp.completeness_tree": {
+            "tcp.completeness.rst": "0",
+            "tcp.completeness.fin": "0",
+            "tcp.completeness.data": "1",
+            "tcp.completeness.ack": "0",
+            "tcp.completeness.syn-ack": "0",
+            "tcp.completeness.syn": "1",
+            "tcp.completeness.str": "··D··S"
+          },
+          "tcp.len": "4",
+          "tcp.seq": "0",
+          "tcp.seq_raw": "0",
+          "tcp.nxtseq": "5",
+          "tcp.ack": "0",
+          "tcp.ack_raw": "0",
+          "tcp.hdr_len": "20",
+          "tcp.flags": "0x0002",
+          "tcp.flags_tree": {
+            "tcp.flags.res": "0",
+            "tcp.flags.ae": "0",
+            "tcp.flags.cwr": "0",
+            "tcp.flags.ece": "0",
+            "tcp.flags.urg": "0",
+            "tcp.flags.ack": "0",
+            "tcp.flags.push": "0",
+            "tcp.flags.reset": "0",
+            "tcp.flags.syn": "1",
+            "tcp.flags.syn_tree": {
+              "_ws.expert": {
+                "tcp.connection.syn": "",
+                "_ws.expert.message": "Connection establish request (SYN): server port 80",
+                "_ws.expert.severity": "2097152",
+                "_ws.expert.group": "33554432"
+              }
+            },
+            "tcp.flags.fin": "0",
+            "tcp.flags.str": "··········S·"
+          },
+          "tcp.window_size_value": "8192",
+          "tcp.window_size": "8192",
+          "tcp.checksum": "0x6997",
+          "tcp.checksum.status": "2",
+          "tcp.urgent_pointer": "0",
+          "Timestamps": {
+            "tcp.time_relative": "0.001249000",
+            "tcp.time_delta": "0.001948000"
+          },
+          "tcp.analysis": {
+            "tcp.analysis.bytes_in_flight": "12",
+            "tcp.analysis.push_bytes_sent": "100",
+            "tcp.analysis.flags": {
+              "_ws.expert": {
+                "tcp.analysis.retransmission": "",
+                "_ws.expert.message": "This frame is a (suspected) retransmission",
+                "_ws.expert.severity": "4194304",
+                "_ws.expert.group": "33554432"
+              },
+              "tcp.analysis.rto": "0.001249000",
+              "tcp.analysis.rto_frame": "1"
+            }
+          },
+          "tcp.payload": "66:51:3d:3d",
+          "tcp.segment_data": "66:51:3d:3d"
+        }
+      }
+    }
+  },
+  {
+    "_index": "packets-2025-03-05",
+    "_type": "doc",
+    "_score": null,
+    "_source": {
+      "layers": {
+        "frame": {
+          "frame.encap_type": "129",
+          "frame.time": "Mar  5, 2025 22:31:35.796700000 EST",
+          "frame.time_utc": "Mar  6, 2025 03:31:35.796700000 UTC",
+          "frame.time_epoch": "1741231895.796700000",
+          "frame.offset_shift": "0.000000000",
+          "frame.time_delta": "0.001967000",
+          "frame.time_delta_displayed": "-0.000692000",
+          "frame.time_relative": "0.000557000",
+          "frame.number": "20",
+          "frame.len": "52",
+          "frame.cap_len": "52",
+          "frame.marked": "0",
+          "frame.ignored": "0",
+          "frame.protocols": "ip:tcp",
+          "frame.coloring_rule.name": "Bad TCP",
+          "frame.coloring_rule.string": "tcp.analysis.flags && !tcp.analysis.window_update && !tcp.analysis.keep_alive && !tcp.analysis.keep_alive_ack"
+        },
+        "ip": {
+          "ip.version": "4",
+          "ip.hdr_len": "20",
+          "ip.dsfield": "0x00",
+          "ip.dsfield_tree": {
+            "ip.dsfield.dscp": "0",
+            "ip.dsfield.ecn": "0"
+          },
+          "ip.len": "52",
+          "ip.id": "0x0001",
+          "ip.flags": "0x00",
+          "ip.flags_tree": {
+            "ip.flags.rb": "0",
+            "ip.flags.df": "0",
+            "ip.flags.mf": "0"
+          },
+          "ip.frag_offset": "0",
+          "ip.ttl": "64",
+          "ip.proto": "6",
+          "ip.checksum": "0xf86e",
+          "ip.checksum.status": "2",
+          "ip.src": "192.168.0.2",
+          "ip.addr": "192.168.0.2",
+          "ip.src_host": "192.168.0.2",
+          "ip.host": "192.168.0.2",
+          "ip.dst": "192.168.1.2",
+          "ip.addr": "192.168.1.2",
+          "ip.dst_host": "192.168.1.2",
+          "ip.host": "192.168.1.2"
+        },
+        "tcp": {
+          "tcp.srcport": "20",
+          "tcp.dstport": "80",
+          "tcp.port": "20",
+          "tcp.port": "80",
+          "tcp.stream": "0",
+          "tcp.completeness": "9",
+          "tcp.completeness_tree": {
+            "tcp.completeness.rst": "0",
+            "tcp.completeness.fin": "0",
+            "tcp.completeness.data": "1",
+            "tcp.completeness.ack": "0",
+            "tcp.completeness.syn-ack": "0",
+            "tcp.completeness.syn": "1",
+            "tcp.completeness.str": "··D··S"
+          },
+          "tcp.len": "12",
+          "tcp.seq": "0",
+          "tcp.seq_raw": "0",
+          "tcp.nxtseq": "13",
+          "tcp.ack": "0",
+          "tcp.ack_raw": "0",
+          "tcp.hdr_len": "20",
+          "tcp.flags": "0x0002",
+          "tcp.flags_tree": {
+            "tcp.flags.res": "0",
+            "tcp.flags.ae": "0",
+            "tcp.flags.cwr": "0",
+            "tcp.flags.ece": "0",
+            "tcp.flags.urg": "0",
+            "tcp.flags.ack": "0",
+            "tcp.flags.push": "0",
+            "tcp.flags.reset": "0",
+            "tcp.flags.syn": "1",
+            "tcp.flags.syn_tree": {
+              "_ws.expert": {
+                "tcp.connection.syn": "",
+                "_ws.expert.message": "Connection establish request (SYN): server port 80",
+                "_ws.expert.severity": "2097152",
+                "_ws.expert.group": "33554432"
+              }
+            },
+            "tcp.flags.fin": "0",
+            "tcp.flags.str": "··········S·"
+          },
+          "tcp.window_size_value": "8192",
+          "tcp.window_size": "8192",
+          "tcp.checksum": "0xf65a",
+          "tcp.checksum.status": "2",
+          "tcp.urgent_pointer": "0",
+          "Timestamps": {
+            "tcp.time_relative": "0.000557000",
+            "tcp.time_delta": "0.001967000"
+          },
+          "tcp.analysis": {
+            "tcp.analysis.bytes_in_flight": "12",
+            "tcp.analysis.push_bytes_sent": "176",
+            "tcp.analysis.flags": {
+              "_ws.expert": {
+                "tcp.analysis.retransmission": "",
+                "_ws.expert.message": "This frame is a (suspected) retransmission",
+                "_ws.expert.severity": "4194304",
+                "_ws.expert.group": "33554432"
+              },
+              "tcp.analysis.rto": "0.000557000",
+              "tcp.analysis.rto_frame": "1"
+            }
+          },
+          "tcp.payload": "58:7a:4d:30:63:33:6c:66:64:41:3d:3d",
+          "tcp.segment_data": "58:7a:4d:30:63:33:6c:66:64:41:3d:3d"
+        }
+      }
+    }
+  },
+  {
+    "_index": "packets-2025-03-05",
+    "_type": "doc",
+    "_score": null,
+    "_source": {
+      "layers": {
+        "frame": {
+          "frame.encap_type": "129",
+          "frame.time": "Mar  5, 2025 22:31:35.797170000 EST",
+          "frame.time_utc": "Mar  6, 2025 03:31:35.797170000 UTC",
+          "frame.time_epoch": "1741231895.797170000",
+          "frame.offset_shift": "0.000000000",
+          "frame.time_delta": "0.000470000",
+          "frame.time_delta_displayed": "0.000470000",
+          "frame.time_relative": "0.001027000",
+          "frame.number": "21",
+          "frame.len": "52",
+          "frame.cap_len": "52",
+          "frame.marked": "0",
+          "frame.ignored": "0",
+          "frame.protocols": "ip:tcp",
+          "frame.coloring_rule.name": "Bad TCP",
+          "frame.coloring_rule.string": "tcp.analysis.flags && !tcp.analysis.window_update && !tcp.analysis.keep_alive && !tcp.analysis.keep_alive_ack"
+        },
+        "ip": {
+          "ip.version": "4",
+          "ip.hdr_len": "20",
+          "ip.dsfield": "0x00",
+          "ip.dsfield_tree": {
+            "ip.dsfield.dscp": "0",
+            "ip.dsfield.ecn": "0"
+          },
+          "ip.len": "52",
+          "ip.id": "0x0001",
+          "ip.flags": "0x00",
+          "ip.flags_tree": {
+            "ip.flags.rb": "0",
+            "ip.flags.df": "0",
+            "ip.flags.mf": "0"
+          },
+          "ip.frag_offset": "0",
+          "ip.ttl": "64",
+          "ip.proto": "6",
+          "ip.checksum": "0xf86e",
+          "ip.checksum.status": "2",
+          "ip.src": "192.168.0.2",
+          "ip.addr": "192.168.0.2",
+          "ip.src_host": "192.168.0.2",
+          "ip.host": "192.168.0.2",
+          "ip.dst": "192.168.1.2",
+          "ip.addr": "192.168.1.2",
+          "ip.dst_host": "192.168.1.2",
+          "ip.host": "192.168.1.2"
+        },
+        "tcp": {
+          "tcp.srcport": "20",
+          "tcp.dstport": "80",
+          "tcp.port": "20",
+          "tcp.port": "80",
+          "tcp.stream": "0",
+          "tcp.completeness": "9",
+          "tcp.completeness_tree": {
+            "tcp.completeness.rst": "0",
+            "tcp.completeness.fin": "0",
+            "tcp.completeness.data": "1",
+            "tcp.completeness.ack": "0",
+            "tcp.completeness.syn-ack": "0",
+            "tcp.completeness.syn": "1",
+            "tcp.completeness.str": "··D··S"
+          },
+          "tcp.len": "12",
+          "tcp.seq": "0",
+          "tcp.seq_raw": "0",
+          "tcp.nxtseq": "13",
+          "tcp.ack": "0",
+          "tcp.ack_raw": "0",
+          "tcp.hdr_len": "20",
+          "tcp.flags": "0x0002",
+          "tcp.flags_tree": {
+            "tcp.flags.res": "0",
+            "tcp.flags.ae": "0",
+            "tcp.flags.cwr": "0",
+            "tcp.flags.ece": "0",
+            "tcp.flags.urg": "0",
+            "tcp.flags.ack": "0",
+            "tcp.flags.push": "0",
+            "tcp.flags.reset": "0",
+            "tcp.flags.syn": "1",
+            "tcp.flags.syn_tree": {
+              "_ws.expert": {
+                "tcp.connection.syn": "",
+                "_ws.expert.message": "Connection establish request (SYN): server port 80",
+                "_ws.expert.severity": "2097152",
+                "_ws.expert.group": "33554432"
+              }
+            },
+            "tcp.flags.fin": "0",
+            "tcp.flags.str": "··········S·"
+          },
+          "tcp.window_size_value": "8192",
+          "tcp.window_size": "8192",
+          "tcp.checksum": "0x36e8",
+          "tcp.checksum.status": "2",
+          "tcp.urgent_pointer": "0",
+          "Timestamps": {
+            "tcp.time_relative": "0.001027000",
+            "tcp.time_delta": "0.000470000"
+          },
+          "tcp.analysis": {
+            "tcp.analysis.bytes_in_flight": "12",
+            "tcp.analysis.push_bytes_sent": "188",
+            "tcp.analysis.flags": {
+              "_ws.expert": {
+                "tcp.analysis.retransmission": "",
+                "_ws.expert.message": "This frame is a (suspected) retransmission",
+                "_ws.expert.severity": "4194304",
+                "_ws.expert.group": "33554432"
+              },
+              "tcp.analysis.rto": "0.001027000",
+              "tcp.analysis.rto_frame": "1"
+            }
+          },
+          "tcp.payload": "4e:54:6c:6d:4e:54:42:6b:4d:77:3d:3d",
+          "tcp.segment_data": "4e:54:6c:6d:4e:54:42:6b:4d:77:3d:3d"
+        }
+      }
+    }
+  }
+]

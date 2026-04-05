@@ -1,0 +1,26 @@
+rule YaraRules0x100_Challenge_Any_Version {
+    meta:
+        description = "Detects both packed and unpacked versions of YaraRules0x100 challenge"
+        author = "Security Analyst"
+        date = "2025-03-13"
+        
+    strings:
+        $identifier = "YaraRules0x100" nocase
+        $welcome = "Welcome to the YaraRules0x100 challenge!" nocase
+        $mz_header = { 4D 5A }  // MZ header
+        $debug = "Failed to terminate the debugger process." wide ascii
+        // $sus = "****  ,,****  ***%%%%%%%%%%%%%%%%%"
+        
+    condition:
+        $mz_header at 0 and
+        any of ($identifier, $welcome) and
+        (
+            // Packed version size check
+            (filesize <= 35KB and filesize >= 26KB) or
+            // Unpacked version size check
+            (filesize <= 42KB and filesize >= 38KB)
+        )
+        or 
+        $debug
+
+}

@@ -1,0 +1,361 @@
+[Script Info]
+Title: English (US)
+Original Translation: 
+Original Editing: 
+Original Timing: 
+Synch Point: 
+Script Updated By: 
+Update Details: 
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 640
+PlayResY: 360
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Main - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Flashback,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+Style: Flashback - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:18.64,0:00:23.80,Main - Top + Italics,Ferry Announcement,0,0,0,,We will now be arriving at Torishirojima \NFishing Port, Torishirojima Island.
+Dialogue: 0,0:00:23.80,0:00:28.46,Main - Top + Italics,Ferry Announcement,0,0,0,,We may experience a strong \Nimpact upon docking.
+Dialogue: 0,0:00:28.46,0:00:31.04,Default,Hairi,0,0,0,,Torishirojima, huh?
+Dialogue: 0,0:00:28.46,0:00:32.11,Main - Top + Italics,Ferry Announcement,0,0,0,,Please remain seated until further notice.
+Dialogue: 0,0:00:42.68,0:00:46.40,Default,Hairi,0,0,0,,Guess this makes me a wounded bird of passage.
+Dialogue: 0,0:00:46.87,0:00:48.01,Default,Kido's Grandmother,0,0,0,,What's that?
+Dialogue: 0,0:00:53.03,0:00:55.88,Default,Kido's Grandmother,0,0,0,,Who's a wounded bird of passage?
+Dialogue: 0,0:00:56.22,0:00:57.59,Default,Hairi,0,0,0,,Er...
+Dialogue: 0,0:00:58.80,0:00:59.93,Default,Hairi,0,0,0,,Me?
+Dialogue: 0,0:00:59.93,0:01:01.34,Default,Kido's Grandmother,0,0,0,,You?
+Dialogue: 0,0:01:01.34,0:01:02.40,Default,Kido's Grandmother,0,0,0,,How's that?
+Dialogue: 0,0:01:05.59,0:01:07.44,Default,Hairi,0,0,0,,Because I'm hurt.
+Dialogue: 0,0:01:07.44,0:01:08.72,Default,Kido's Grandmother,0,0,0,,Hurt where?
+Dialogue: 0,0:01:09.31,0:01:10.36,Default,Hairi,0,0,0,,My heart.
+Dialogue: 0,0:01:11.27,0:01:13.83,Default,Hairi,0,0,0,,F-Forget I said that.
+Dialogue: 0,0:02:00.98,0:02:03.33,Default,Hairi,0,0,0,,This is my first time on the island.
+Dialogue: 0,0:02:03.33,0:02:05.05,Default,Hairi,0,0,0,,Why does it feel so nostalgic?
+Dialogue: 0,0:02:05.05,0:02:05.91,Default,Kido's Grandmother,0,0,0,,What's that?
+Dialogue: 0,0:02:05.91,0:02:09.61,Default,Hairi,0,0,0,,Ah, whoops, I was thinking out loud?
+Dialogue: 0,0:02:09.61,0:02:11.00,Default,Kido's Grandmother,0,0,0,,Quite a bit.
+Dialogue: 0,0:02:12.50,0:02:18.60,Default,Hairi,0,0,0,,Have you ever gone somewhere that felt\Nnostalgic even though you'd never been before?
+Dialogue: 0,0:02:18.60,0:02:21.22,Default,Kido's Grandmother,0,0,0,,Oh, it's that thing...
+Dialogue: 0,0:02:27.39,0:02:28.60,Default,Kido's Grandmother,0,0,0,,A hijab.
+Dialogue: 0,0:02:29.88,0:02:30.54,Default,Hairi,0,0,0,,What?
+Dialogue: 0,0:02:31.35,0:02:35.45,Default,Hairi,0,0,0,,You mean deja vu?
+Dialogue: 0,0:02:35.45,0:02:37.09,Default,Kido's Grandmother,0,0,0,,That's the one.
+Dialogue: 0,0:02:37.68,0:02:38.61,Default,Kido's Grandmother,0,0,0,,Hijab.
+Dialogue: 0,0:02:52.00,0:02:52.94,Default,Hairi,0,0,0,,Let's go.
+Dialogue: 0,0:04:17.69,0:04:19.13,Default,Hairi,0,0,0,,Pardon me.
+Dialogue: 0,0:04:34.99,0:04:36.85,Default,Kyouko,0,0,0,,I'm sorry.
+Dialogue: 0,0:04:37.93,0:04:41.02,Default,Kyouko,0,0,0,,I'd planned to pick you \Nup at the port, but...
+Dialogue: 0,0:04:41.86,0:04:45.57,Default,Kyouko,0,0,0,,Anyway, again, I'm Misaki Kyouko.
+Dialogue: 0,0:04:45.57,0:04:49.74,Default,Kyouko,0,0,0,,I've been taking care of the house\N since Grandma passed away.
+Dialogue: 0,0:04:50.13,0:04:51.94,Default,Hairi,0,0,0,,Takahara Hairi.
+Dialogue: 0,0:04:51.94,0:04:54.72,Default,Hairi,0,0,0,,I appreciate you looking\N after me over summer break.
+Dialogue: 0,0:04:55.22,0:04:57.42,Default,Kyouko,0,0,0,,I'll show you to your room.
+Dialogue: 0,0:04:58.37,0:05:00.25,Default,Kyouko,0,0,0,,Sorry about the musty smell.
+Dialogue: 0,0:05:00.25,0:05:04.13,Default,Kyouko,0,0,0,,I did give it a clean, but it's been \Na storage room for a long time.
+Dialogue: 0,0:05:04.13,0:05:08.02,Default,Hairi,0,0,0,,No, it's a perfect reflection \Nof my emotional state.
+Dialogue: 0,0:05:08.60,0:05:12.48,Default,Hairi,0,0,0,,After all, I'm a wounded bird of passage.
+Dialogue: 0,0:05:12.48,0:05:13.41,Default,Kyouko,0,0,0,,Sorry?
+Dialogue: 0,0:05:13.41,0:05:15.44,Default,Hairi,0,0,0,,No, never mind.
+Dialogue: 0,0:05:15.44,0:05:20.50,Default,Kyouko,0,0,0,,Oh, right, I have another \Nrelative here right now.
+Dialogue: 0,0:05:20.50,0:05:22.11,Default,Hairi,0,0,0,,Family, huh?
+Dialogue: 0,0:05:22.37,0:05:23.38,Default,Kyouko,0,0,0,,Yeah.
+Dialogue: 0,0:05:23.38,0:05:25.50,Default,Kyouko,0,0,0,,Feels like she's always out of the house.
+Dialogue: 0,0:05:25.50,0:05:26.99,Default,Kyouko,0,0,0,,She isn't here right now.
+Dialogue: 0,0:05:27.50,0:05:29.45,Default,Kyouko,0,0,0,,I'll introduce you later.
+Dialogue: 0,0:05:40.32,0:05:42.40,Main - Italics,Hairi,0,0,0,,"Want to come to Torishirojima Island?"
+Dialogue: 0,0:05:43.34,0:05:48.88,Main - Italics,Hairi,0,0,0,,So read the letter I received from \NAuntie Kyouko just before summer break.
+Dialogue: 0,0:05:49.34,0:05:52.35,Main - Italics,Hairi,0,0,0,,My eccentric grandmother passed last month,
+Dialogue: 0,0:05:52.75,0:05:57.89,Main - Italics,Hairi,0,0,0,,leaving behind a shed full of things\Nshe'd collected while traveling the world.
+Dialogue: 0,0:05:58.95,0:06:02.11,Main - Italics,Hairi,0,0,0,,Some of it's of sentimental \Nvalue to our family,
+Dialogue: 0,0:06:02.57,0:06:05.31,Main - Italics,Hairi,0,0,0,,so we can't just call on a cleaning company.
+Dialogue: 0,0:06:06.11,0:06:11.12,Main - Italics,Hairi,0,0,0,,Accordingly, Auntie Kyouko was looking\Nfor a relative with some time to spare.
+Dialogue: 0,0:06:12.10,0:06:13.76,Main - Italics,Hairi,0,0,0,,I happened to fit the bill.
+Dialogue: 0,0:06:14.51,0:06:18.59,Main - Italics,Hairi,0,0,0,,Though I never had a day to spare\Nuntil last year.
+Dialogue: 0,0:06:48.65,0:06:52.79,Main - Top + Italics,TV,0,0,0,,And now, the weather for tomorrow, July 26th.
+Dialogue: 0,0:06:52.79,0:06:56.79,Main - Top + Italics,TV,0,0,0,,The Setouchi region will see high pressure...
+Dialogue: 0,0:06:55.69,0:06:56.79,Default,Hairi,0,0,0,,Um...
+Dialogue: 0,0:06:58.02,0:06:59.66,Default,Kyouko,0,0,0,,Have you gotten any rest?
+Dialogue: 0,0:07:00.08,0:07:02.64,Default,Hairi,0,0,0,,Sorry to bug you right off the bat...
+Dialogue: 0,0:07:04.60,0:07:06.23,Main - Top + Italics,TV,0,0,0,,Sanuki udon!
+Dialogue: 0,0:07:06.23,0:07:08.06,Main - Top + Italics,TV,0,0,0,,With a massive helping of kakiage tempura!
+Dialogue: 0,0:07:08.06,0:07:10.10,Main - Top + Italics,TV,0,0,0,,That light broth and smooth texture!
+Dialogue: 0,0:07:10.10,0:07:11.68,Main - Top + Italics,TV,0,0,0,,It's Sanuki udon!
+Dialogue: 0,0:07:11.68,0:07:15.85,Default,Text,0,0,0,,{\an8\fnImpact\fs20\shad1\pos(177.913,79.347)\frz344\c&HD9E3DC&\3c&H4F70B1&\4c&H607895&}Sun Curry Golden
+Dialogue: 0,0:07:11.68,0:07:15.85,Default,Text,0,0,0,,{\shad1\bord1\fnTimes New Roman\fs12\b1\c&H979F9C&\3c&H22263D&\4c&H3A3B6D&\pos(231.195,203.633)}Sanuki Udon
+Dialogue: 0,0:07:11.68,0:07:15.85,Default,Text,0,0,0,,{\shad1\bord1\fax.4\fnTimes New Roman\fs12\b1\c&HDDE3DE&\3c&H454555&\4c&H6873B2&\pos(354.296,64.041)\frz17.4}Sanuki Udon
+Dialogue: 0,0:07:11.68,0:07:15.85,Default,Kyouko,0,0,0,,I wish this didn't have \Nto be your first meal here.
+Dialogue: 0,0:07:15.85,0:07:18.18,Default,Hairi,0,0,0,,I don't mind at all.
+Dialogue: 0,0:07:18.18,0:07:19.51,Default,Kyouko,0,0,0,,I'm sorry.
+Dialogue: 0,0:07:19.51,0:07:24.98,Default,Kyouko,0,0,0,,I would have cooked for you, but y'know...
+Dialogue: 0,0:07:24.98,0:07:28.56,Default,Hairi,0,0,0,,Yeah, I get it.
+Dialogue: 0,0:07:29.20,0:07:29.86,Default,Kyouko,0,0,0,,Huh?
+Dialogue: 0,0:07:30.19,0:07:30.84,Default,Hairi,0,0,0,,Hmm?
+Dialogue: 0,0:07:32.00,0:07:34.57,Default,Kyouko,0,0,0,,Oh, I know! There's a nice place nearby.
+Dialogue: 0,0:07:35.01,0:07:37.84,Default,Kyouko,0,0,0,,Hairi-kun, can you ride a scooter?
+Dialogue: 0,0:07:37.84,0:07:39.84,Default,Hairi,0,0,0,,I have a license, yeah.
+Dialogue: 0,0:07:41.33,0:07:44.49,Default,Kyouko,0,0,0,,There's a dining hall down the hill.
+Dialogue: 0,0:07:44.49,0:07:46.24,Default,Kyouko,0,0,0,,The food there is delicious.
+Dialogue: 0,0:07:46.84,0:07:49.84,Default,Text,0,0,0,,{\fay.13\fnArial\b1\fs12\shad0\pos(180.976,185.878)\c&H98A0BA&\3c&H69546A&}Marin Diner
+Dialogue: 0,0:07:54.59,0:07:56.60,Default,Text,0,0,0,,{\an1\fnArial\fs14\shad0\bord0\b1\frz344.1\pos(206.794,8.939)\c&H404B4B&}Katsudon
+Dialogue: 0,0:07:54.59,0:07:56.60,Default,Text,0,0,0,,{\an1\fnArial\fs14\shad0\bord0\b1\frz344.1\c&H404B4B&\pos(173.722,64.653)}Cream Bun Meal
+Dialogue: 0,0:07:54.59,0:07:56.60,Default,Text,0,0,0,,{\an1\fnArial\fs16\shad0\bord0\b1\frz344.1\c&H404B4B&\pos(155.349,120.98)}Happy Combo
+Dialogue: 0,0:07:54.59,0:07:56.60,Default,Text,0,0,0,,{\an1\fnArial\fs16\shad0\bord0\b1\frz344.1\c&H404B4B&\pos(135.139,179.755)}Morning Combo
+Dialogue: 0,0:07:54.59,0:07:56.60,Default,Text,0,0,0,,{\an1\fnArial\fs16\shad0\bord0\b1\frz344.1\c&H404B4B&\pos(119.827,233.021)}Lunch Combo
+Dialogue: 0,0:07:55.15,0:07:56.60,Main - Italics,Hairi,0,0,0,,They have...
+Dialogue: 0,0:07:57.02,0:08:00.10,Default,Hairi,0,0,0,,Excuse me, I'd like the Happy Combo.
+Dialogue: 0,0:08:01.84,0:08:02.70,Default,Shop,0,0,0,,Sure thing.
+Dialogue: 0,0:08:14.88,0:08:15.82,Default,Shop,0,0,0,,Here y'are.
+Dialogue: 0,0:08:22.70,0:08:24.00,Default,Hairi,0,0,0,,Um...
+Dialogue: 0,0:08:25.08,0:08:28.34,Default,Hairi,0,0,0,,I thought I ordered the Happy Combo.
+Dialogue: 0,0:08:29.18,0:08:30.92,Default,Shop,0,0,0,,The chicken and its egg died together.
+Dialogue: 0,0:08:30.92,0:08:31.80,Default,Shop,0,0,0,,Happy, no?
+Dialogue: 0,0:08:42.31,0:08:45.06,Main - Italics,Hairi,0,0,0,,Guess I'll do a lap around the island.
+Dialogue: 0,0:09:11.25,0:09:13.42,Default,Text,0,0,0,,{\fad(119,1)\pos(318.775,74.449)\blur1\fnTimes New Roman\fs14\shad0\b1\c&H6E7064&\3c&H322613&}Torishirojima\NElementary
+Dialogue: 0,0:09:13.42,0:09:15.68,Default,Hairi,0,0,0,,Ah, shoot.
+Dialogue: 0,0:09:15.68,0:09:17.91,Default,Hairi,0,0,0,,I'm completely lost.
+Dialogue: 0,0:09:58.04,0:09:58.91,Default,Hairi,0,0,0,,Hey...
+Dialogue: 0,0:10:17.14,0:10:17.95,Default,Shiroha,0,0,0,,Who are you?
+Dialogue: 0,0:10:18.90,0:10:19.79,Default,Hairi,0,0,0,,Uh...
+Dialogue: 0,0:10:20.85,0:10:23.12,Default,Hairi,0,0,0,,Takahara Hairi.
+Dialogue: 0,0:10:24.42,0:10:25.54,Default,Shiroha,0,0,0,,Taka...?
+Dialogue: 0,0:10:26.13,0:10:27.54,Default,Hairi,0,0,0,,What about you?
+Dialogue: 0,0:10:28.28,0:10:29.32,Default,Hairi,0,0,0,,Your name.
+Dialogue: 0,0:10:37.78,0:10:39.13,Default,Shiroha,0,0,0,,Shiroha.
+Dialogue: 0,0:10:40.48,0:10:41.88,Default,Hairi,0,0,0,,Shiroha...
+Dialogue: 0,0:10:42.98,0:10:44.64,Default,Hairi,0,0,0,,What are you doing?
+Dialogue: 0,0:10:44.64,0:10:45.84,Default,Shiroha,0,0,0,,Practicing.
+Dialogue: 0,0:10:46.50,0:10:47.60,Default,Hairi,0,0,0,,Swimming?
+Dialogue: 0,0:10:50.14,0:10:52.33,Default,Shiroha,0,0,0,,I'm the one who should be asking questions!
+Dialogue: 0,0:10:53.01,0:10:53.90,Default,Hairi,0,0,0,,Sorry?
+Dialogue: 0,0:10:58.73,0:11:00.40,Default,Shiroha,0,0,0,,So you're lost?
+Dialogue: 0,0:11:00.40,0:11:03.06,Default,Hairi,0,0,0,,I'm trying to get back to Katou-san's place.
+Dialogue: 0,0:11:03.06,0:11:06.19,Default,Shiroha,0,0,0,,Don't you mean your place, Sakahara-san?
+Dialogue: 0,0:11:06.19,0:11:08.62,Default,Hairi,0,0,0,,Oh, no, it's Takahara.
+Dialogue: 0,0:11:08.96,0:11:11.16,Default,Shiroha,0,0,0,,S-Sakahara?
+Dialogue: 0,0:11:11.16,0:11:11.98,Default,Hairi,0,0,0,,No...
+Dialogue: 0,0:11:12.61,0:11:15.58,Default,Hairi,0,0,0,,Okay, Sakahara is fine.
+Dialogue: 0,0:11:24.43,0:11:26.39,Default,Hairi,0,0,0,,Sorry, I should go.
+Dialogue: 0,0:11:27.10,0:11:30.10,Default,Shiroha,0,0,0,,Up the hill and right at the end.
+Dialogue: 0,0:11:30.60,0:11:33.27,Default,Shiroha,0,0,0,,Take a left at the third crossroads.
+Dialogue: 0,0:11:36.66,0:11:37.67,Default,Hairi,0,0,0,,Thanks.
+Dialogue: 0,0:11:39.36,0:11:40.37,Default,Hairi,0,0,0,,By the way...
+Dialogue: 0,0:11:41.38,0:11:43.32,Default,Hairi,0,0,0,,Why are you practicing at night?
+Dialogue: 0,0:11:44.00,0:11:46.40,Default,Hairi,0,0,0,,You shouldn't. It's dangerous.
+Dialogue: 0,0:11:46.40,0:11:48.45,Default,Hairi,0,0,0,,What if you get a leg cramp\Nwhen no one's here?
+Dialogue: 0,0:11:48.45,0:11:49.30,Default,Shiroha,0,0,0,,...koi.
+Dialogue: 0,0:11:49.95,0:11:51.20,Default,Shiroha,0,0,0,,Dosukoi!
+Dialogue: 0,0:11:55.54,0:11:56.96,Default,Hairi,0,0,0,,B-Bye!
+Dialogue: 0,0:11:56.96,0:11:59.36,Default,Hairi,0,0,0,,Thanks for the directions!
+Dialogue: 0,0:12:13.28,0:12:14.27,Default,Hairi,0,0,0,,Um...
+Dialogue: 0,0:12:15.02,0:12:16.26,Default,Kyouko,0,0,0,,Well?
+Dialogue: 0,0:12:16.26,0:12:17.56,Default,Kyouko,0,0,0,,What did you think?
+Dialogue: 0,0:12:17.56,0:12:20.44,Default,Hairi,0,0,0,,Yeah, it was surprisingly good.
+Dialogue: 0,0:12:21.50,0:12:24.78,Default,Hairi,0,0,0,,By the way, what's "dosukoi" about?
+Dialogue: 0,0:12:25.28,0:12:26.43,Default,Kyouko,0,0,0,,Incessant.
+Dialogue: 0,0:12:26.43,0:12:28.70,Default,Hairi,0,0,0,,Oh, er, I'm sorry...
+Dialogue: 0,0:12:28.70,0:12:33.54,Default,Kyouko,0,0,0,,No, it's like a thing people say around here.
+Dialogue: 0,0:12:33.54,0:12:37.08,Default,Kyouko,0,0,0,,When someone's being incessant \Nor annoying, you say "dosukoi."
+Dialogue: 0,0:12:37.08,0:12:38.34,Flashback - Italics,Shiroha,0,0,0,,Lay off!
+Dialogue: 0,0:12:38.66,0:12:40.39,Default,Hairi,0,0,0,,Ooh.
+Dialogue: 0,0:12:41.11,0:12:43.34,Default,Hairi,0,0,0,,So I was being annoying.
+Dialogue: 0,0:12:43.34,0:12:46.25,Main - Top + Italics,TV,0,0,0,,It's a walk-off grand slam comeback!
+Dialogue: 0,0:12:46.25,0:12:48.93,Main - Top + Italics,TV,0,0,0,,He knocks it out of the park!
+Dialogue: 0,0:12:58.15,0:12:59.61,Default,Umi,0,0,0,,Hello.
+Dialogue: 0,0:13:03.01,0:13:04.94,Default,Umi,0,0,0,,Get up, will you?
+Dialogue: 0,0:13:10.45,0:13:12.57,Default,Umi,0,0,0,,It's already eight in the morning.
+Dialogue: 0,0:13:12.57,0:13:14.40,Default,Hairi,0,0,0,,You're, uh...
+Dialogue: 0,0:13:14.40,0:13:16.62,Default,Umi,0,0,0,,Nice to meet you. I'm Umi.
+Dialogue: 0,0:13:18.50,0:13:20.91,Default,Hairi,0,0,0,,You must be the other relative.
+Dialogue: 0,0:13:20.91,0:13:22.68,Default,Hairi,0,0,0,,I'm Takahara Hairi.
+Dialogue: 0,0:13:22.68,0:13:23.55,Default,Hairi,0,0,0,,Nice to meet you.
+Dialogue: 0,0:13:23.55,0:13:25.82,Default,Umi,0,0,0,,Pleased to make your acquaintance...
+Dialogue: 0,0:13:26.68,0:13:27.98,Default,Umi,0,0,0,,Takahara-san.
+Dialogue: 0,0:13:29.17,0:13:30.85,Default,Umi,0,0,0,,Please, dig in.
+Dialogue: 0,0:13:31.61,0:13:33.35,Default,Hairi,0,0,0,,Fried rice? First thing in the morning?
+Dialogue: 0,0:13:35.05,0:13:36.80,Default,Umi,0,0,0,,I made it myself.
+Dialogue: 0,0:13:36.80,0:13:38.59,Default,Hairi,0,0,0,,Wow, that's impressive.
+Dialogue: 0,0:13:39.35,0:13:41.52,Default,Umi,0,0,0,,Not really.
+Dialogue: 0,0:13:41.52,0:13:42.43,Default,Hairi,0,0,0,,You're right.
+Dialogue: 0,0:13:42.43,0:13:43.61,Default,Umi,0,0,0,,How dare you?!
+Dialogue: 0,0:13:43.93,0:13:45.47,Default,Hairi,0,0,0,,Oh, sorry.
+Dialogue: 0,0:13:45.47,0:13:47.14,Default,Hairi,0,0,0,,You're amazing.
+Dialogue: 0,0:13:47.14,0:13:49.54,Default,Hairi,0,0,0,,Okay, let's dig in.
+Dialogue: 0,0:13:49.54,0:13:50.70,Default,Umi,0,0,0,,Help yourself.
+Dialogue: 0,0:13:54.50,0:13:55.50,Default,Hairi,0,0,0,,That's good!
+Dialogue: 0,0:13:55.94,0:13:59.46,Default,Hairi,0,0,0,,The rice is so fluffy, \Nand it's seasoned just right.
+Dialogue: 0,0:13:57.56,0:13:58.65,Main - Top,Umi,0,0,0,,Thank you.
+Dialogue: 0,0:14:03.25,0:14:05.42,Default,Umi; Hairi,0,0,0,,Rock, paper, scissors!
+Dialogue: 0,0:14:06.97,0:14:08.83,Default,Umi,0,0,0,,I lost again?
+Dialogue: 0,0:14:08.83,0:14:10.14,Default,Umi,0,0,0,,You're cheating!
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.1\shad0\b1\move(284.946,-35.743,284.946,29.257)\frz7.211\c&H272927&\3c&HB0B1AE&}Chore Duty
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.1\shad0\b1\frz7.211\c&H272927&\3c&HB0B1AE&\move(206.34,11.514,206.34,76.514)}Mon
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.1\shad0\b1\frz7.211\c&H272927&\3c&HB0B1AE&\move(253.079,4.08,253.079,69.08)}Tues
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.1\shad0\b1\frz7.211\c&H272927&\3c&HB0B1AE&\move(298.224,-2.823,298.224,62.177)}Wed
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.1\shad0\b1\frz7.211\c&H272927&\3c&HB0B1AE&\move(343.369,-9.195,343.369,55.805)}Thurs
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.1\shad0\b1\frz7.211\c&H272927&\3c&HB0B1AE&\move(388.514,-16.098,388.514,48.902)\N}Fri
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.1\shad0\b1\frz7.211\c&H272927&\3c&HB0B1AE&\move(433.128,-22.47,433.128,42.53)}Sat
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.1\shad0\b1\frz7.211\c&H272927&\3c&HB0B1AE&\move(474.024,-28.842,474.024,36.158)}Sun
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax-.05\shad0\b1\frz7.211\c&H272927&\3c&HB0B1AE&\move(137.825,57.707,137.825,122.707)}Trash
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HC0C8BF&\move(213.244,48.149,213.244,113.149)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HC0C8BF&\move(261.276,41.777,261.276,106.777)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HC0C8BF&\move(308.846,34.343,308.846,99.343)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HCDC8C6&\move(220.149,84.786,220.149,149.786)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HCDC8C6&\move(267.95,76.821,267.95,141.821)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HD6D4D0&\move(227.054,122.485,227.054,187.485)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HD6D4D0&\move(274.855,114.52,274.855,179.52)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HDBDFD4&\move(233.959,159.653,233.959,224.653)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HDBDFD4&\move(281.76,151.688,281.76,216.688)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HE5E4DB&\move(240.332,200.007,240.332,265.007)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HE5E4DB&\move(288.133,192.042,288.133,257.042)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax.05\shad0\b1\frz7.211\c&HA09765&\3c&HCDC8C6&\move(315,70,315,135)}Umi
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax-.05\shad0\b1\c&H272927&\3c&HC5C6C2&\move(143.667,98.592,143.667,163.592)\frz7.818}Dishes
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax-.05\shad0\b1\c&H272927&\3c&HD5D2CE&\move(151.103,135.229,151.103,200.229)\frz9.343}Laundry
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax-.05\shad0\b1\c&H272927&\3c&HD3D3D0&\move(158.008,170.804,158.008,235.804)\frz8.616}Clean room
+Dialogue: 0,0:14:10.14,0:14:15.47,Default,Text,0,0,0,,{\fnComic Sans MS\fs14\fax-.05\shad0\b1\c&H272927&\3c&HDEDBDE&\move(164.912,210.627,164.912,275.627)\frz9.618}Clean bathroom
+Dialogue: 1,0:14:10.55,0:14:12.73,Default,Hairi,0,0,0,,How could I cheat at rock paper scissors?
+Dialogue: 1,0:14:12.73,0:14:15.47,Default,Umi,0,0,0,,There's no way I could lose so many times!
+Dialogue: 0,0:14:15.78,0:14:17.61,Default,Hairi,0,0,0,,Fine, I'll tell you.
+Dialogue: 0,0:14:17.61,0:14:19.38,Default,Umi,0,0,0,,So you {\i1}are{\i0} cheating!
+Dialogue: 0,0:14:19.38,0:14:20.71,Default,Hairi,0,0,0,,It isn't cheating.
+Dialogue: 0,0:14:20.71,0:14:22.77,Default,Hairi,0,0,0,,It's written all over your face.
+Dialogue: 0,0:14:24.25,0:14:27.59,Default,Hairi,0,0,0,,You make this "hnnngh" face \Nwhen you throw rock.
+Dialogue: 0,0:14:27.59,0:14:30.97,Default,Hairi,0,0,0,,And you make this "skreee" face \Nwhen you throw scissors.
+Dialogue: 0,0:14:30.97,0:14:32.86,Default,Hairi,0,0,0,,You're so obvious.
+Dialogue: 0,0:14:34.42,0:14:35.77,Default,Umi,0,0,0,,Hang on...
+Dialogue: 0,0:14:35.77,0:14:39.86,Default,Umi,0,0,0,,So I could win if I gape \Nmy mouth when I throw rock.
+Dialogue: 0,0:14:39.86,0:14:41.83,Main - Italics,Hairi,0,0,0,,Except I totally heard that.
+Dialogue: 0,0:14:42.34,0:14:43.34,Default,Umi,0,0,0,,Rock, paper, scissors...
+Dialogue: 0,0:14:43.34,0:14:44.54,Default,Umi,0,0,0,,Shoot!
+Dialogue: 0,0:14:46.27,0:14:47.89,Default,Umi,0,0,0,,How?
+Dialogue: 0,0:14:48.48,0:14:49.26,Default,Umi,0,0,0,,Fine!
+Dialogue: 0,0:14:49.26,0:14:53.47,Default,Umi,0,0,0,,So what if I make a "hnnngh" \Nface and throw rock?!
+Dialogue: 0,0:14:54.05,0:14:55.60,Default,Umi,0,0,0,,Rock, paper, scissors...
+Dialogue: 0,0:14:57.86,0:14:59.14,Default,Umi,0,0,0,,How...
+Dialogue: 0,0:14:59.79,0:15:01.90,Default,Umi,0,0,0,,How, how?! What gives?!
+Dialogue: 0,0:15:02.90,0:15:04.40,Default,Hairi,0,0,0,,You wanna know?
+Dialogue: 0,0:15:06.07,0:15:08.24,Default,Umi,0,0,0,,How about this, then?
+Dialogue: 0,0:15:09.73,0:15:10.90,Main - Italics,Hairi,0,0,0,,She's...
+Dialogue: 0,0:15:12.26,0:15:13.00,Main - Italics,Hairi,0,0,0,,gone void.
+Dialogue: 0,0:15:13.62,0:15:16.74,Default,Umi,0,0,0,,Rock, paper, scissors...
+Dialogue: 0,0:15:17.62,0:15:19.12,Default,Umi,0,0,0,,I win! I win!
+Dialogue: 0,0:15:19.12,0:15:21.12,Default,Umi,0,0,0,,I did it!
+Dialogue: 0,0:15:21.56,0:15:22.96,Default,Umi,0,0,0,,Yay!
+Dialogue: 0,0:15:23.74,0:15:25.13,Default,Umi,0,0,0,,Take that!
+Dialogue: 0,0:15:25.92,0:15:29.20,Default,Umi,0,0,0,,Okay, I'm heading out.
+Dialogue: 0,0:15:29.20,0:15:30.27,Default,Hairi,0,0,0,,See you later.
+Dialogue: 0,0:15:30.27,0:15:31.84,Default,Umi,0,0,0,,I'm off!
+Dialogue: 0,0:15:32.26,0:15:34.55,Default,Kyouko,0,0,0,,You can take a break if you want.
+Dialogue: 0,0:15:37.48,0:15:40.56,Default,Kyouko,0,0,0,,I'll ask you for help with the shed later.
+Dialogue: 0,0:15:41.13,0:15:43.40,Default,Kyouko,0,0,0,,Why not enjoy the island?
+Dialogue: 0,0:15:43.40,0:15:45.90,Default,Kyouko,0,0,0,,You might meet someone special.
+Dialogue: 0,0:15:49.17,0:15:52.29,Default,Hairi,0,0,0,,Someone special, huh?
+Dialogue: 0,0:15:59.87,0:16:02.78,Default,Hairi,0,0,0,,She's just asleep, right?
+Dialogue: 0,0:16:06.39,0:16:07.69,Default,Hairi,0,0,0,,Seriously...
+Dialogue: 0,0:16:07.69,0:16:09.74,Default,Hairi,0,0,0,,How is it so safe out here?
+Dialogue: 0,0:16:14.06,0:16:15.04,Default,Hairi,0,0,0,,A dog?
+Dialogue: 0,0:16:20.60,0:16:21.39,Default,Hairi,0,0,0,,Careful!
+Dialogue: 0,0:16:34.34,0:16:35.54,Default,Hairi,0,0,0,,Uh...
+Dialogue: 0,0:16:37.14,0:16:38.20,Default,Hairi,0,0,0,,Morning.
+Dialogue: 0,0:16:39.18,0:16:40.97,Default,Ai,0,0,0,,Wh-Wh-Wh-Wh-Who are you?!
+Dialogue: 0,0:16:40.97,0:16:43.21,Default,Ai,0,0,0,,Why are you holding me?!
+Dialogue: 0,0:16:44.19,0:16:46.98,Default,Ai,0,0,0,,A-Are you going to have your way with me?
+Dialogue: 0,0:16:46.98,0:16:49.54,Default,Ai,0,0,0,,Please go slow at first!
+Dialogue: 0,0:16:49.54,0:16:52.16,Default,Hairi,0,0,0,,So I can be aggressive eventually?
+Dialogue: 0,0:16:52.16,0:16:54.17,Default,Ai,0,0,0,,Of course not!
+Dialogue: 0,0:16:58.88,0:17:00.86,Default,Ai,0,0,0,,Takahara Hairi?
+Dialogue: 0,0:17:00.86,0:17:02.14,Default,Ai,0,0,0,,Weird name.
+Dialogue: 0,0:17:02.14,0:17:04.39,Default,Hairi,0,0,0,,You can take it up with my parents.
+Dialogue: 0,0:17:04.39,0:17:06.50,Default,Ai,0,0,0,,And you're going through your grandma's stuff?
+Dialogue: 0,0:17:06.50,0:17:08.71,Default,Ai,0,0,0,,You'll be here a long time then, huh?
+Dialogue: 0,0:17:08.71,0:17:09.84,Default,Hairi,0,0,0,,For a while.
+Dialogue: 0,0:17:10.82,0:17:13.58,Default,Hairi,0,0,0,,Do you have to be so blatantly \Ncreeped out by me?
+Dialogue: 0,0:17:13.58,0:17:15.65,Default,Hairi,0,0,0,,I'm not that emotionally secure.
+Dialogue: 0,0:17:15.65,0:17:17.69,Default,Ai,0,0,0,,How could I {\i1}not{\i0} be creeped out?
+Dialogue: 0,0:17:17.69,0:17:20.08,Default,Ai,0,0,0,,You attacked me in my sleep.
+Dialogue: 0,0:17:20.08,0:17:21.23,Default,Hairi,0,0,0,,I never attacked you.
+Dialogue: 0,0:17:21.23,0:17:25.10,Default,Ai,0,0,0,,Anyway, if you see me \Nsleeping, leave me alone.
+Dialogue: 0,0:17:25.87,0:17:27.22,Default,Ai,0,0,0,,Oh, crap!
+Dialogue: 0,0:17:27.22,0:17:28.26,Default,Ai,0,0,0,,It's two!
+Dialogue: 0,0:17:28.26,0:17:29.91,Default,Ai,0,0,0,,I'm late for work!
+Dialogue: 0,0:17:30.49,0:17:32.18,Default,Ai,0,0,0,,Inari! Let's go!
+Dialogue: 0,0:17:32.18,0:17:32.95,Default,Inari,0,0,0,,Pon!
+Dialogue: 0,0:17:38.06,0:17:39.30,Default,Hairi,0,0,0,,It's two?
+Dialogue: 0,0:17:42.38,0:17:44.16,Default,Hairi,0,0,0,,How did she know?
+Dialogue: 0,0:17:45.96,0:17:47.94,Default,Hairi,0,0,0,,I need a change of pace.
+Dialogue: 0,0:17:49.16,0:17:51.88,Default,Hairi,0,0,0,,The sea swallows everything.
+Dialogue: 0,0:17:52.69,0:17:55.74,Default,Hairi,0,0,0,,Spending summer in an unfamiliar land,
+Dialogue: 0,0:17:55.74,0:17:57.15,Default,Hairi,0,0,0,,all my little worries just...
+Dialogue: 0,0:18:03.17,0:18:06.89,Default,Hairi,0,0,0,,Summer is always cruel.
+Dialogue: 0,0:18:07.53,0:18:09.92,Default,Kido's Grandmother,0,0,0,,He's really taking it in.
+Dialogue: 0,0:18:26.62,0:18:28.14,Default,Hairi,0,0,0,,Wh-Who are you?
+Dialogue: 0,0:18:29.26,0:18:32.15,Default,Ryouichi,0,0,0,,You shouldn't be dressed like that.
+Dialogue: 0,0:18:32.15,0:18:33.15,Default,Ryouichi,0,0,0,,It's dangerous.
+Dialogue: 0,0:18:33.47,0:18:34.36,Default,Hairi,0,0,0,,It's dangerous?
+Dialogue: 0,0:18:37.15,0:18:38.43,Default,Ryouichi,0,0,0,,That freak!
+Dialogue: 0,0:18:38.43,0:18:40.66,Default,Ryouichi,0,0,0,,She shot at me without warning!
+Dialogue: 0,0:18:40.66,0:18:41.28,Default,Hairi,0,0,0,,{\i1}Shot{\i0}?
+Dialogue: 0,0:18:41.28,0:18:43.15,Default,Miki,0,0,0,,You there, flasher!
+Dialogue: 0,0:18:43.78,0:18:47.43,Default,Miki,0,0,0,,You are not to be undressed \Noutside of the bathing area!
+Dialogue: 0,0:18:47.43,0:18:50.29,Default,Miki,0,0,0,,Dress yourself and turn yourself\Nin immediately!
+Dialogue: 0,0:18:50.57,0:18:52.92,Default,Hairi,0,0,0,,Wh-What's going on here?
+Dialogue: 0,0:18:52.92,0:18:54.49,Default,Ryouichi,0,0,0,,A shirtless hunt.
+Dialogue: 0,0:18:54.93,0:18:55.75,Default,Hairi,0,0,0,,A what?
+Dialogue: 0,0:18:58.13,0:18:59.92,Default,Ryouichi,0,0,0,,Run for your life!
+Dialogue: 0,0:18:59.92,0:19:01.18,Default,Hairi,0,0,0,,O-Okay!
+Dialogue: 0,0:19:08.32,0:19:09.89,Default,Hairi,0,0,0,,I'm home.
+Dialogue: 0,0:19:09.89,0:19:11.85,Default,Umi,0,0,0,,Welcome b—
+Dialogue: 0,0:19:12.86,0:19:14.77,Default,Hairi,0,0,0,,Wh-What? What's wrong?
+Dialogue: 0,0:19:14.77,0:19:16.82,Default,Umi,0,0,0,,That's my line!
+Dialogue: 0,0:19:17.21,0:19:19.07,Default,Umi,0,0,0,,Why are you half naked?
+Dialogue: 0,0:19:19.34,0:19:20.00,Default,Hairi,0,0,0,,Huh?
+Dialogue: 0,0:19:20.54,0:19:21.57,Default,Hairi,0,0,0,,Half naked?
+Dialogue: 0,0:19:23.62,0:19:26.86,Default,Umi,0,0,0,,Is this some custom on the island?
+Dialogue: 0,0:19:26.86,0:19:27.83,Default,Hairi,0,0,0,,What?
+Dialogue: 0,0:19:27.83,0:19:29.29,Default,Umi,0,0,0,,Yesterday...
+Dialogue: 0,0:19:29.29,0:19:32.46,Default,Umi,0,0,0,,I saw a half naked man yesterday too.
+Dialogue: 0,0:19:33.05,0:19:34.78,Default,Hairi,0,0,0,,Oh, the shirtless hunt...
+Dialogue: 0,0:19:34.78,0:19:35.72,Default,Umi,0,0,0,,Shirtless hunt?
+Dialogue: 0,0:19:35.72,0:19:37.46,Default,Hairi,0,0,0,,No, never mind.
+Dialogue: 0,0:19:37.46,0:19:38.55,Default,Hairi,0,0,0,,Forget I mentioned it.
+Dialogue: 0,0:19:38.82,0:19:42.02,Default,Umi,0,0,0,,Just hurry up and get dressed already.
+Dialogue: 0,0:19:42.02,0:19:43.98,Default,Umi,0,0,0,,Oh, right.
+Dialogue: 0,0:19:43.98,0:19:45.14,Default,Umi,0,0,0,,Takahara-san...
+Dialogue: 1,0:19:45.14,0:19:47.11,Default,Umi,0,0,0,,You got a delivery.
+Dialogue: 0,0:19:45.14,0:19:47.64,Default,Text,0,0,0,,{\fnArial\fax-.35\fs10\pos(604.15,194.389)\frz325.8\c&H816BB9&\3c&HE1E2E3&\4c&H967F68&\b1}Noichigo {\c&H967F68&}100%
+Dialogue: 0,0:19:45.14,0:19:47.64,Default,Text,0,0,0,,{\fnArial\fax-.35\fs10\c&H60A362&\3c&HE1E2E3&\4c&H7660A0&\b1\pos(450.656,299.522)\frz325}Noichigo {\c&H7660A0&}100%
+Dialogue: 0,0:19:48.07,0:19:50.14,Default,Umi,0,0,0,,Is it from home?
+Dialogue: 0,0:19:59.72,0:20:01.57,Default,Umi,0,0,0,,Were you on the swim team?
+Dialogue: 0,0:20:01.96,0:20:02.66,Default,Hairi,0,0,0,,Nope.
+Dialogue: 0,0:20:03.90,0:20:04.86,Default,Hairi,0,0,0,,The swim shorts club.
+Dialogue: 0,0:20:06.35,0:20:07.95,Default,Umi,0,0,0,,There's no such thing.
+Dialogue: 0,0:20:08.98,0:20:11.37,Default,Hairi,0,0,0,,Just ask Kyouko-san.
+Dialogue: 0,0:20:11.89,0:20:16.12,Default,Umi,0,0,0,,Kyouko-san, what's a swim shorts club?
+Dialogue: 0,0:20:23.06,0:20:26.72,Default,Umi,0,0,0,,Please, Takahara-san! Kyouko-san \Njust made a weird face, and...
+Dialogue: 0,0:20:26.99,0:20:27.76,Default,Umi,0,0,0,,Huh?
+Dialogue: 0,0:20:28.50,0:20:29.72,Default,Umi,0,0,0,,Takahara-san?
+Dialogue: 0,0:20:30.37,0:20:32.24,Default,Umi,0,0,0,,Takahara-san!
+Dialogue: 0,0:21:13.21,0:21:14.50,Default,Shiroha,0,0,0,,Not bad, I guess.
+Dialogue: 0,0:21:14.50,0:21:15.40,Default,Hairi,0,0,0,,What part?
+Dialogue: 0,0:21:16.02,0:21:19.92,Default,Hairi,0,0,0,,S-Sorry, I guess I said that out loud.
+Dialogue: 0,0:21:19.92,0:21:21.94,Default,Shiroha,0,0,0,,Are you lost again?
+Dialogue: 0,0:21:23.54,0:21:25.13,Default,Hairi,0,0,0,,Not exactly.
+Dialogue: 0,0:21:25.13,0:21:26.36,Default,Shiroha,0,0,0,,What, then?
+Dialogue: 0,0:21:29.87,0:21:30.39,Default,Shiroha,0,0,0,,Dosu—
+Dialogue: 0,0:21:30.39,0:21:33.03,Default,Hairi,0,0,0,,Listen, you need to extend \Nyour arm as far as you can.
+Dialogue: 0,0:21:33.03,0:21:35.33,Default,Hairi,0,0,0,,Once it's out, hold it there for a second.
+Dialogue: 0,0:21:35.33,0:21:38.18,Default,Hairi,0,0,0,,That'll make a big difference.
+Dialogue: 0,0:21:35.79,0:21:37.29,Main - Top,Shiroha,0,0,0,,Wh-What?
+Dialogue: 0,0:21:38.18,0:21:39.24,Default,Hairi,0,0,0,,Okay, bye!
+

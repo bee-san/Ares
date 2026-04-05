@@ -1,0 +1,1 @@
+See crack.js for my soln.

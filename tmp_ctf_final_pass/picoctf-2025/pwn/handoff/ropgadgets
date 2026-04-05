@@ -1,0 +1,85 @@
+Gadgets information
+============================================================
+0x000000000040113d : add ah, dh ; nop ; endbr64 ; ret
+0x00000000004013ce : add al, bpl ; retf
+0x00000000004013cf : add al, ch ; retf
+0x000000000040116b : add bh, bh ; loopne 0x4011d5 ; nop ; ret
+0x00000000004014bc : add byte ptr [rax], al ; add byte ptr [rax], al ; endbr64 ; ret
+0x0000000000401440 : add byte ptr [rax], al ; add byte ptr [rax], al ; pop rbp ; ret
+0x0000000000401036 : add byte ptr [rax], al ; add dl, dh ; jmp 0x401020
+0x00000000004011da : add byte ptr [rax], al ; add dword ptr [rbp - 0x3d], ebx ; nop ; ret
+0x00000000004014be : add byte ptr [rax], al ; endbr64 ; ret
+0x000000000040113c : add byte ptr [rax], al ; hlt ; nop ; endbr64 ; ret
+0x0000000000401442 : add byte ptr [rax], al ; pop rbp ; ret
+0x000000000040100d : add byte ptr [rax], al ; test rax, rax ; je 0x401016 ; call rax
+0x00000000004011db : add byte ptr [rcx], al ; pop rbp ; ret
+0x00000000004011d9 : add byte ptr cs:[rax], al ; add dword ptr [rbp - 0x3d], ebx ; nop ; ret
+0x000000000040113b : add byte ptr cs:[rax], al ; hlt ; nop ; endbr64 ; ret
+0x000000000040116a : add dil, dil ; loopne 0x4011d5 ; nop ; ret
+0x0000000000401038 : add dl, dh ; jmp 0x401020
+0x00000000004011dc : add dword ptr [rbp - 0x3d], ebx ; nop ; ret
+0x00000000004012f8 : add dword ptr [rbp - 4], 1 ; jmp 0x401249
+0x00000000004011d7 : add eax, 0x2e9b ; add dword ptr [rbp - 0x3d], ebx ; nop ; ret
+0x0000000000401085 : add eax, 0xf2000000 ; jmp 0x401020
+0x0000000000401017 : add esp, 8 ; ret
+0x0000000000401016 : add rsp, 8 ; ret
+0x0000000000401225 : call qword ptr [rax + 0xff3c35d]
+0x000000000040140b : call qword ptr [rax + 0xff3c3c9]
+0x000000000040103e : call qword ptr [rax - 0x5e1f00d]
+0x0000000000401014 : call rax
+0x00000000004011f3 : cli ; jmp 0x401180
+0x0000000000401143 : cli ; ret
+0x00000000004014cb : cli ; sub rsp, 8 ; add rsp, 8 ; ret
+0x0000000000401408 : cmp eax, 0x90fffffe ; leave ; ret
+0x00000000004011f0 : endbr64 ; jmp 0x401180
+0x0000000000401140 : endbr64 ; ret
+0x000000000040149c : fisttp word ptr [rax - 0x7d] ; ret
+0x000000000040113e : hlt ; nop ; endbr64 ; ret
+0x0000000000401012 : je 0x401016 ; call rax
+0x0000000000401165 : je 0x401170 ; mov edi, 0x404060 ; jmp rax
+0x00000000004011a7 : je 0x4011b0 ; mov edi, 0x404060 ; jmp rax
+0x000000000040103a : jmp 0x401020
+0x00000000004011f4 : jmp 0x401180
+0x00000000004012fc : jmp 0x401249
+0x00000000004012a5 : jmp 0x401407
+0x00000000004013f1 : jmp 0x40140c
+0x000000000040100b : jmp 0x4840103f
+0x000000000040116c : jmp rax
+0x000000000040140d : leave ; ret
+0x000000000040116d : loopne 0x4011d5 ; nop ; ret
+0x00000000004013ed : mov byte ptr [rbp - 5], 0 ; jmp 0x40140c
+0x00000000004011d6 : mov byte ptr [rip + 0x2e9b], 1 ; pop rbp ; ret
+0x000000000040143f : mov eax, 0 ; pop rbp ; ret
+0x0000000000401167 : mov edi, 0x404060 ; jmp rax
+0x000000000040113f : nop ; endbr64 ; ret
+0x000000000040140c : nop ; leave ; ret
+0x0000000000401226 : nop ; pop rbp ; ret
+0x000000000040116f : nop ; ret
+0x00000000004011ec : nop dword ptr [rax] ; endbr64 ; jmp 0x401180
+0x00000000004013a0 : or byte ptr [rax - 0x77], cl ; retf 0x40be
+0x0000000000401166 : or dword ptr [rdi + 0x404060], edi ; jmp rax
+0x00000000004014ac : pop r12 ; pop r13 ; pop r14 ; pop r15 ; ret
+0x00000000004014ae : pop r13 ; pop r14 ; pop r15 ; ret
+0x00000000004014b0 : pop r14 ; pop r15 ; ret
+0x00000000004014b2 : pop r15 ; ret
+0x00000000004014ab : pop rbp ; pop r12 ; pop r13 ; pop r14 ; pop r15 ; ret
+0x00000000004014af : pop rbp ; pop r14 ; pop r15 ; ret
+0x00000000004011dd : pop rbp ; ret
+0x00000000004014b3 : pop rdi ; ret
+0x00000000004014b1 : pop rsi ; pop r15 ; ret
+0x00000000004014ad : pop rsp ; pop r13 ; pop r14 ; pop r15 ; ret
+0x000000000040101a : ret
+0x00000000004013d1 : retf
+0x00000000004012ea : retf 0x20be
+0x00000000004013a3 : retf 0x40be
+0x0000000000401011 : sal byte ptr [rdx + rax - 1], 0xd0 ; add rsp, 8 ; ret
+0x000000000040105b : sar edi, 0xff ; call qword ptr [rax - 0x5e1f00d]
+0x00000000004014cd : sub esp, 8 ; add rsp, 8 ; ret
+0x00000000004014cc : sub rsp, 8 ; add rsp, 8 ; ret
+0x0000000000401010 : test eax, eax ; je 0x401016 ; call rax
+0x0000000000401163 : test eax, eax ; je 0x401170 ; mov edi, 0x404060 ; jmp rax
+0x00000000004011a5 : test eax, eax ; je 0x4011b0 ; mov edi, 0x404060 ; jmp rax
+0x000000000040100f : test rax, rax ; je 0x401016 ; call rax
+0x00000000004011d8 : wait ; add byte ptr cs:[rax], al ; add dword ptr [rbp - 0x3d], ebx ; nop ; ret
+
+Unique gadgets found: 81

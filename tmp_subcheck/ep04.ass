@@ -1,0 +1,440 @@
+[Script Info]
+Title: English (US)
+Original Translation: 
+Original Editing: 
+Original Timing: 
+Synch Point: 
+Script Updated By: 
+Update Details: 
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 640
+PlayResY: 360
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Main - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Flashback,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+Style: Flashback - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:05.70,0:00:07.29,Flashback,Kamome,0,0,0,,Check this out, Taka!
+Dialogue: 0,0:00:08.33,0:00:09.68,Flashback,Taka,0,0,0,,A map of this island?
+Dialogue: 0,0:00:09.68,0:00:10.42,Flashback,Kamome,0,0,0,,Yeah!
+Dialogue: 0,0:00:10.42,0:00:14.43,Default,Text,0,0,0,,{\fnComic Sans MS\fs10\shad0\frz326.2\pos(497.176,76.699)\c&HA2B4BC&\3c&HD2E7ED&\b1}Torishirojima
+Dialogue: 0,0:00:10.87,0:00:13.30,Flashback,Kamome,0,0,0,,I wanna get to this X.
+Dialogue: 0,0:00:13.30,0:00:14.43,Flashback,Taka,0,0,0,,Okay...
+Dialogue: 0,0:00:14.90,0:00:16.34,Flashback,Taka,0,0,0,,Is something there?
+Dialogue: 0,0:00:18.24,0:00:19.10,Flashback,Kamome,0,0,0,,Treasure!
+Dialogue: 0,0:00:19.10,0:00:20.51,Flashback,Taka,0,0,0,,You're lying.
+Dialogue: 0,0:00:20.51,0:00:22.14,Flashback,Taka,0,0,0,,There's no way there's treasure.
+Dialogue: 0,0:00:22.14,0:00:24.81,Flashback,Kamome,0,0,0,,Well, we gotta go find out!
+Dialogue: 0,0:00:25.99,0:00:27.38,Flashback,Taka,0,0,0,,Why do {\i1}I{\i0} have to, though?
+Dialogue: 0,0:00:27.38,0:00:29.79,Flashback,Kamome,0,0,0,,Because you look athletic.
+Dialogue: 0,0:00:29.79,0:00:32.93,Flashback,Kamome,0,0,0,,I bet you'll be fine, even if there's danger.
+Dialogue: 0,0:00:37.01,0:00:40.57,Flashback,Taka,0,0,0,,In that case, there's someone \Nwho'd be even more useful than me.
+Dialogue: 0,0:00:40.57,0:00:41.87,Flashback,Kamome,0,0,0,,Really? Who?
+Dialogue: 0,0:00:41.87,0:00:43.29,Flashback,Tsubame,0,0,0,,Hup.
+Dialogue: 0,0:00:44.28,0:00:45.92,Flashback,Tsubame,0,0,0,,Tsubame is my name.
+Dialogue: 0,0:00:46.21,0:00:47.69,Flashback,Kamome,0,0,0,,Where did you come from?!
+Dialogue: 0,0:00:47.69,0:00:50.22,Flashback,Kamome,0,0,0,,I'd swear you came outta the trees!
+Dialogue: 0,0:00:50.22,0:00:51.55,Flashback,Tsubame,0,0,0,,That is a secret.
+Dialogue: 0,0:00:51.55,0:00:53.09,Flashback,Kamome,0,0,0,,She's a ninja!
+Dialogue: 0,0:00:53.09,0:00:54.83,Flashback,Hayato,0,0,0,,You kids.
+Dialogue: 0,0:00:54.83,0:00:58.49,Flashback,Hayato,0,0,0,,You look like you're up to no good.
+Dialogue: 0,0:00:58.49,0:00:59.45,Flashback,Kamome,0,0,0,,Uh-oh...
+Dialogue: 0,0:01:01.46,0:01:02.36,Flashback,Kamome,0,0,0,,Who are you?
+Dialogue: 0,0:01:02.87,0:01:04.27,Flashback,Hayato,0,0,0,,I'm Hayato.
+Dialogue: 0,0:01:04.27,0:01:06.48,Flashback,Hayato,0,0,0,,As student president, I can't just stand by.
+Dialogue: 0,0:01:06.88,0:01:07.96,Flashback,Suzume,0,0,0,,Um...
+Dialogue: 0,0:01:08.90,0:01:11.84,Flashback,Kamome,0,0,0,,You're... Suzume-chan, right?
+Dialogue: 0,0:01:11.84,0:01:12.61,Flashback,Suzume,0,0,0,,Yeah.
+Dialogue: 0,0:01:13.42,0:01:18.36,Flashback,Suzume,0,0,0,,C-Can I have some treasure if I help out too?
+Dialogue: 0,0:01:18.36,0:01:19.45,Flashback,Kamome,0,0,0,,Sure!
+Dialogue: 0,0:01:19.45,0:01:21.41,Flashback,Kamome,0,0,0,,Let's all find it together.
+Dialogue: 0,0:03:09.41,0:03:10.60,Default,Kamome,0,0,0,,I see, I see...
+Dialogue: 0,0:03:12.18,0:03:12.85,Default,Hairi,0,0,0,,Hey.
+Dialogue: 0,0:03:14.34,0:03:15.36,Default,Kamome,0,0,0,,You came, huh?
+Dialogue: 0,0:03:16.95,0:03:18.67,Default,Kamome,0,0,0,,Look at you!
+Dialogue: 0,0:03:18.67,0:03:20.36,Default,Kamome,0,0,0,,You made it here!
+Dialogue: 0,0:03:20.36,0:03:22.36,Default,Kamome,0,0,0,,C'mon, you! C'mon, c'mon, c'mon!
+Dialogue: 0,0:03:21.59,0:03:22.97,Main - Top,Hairi,0,0,0,,Y-Yeah...
+Dialogue: 0,0:03:23.22,0:03:24.20,Default,Kamome,0,0,0,,C'mon, c'mon!
+Dialogue: 0,0:03:25.22,0:03:30.03,Default,Kamome,0,0,0,,We hid the secret of this island in this box,
+Dialogue: 0,0:03:30.03,0:03:32.58,Default,Kamome,0,0,0,,then we all locked it together.
+Dialogue: 0,0:03:32.58,0:03:34.09,Default,Hairi,0,0,0,,Four locks, huh?
+Dialogue: 0,0:03:34.09,0:03:34.84,Default,Kamome,0,0,0,,Yup.
+Dialogue: 0,0:03:34.84,0:03:36.84,Default,Kamome,0,0,0,,There were five of us.
+Dialogue: 0,0:03:36.84,0:03:39.37,Default,Hairi,0,0,0,,So the five of you hid the keys?
+Dialogue: 0,0:03:41.06,0:03:42.82,Default,Hairi,0,0,0,,But there're only four...
+Dialogue: 0,0:03:42.82,0:03:46.22,Default,Kamome,0,0,0,,As the leader, I was tasked \Nwith holding on to this notebook.
+Dialogue: 0,0:03:46.22,0:03:47.97,Default,Kamome,0,0,0,,So I didn't have a key.
+Dialogue: 0,0:03:47.97,0:03:49.96,Default,Hairi,0,0,0,,{\i1}You{\i0} were the leader?
+Dialogue: 0,0:03:49.96,0:03:51.73,Default,Kamome,0,0,0,,Wh-What's wrong with that?
+Dialogue: 0,0:03:51.73,0:03:53.61,Default,Hairi,0,0,0,,Who else was on board?
+Dialogue: 0,0:03:53.61,0:03:54.85,Default,Hairi,0,0,0,,A dog and a pheasant?
+Dialogue: 0,0:03:56.41,0:03:57.82,Default,Kamome,0,0,0,,Bah!
+Dialogue: 0,0:03:59.09,0:03:59.93,Default,Hairi,0,0,0,,A sheep?
+Dialogue: 0,0:03:59.93,0:04:01.30,Default,Kamome,0,0,0,,I'm {\i1}angry{\i0}!
+Dialogue: 0,0:04:01.30,0:04:03.84,Default,Kamome,0,0,0,,I made a great team leader.
+Dialogue: 0,0:04:06.32,0:04:09.18,Default,Hairi,0,0,0,,Okay, now if you find the keys\Nand open this box,
+Dialogue: 0,0:04:09.18,0:04:11.20,Default,Hairi,0,0,0,,you get access to the island's secret.
+Dialogue: 0,0:04:11.75,0:04:13.70,Default,Hairi,0,0,0,,So, what's the secret?
+Dialogue: 0,0:04:14.64,0:04:15.87,Default,Kamome,0,0,0,,Come closer.
+Dialogue: 0,0:04:18.50,0:04:19.88,Default,Kamome,0,0,0,,The secret is...
+Dialogue: 0,0:04:22.33,0:04:24.17,Default,Kamome,0,0,0,,not something I'd spill!
+Dialogue: 0,0:04:26.19,0:04:32.81,Default,Kamome,0,0,0,,Anyway, the keys are hidden\Naccording to the hints written here.
+Dialogue: 0,0:04:32.10,0:04:34.64,Default,Text,0,0,0,,{\an1\shad0\bord1\fnArial\fs10\frz25.34\pos(161.627,162.722)\c&H434749&\3c&H8BA69B&}The castle in the sky where\N the sea eagle lives
+Dialogue: 0,0:04:32.10,0:04:34.64,Default,Text,0,0,0,,{\an1\shad0\bord0\fnArial\fs10\frz25.34\c&H434749&\3c&H8BA69B&\pos(190.554,214.77)}Beneath the kaitei \Nwatched over by the kaijin
+Dialogue: 0,0:04:32.10,0:04:34.64,Default,Text,0,0,0,,{\an1\shad0\bord0\fay-.1\fnArial\fs10\frz25.34\c&H434749&\3c&H8BA69B&\pos(309.875,90.433)}The guard dog sleeps by \Nthe gateway to the next life
+Dialogue: 0,0:04:32.10,0:04:34.64,Default,Text,0,0,0,,{\an1\shad0\bord1\fay-.1\fnArial\fs10\frz25.34\c&H434749&\3c&HE9EFF0&\pos(343.141,156.216)}The desert where basilisks gather
+Dialogue: 0,0:04:33.29,0:04:34.64,Default,Hairi,0,0,0,,Riddles, huh?
+Dialogue: 0,0:04:34.96,0:04:37.18,Default,Hairi,0,0,0,,But these are ten years old, right?
+Dialogue: 0,0:04:37.18,0:04:41.40,Default,Hairi,0,0,0,,Wherever you hid the keys, \NI can't imagine they're still there.
+Dialogue: 0,0:04:41.78,0:04:45.20,Default,Hairi,0,0,0,,Like, "kaitei" here means "under the sea."\NIf that's literal,
+Dialogue: 0,0:04:45.57,0:04:47.28,Default,Hairi,0,0,0,,there's no way you're getting it back.
+Dialogue: 0,0:04:47.58,0:04:51.19,Default,Kamome,0,0,0,,I'm confident we thought things \Nthrough when hiding them.
+Dialogue: 0,0:04:51.19,0:04:52.79,Default,Kamome,0,0,0,,For example...
+Dialogue: 0,0:04:53.79,0:04:56.46,Default,Hairi,0,0,0,,Doesn't look like there are any keys here.
+Dialogue: 0,0:04:56.46,0:04:57.29,Default,Kamome,0,0,0,,Yeah...
+Dialogue: 0,0:04:57.29,0:04:59.56,Default,Kamome,0,0,0,,Well, what do you think "kaijin" means?
+Dialogue: 0,0:04:59.56,0:05:01.00,Default,Hairi,0,0,0,,Kaijin...
+Dialogue: 0,0:05:01.00,0:05:03.35,Default,Hairi,0,0,0,,If it's supposed to mean "sea god,"
+Dialogue: 0,0:05:03.35,0:05:05.92,Default,Hairi,0,0,0,,maybe there's a statue somewhere.
+Dialogue: 0,0:05:05.92,0:05:08.18,Default,Kamome,0,0,0,,I've been around the whole island,
+Dialogue: 0,0:05:08.18,0:05:09.89,Default,Kamome,0,0,0,,and I don't remember seeing one.
+Dialogue: 0,0:05:09.89,0:05:11.58,Default,Hairi,0,0,0,,Kaijin...
+Dialogue: 0,0:05:11.58,0:05:13.49,Default,Hairi,0,0,0,,A sea god?
+Dialogue: 0,0:05:13.49,0:05:14.89,Default,Hairi,0,0,0,,Protecting the sea?
+Dialogue: 0,0:05:17.01,0:05:19.36,Default,Hairi,0,0,0,,Maybe the lighthouse?\NThat keeps the sea safe.
+Dialogue: 0,0:05:20.42,0:05:21.73,Default,Kamome,0,0,0,,That makes sense!
+Dialogue: 0,0:05:22.88,0:05:23.86,Default,Tsumugi,0,0,0,,Mugyu?
+Dialogue: 0,0:05:23.86,0:05:25.36,Default,Tsumugi,0,0,0,,Aren't you...
+Dialogue: 0,0:05:26.83,0:05:27.86,Default,Kamome,0,0,0,,Do you know each other?
+Dialogue: 0,0:05:27.86,0:05:29.24,Default,Hairi,0,0,0,,Yeah, kinda.
+Dialogue: 0,0:05:30.87,0:05:32.81,Default,Hairi,0,0,0,,I'm Takahara Hairi.
+Dialogue: 0,0:05:32.81,0:05:35.75,Default,Hairi,0,0,0,,And this is Kushima Kamomehhh.
+Dialogue: 0,0:05:35.75,0:05:36.61,Default,Tsumugi,0,0,0,,"Mehhh"?
+Dialogue: 0,0:05:36.61,0:05:37.62,Default,Kamome,0,0,0,,Hold it.
+Dialogue: 0,0:05:37.62,0:05:39.50,Default,Kamome,0,0,0,,That's not right.
+Dialogue: 0,0:05:40.98,0:05:42.19,Default,Kamome,0,0,0,,Nice to meet you.
+Dialogue: 0,0:05:42.19,0:05:43.50,Default,Kamome,0,0,0,,I'm Kushima Kamome.
+Dialogue: 0,0:05:43.50,0:05:44.87,Default,Tsumugi,0,0,0,,Hello there.
+Dialogue: 0,0:05:44.87,0:05:46.70,Default,Tsumugi,0,0,0,,I'm Tsumugi Wenders.
+Dialogue: 0,0:05:47.38,0:05:48.94,Default,Kamome,0,0,0,,You're cleaning up litter, huh?
+Dialogue: 0,0:05:48.94,0:05:49.93,Default,Kamome,0,0,0,,Good on you.
+Dialogue: 0,0:05:49.93,0:05:51.90,Default,Kamome,0,0,0,,I'll lend you a hand.
+Dialogue: 0,0:05:54.25,0:05:55.14,Default,Hairi,0,0,0,,Count me in too.
+Dialogue: 0,0:05:55.14,0:05:56.32,Default,Tsumugi,0,0,0,,Mugyu...
+Dialogue: 0,0:05:57.87,0:06:00.69,Default,Tsumugi,0,0,0,,You're both such nice people.
+Dialogue: 0,0:06:02.47,0:06:05.32,Default,Tsumugi,0,0,0,,I see. So you're looking for keys.
+Dialogue: 0,0:06:06.82,0:06:09.01,Default,Tsumugi,0,0,0,,I haven't seen any.
+Dialogue: 0,0:06:09.01,0:06:10.14,Default,Kamome,0,0,0,,Figures.
+Dialogue: 0,0:06:10.14,0:06:11.68,Default,Kamome,0,0,0,,I wouldn't have thought so.
+Dialogue: 0,0:06:11.68,0:06:13.08,Default,Kamome,0,0,0,,But we do know...
+Dialogue: 0,0:06:13.40,0:06:16.02,Default,Kamome,0,0,0,,it's underwater near the lighthouse?
+Dialogue: 0,0:06:16.02,0:06:18.71,Default,Hairi,0,0,0,,If that's the case, we're never finding it.
+Dialogue: 0,0:06:19.96,0:06:22.96,Default,Hairi,0,0,0,,"Beneath the kaitei \Nwatched over by the kaijin..."
+Dialogue: 0,0:06:23.42,0:06:27.38,Default,Hairi,0,0,0,,Maybe there's some other meaning to it.
+Dialogue: 0,0:06:34.35,0:06:38.10,Default,Hairi,0,0,0,,What are you, a kaijin? Like the humanoid \Nmonsters from sentai shows?
+Dialogue: 0,0:06:38.10,0:06:39.64,Default,Kamome,0,0,0,,Yeah, those.
+Dialogue: 0,0:06:39.64,0:06:42.15,Default,Hairi,0,0,0,,I really doubt that's what it's going for.
+Dialogue: 0,0:06:43.99,0:06:48.78,Default,Hairi,0,0,0,,Maybe it's not the "kaijin" part\N we're not getting, but the "kaitei."
+Dialogue: 0,0:06:48.78,0:06:50.11,Default,Hairi,0,0,0,,Excuse me.
+Dialogue: 0,0:06:51.03,0:06:52.82,Default,Hairi,0,0,0,,Do you happen to have a dictionary?
+Dialogue: 0,0:06:52.82,0:06:53.93,Default,Staff,0,0,0,,Here you go.
+Dialogue: 0,0:06:56.58,0:06:58.95,Default,Kamome,0,0,0,,Are we really going to find it here?
+Dialogue: 0,0:06:58.95,0:07:01.29,Default,Hairi,0,0,0,,If my reasoning is correct.
+Dialogue: 0,0:07:10.94,0:07:11.94,Default,Kamome,0,0,0,,The key!
+Dialogue: 0,0:07:11.94,0:07:13.05,Default,Kamome,0,0,0,,We found the key!
+Dialogue: 0,0:07:13.44,0:07:14.72,Default,Hairi,0,0,0,,So I was right.
+Dialogue: 0,0:07:15.54,0:07:16.92,Default,Kamome,0,0,0,,How did you know?
+Dialogue: 0,0:07:23.23,0:07:26.02,Default,Hairi,0,0,0,,Written this way, "kaitei" means "stairs."
+Dialogue: 0,0:07:23.23,0:07:28.36,Default,Text,0,0,0,,{\fnArial\shad0\b1\fax.1\blur2\c&H486F7E&\3c&H90B4C5&\frz17.74\pos(276.611,80.314)}Kaitei
+Dialogue: 0,0:07:26.02,0:07:30.85,Default,Hairi,0,0,0,,The "kaitei" being watched over\N meant the stairs to this shrine
+Dialogue: 0,0:07:28.36,0:07:32.78,Default,Text,0,0,0,,{\fs8\fnArial\shad0\c&H000000&\3c&HC5BAB3&\move(240.452,153.325,230.361,144.829)}Fortunes
+Dialogue: 0,0:07:28.36,0:07:32.78,Default,Text,0,0,0,,{\fs10\fnArial\shad0\c&H000000&\3c&HC5BAB3&\move(315.864,155.494,315.864,145.529)}Offerings
+Dialogue: 0,0:07:30.85,0:07:32.78,Default,Hairi,0,0,0,,to the sea god who protects the sea.
+Dialogue: 0,0:07:34.10,0:07:36.78,Default,Kamome,0,0,0,,I never learned that...
+Dialogue: 0,0:07:39.43,0:07:42.12,Default,Kamome,0,0,0,,I'm so glad the key was still there.
+Dialogue: 0,0:07:42.42,0:07:45.30,Default,Kamome,0,0,0,,Thanks, Hairi. I owe you.
+Dialogue: 0,0:07:45.30,0:07:49.51,Default,Hairi,0,0,0,,Man, couldn't you guys\N have chosen a simpler hint?
+Dialogue: 0,0:07:50.00,0:07:51.58,Default,Kamome,0,0,0,,I know, right?
+Dialogue: 0,0:07:55.42,0:07:57.26,Default,Kamome,0,0,0,,Thanks for walking me here.
+Dialogue: 0,0:07:57.56,0:07:58.81,Default,Kamome,0,0,0,,See you tomorrow.
+Dialogue: 0,0:07:59.08,0:08:00.97,Default,Hairi,0,0,0,,It might be the day after.
+Dialogue: 0,0:08:01.26,0:08:03.00,Default,Kamome,0,0,0,,Sure, fine by me.
+Dialogue: 0,0:08:03.60,0:08:08.04,Default,Kamome,0,0,0,,If the day after doesn't work, \Nwe have the day after that.
+Dialogue: 0,0:08:08.04,0:08:12.30,Default,Kamome,0,0,0,,No matter how late, there's always tomorrow!
+Dialogue: 0,0:08:12.30,0:08:14.57,Default,Kamome,0,0,0,,Dondon gabacho!
+Dialogue: 0,0:08:14.57,0:08:15.45,Default,Hairi,0,0,0,,Say what?
+Dialogue: 0,0:08:16.74,0:08:18.14,Default,Kamome,0,0,0,,You don't know it?
+Dialogue: 0,0:08:18.14,0:08:19.47,Default,Hairi,0,0,0,,Not at all.
+Dialogue: 0,0:08:24.02,0:08:28.46,Default,Kamome,0,0,0,,Anyway, come help me out again \Nif you ever feel like it.
+Dialogue: 0,0:08:30.19,0:08:30.96,Default,Hairi,0,0,0,,Sure.
+Dialogue: 0,0:08:31.23,0:08:32.46,Default,Hairi,0,0,0,,See you tomorrow.
+Dialogue: 0,0:08:43.65,0:08:45.42,Default,Hairi,0,0,0,,That wasn't it either...
+Dialogue: 0,0:08:46.02,0:08:49.65,Default,Kamome,0,0,0,,"The guard dog sleeps by the \Ngateway to the next life."
+Dialogue: 0,0:08:50.11,0:08:52.93,Default,Kamome,0,0,0,,This dog would need to be over a decade old.
+Dialogue: 0,0:08:52.93,0:08:55.60,Default,Kamome,0,0,0,,I wonder how many of those\N there are on the island.
+Dialogue: 0,0:09:01.85,0:09:03.19,Default,Hairi,0,0,0,,This should be the place.
+Dialogue: 0,0:09:03.65,0:09:05.08,Default,Kamome,0,0,0,,The crematorium?
+Dialogue: 0,0:09:05.08,0:09:07.10,Default,Kamome,0,0,0,,Oh, I see.
+Dialogue: 0,0:09:07.10,0:09:09.03,Default,Kamome,0,0,0,,The "gateway to the next life."
+Dialogue: 0,0:09:09.03,0:09:11.71,Default,Hairi,0,0,0,,A bit morbid, but...
+Dialogue: 0,0:09:16.05,0:09:18.48,Default,Kamome,0,0,0,,Don't mind me.
+Dialogue: 0,0:09:21.76,0:09:22.64,Default,Kamome,0,0,0,,Found it!
+Dialogue: 0,0:09:22.64,0:09:23.72,Default,Kamome,0,0,0,,I really found it!
+Dialogue: 0,0:09:24.02,0:09:25.23,Default,Kamome,0,0,0,,The second key!
+Dialogue: 0,0:09:26.39,0:09:27.77,Default,Hairi,0,0,0,,Nice!
+Dialogue: 0,0:09:28.08,0:09:29.12,Default,Hairi,0,0,0,,On to the next one!
+Dialogue: 0,0:09:36.42,0:09:40.53,Default,Hairi,0,0,0,,"The desert where basilisks gather."
+Dialogue: 0,0:09:40.53,0:09:43.74,Default,Kamome,0,0,0,,Basilisks are those bird \Nmonsters, aren't they?
+Dialogue: 0,0:09:43.74,0:09:46.02,Default,Hairi,0,0,0,,"Where birds gather..."
+Dialogue: 0,0:09:47.31,0:09:49.39,Default,Hairi,0,0,0,,Maybe a chicken coop?
+Dialogue: 0,0:09:49.86,0:09:51.03,Default,Kamome,0,0,0,,That's it!
+Dialogue: 0,0:09:51.95,0:09:54.07,Default,Kyouko,0,0,0,,Someone who keeps chickens?
+Dialogue: 0,0:09:55.20,0:09:57.30,Default,Kyouko,0,0,0,,I think a few folks do.
+Dialogue: 0,0:09:57.60,0:10:00.14,Default,Hairi,0,0,0,,I'm looking for somewhere with a lot.
+Dialogue: 0,0:10:00.14,0:10:01.85,Default,Kyouko,0,0,0,,Let's see...
+Dialogue: 0,0:10:01.85,0:10:04.31,Default,Kyouko,0,0,0,,Maybe Naruse-san's place, then.
+Dialogue: 0,0:10:05.37,0:10:08.39,Default,Kyouko,0,0,0,,They have a big shed there \Nwith lots of chickens.
+Dialogue: 0,0:10:08.81,0:10:10.81,Default,Hairi,0,0,0,,I-I see.
+Dialogue: 0,0:10:12.98,0:10:14.15,Default,Kamome,0,0,0,,Naruse-san?
+Dialogue: 0,0:10:14.15,0:10:16.61,Default,Hairi,0,0,0,,You saw her in front of the\Nsnack shop the other day.
+Dialogue: 0,0:10:16.61,0:10:18.99,Default,Kamome,0,0,0,,Ah, that girl!
+Dialogue: 0,0:10:21.02,0:10:23.38,Default,Kamome,0,0,0,,You're close enough \Nto drop by her place, huh?
+Dialogue: 0,0:10:23.38,0:10:25.62,Default,Kamome,0,0,0,,Good going, you.
+Dialogue: 0,0:10:26.70,0:10:28.84,Default,Hairi,0,0,0,,Heh, I guess so.
+Dialogue: 0,0:10:28.84,0:10:33.63,Default,Hairi,0,0,0,,Naruse Shiroha and I have been acquainted \Nsince the day I came to the island.
+Dialogue: 0,0:10:33.63,0:10:35.58,Default,Kamome,0,0,0,,You player, you!
+Dialogue: 0,0:10:36.59,0:10:38.09,Default,Text,0,0,0,,{\fnTimes New Roman\frx20\shad0\pos(317.831,68.747)\c&H27261E&\3c&H668CAA&\b1}Naruse
+Dialogue: 0,0:10:38.09,0:10:40.06,Default,Hairi,0,0,0,,Pardon me!
+Dialogue: 0,0:10:43.82,0:10:46.10,Default,Hairi,0,0,0,,Pardon me...
+Dialogue: 0,0:10:50.98,0:10:52.10,Default,Kobato,0,0,0,,Yes?
+Dialogue: 0,0:10:53.51,0:10:54.94,Default,Hairi,0,0,0,,U-Um...
+Dialogue: 0,0:10:54.94,0:10:57.36,Default,Hairi,0,0,0,,I-I'm Takahara Hairi.
+Dialogue: 0,0:10:57.36,0:10:58.65,Default,Kobato,0,0,0,,I don't know you.
+Dialogue: 0,0:10:58.65,0:11:00.30,Default,Hairi,0,0,0,,U-Um...
+Dialogue: 0,0:11:00.30,0:11:01.78,Default,Hairi,0,0,0,,I-Is Shiroha-san...
+Dialogue: 0,0:11:01.78,0:11:03.45,Default,Kobato,0,0,0,,You're on a first-name basis?
+Dialogue: 0,0:11:03.45,0:11:04.97,Default,Kobato,0,0,0,,That's awful chummy.
+Dialogue: 0,0:11:04.97,0:11:06.28,Default,Kobato,0,0,0,,Who're you?
+Dialogue: 0,0:11:08.68,0:11:09.91,Default,Kamome,0,0,0,,We're friends.
+Dialogue: 0,0:11:13.92,0:11:15.29,Default,Kobato,0,0,0,,Outsiders!
+Dialogue: 0,0:11:21.39,0:11:22.87,Default,Kamome,0,0,0,,That didn't work out.
+Dialogue: 0,0:11:22.87,0:11:24.60,Default,Kamome,0,0,0,,Do you really know each other?
+Dialogue: 0,0:11:24.60,0:11:28.10,Default,Hairi,0,0,0,,I had no idea she had a grandpa like that.
+Dialogue: 0,0:11:33.03,0:11:37.13,Default,Kamome,0,0,0,,Hey, that was a school uniform, wasn't it?
+Dialogue: 0,0:11:37.13,0:11:38.36,Default,Hairi,0,0,0,,Yeah, looks like it.
+Dialogue: 0,0:11:38.36,0:11:42.50,Default,Kamome,0,0,0,,Maybe her gramps would trust us in those.
+Dialogue: 0,0:11:42.50,0:11:44.38,Default,Kamome,0,0,0,,He'd think we're school friends.
+Dialogue: 0,0:11:44.38,0:11:47.08,Default,Hairi,0,0,0,,Yeah, that might lower his guard a little.
+Dialogue: 0,0:11:48.08,0:11:49.25,Default,Hairi,0,0,0,,What?
+Dialogue: 0,0:11:49.25,0:11:52.08,Default,Kamome,0,0,0,,Do you think we can find a uniform?
+Dialogue: 0,0:11:54.82,0:11:57.71,Default,Hairi,0,0,0,,Ao, lend me your school uniform.
+Dialogue: 0,0:11:58.57,0:11:59.17,Default,Ao,0,0,0,,Huh?
+Dialogue: 0,0:11:59.17,0:12:00.92,Default,Hairi,0,0,0,,Lend me your uniform.
+Dialogue: 0,0:12:00.92,0:12:03.88,Default,Ao,0,0,0,,Wh-What? No way in hell!
+Dialogue: 0,0:12:03.88,0:12:05.33,Default,Hairi,0,0,0,,I'm begging you!
+Dialogue: 0,0:12:05.33,0:12:07.37,Default,Hairi,0,0,0,,My friend's absolutely in love.
+Dialogue: 0,0:12:07.37,0:12:08.51,Default,Hairi,0,0,0,,She's infatuated.
+Dialogue: 0,0:12:09.20,0:12:15.65,Default,Ao,0,0,0,,I-I'm no idol or anything. I don't know how\N to deal with that kind of attention...
+Dialogue: 0,0:12:16.24,0:12:17.60,Default,Hairi,0,0,0,,I meant she loves the uniform.
+Dialogue: 0,0:12:18.61,0:12:20.65,Default,Ao,0,0,0,,I knew what you meant!
+Dialogue: 0,0:12:22.28,0:12:25.56,Default,Kamome,0,0,0,,At last, I'm a schoolgirl!
+Dialogue: 0,0:12:26.66,0:12:28.45,Default,Hairi,0,0,0,,It looks pretty tight.
+Dialogue: 0,0:12:28.99,0:12:30.45,Default,Hairi,0,0,0,,Especially in the b—
+Dialogue: 0,0:12:30.45,0:12:31.57,Default,Hairi,0,0,0,,Bwuh!
+Dialogue: 0,0:12:31.57,0:12:32.81,Default,Kamome,0,0,0,,The bwuh?
+Dialogue: 0,0:12:32.81,0:12:33.68,Default,Kamome,0,0,0,,What's that?
+Dialogue: 0,0:12:33.68,0:12:35.07,Default,Hairi,0,0,0,,Nothing. Never mind.
+Dialogue: 0,0:12:35.07,0:12:36.96,Default,Hairi,0,0,0,,Just think of it as a kind of tic.
+Dialogue: 0,0:12:37.43,0:12:38.32,Default,Kamome,0,0,0,,Okay...
+Dialogue: 0,0:12:38.82,0:12:40.34,Default,Kamome,0,0,0,,Good afternoon!
+Dialogue: 0,0:12:43.06,0:12:45.22,Default,Kobato,0,0,0,,What, you again?
+Dialogue: 0,0:12:45.22,0:12:46.47,Default,Kamome,0,0,0,,Hello.
+Dialogue: 0,0:12:54.27,0:12:55.62,Default,Kobato,0,0,0,,Shiroha!
+Dialogue: 0,0:12:55.62,0:12:56.69,Default,Kobato,0,0,0,,Your friends are here!
+Dialogue: 0,0:13:00.41,0:13:01.19,Default,Shiroha,0,0,0,,Ugh.
+Dialogue: 0,0:13:01.46,0:13:03.13,Default,Hairi,0,0,0,,"Ugh"? Really?
+Dialogue: 0,0:13:03.13,0:13:04.22,Default,Kamome,0,0,0,,Hello.
+Dialogue: 0,0:13:05.15,0:13:06.32,Default,Shiroha,0,0,0,,Who are you?
+Dialogue: 0,0:13:06.32,0:13:07.70,Default,Kamome,0,0,0,,I'm Kushima Kamome.
+Dialogue: 0,0:13:08.36,0:13:09.38,Default,Shiroha,0,0,0,,Hi.
+Dialogue: 0,0:13:10.02,0:13:11.16,Default,Shiroha,0,0,0,,What do you want?
+Dialogue: 0,0:13:13.12,0:13:15.50,Default,Kamome,0,0,0,,Pardon us.
+Dialogue: 0,0:13:15.50,0:13:18.38,Default,Hairi,0,0,0,,Now then, where could they have hidden it?
+Dialogue: 0,0:13:24.20,0:13:24.97,Default,Hairi,0,0,0,,Found it!
+Dialogue: 0,0:13:24.97,0:13:26.02,Default,Kamome,0,0,0,,I see.
+Dialogue: 0,0:13:24.97,0:13:28.51,Default,Text,0,0,0,,{\shad0\fnArial Black\fax-.1\frz26.76\pos(204.293,63.687)\c&H95A6AA&\3c&H45575F&}Weekly Young Boy
+Dialogue: 0,0:13:26.02,0:13:27.83,Default,Kamome,0,0,0,,There's a woman on there.
+Dialogue: 0,0:13:27.83,0:13:28.51,Default,Kamome,0,0,0,,Naked.
+Dialogue: 0,0:13:30.34,0:13:32.02,Default,Shiroha,0,0,0,,{\i1}That's{\i0} what you were looking for?
+Dialogue: 0,0:13:32.02,0:13:33.64,Default,Hairi,0,0,0,,N-N-N-No!
+Dialogue: 0,0:13:38.65,0:13:40.46,Default,Hairi,0,0,0,,That's the third one.
+Dialogue: 0,0:13:40.46,0:13:41.77,Default,Kamome,0,0,0,,Yay!
+Dialogue: 0,0:13:41.77,0:13:43.69,Default,Shiroha,0,0,0,,What's that?
+Dialogue: 0,0:13:46.32,0:13:50.51,Default,Kamome,0,0,0,,It's a key for opening a chest \Ncontaining the island's treasure.
+Dialogue: 0,0:13:52.26,0:13:53.49,Default,Shiroha,0,0,0,,That sounds fun.
+Dialogue: 0,0:13:53.49,0:13:54.72,Default,Kamome,0,0,0,,Right?!
+Dialogue: 0,0:13:54.72,0:13:56.04,Default,Shiroha,0,0,0,,Y-Yeah.
+Dialogue: 0,0:13:56.39,0:13:58.79,Default,Kamome,0,0,0,,Wanna help us find it?
+Dialogue: 0,0:14:00.46,0:14:01.13,Default,Shiroha,0,0,0,,No.
+Dialogue: 0,0:14:06.76,0:14:09.43,Default,Kamome,0,0,0,,I put her on the spot. \NCan't blame her for that.
+Dialogue: 0,0:14:09.43,0:14:11.58,Default,Hairi,0,0,0,,She's always like that.
+Dialogue: 0,0:14:11.58,0:14:13.00,Default,Hairi,0,0,0,,Don't worry about it.
+Dialogue: 0,0:14:13.83,0:14:15.35,Default,Hairi,0,0,0,,But man, you know...
+Dialogue: 0,0:14:15.35,0:14:17.53,Default,Hairi,0,0,0,,The Higenekos, was it?
+Dialogue: 0,0:14:17.53,0:14:20.56,Default,Hairi,0,0,0,,I can kinda see why you were the leader.
+Dialogue: 0,0:14:20.56,0:14:22.56,Default,Kamome,0,0,0,,Y-You don't say.
+Dialogue: 0,0:14:22.56,0:14:24.77,Default,Hairi,0,0,0,,You're weirdly assertive about stuff.
+Dialogue: 0,0:14:24.77,0:14:26.04,Default,Kamome,0,0,0,,Nah.
+Dialogue: 0,0:14:26.04,0:14:28.17,Default,Kamome,0,0,0,,You're giving me too much credit.
+Dialogue: 0,0:14:28.71,0:14:32.37,Default,Kamome,0,0,0,,I just wanted friends. That's all.
+Dialogue: 0,0:14:32.87,0:14:36.58,Default,Kamome,0,0,0,,I was always shy and \Nanxious around strangers.
+Dialogue: 0,0:14:36.98,0:14:42.96,Default,Kamome,0,0,0,,Ten years ago, my friends pushed me into\Nsummer camp to try to overcome that.
+Dialogue: 0,0:14:42.96,0:14:45.34,Default,Kamome,0,0,0,,I couldn't stand it at first.
+Dialogue: 0,0:14:45.81,0:14:50.84,Default,Kamome,0,0,0,,I was always by my lonesome while\N everyone else was forming groups.
+Dialogue: 0,0:14:51.40,0:14:55.64,Default,Kamome,0,0,0,,But then I found a map in my dad's study.
+Dialogue: 0,0:14:56.02,0:14:58.07,Default,Kamome,0,0,0,,My dad's a scholar.
+Dialogue: 0,0:14:58.07,0:15:01.52,Default,Kamome,0,0,0,,He was apparently studying \Nthe history of this island.
+Dialogue: 0,0:15:01.84,0:15:05.86,Default,Kamome,0,0,0,,And he kept that map tucked \Nsafely in the back of his desk.
+Dialogue: 0,0:15:06.16,0:15:11.76,Default,Kamome,0,0,0,,It had a red X and a quick note on it...
+Dialogue: 0,0:15:11.76,0:15:14.50,Default,Kamome,0,0,0,,Just the word "treasure."
+Dialogue: 0,0:15:15.40,0:15:20.12,Default,Kamome,0,0,0,,But you have to traverse \Nthe mountains to reach it.
+Dialogue: 0,0:15:20.12,0:15:24.33,Default,Kamome,0,0,0,,I knew the grown-ups wouldn't let me go.
+Dialogue: 0,0:15:24.90,0:15:30.36,Default,Kamome,0,0,0,,So I tried talking the most promising\Nkid into going with me.
+Dialogue: 0,0:15:30.36,0:15:31.84,Default,Hairi,0,0,0,,Talk about pragmatic.
+Dialogue: 0,0:15:31.84,0:15:33.82,Default,Kamome,0,0,0,,His name was Taka.
+Dialogue: 0,0:15:33.82,0:15:37.35,Default,Kamome,0,0,0,,He was a bit intimidating,\N but he was athletic.
+Dialogue: 0,0:15:37.35,0:15:38.90,Default,Kamome,0,0,0,,And then there was Tsubame.
+Dialogue: 0,0:15:38.90,0:15:39.99,Default,Kamome,0,0,0,,Hayato too.
+Dialogue: 0,0:15:39.99,0:15:43.60,Default,Kamome,0,0,0,,Then Suzume rounded out the five of us.
+Dialogue: 0,0:15:45.92,0:15:47.20,Default,Kamome,0,0,0,,What's wrong?
+Dialogue: 0,0:15:47.20,0:15:48.61,Default,Kamome,0,0,0,,Something bothering you?
+Dialogue: 0,0:15:48.61,0:15:53.15,Default,Hairi,0,0,0,,No. It's just that all of this sounds familiar.
+Dialogue: 0,0:15:53.15,0:15:54.61,Default,Kamome,0,0,0,,Oh yeah?
+Dialogue: 0,0:15:54.61,0:15:56.99,Default,Kamome,0,0,0,,Then you've been on an adventure before too.
+Dialogue: 0,0:15:57.39,0:15:58.68,Default,Hairi,0,0,0,,Could be.
+Dialogue: 0,0:16:08.00,0:16:11.67,Default,Hairi,0,0,0,,"The castle in the sky \Nwhere the sea eagle lives," huh?
+Dialogue: 0,0:16:19.31,0:16:21.43,Default,Hairi,0,0,0,,We're getting good at this.
+Dialogue: 0,0:16:21.43,0:16:22.93,Default,Kamome,0,0,0,,That's the fourth one.
+Dialogue: 0,0:16:22.93,0:16:23.91,Default,Hairi,0,0,0,,Yup.
+Dialogue: 0,0:16:23.91,0:16:25.81,Default,Hairi,0,0,0,,That makes all of them.
+Dialogue: 0,0:16:26.56,0:16:27.40,Default,Kamome,0,0,0,,Hairi!
+Dialogue: 0,0:16:36.37,0:16:37.85,Default,Kamome,0,0,0,,Wake up, Hairi.
+Dialogue: 0,0:16:37.85,0:16:39.23,Default,Kamome,0,0,0,,It's morning.
+Dialogue: 0,0:16:43.82,0:16:45.42,Default,Kamome,0,0,0,,Morning, Hairi.
+Dialogue: 0,0:16:45.84,0:16:48.18,Default,Hairi,0,0,0,,M-Morning.
+Dialogue: 0,0:16:48.18,0:16:49.58,Default,Hairi,0,0,0,,Why are you...
+Dialogue: 0,0:16:49.58,0:16:53.80,Default,Kamome,0,0,0,,Well, I'm the reason you got hurt, so...
+Dialogue: 0,0:16:54.11,0:16:58.18,Default,Kamome,0,0,0,,I thought I'd take care of you for a while.
+Dialogue: 0,0:16:58.47,0:17:00.26,Default,Hairi,0,0,0,,I appreciate the thought, but...
+Dialogue: 0,0:17:00.71,0:17:02.65,Default,Hairi,0,0,0,,Why are you dressed like that?
+Dialogue: 0,0:17:02.65,0:17:07.19,Default,Kamome,0,0,0,,I told Kyouko-san I'd be helping \Nout for a while, and...
+Dialogue: 0,0:17:07.19,0:17:09.36,Default,Kamome,0,0,0,,She offered me this!
+Dialogue: 0,0:17:13.19,0:17:14.25,Default,Kyouko,0,0,0,,What do you think?
+Dialogue: 0,0:17:14.25,0:17:15.45,Default,Kyouko,0,0,0,,Looks good on her, right?
+Dialogue: 0,0:17:17.63,0:17:21.24,Default,Hairi,0,0,0,,Yeah... I guess it does.
+Dialogue: 0,0:17:21.24,0:17:23.10,Default,Kamome,0,0,0,,Yay!
+Dialogue: 0,0:17:23.10,0:17:25.21,Default,Kamome,0,0,0,,Okay, I'll be keeping busy.
+Dialogue: 0,0:17:44.47,0:17:47.06,Default,Umi,0,0,0,,She works hard, doesn't she?
+Dialogue: 0,0:17:47.57,0:17:48.45,Default,Hairi,0,0,0,,Yeah.
+Dialogue: 0,0:17:53.36,0:17:55.53,Default,Kamome,0,0,0,,Hairi, I'm here to scrub your back.
+Dialogue: 0,0:17:56.42,0:17:57.65,Default,Hairi,0,0,0,,Wh-Why?!
+Dialogue: 0,0:17:57.65,0:18:00.33,Default,Kamome,0,0,0,,Why not? I came to help.
+Dialogue: 0,0:18:00.97,0:18:02.41,Default,Hairi,0,0,0,,B-But you're...
+Dialogue: 0,0:18:02.41,0:18:04.91,Default,Kamome,0,0,0,,No need to be so shy.
+Dialogue: 0,0:18:04.91,0:18:06.90,Default,Kamome,0,0,0,,You're wearing a towel, aren't you?
+Dialogue: 0,0:18:06.90,0:18:08.00,Default,Hairi,0,0,0,,Nope.
+Dialogue: 0,0:18:09.09,0:18:13.56,Default,Kamome,0,0,0,,W-Well, I may as well scrub \Nyour back while I'm here.
+Dialogue: 0,0:18:13.56,0:18:15.17,Default,Kamome,0,0,0,,Put a towel on, though.
+Dialogue: 0,0:18:18.98,0:18:20.29,Main - Italics,Hairi,0,0,0,,Come on!
+Dialogue: 0,0:18:20.29,0:18:22.80,Main - Italics,Hairi,0,0,0,,Do you really need to get {\i0}that{\i1} worked up?
+Dialogue: 0,0:18:26.31,0:18:27.56,Default,Kamome,0,0,0,,Sorry, never mind!
+Dialogue: 0,0:18:27.56,0:18:29.00,Default,Kamome,0,0,0,,I can't!
+Dialogue: 0,0:18:36.03,0:18:38.53,Default,Kamome,0,0,0,,Okay, let's open up the box now.
+Dialogue: 0,0:18:38.53,0:18:39.78,Default,Hairi,0,0,0,,Yeah.
+Dialogue: 0,0:18:42.60,0:18:45.58,Default,Hairi,0,0,0,,This is the treasure you were talking about?
+Dialogue: 0,0:18:47.37,0:18:48.82,Default,Kamome,0,0,0,,That's right.
+Dialogue: 0,0:18:49.29,0:18:50.56,Default,Kamome,0,0,0,,Thank goodness.
+Dialogue: 0,0:18:50.56,0:18:52.08,Default,Kamome,0,0,0,,It's still here.
+Dialogue: 0,0:18:52.63,0:18:53.84,Default,Hairi,0,0,0,,Kamome...
+Dialogue: 0,0:18:54.26,0:18:59.12,Default,Kamome,0,0,0,,To be honest, I wasn't sure\N I'd be able to recover it.
+Dialogue: 0,0:19:00.21,0:19:04.85,Default,Kamome,0,0,0,,But with your help, we found it.
+Dialogue: 0,0:19:06.54,0:19:08.60,Default,Kamome,0,0,0,,Thank you, Hairi.
+Dialogue: 0,0:19:10.73,0:19:11.97,Default,Hairi,0,0,0,,I'm happy for you.
+Dialogue: 0,0:19:12.56,0:19:14.77,Default,Hairi,0,0,0,,So, what is it anyway?
+Dialogue: 0,0:19:16.01,0:19:18.25,Default,Hairi,0,0,0,,Whatever it is you recovered.
+Dialogue: 0,0:19:18.25,0:19:20.01,Default,Hairi,0,0,0,,The secret of the island.
+Dialogue: 0,0:19:20.01,0:19:24.27,Default,Hairi,0,0,0,,I was under the impression\Nit's what was in the chest.
+Dialogue: 0,0:19:25.16,0:19:29.91,Default,Kamome,0,0,0,,What we found would never fit in this chest.
+Dialogue: 0,0:19:29.91,0:19:31.77,Default,Hairi,0,0,0,,It's that big?
+Dialogue: 0,0:19:31.77,0:19:33.70,Default,Kamome,0,0,0,,It's huge.
+Dialogue: 0,0:19:33.70,0:19:35.25,Default,Hairi,0,0,0,,Must be some treasure.
+Dialogue: 0,0:19:35.54,0:19:36.20,Default,Kamome,0,0,0,,Yup.
+Dialogue: 0,0:19:36.20,0:19:37.45,Default,Kamome,0,0,0,,It's amazing.
+Dialogue: 0,0:19:37.45,0:19:38.91,Default,Hairi,0,0,0,,And what is it?
+Dialogue: 0,0:19:38.91,0:19:41.63,Default,Kamome,0,0,0,,Look. It shows you right here.
+Dialogue: 0,0:19:43.30,0:19:44.28,Default,Hairi,0,0,0,,A ship?
+Dialogue: 0,0:19:44.28,0:19:45.09,Default,Kamome,0,0,0,,Yup.
+Dialogue: 0,0:19:46.06,0:19:47.68,Default,Hairi,0,0,0,,Well, this {\i1}is{\i0} an island.
+Dialogue: 0,0:19:47.68,0:19:49.01,Default,Hairi,0,0,0,,A ship or two is no surprise.
+Dialogue: 0,0:19:49.01,0:19:50.52,Default,Kamome,0,0,0,,Tut, tut, tut.
+Dialogue: 0,0:19:50.87,0:19:52.75,Default,Kamome,0,0,0,,It's no ordinary ship.
+Dialogue: 0,0:19:52.75,0:19:54.03,Default,Hairi,0,0,0,,What do you mean?
+Dialogue: 0,0:19:54.03,0:19:55.06,Default,Kamome,0,0,0,,You see...
+Dialogue: 0,0:19:56.26,0:19:58.04,Default,Hairi,0,0,0,,You aren't getting me this time.
+Dialogue: 0,0:19:59.13,0:20:02.82,Default,Hairi,0,0,0,,You're going to tease me and \Nthen refuse to tell me, right?
+Dialogue: 0,0:20:02.82,0:20:04.41,Default,Hairi,0,0,0,,I see through you.
+Dialogue: 0,0:20:04.41,0:20:05.57,Default,Kamome,0,0,0,,Nuh-uh.
+Dialogue: 0,0:20:06.04,0:20:08.58,Default,Kamome,0,0,0,,I was really going to tell you this time.
+Dialogue: 0,0:20:08.58,0:20:09.58,Default,Hairi,0,0,0,,What?
+Dialogue: 0,0:20:09.58,0:20:10.54,Default,Hairi,0,0,0,,For real?
+Dialogue: 0,0:20:10.54,0:20:11.83,Default,Kamome,0,0,0,,For real.
+Dialogue: 0,0:20:11.83,0:20:13.45,Default,Hairi,0,0,0,,I wanna know, then!
+Dialogue: 0,0:20:13.45,0:20:15.14,Default,Kamome,0,0,0,,Yeah?
+Dialogue: 0,0:20:15.14,0:20:17.83,Default,Kamome,0,0,0,,Then I guess I'll tell you.
+Dialogue: 0,0:20:17.83,0:20:18.59,Default,Kamome,0,0,0,,Ahem.
+Dialogue: 0,0:20:19.27,0:20:20.92,Default,Kamome,0,0,0,,Okay, here goes.
+Dialogue: 0,0:20:21.64,0:20:26.09,Default,Kamome,0,0,0,,We followed this map to \Nthe end of the island.
+Dialogue: 0,0:20:26.41,0:20:29.97,Default,Kamome,0,0,0,,Past the mountains and through caves.
+Dialogue: 0,0:20:29.97,0:20:32.23,Default,Kamome,0,0,0,,It was a long journey.
+Dialogue: 0,0:20:33.54,0:20:35.49,Default,Kamome,0,0,0,,And then we found...
+Dialogue: 0,0:20:44.43,0:20:45.66,Default,Kamome,0,0,0,,a pirate ship!
+Dialogue: 0,0:20:45.66,0:20:47.03,Default,Hairi,0,0,0,,What?
+Dialogue: 0,0:20:47.03,0:20:48.98,Default,Hairi,0,0,0,,A pirate ship, uh...
+Dialogue: 0,0:20:48.98,0:20:51.48,Default,Hairi,0,0,0,,like with a skull and crossbones and stuff?
+Dialogue: 0,0:20:51.48,0:20:52.25,Default,Kamome,0,0,0,,Yup.
+Dialogue: 0,0:20:52.25,0:20:53.66,Default,Kamome,0,0,0,,One of those pirate ships.
+Dialogue: 0,0:20:53.66,0:20:55.49,Default,Kamome,0,0,0,,It had a skull and crossbones,
+Dialogue: 0,0:20:55.49,0:20:57.83,Default,Kamome,0,0,0,,like one you'd see drifting \Nnear Europe or something.
+Dialogue: 0,0:21:00.48,0:21:01.46,Default,Hairi,0,0,0,,You're lying.
+Dialogue: 0,0:21:01.46,0:21:02.67,Default,Kamome,0,0,0,,I'm not lying.
+Dialogue: 0,0:21:04.34,0:21:12.02,Default,Kamome,0,0,0,,Right after we found that ship,\N we had to turn back.
+Dialogue: 0,0:21:12.56,0:21:16.10,Default,Kamome,0,0,0,,And the next day, summer camp was over.
+Dialogue: 0,0:21:16.36,0:21:18.90,Default,Kamome,0,0,0,,We all went our separate ways.
+Dialogue: 0,0:21:18.90,0:21:22.95,Default,Hairi,0,0,0,,So you guys found it and left it there.
+Dialogue: 0,0:21:23.06,0:21:23.56,Default,Kamome,0,0,0,,Yeah.
+Dialogue: 0,0:21:24.16,0:21:28.89,Default,Hairi,0,0,0,,Assuming that's true, \Nis it still in the same spot?
+Dialogue: 0,0:21:28.89,0:21:30.24,Default,Kamome,0,0,0,,It should be.
+Dialogue: 0,0:21:30.24,0:21:33.76,Default,Kamome,0,0,0,,That day, when we found the pirate ship,
+Dialogue: 0,0:21:33.76,0:21:37.46,Default,Kamome,0,0,0,,we promised to come find \Nit again ten years later.
+Dialogue: 0,0:21:37.46,0:21:39.13,Default,Kamome,0,0,0,,Then we bade each other farewell.
+Dialogue: 0,0:21:41.69,0:21:45.22,Default,Hairi,0,0,0,,And so you came back to find it.
+Dialogue: 0,0:21:45.22,0:21:47.29,Default,Hairi,0,0,0,,This summer, ten years later.
+Dialogue: 0,0:21:47.29,0:21:48.13,Default,Kamome,0,0,0,,Yeah.
+Dialogue: 0,0:21:49.86,0:21:52.64,Default,Kamome,0,0,0,,The map and keys were all still here.
+Dialogue: 0,0:21:55.94,0:21:57.23,Default,Kamome,0,0,0,,So I'm going.
+Dialogue: 0,0:21:58.84,0:22:00.24,Default,Kamome,0,0,0,,One more time...
+Dialogue: 0,0:22:00.24,0:22:01.98,Default,Kamome,0,0,0,,to where the pirate ship is.
+

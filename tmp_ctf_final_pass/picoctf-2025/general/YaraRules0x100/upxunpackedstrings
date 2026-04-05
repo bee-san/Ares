@@ -1,0 +1,290 @@
+!This program cannot be run in DOS mode.
+x~Fx
+xRich~
+.text
+`.rdata
+@.data
+.rsrc
+@.reloc
+hX<@
+h8=@
+hP8@
+h0b@
+t8hP9@
+u%h@:@
+t3h8;@
+h >@
+ht>@
+hx>@
+hp?@
+h$A@
+h(A@
+h 7@
+h0b@
+t%j@h
+h@A@
+%X0@
+%\0@
+hc$@
+h0H@
+VPWh
+Y_^[
+M;Jr
+hPH@
+Y_^[
+h}&@
+>csm
+uVh
+hlH@
+%d@
+SVW3
+Genu
+5ineI
+5ntel
+SuC
+t#=`
+5d@
+_^[3
+%01@
+%$1@
+% 1@
+%,1@
+%(1@
+%41@
+%H1@
+%D1@
+%h1@
+%`1@
+%p1@
+%l1@
+%x1@
+%X1@
+%P1@
+%L1@
+%t1@
+%|1@
+=d@
+        _            _____ _______ ______  
+       (_)          / ____|__   __|  ____| 
+  _ __  _  ___ ___ | |       | |  | |__    
+ | '_ \| |/ __/ _ \| |       | |  |  __|   
+ | |_) | | (_| (_) | |____   | |  | |      
+ | .__/|_|\___\___/ \_____|  |_|  |_|      
+ | |                                       
+ |_|                                       
+  Welcome to the YaraRules0x100 challenge!
+                       .,,                
+              ****************.         
+            ***************.  .*,       
+           ********,     ,*%%#(,        
+           ******.  %%%%%&@@@@@@@@@%    
+           *****   #%%%%%@@@@@@@@@@%%#  
+    ****  ,,****  ***%%%%%%%%%%%%%%%%%  
+   *****  ,,*****  ******/%%%%%%/****   
+   ,,,,,  ,,******    ,*********        
+   ,,,,,  ,,,*********.         .**     
+   ,,,,,  ,,,,*********************     
+   ,,,,,  ,,,,,,*******************     
+   ,,,,,  ,,,,,,,,,,,,********,,,,,     
+    ,,,,  ,,,,,,,,,,,,,,,,,,,,,,,,,     
+    ,,,,  .,,,,,,,,,,,,,,,,,,,,,,,,     
+           ,,,,,,,,,,       .,,,,,      
+           ,,,,,,,,,       ,,,,,,,      
+           ,,,,,,,,,      .,,,,,,,      
+           .,,,,,,,         ,,.
+NtQueryInformationProcess
+%ws %d
+Unknown exception
+bad allocation
+bad array new length
+GCTL
+.text$di
+.text$mn
+.idata$5
+.00cfg
+.CRT$XCA
+.CRT$XCAA
+.CRT$XCU
+.CRT$XCZ
+.CRT$XIA
+.CRT$XIAA
+.CRT$XIAC
+.CRT$XIZ
+.CRT$XPA
+.CRT$XPZ
+.CRT$XTA
+.CRT$XTZ
+.rdata
+.rdata$r
+.rdata$sxdata
+.rdata$voltmd
+.rdata$zzzdbg
+.rtc$IAA
+.rtc$IZZ
+.rtc$TAA
+.rtc$TZZ
+.xdata$x
+.idata$2
+.idata$3
+.idata$4
+.idata$6
+.data
+.data$r
+.data$rs
+.bss
+.rsrc$01
+.rsrc$02
+GetCommandLineW
+OutputDebugStringW
+DebugActiveProcess
+DebugActiveProcessStop
+CloseHandle
+GetLastError
+WaitForSingleObject
+CreateMutexW
+Sleep
+GetCurrentProcess
+GetCurrentProcessId
+TerminateProcess
+GetExitCodeProcess
+CreateThread
+CreateProcessA
+OpenProcess
+GetModuleFileNameW
+GetModuleHandleW
+GetProcAddress
+MultiByteToWideChar
+WideCharToMultiByte
+CreateToolhelp32Snapshot
+Process32FirstW
+Process32NextW
+KERNEL32.DLL
+LoadStringW
+GetMessageW
+TranslateMessage
+DispatchMessageW
+DefWindowProcW
+PostQuitMessage
+RegisterClassExW
+CreateWindowExW
+DestroyWindow
+ShowWindow
+DialogBoxParamW
+EndDialog
+LoadAcceleratorsW
+TranslateAcceleratorW
+DrawIcon
+UpdateWindow
+BeginPaint
+EndPaint
+GetClientRect
+MessageBoxW
+FillRect
+GetDesktopWindow
+LoadCursorW
+LoadIconW
+USER32.dll
+CreateSolidBrush
+DeleteObject
+SetBkColor
+SetTextColor
+TextOutW
+GDI32.dll
+OpenProcessToken
+AdjustTokenPrivileges
+LookupPrivilegeValueW
+ADVAPI32.dll
+CommandLineToArgvW
+SHELL32.dll
+memset
+__current_exception
+__current_exception_context
+_except_handler4_common
+__std_exception_copy
+__std_exception_destroy
+_CxxThrowException
+VCRUNTIME140.dll
+free
+malloc
+exit
+atoi
+__stdio_common_vsprintf
+_seh_filter_exe
+_set_app_type
+__setusermatherr
+_configure_wide_argv
+_initialize_wide_environment
+_get_wide_winmain_command_line
+_initterm
+_initterm_e
+_exit
+_set_fmode
+_cexit
+_c_exit
+_register_thread_local_exe_atexit_callback
+_configthreadlocale
+_set_new_mode
+__p__commode
+_callnewh
+_initialize_onexit_table
+_register_onexit_function
+_crt_atexit
+_controlfp_s
+terminate
+api-ms-win-crt-heap-l1-1-0.dll
+api-ms-win-crt-runtime-l1-1-0.dll
+api-ms-win-crt-convert-l1-1-0.dll
+api-ms-win-crt-stdio-l1-1-0.dll
+api-ms-win-crt-math-l1-1-0.dll
+api-ms-win-crt-locale-l1-1-0.dll
+QueryPerformanceCounter
+GetCurrentThreadId
+GetSystemTimeAsFileTime
+InitializeSListHead
+IsDebuggerPresent
+UnhandledExceptionFilter
+SetUnhandledExceptionFilter
+GetStartupInfoW
+IsProcessorFeaturePresent
+.?AVbad_alloc@std@@
+.?AVexception@std@@
+.?AVbad_array_new_length@std@@
+.?AVtype_info@@
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level='asInvoker' uiAccess='false' />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+</assembly>
+0"12171=1D1]1k1{1
+3>3E3P3U3]3s3{3
+4"40454=4G4^4x4
+5L5Y5_5h5w5
+5$6*60676N6X6a6g6q6{6
+7!7+737:7N7T7^7g7n7
+8;8e8m8t8z8
+9#9u9z9
+::(:7:I:O:X:`:i:
+;-;>;X;
+<><C<K<
+=6>D>N>^>c>h>o>
+>2?[?
+00-020?0y0
+1.2T2c2z2
+2Y3f3
+4T4]4q4w4
+636r6x6
+7"7A7^7
+8%8K8b8
+:B:K:T:b:k:
+;-;3;9;?;E;K;R;Y;`;g;n;u;|;
+< <&<,<2<8<><D<J<P<V<\<b<h<n<t<z<
+,20242L2P2T2h2l2p2
+2@3X3
+4(4,40484P4`4d4t4x4|4
+4D8H8d8h8p8x8
+0 0<0X0

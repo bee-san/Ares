@@ -1,0 +1,3 @@
+1. Manually look through logs for the installation. Note the name is Totally_Legit_Software.
+2. Look for Totally_Legit_Software. Find "Immediate Shutdown LOg" of Task tag "Registry". 
+3. Filter by event IDs (1074, 6006, 6008, 41) that indicate shutdowns.

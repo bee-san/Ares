@@ -1,0 +1,63 @@
+XtraORdinary -First we write a frequency analysis script to find out the most common letter in study-guide.txt. Once we have that information, use it as "clues" for quipqiup:
+from collections import Counter
+
+def analyze_frequency(filename):
+    with open(filename, 'r') as file:
+        text = file.read().lower().replace(' ', '')
+    
+    letter_counts = Counter(text)
+    most_common_letter = letter_counts.most_common(1)[0][0]
+    
+    return most_common_letter
+
+# Usage
+most_common = analyze_frequency('study-guide.txt')
+print("Most common letter:", most_common)
+
+The nested loop is useless. There are only two cases for each random string: either we XOR it, or we don't. That is, we can only keep the for m in range(randint(0, pow(2, 0))) loop and delete everything else.
+The random string b'ever' is repeated. If we delete the repeated strings, it won't make a difference to the XOR result. Although this step is unnecessary, it can speed up the script.
+*this is the implamatation:
+#!/usr/bin/env python3
+import sys
+from pwn import xor
+from random import randint
+
+#--------Data--------#
+
+c = bytes.fromhex("57657535570c1e1c612b3468106a18492140662d2f5967442a2960684d28017931617b1f3637")
+
+#--------XOR--------#
+
+random_strs = [
+    b'my encryption method',
+    b'is absolutely impenetrable',
+    b'and you will never',
+    b'ever',
+    b'break it'
+]
+
+while True:
+    for random_str in random_strs:
+        for m in range(randint(0, pow(2, 0))):
+            c = xor(c, random_str)
+
+    flag_prefix = b"picoCTF{"
+    key = xor(c[:len(flag_prefix)], flag_prefix)
+    # if key.decode().isprintable():
+    #     print(key)
+    #     sys.exit()
+
+    key = b'Africa!'
+    flag = xor(c, key)
+    if flag.startswith(b"picoCTF{"):
+        print(flag.decode())
+        sys.exit()
+        
+        and the flag is !!---picoCTF{w41t_s0_1_d1dnt_1nv3nt_x0r???}  (its the output of the code)
+        C:\Users\Max\PycharmProjects\pythonProject6home\venv\Scripts\python.exe C:/Users/Max/PycharmProjects/pythonProject6home/main.py
+picoCTF{w41t_s0_1_d1dnt_1nv3nt_x0r???}
+
+Process finished with exit code 0
+
+        
+        

@@ -1,0 +1,415 @@
+[Script Info]
+Title: English (US)
+Original Translation: 
+Original Editing: 
+Original Timing: 
+Synch Point: 
+Script Updated By: 
+Update Details: 
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 640
+PlayResY: 360
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Main - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Flashback,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+Style: Flashback - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:02.91,0:00:05.30,Main - Italics,Umi,0,0,0,,I continue to fly.
+Dialogue: 0,0:00:05.30,0:00:10.42,Main - Italics,Umi,0,0,0,,The more I flutter, the further \NI go, the more I lose.
+Dialogue: 0,0:00:11.29,0:00:14.96,Main - Italics,Umi,0,0,0,,After all those summers I spent,
+Dialogue: 0,0:00:14.96,0:00:18.97,Main - Italics,Umi,0,0,0,,after gathering so many precious\N memories and so much emotion...
+Dialogue: 0,0:00:19.54,0:00:22.85,Main - Italics,Umi,0,0,0,,It all gets hazy.
+Dialogue: 0,0:00:23.28,0:00:26.95,Main - Italics,Umi,0,0,0,,But someone pushes me.
+Dialogue: 0,0:00:27.60,0:00:29.25,Main - Italics,Umi,0,0,0,,They take me by the hand.
+Dialogue: 0,0:00:29.86,0:00:35.53,Main - Italics,Umi,0,0,0,,The body I thought I'd lost is patched\N together by various memories...
+Dialogue: 0,0:00:36.25,0:00:41.75,Main - Italics,Umi,0,0,0,,each one like a prayer.
+Dialogue: 0,0:00:48.52,0:00:50.80,Default,Nanami,0,0,0,,That tickles.
+Dialogue: 0,0:00:50.80,0:00:52.00,Default,Nanami,0,0,0,,Wait, ouch.
+Dialogue: 0,0:00:52.00,0:00:53.66,Default,Nanami,0,0,0,,That hurts.
+Dialogue: 0,0:00:59.43,0:01:00.99,Default,Nanami,0,0,0,,A coop?
+Dialogue: 0,0:01:02.32,0:01:03.77,Default,Nanami,0,0,0,,You woke me up?
+Dialogue: 0,0:01:04.12,0:01:05.72,Default,Nanami,0,0,0,,Erm...
+Dialogue: 0,0:01:04.12,0:01:07.69,Default,Text,0,0,0,,{\fad(1460,1)\fnArial\fs10\shad0\pos(307.333,172)\c&H0D0F0D&\3c&H213034&\b1}Catherine
+Dialogue: 0,0:01:05.72,0:01:07.69,Default,Nanami,0,0,0,,Thanks, Catherine.
+Dialogue: 0,0:01:09.60,0:01:11.11,Default,Nanami,0,0,0,,I'm...
+Dialogue: 0,0:01:19.55,0:01:20.67,Default,Nanami,0,0,0,,Um...
+Dialogue: 0,0:01:21.15,0:01:22.99,Default,Nanami,0,0,0,,Where am I?
+Dialogue: 0,0:01:24.18,0:01:26.53,Default,Nanami,0,0,0,,And who am I?
+Dialogue: 0,0:01:28.76,0:01:34.51,Default,Kobato,0,0,0,,You say you have no idea who \Nyou are or where you came from?
+Dialogue: 0,0:01:34.79,0:01:35.86,Default,Nanami,0,0,0,,That's right.
+Dialogue: 0,0:01:39.82,0:01:41.10,Default,Kobato,0,0,0,,Say hello now.
+Dialogue: 0,0:01:44.09,0:01:45.64,Default,Nanami,0,0,0,,H-Hello.
+Dialogue: 0,0:01:46.73,0:01:48.58,Default,Kobato,0,0,0,,Wait, Shiroha!
+Dialogue: 0,0:01:49.42,0:01:51.11,Default,Nanami,0,0,0,,Her name's Shiroha-chan?
+Dialogue: 0,0:01:51.11,0:01:52.44,Default,Kobato,0,0,0,,Yeah.
+Dialogue: 0,0:01:52.44,0:01:56.11,Default,Kobato,0,0,0,,And I'm Naruse... Kobato.
+Dialogue: 0,0:01:56.53,0:01:58.24,Default,Nanami,0,0,0,,Kobato-san.
+Dialogue: 0,0:01:58.60,0:02:03.74,Default,Kobato,0,0,0,,You'll want to get a proper check-up for your\Namnesia at the hospital on the main island.
+Dialogue: 0,0:02:04.27,0:02:07.76,Default,Kobato,0,0,0,,I'll arrange for your trip \Nafter you've had something to eat.
+Dialogue: 0,0:02:07.76,0:02:09.23,Default,Nanami,0,0,0,,Thank you.
+Dialogue: 0,0:02:26.26,0:02:27.42,Default,Nanami,0,0,0,,Thanks...
+Dialogue: 0,0:02:27.42,0:02:29.31,Default,Nanami,0,0,0,,Shiroha-chan?
+Dialogue: 0,0:02:30.00,0:02:33.15,Default,Shiroha,0,0,0,,H-H-How do you know my name?
+Dialogue: 0,0:02:33.15,0:02:35.94,Default,Nanami,0,0,0,,Oh, your dad just...
+Dialogue: 0,0:02:38.16,0:02:40.74,Default,Shiroha,0,0,0,,I don't have a dad.
+Dialogue: 0,0:02:43.20,0:02:44.41,Default,Shiroha,0,0,0,,He's dead.
+Dialogue: 0,0:02:48.38,0:02:51.03,Default,Kobato,0,0,0,,Hey, how could you make her cry?
+Dialogue: 0,0:02:51.03,0:02:52.42,Default,Nanami,0,0,0,,I'm sorry.
+Dialogue: 0,0:02:52.42,0:02:54.48,Default,Nanami,0,0,0,,Wait, {\i1}you're{\i0} her dad!
+Dialogue: 0,0:02:54.48,0:02:56.30,Default,Nanami,0,0,0,,I thought you were dead!
+Dialogue: 0,0:02:56.30,0:02:58.89,Default,Kobato,0,0,0,,I'm her grandfather.
+Dialogue: 0,0:02:58.89,0:03:01.27,Default,Kobato,0,0,0,,Couldn't you tell?
+Dialogue: 0,0:03:01.27,0:03:04.14,Default,Kobato,0,0,0,,Well, eat up before it gets cold.
+Dialogue: 0,0:03:05.28,0:03:06.33,Default,Nanami,0,0,0,,Right.
+Dialogue: 0,0:03:08.42,0:03:09.77,Default,Nanami,0,0,0,,Thank you.
+Dialogue: 0,0:03:14.82,0:03:17.52,Default,Nanami,0,0,0,,This karaage is so good.
+Dialogue: 0,0:03:17.52,0:03:18.84,Default,Kobato,0,0,0,,Yeah.
+Dialogue: 0,0:03:18.84,0:03:21.53,Default,Kobato,0,0,0,,That chicken's just from this morning.
+Dialogue: 0,0:03:23.13,0:03:24.91,Default,Nanami,0,0,0,,No wonder it's so fresh.
+Dialogue: 0,0:03:28.04,0:03:31.00,Default,Nanami,0,0,0,,Catherine?!
+Dialogue: 0,0:03:34.95,0:03:36.77,Default,Kobato,0,0,0,,Have you got everything?
+Dialogue: 0,0:03:36.77,0:03:38.40,Default,Nanami,0,0,0,,Um...
+Dialogue: 0,0:03:41.38,0:03:42.80,Default,Nanami,0,0,0,,Shiroha-chan!
+Dialogue: 0,0:03:45.70,0:03:46.93,Default,Nanami,0,0,0,,Sorry about earlier.
+Dialogue: 0,0:03:48.24,0:03:49.28,Default,Shiroha,0,0,0,,Why?
+Dialogue: 0,0:03:49.28,0:03:50.55,Default,Nanami,0,0,0,,Well...
+Dialogue: 0,0:03:50.55,0:03:52.47,Default,Nanami,0,0,0,,I was insensitive.
+Dialogue: 0,0:03:53.38,0:03:54.65,Default,Shiroha,0,0,0,,Insensitive?
+Dialogue: 0,0:03:55.09,0:03:59.38,Default,Nanami,0,0,0,,How should I put it? I know.\NI was careless.
+Dialogue: 0,0:03:59.38,0:04:00.98,Default,Shiroha,0,0,0,,Careless?
+Dialogue: 0,0:04:00.98,0:04:02.46,Default,Nanami,0,0,0,,I was lacking delicacy.
+Dialogue: 0,0:04:03.00,0:04:04.12,Default,Shiroha,0,0,0,,Delicacy?
+Dialogue: 0,0:04:04.12,0:04:06.66,Default,Nanami,0,0,0,,Well, the point is...
+Dialogue: 0,0:04:06.99,0:04:09.20,Default,Kobato,0,0,0,,Are we done with the vocab lesson?
+Dialogue: 0,0:04:09.20,0:04:10.95,Default,Nanami,0,0,0,,Oh, yes.
+Dialogue: 0,0:04:10.95,0:04:12.01,Default,Nanami,0,0,0,,See you!
+Dialogue: 0,0:04:15.41,0:04:17.44,Default,Shiroha,0,0,0,,See you...
+Dialogue: 0,0:04:26.39,0:04:28.21,Default,Shiroha,0,0,0,,What's the meaning of this?
+Dialogue: 0,0:04:28.21,0:04:30.91,Default,Nanami,0,0,0,,That's a very good question.
+Dialogue: 0,0:04:30.91,0:04:32.56,Default,Kobato,0,0,0,,Turns out she's afraid of boats.
+Dialogue: 0,0:04:33.06,0:04:38.81,Default,Nanami,0,0,0,,As soon as I saw the water before I \Ngot on the boat, I was petrified.
+Dialogue: 0,0:04:38.81,0:04:41.70,Default,Nanami,0,0,0,,Man... How embarrassing.
+Dialogue: 0,0:04:41.70,0:04:42.74,Default,Kobato,0,0,0,,No kidding.
+Dialogue: 0,0:04:42.74,0:04:44.46,Default,Shiroha,0,0,0,,Were you careless?
+Dialogue: 0,0:04:44.46,0:04:47.19,Default,Nanami,0,0,0,,Not that, exactly.
+Dialogue: 0,0:04:47.19,0:04:48.59,Default,Shiroha,0,0,0,,No?
+Dialogue: 0,0:04:48.59,0:04:50.37,Default,Shiroha,0,0,0,,"Careless" is a hard word.
+Dialogue: 0,0:04:51.78,0:04:53.70,Default,Nanami,0,0,0,,Oh, sorry, that was mean.
+Dialogue: 0,0:04:54.78,0:04:57.25,Default,Shiroha,0,0,0,,You're being insensitive.
+Dialogue: 0,0:04:58.36,0:04:59.50,Default,Nanami,0,0,0,,That's right.
+Dialogue: 0,0:04:59.50,0:05:03.88,Default,Kobato,0,0,0,,So anyway, she'll be staying\N with us for a while.
+Dialogue: 0,0:05:06.09,0:05:07.56,Default,Nanami,0,0,0,,Um...
+Dialogue: 0,0:05:07.56,0:05:09.35,Default,Nanami,0,0,0,,Are you really okay with this?
+Dialogue: 0,0:05:09.35,0:05:12.82,Default,Kobato,0,0,0,,It's just me and my grandkid living here.
+Dialogue: 0,0:05:12.82,0:05:16.00,Default,Kobato,0,0,0,,I'm often away at work.
+Dialogue: 0,0:05:16.00,0:05:19.36,Default,Kobato,0,0,0,,Having you here won't \Nnecessarily be a bad thing.
+Dialogue: 0,0:05:19.36,0:05:21.44,Default,Kobato,0,0,0,,Just one word of caution.
+Dialogue: 0,0:05:22.18,0:05:29.91,Default,Kobato,0,0,0,,Please don't mention her parents \Naround her. Especially her mom.
+Dialogue: 0,0:05:30.74,0:05:32.83,Default,Nanami,0,0,0,,Is her mom...
+Dialogue: 0,0:05:32.83,0:05:37.46,Default,Kobato,0,0,0,,Her father died in an accident a month ago.
+Dialogue: 0,0:05:38.14,0:05:44.31,Default,Kobato,0,0,0,,Soon after, her mother, \Nwho was my daughter, vanished.
+Dialogue: 0,0:05:45.59,0:05:49.04,Default,Kobato,0,0,0,,It's only been a month since \Nshe lost both her parents.
+Dialogue: 0,0:05:49.89,0:05:54.80,Default,Kobato,0,0,0,,She may seem like a difficult \Nchild to you, but she's strong.
+Dialogue: 0,0:05:55.64,0:05:58.82,Default,Kobato,0,0,0,,She rarely ever cries in front of me.
+Dialogue: 0,0:05:58.82,0:06:03.16,Default,Kobato,0,0,0,,Although, maybe people just lose\Nthe ability to shed tears
+Dialogue: 0,0:06:03.16,0:06:06.03,Default,Kobato,0,0,0,,in the face of such intense pain.
+Dialogue: 0,0:06:08.28,0:06:11.92,Default,Kobato,0,0,0,,Anyway, that aside, your name...
+Dialogue: 0,0:06:12.71,0:06:16.22,Default,Kobato,0,0,0,,So long as we're living together, \Nyou'll need a name.
+Dialogue: 0,0:06:16.22,0:06:18.79,Default,Kobato,0,0,0,,Any idea what yours might've been?
+Dialogue: 0,0:06:20.98,0:06:22.02,Default,Nanami,0,0,0,,The sea...
+Dialogue: 0,0:06:22.92,0:06:24.49,Default,Nanami,0,0,0,,Seven seas...
+Dialogue: 0,0:06:26.59,0:06:27.51,Default,Kobato,0,0,0,,What's wrong?
+Dialogue: 0,0:06:28.17,0:06:30.20,Default,Nanami,0,0,0,,That's what came to my mind.
+Dialogue: 0,0:06:30.20,0:06:32.34,Default,Nanami,0,0,0,,"Seven seas."
+Dialogue: 0,0:06:32.34,0:06:34.39,Default,Kobato,0,0,0,,When you can't even go out on the water?
+Dialogue: 0,0:06:35.85,0:06:37.70,Default,Kobato,0,0,0,,"Seven seas"?
+Dialogue: 0,0:06:37.70,0:06:38.89,Default,Kobato,0,0,0,,Nanami, huh?
+Dialogue: 0,0:06:39.22,0:06:40.32,Default,Nanami,0,0,0,,Nanami?
+Dialogue: 0,0:06:41.01,0:06:42.15,Default,Nanami,0,0,0,,Nanami...
+Dialogue: 0,0:06:42.15,0:06:44.77,Default,Kobato,0,0,0,,Either way, that'll do for now.
+Dialogue: 0,0:06:45.16,0:06:46.01,Default,Nanami,0,0,0,,Okay.
+Dialogue: 0,0:06:52.10,0:06:53.72,Default,Nanami,0,0,0,,Nanami...
+Dialogue: 0,0:06:53.72,0:06:55.71,Default,Nanami,0,0,0,,Is that my name?
+Dialogue: 0,0:07:00.58,0:07:02.13,Default,Nanami,0,0,0,,What's this?
+Dialogue: 0,0:07:02.13,0:07:04.08,Default,Nanami,0,0,0,,A wing?
+Dialogue: 0,0:07:11.60,0:07:12.59,Default,Nanami,0,0,0,,A butterfly.
+Dialogue: 0,0:07:13.66,0:07:14.90,Default,Shiroha,0,0,0,,Nanami.
+Dialogue: 0,0:07:16.84,0:07:18.17,Default,Shiroha,0,0,0,,Sorry.
+Dialogue: 0,0:07:18.17,0:07:20.68,Default,Shiroha,0,0,0,,I heard that's your name.
+Dialogue: 0,0:07:21.77,0:07:23.44,Default,Shiroha,0,0,0,,Dinner's ready.
+Dialogue: 0,0:07:32.67,0:07:35.62,Main - Italics,Nanami,0,0,0,,It's been a few days since I started\Nliving with the Naruse family.
+Dialogue: 0,0:07:35.62,0:07:39.37,Main - Italics,Nanami,0,0,0,,I've walked the island\N in search of my memories.
+Dialogue: 0,0:07:39.37,0:07:42.56,Main - Italics,Nanami,0,0,0,,Sadly, there was no sign\Nof me getting them back anywhere.
+Dialogue: 0,0:07:43.25,0:07:45.58,Main - Italics,Nanami,0,0,0,,Kobato-san works as a fisherman.
+Dialogue: 0,0:07:45.58,0:07:48.71,Main - Italics,Nanami,0,0,0,,Shiroha-chan leaves early in the morning,
+Dialogue: 0,0:07:48.71,0:07:53.00,Main - Italics,Nanami,0,0,0,,comes back for lunch, and then goes out \Non her own again until the evening.
+Dialogue: 0,0:07:53.59,0:07:56.35,Main - Italics,Nanami,0,0,0,,And one day...
+Dialogue: 0,0:07:56.66,0:07:58.35,Default,All,0,0,0,,Let's eat.
+Dialogue: 0,0:07:59.04,0:08:02.75,Default,Nanami,0,0,0,,Wow, Kobato-san, this is another big haul!
+Dialogue: 0,0:08:02.75,0:08:05.54,Default,Nanami,0,0,0,,So much gorgeous seafood every day...
+Dialogue: 0,0:08:05.54,0:08:07.48,Default,Nanami,0,0,0,,Isn't this great, Shiroha-chan?
+Dialogue: 0,0:08:11.60,0:08:13.61,Default,Nanami,0,0,0,,As fresh and lavish as it is,
+Dialogue: 0,0:08:13.97,0:08:18.78,Default,Nanami,0,0,0,,I don't know if having sashimi \Nevery day is great for a kid.
+Dialogue: 0,0:08:19.10,0:08:21.30,Default,Nanami,0,0,0,,Seeing her so expressionless over dinner...
+Dialogue: 0,0:08:21.30,0:08:22.80,Default,Nanami,0,0,0,,That can't be good.
+Dialogue: 0,0:08:23.33,0:08:26.86,Default,Nanami,0,0,0,,I hope she'll start enjoying \Nmeals a little more.
+Dialogue: 0,0:08:27.77,0:08:28.54,Default,Nanami,0,0,0,,There.
+Dialogue: 0,0:08:28.54,0:08:29.63,Default,Nanami,0,0,0,,All done.
+Dialogue: 0,0:08:31.71,0:08:34.27,Default,Nanami,0,0,0,,Not bad for leftovers!
+Dialogue: 0,0:08:34.72,0:08:39.80,Default,Nanami,0,0,0,,Hang on, how did I know I could make\N this when I have no memory?
+Dialogue: 0,0:08:39.80,0:08:40.68,Default,Nanami,0,0,0,,Chao fan?
+Dialogue: 0,0:08:41.62,0:08:42.89,Default,Shiroha,0,0,0,,What did you make?
+Dialogue: 0,0:08:43.28,0:08:44.59,Default,Shiroha,0,0,0,,Shiroha-chan!
+Dialogue: 0,0:08:45.31,0:08:46.44,Default,Nanami,0,0,0,,We've got chao fan.
+Dialogue: 0,0:08:46.84,0:08:48.45,Default,Shiroha,0,0,0,,You mean fried rice?
+Dialogue: 0,0:08:48.45,0:08:50.47,Default,Nanami,0,0,0,,No, chao fan.
+Dialogue: 0,0:08:50.94,0:08:52.19,Default,Shiroha,0,0,0,,Fried rice?
+Dialogue: 0,0:08:54.39,0:08:56.49,Default,Nanami,0,0,0,,Let's split the difference\Nand call it fried fan!
+Dialogue: 0,0:08:56.85,0:08:57.86,Default,Shiroha,0,0,0,,Fried fan!
+Dialogue: 0,0:08:57.86,0:08:58.90,Default,Nanami,0,0,0,,That's right!
+Dialogue: 0,0:08:58.90,0:09:00.10,Default,Nanami,0,0,0,,Fried fan.
+Dialogue: 0,0:09:00.10,0:09:07.46,Default,Shiroha; Nanami,0,0,0,,Fried fan! Fried fan!
+Dialogue: 0,0:09:18.08,0:09:19.05,Default,Shiroha,0,0,0,,It's good.
+Dialogue: 0,0:09:19.36,0:09:20.49,Default,Nanami,0,0,0,,Thank goodness!
+Dialogue: 0,0:09:21.77,0:09:26.18,Default,Shiroha,0,0,0,,As fancy and fresh as it is, you get \Ntired of eating sashimi every day, huh?
+Dialogue: 0,0:09:26.18,0:09:27.64,Default,Kobato,0,0,0,,Well, sorry for that.
+Dialogue: 0,0:09:31.00,0:09:32.58,Default,Kobato,0,0,0,,Did you make this, Nanami?
+Dialogue: 0,0:09:32.58,0:09:34.23,Default,Nanami,0,0,0,,Y-Yes.
+Dialogue: 0,0:09:34.23,0:09:37.34,Default,Nanami,0,0,0,,Oh, I made some for you too.
+Dialogue: 0,0:09:43.09,0:09:44.09,Default,Kobato,0,0,0,,It's good.
+Dialogue: 0,0:09:44.74,0:09:46.54,Default,Kobato,0,0,0,,But this is...
+Dialogue: 0,0:09:46.54,0:09:49.24,Default,Nanami,0,0,0,,I-Is something wrong?
+Dialogue: 0,0:09:49.24,0:09:50.65,Default,Kobato,0,0,0,,Oh, no.
+Dialogue: 0,0:09:50.65,0:09:53.21,Default,Kobato,0,0,0,,Anyway, thanks for this.
+Dialogue: 0,0:09:53.21,0:09:56.63,Default,Kobato,0,0,0,,I didn't know you could cook.
+Dialogue: 0,0:09:56.63,0:09:59.26,Default,Kobato,0,0,0,,If you wouldn't mind,\N Shiroha could benefit from...
+Dialogue: 0,0:09:59.26,0:10:02.10,Default,Kobato,0,0,0,,Forget it. You're a guest here.
+Dialogue: 0,0:10:02.10,0:10:04.67,Default,Kobato,0,0,0,,You don't need to cook for us.
+Dialogue: 0,0:10:05.22,0:10:07.10,Default,Nanami,0,0,0,,I don't mind cooking.
+Dialogue: 0,0:10:08.56,0:10:10.18,Default,Kobato,0,0,0,,Thanks for the meal.
+Dialogue: 0,0:10:10.18,0:10:11.77,Default,Kobato,0,0,0,,I'm going to catch a bit of sleep.
+Dialogue: 0,0:10:11.77,0:10:13.36,Default,Shiroha,0,0,0,,Thank you.
+Dialogue: 0,0:10:15.34,0:10:16.49,Default,Nanami,0,0,0,,You're welcome.
+Dialogue: 0,0:10:16.99,0:10:19.99,Default,Shiroha,0,0,0,,This tastes like Dad's.
+Dialogue: 0,0:10:21.50,0:10:22.62,Default,Shiroha,0,0,0,,Um...
+Dialogue: 0,0:10:22.99,0:10:25.79,Default,Shiroha,0,0,0,,Could you please tell me how you make it?
+Dialogue: 0,0:10:26.71,0:10:31.29,Default,Nanami,0,0,0,,Sure, but I kind of just went by feeling.
+Dialogue: 0,0:10:31.96,0:10:36.63,Default,Nanami,0,0,0,,Besides, your grandpa doesn't \Nseem to appreciate my cooking.
+Dialogue: 0,0:10:38.11,0:10:40.30,Default,Shiroha,0,0,0,,In that case...
+Dialogue: 0,0:10:40.86,0:10:43.60,Default,Shiroha,0,0,0,,I'll tell you about my secret place.
+Dialogue: 0,0:10:44.21,0:10:45.91,Default,Nanami,0,0,0,,Your secret place?
+Dialogue: 0,0:10:49.85,0:10:51.73,Default,Nanami,0,0,0,,It isn't open anymore?
+Dialogue: 0,0:10:51.73,0:10:52.91,Default,Shiroha,0,0,0,,It isn't.
+Dialogue: 0,0:10:52.91,0:10:55.19,Default,Shiroha,0,0,0,,Dad used to cook here.
+Dialogue: 0,0:10:55.54,0:10:58.86,Default,Shiroha,0,0,0,,Mom couldn't cook too much,
+Dialogue: 0,0:10:58.86,0:11:01.65,Default,Shiroha,0,0,0,,so she helped with other stuff.
+Dialogue: 0,0:11:01.65,0:11:05.24,Default,Shiroha,0,0,0,,But Dad died in an accident.
+Dialogue: 0,0:11:05.24,0:11:07.45,Default,Shiroha,0,0,0,,And Mom went somewhere.
+Dialogue: 0,0:11:07.78,0:11:09.96,Default,Nanami,0,0,0,,She went somewhere? Where?
+Dialogue: 0,0:11:10.42,0:11:11.46,Default,Shiroha,0,0,0,,I don't know.
+Dialogue: 0,0:11:12.00,0:11:15.46,Default,Shiroha,0,0,0,,But I think she went to find Dad.
+Dialogue: 0,0:11:15.73,0:11:18.21,Default,Shiroha,0,0,0,,They were really close.
+Dialogue: 0,0:11:18.51,0:11:19.97,Default,Nanami,0,0,0,,Shiroha-chan...
+Dialogue: 0,0:11:24.76,0:11:26.11,Default,Nanami,0,0,0,,I see now.
+Dialogue: 0,0:11:26.11,0:11:29.06,Default,Nanami,0,0,0,,You've been coming here every day to clean.
+Dialogue: 0,0:11:29.56,0:11:31.48,Default,Shiroha,0,0,0,,It's what Mom used to do.
+Dialogue: 0,0:11:35.61,0:11:37.11,Default,Nanami,0,0,0,,I'll help too.
+Dialogue: 0,0:11:48.92,0:11:50.58,Default,Nanami,0,0,0,,What do you think, Shiroha-chan?
+Dialogue: 0,0:11:52.94,0:11:54.07,Default,Shiroha,0,0,0,,It's good.
+Dialogue: 0,0:11:54.07,0:11:55.94,Default,Shiroha,0,0,0,,It's flavored the exact same way.
+Dialogue: 0,0:11:55.94,0:11:59.63,Default,Shiroha,0,0,0,,But Dad's was even better.
+Dialogue: 0,0:12:01.28,0:12:05.32,Default,Nanami,0,0,0,,I guess I'd need the recipe \Nto make it just like his...
+Dialogue: 0,0:12:05.87,0:12:07.09,Default,Shiroha,0,0,0,,I think there is one.
+Dialogue: 0,0:12:07.64,0:12:10.52,Default,Shiroha,0,0,0,,Mom wrote a secret recipe.
+Dialogue: 0,0:12:14.84,0:12:17.15,Default,Nanami,0,0,0,,Is this Shiroha-chan's...
+Dialogue: 0,0:12:17.15,0:12:19.61,Default,Shiroha,0,0,0,,Nanami, I found it.
+Dialogue: 0,0:12:20.07,0:12:21.01,Default,Nanami,0,0,0,,Really?
+Dialogue: 0,0:12:21.01,0:12:22.61,Default,Nanami,0,0,0,,Let's see, let's see!
+Dialogue: 0,0:12:22.61,0:12:27.99,Default,Text,0,0,0,,{\bord3\shad0\an7\fnArial\fs12\c&H595758&\3c&HEEEEEF&}Fried Rice\N\N {\fs10\u1}Ingredients{\u0}\N - Pepper\N - Carrots\N - Lettuce\N - Lord of the river\N - Legendary mountain plants\N Have you ever seen the legendary\N mountain plants that only appear at dusk?\N- Water\N Natural water beloved by birds of passage, \Nspringing from the peak of the mountains\N - Boar King\N The carrion flesh of majestic beasts\N beloved by birds of passage\N-
+Dialogue: 0,0:12:23.07,0:12:24.33,Default,Nanami,0,0,0,,What've we got here?
+Dialogue: 0,0:12:24.33,0:12:26.80,Default,Nanami,0,0,0,,Pepper, carrots, lettuce...
+Dialogue: 0,0:12:26.80,0:12:27.99,Default,Nanami,0,0,0,,Lord of the river?
+Dialogue: 0,0:12:29.01,0:12:34.66,Default,Nanami,0,0,0,,"Have you ever seen the legendary mountain \Nplants that only appear at dusk?"
+Dialogue: 0,0:12:34.66,0:12:38.85,Default,Nanami,0,0,0,,"Natural water beloved by birds of passage, \Nspringing from the peak of the mountains."
+Dialogue: 0,0:12:38.85,0:12:42.78,Default,Nanami,0,0,0,,"The carrion flesh of majestic beasts \Nbeloved by birds of passage."
+Dialogue: 0,0:12:42.78,0:12:43.90,Default,Nanami,0,0,0,,Hang on a second.
+Dialogue: 0,0:12:43.90,0:12:46.18,Default,Nanami,0,0,0,,Those are some mystery ingredients in there.
+Dialogue: 0,0:12:46.18,0:12:49.10,Default,Shiroha,0,0,0,,They're all things you can find on the island.
+Dialogue: 0,0:12:49.10,0:12:52.17,Default,Shiroha,0,0,0,,Mom would gather them, and Dad would cook.
+Dialogue: 0,0:12:52.17,0:12:55.06,Default,Shiroha,0,0,0,,I even helped my mom with it!
+Dialogue: 0,0:12:55.06,0:12:56.75,Default,Nanami,0,0,0,,Good for you!
+Dialogue: 0,0:12:56.75,0:12:59.73,Default,Nanami,0,0,0,,Now, I'm gonna go find these. Wanna come help?
+Dialogue: 0,0:13:00.23,0:13:01.19,Default,Shiroha,0,0,0,,Okay!
+Dialogue: 0,0:13:04.28,0:13:05.95,Default,Text,0,0,0,,{\fad(350,1)\shad0\blur2\bord3\an7\fnTimes NEw Roman\fs18\b1}One of the Four Gods of Torishirojima\N{\fs36}Seiryuu
+Dialogue: 0,0:13:10.08,0:13:12.79,Default,Text,0,0,0,,{\an1\fs20\fad(1,360)\fnArial\b1\shad0\pos(70.4,131.6)\frz339.3}Lord of the River (*Crayfish)
+Dialogue: 0,0:13:15.58,0:13:17.25,Default,Text,0,0,0,,{\fad(350,1)\shad0\blur2\bord3\an9\fnTimes NEw Roman\fs18\b1}One of the Four Gods of Torishirojima\N{\fs36}Suzaku
+Dialogue: 0,0:13:19.13,0:13:20.46,Default,Text,0,0,0,,{\fad(114,0)\an8\fnArial\fs18\shad0\b1\c&H333245&\3c&H7D8EA4&}Freebies
+Dialogue: 0,0:13:21.46,0:13:24.46,Default,Text,0,0,0,,{\an1\fs20\fad(1,360)\fnArial\b1\shad0\pos(36.8,271.6)}The Legendary Mountain Plants That Only Appear at Dusk\N(*Leftover veggies from the produce shop)
+Dialogue: 0,0:13:27.59,0:13:29.22,Default,Text,0,0,0,,{\fad(350,1)\shad0\blur2\bord3\an9\fnTimes NEw Roman\fs18\b1}One of the Four Gods of Torishirojima\N{\fs36}Genbu
+Dialogue: 0,0:13:31.39,0:13:34.56,Default,Text,0,0,0,,{\an1\fs18\fad(1,360)\fnArial\b1\shad0\pos(36.8,263.6)}Natural Water Beloved by Birds of Passage, Springing \Nfrom the Peak of the Mountains (*Spring water to cook rice with)
+Dialogue: 0,0:13:40.69,0:13:42.19,Default,Text,0,0,0,,{\fad(350,1)\shad0\blur2\bord3\an9\fnTimes NEw Roman\fs18\b1}One of the Four Gods of Torishirojima\N{\fs36}Byakko
+Dialogue: 0,0:13:44.19,0:13:47.20,Default,Text,0,0,0,,{\an1\fs18\fad(1,360)\fnArial\b1\shad0\pos(36.8,263.6)}Carrion Flesh of Majestic Beasts Beloved by Birds of Passage\N(*Meat from boars raised by Boar King Sawada)
+Dialogue: 0,0:13:49.95,0:13:51.91,Default,Nanami,0,0,0,,We got everything we need!
+Dialogue: 0,0:13:56.52,0:13:58.96,Default,Nanami,0,0,0,,I guess we'll be testing \Nthe fried fan tomorrow.
+Dialogue: 0,0:13:58.96,0:14:01.21,Default,Nanami,0,0,0,,Rest well, Shiroha-chan.
+Dialogue: 0,0:14:01.96,0:14:03.88,Default,Nanami,0,0,0,,We're back!
+Dialogue: 0,0:14:04.28,0:14:06.76,Default,Kobato,0,0,0,,She must have had a ton of fun.
+Dialogue: 0,0:14:07.07,0:14:09.51,Default,Kobato,0,0,0,,She looked so happy.
+Dialogue: 0,0:14:09.51,0:14:12.58,Default,Kobato,0,0,0,,Just what were you doing around the island?
+Dialogue: 0,0:14:12.58,0:14:15.99,Default,Nanami,0,0,0,,Oh, well, y'know, stuff.
+Dialogue: 0,0:14:15.99,0:14:19.27,Default,Nanami,0,0,0,,That reminds me! I met some friends of yours.
+Dialogue: 0,0:14:19.27,0:14:20.44,Default,Nanami,0,0,0,,Let's see...
+Dialogue: 0,0:14:20.44,0:14:23.15,Default,Nanami,0,0,0,,Seiryuu, Suzaku, Byakko, and Genbu-san.
+Dialogue: 0,0:14:24.81,0:14:25.36,Default,Kobato,0,0,0,,What's this?!
+Dialogue: 0,0:14:25.36,0:14:28.03,Default,Text,0,0,0,,{\fad(390,1)\shad0\blur2\bord3\an9\fnTimes NEw Roman\fs18\b1}One of the Four Gods of Torishirojima\N (The Real) {\fs36}Genbu
+Dialogue: 0,0:14:25.70,0:14:28.03,Default,Kobato,0,0,0,,Genbu is {\i1}my{\i0} designation!
+Dialogue: 0,0:14:29.51,0:14:31.61,Default,Kobato,0,0,0,,Damn that little punk...
+Dialogue: 0,0:14:31.61,0:14:33.45,Default,Kobato,0,0,0,,What gives him the right?!
+Dialogue: 0,0:14:35.44,0:14:40.10,Default,Kobato,0,0,0,,Nanami, thanks for spending \Nso much time playing with Shiroha.
+Dialogue: 0,0:14:40.10,0:14:40.87,Default,Kobato,0,0,0,,I appreciate it.
+Dialogue: 0,0:14:40.87,0:14:43.86,Default,Nanami,0,0,0,,Oh, no, it's not a big deal.
+Dialogue: 0,0:14:43.86,0:14:49.72,Default,Kobato,0,0,0,,However, I've searched all over and I still\Nhaven't found a clue as to who you are.
+Dialogue: 0,0:14:51.14,0:14:53.30,Default,Nanami,0,0,0,,Ah, my memory...
+Dialogue: 0,0:14:54.14,0:14:55.60,Default,Nanami,0,0,0,,Don't worry about it.
+Dialogue: 0,0:14:55.60,0:14:57.89,Default,Kobato,0,0,0,,You {\i1}should{\i0} be worried about it.
+Dialogue: 0,0:14:57.89,0:15:00.08,Default,Kobato,0,0,0,,Anyway, about this island...
+Dialogue: 0,0:15:00.08,0:15:03.36,Default,Kobato,0,0,0,,There's a diner by the hill \Nleading to the port.
+Dialogue: 0,0:15:04.63,0:15:07.48,Default,Kobato,0,0,0,,You're free to explore as you please,
+Dialogue: 0,0:15:07.48,0:15:11.18,Default,Kobato,0,0,0,,but even if she asks, \NI want you to refuse to go there.
+Dialogue: 0,0:15:11.18,0:15:13.07,Default,Kobato,0,0,0,,It will only make her sad.
+Dialogue: 0,0:15:13.45,0:15:15.00,Main - Italics,Nanami,0,0,0,,Kobato-san...
+Dialogue: 0,0:15:15.00,0:15:20.11,Default,Nanami,0,0,0,,Listen, did Shiroha-chan's mother \Nhave any friends or anything?
+Dialogue: 0,0:15:20.11,0:15:21.91,Default,Kobato,0,0,0,,Let me think.
+Dialogue: 0,0:15:21.91,0:15:23.86,Default,Kobato,0,0,0,,She had plenty of friends.
+Dialogue: 0,0:15:23.86,0:15:26.21,Default,Kobato,0,0,0,,She was especially close with...
+Dialogue: 0,0:15:26.21,0:15:27.34,Default,Kyouko,0,0,0,,Yes?
+Dialogue: 0,0:15:28.51,0:15:31.80,Default,Nanami,0,0,0,,Might you be... Katou Kyouko-san?
+Dialogue: 0,0:15:32.14,0:15:34.49,Default,Kyouko,0,0,0,,Yup, that's me.
+Dialogue: 0,0:15:34.49,0:15:37.18,Default,Kyouko,0,0,0,,You must be Naruse-san's...
+Dialogue: 0,0:15:37.49,0:15:38.74,Default,Nanami,0,0,0,,I'm Nanami.
+Dialogue: 0,0:15:38.74,0:15:42.69,Default,Nanami,0,0,0,,I'd like to ask you \Nabout Shiroha-chan's mother.
+Dialogue: 0,0:15:43.07,0:15:44.98,Default,Kyouko,0,0,0,,I've been curious myself.
+Dialogue: 0,0:15:44.98,0:15:49.75,Default,Kyouko,0,0,0,,I can't believe she—I mean, Hitomi—\Nleft Shiroha-chan and vanished.
+Dialogue: 0,0:15:49.75,0:15:51.95,Default,Nanami,0,0,0,,Did she ever mention anything?
+Dialogue: 0,0:15:55.47,0:16:00.25,Default,Kyouko,0,0,0,,Come to think of it, she came by to talk\Na little bit before she disappeared.
+Dialogue: 0,0:16:01.63,0:16:03.42,Default,Nanami,0,0,0,,What did you discuss?
+Dialogue: 0,0:16:03.72,0:16:05.57,Default,Kyouko,0,0,0,,The folklore of Shirohane.
+Dialogue: 0,0:16:06.31,0:16:08.19,Default,Nanami,0,0,0,,Shirohane?
+Dialogue: 0,0:16:08.19,0:16:10.15,Default,Kyouko,0,0,0,,It's a story passed down on Torishirojima.
+Dialogue: 0,0:16:10.15,0:16:13.12,Default,Kyouko,0,0,0,,That sort of thing fascinates me, \Nso I've been doing research.
+Dialogue: 0,0:16:13.12,0:16:14.88,Default,Nanami,0,0,0,,What is it about?
+Dialogue: 0,0:16:15.32,0:16:20.14,Default,Kyouko,0,0,0,,A woman becoming a butterfly \Nand going to see someone she loves.
+Dialogue: 0,0:16:20.55,0:16:22.83,Default,Kyouko,0,0,0,,She throws herself into the ocean,
+Dialogue: 0,0:16:22.83,0:16:26.58,Default,Kyouko,0,0,0,,gaining power by giving her life\Nto the god of the sea.
+Dialogue: 0,0:16:26.58,0:16:30.90,Default,Kyouko,0,0,0,,She transforms into a butterfly with white\N wings and flies off to see her beloved.
+Dialogue: 0,0:16:31.29,0:16:35.16,Default,Kyouko,0,0,0,,But in exchange, she loses everything else.
+Dialogue: 0,0:16:35.51,0:16:37.59,Default,Nanami,0,0,0,,She goes to see a loved one?
+Dialogue: 0,0:16:38.18,0:16:39.95,Default,Nanami,0,0,0,,That's what you two talked about?
+Dialogue: 0,0:16:39.95,0:16:41.06,Default,Kyouko,0,0,0,,Yes.
+Dialogue: 0,0:16:41.06,0:16:42.36,Default,Kyouko,0,0,0,,Thinking back on it,
+Dialogue: 0,0:16:42.36,0:16:45.16,Default,Kyouko,0,0,0,,she had to have been desperate \Nto be clinging to folk tales.
+Dialogue: 0,0:16:45.16,0:16:47.53,Default,Nanami,0,0,0,,What was Hitomi-san like?
+Dialogue: 0,0:16:47.53,0:16:48.53,Default,Kyouko,0,0,0,,Hitomi?
+Dialogue: 0,0:16:48.53,0:16:55.55,Default,Kyouko,0,0,0,,She had this power about her. \NWith her, even trivial things felt fun.
+Dialogue: 0,0:16:55.55,0:16:58.60,Default,Kyouko,0,0,0,,Oh, yeah! And she would always say...
+Dialogue: 0,0:16:58.89,0:17:03.73,Flashback,Hitomi,0,0,0,,I'm enjoying the moment so much that\N I don't have any time to be nostalgic.
+Dialogue: 0,0:17:08.75,0:17:11.98,Default,Nanami,0,0,0,,I still don't know anything.
+Dialogue: 0,0:17:13.74,0:17:16.78,Default,Nanami,0,0,0,,But this folklore of Shirohane...
+Dialogue: 0,0:17:20.63,0:17:22.20,Default,Nanami,0,0,0,,What was that?
+Dialogue: 0,0:17:30.79,0:17:31.68,Default,Nanami,0,0,0,,So then...
+Dialogue: 0,0:17:32.13,0:17:35.63,Default,Nanami,0,0,0,,Would you be the one to tell me something?
+Dialogue: 0,0:17:39.70,0:17:41.64,Default,Nanami,0,0,0,,Okay, try this.
+Dialogue: 0,0:17:46.68,0:17:47.99,Default,Shiroha,0,0,0,,It's good.
+Dialogue: 0,0:17:47.99,0:17:50.02,Default,Shiroha,0,0,0,,It tastes just like Dad's.
+Dialogue: 0,0:17:50.02,0:17:51.40,Default,Nanami,0,0,0,,Then...
+Dialogue: 0,0:17:53.86,0:17:55.19,Default,Nanami,0,0,0,,Shiroha-chan?
+Dialogue: 0,0:17:56.10,0:17:59.07,Default,Shiroha,0,0,0,,Sorry, it's still not right.
+Dialogue: 0,0:17:59.07,0:18:01.41,Default,Shiroha,0,0,0,,It's really, really close.
+Dialogue: 0,0:18:02.78,0:18:05.54,Default,Nanami,0,0,0,,I followed the recipe, but...
+Dialogue: 0,0:18:05.54,0:18:08.14,Default,Nanami,0,0,0,,Can you tell me exactly what it's missing?
+Dialogue: 0,0:18:08.14,0:18:09.60,Default,Shiroha,0,0,0,,Let's see...
+Dialogue: 0,0:18:09.60,0:18:11.62,Default,Shiroha,0,0,0,,It was a little sweeter.
+Dialogue: 0,0:18:11.62,0:18:13.25,Default,Nanami,0,0,0,,Sweeter, huh?
+Dialogue: 0,0:18:13.25,0:18:17.09,Default,Nanami,0,0,0,,Shiroha-chan, did your dad ever \Nadd anything when he was cooking?
+Dialogue: 0,0:18:17.38,0:18:18.73,Default,Shiroha,0,0,0,,Hmm...
+Dialogue: 0,0:18:18.73,0:18:22.22,Default,Shiroha,0,0,0,,I know! He put in little \Nblack things at the end.
+Dialogue: 0,0:18:22.52,0:18:24.82,Default,Nanami,0,0,0,,Little black things?
+Dialogue: 0,0:18:24.82,0:18:25.79,Default,Nanami,0,0,0,,Sesame seeds?
+Dialogue: 0,0:18:25.79,0:18:27.73,Default,Shiroha,0,0,0,,They weren't sesame seeds.
+Dialogue: 0,0:18:27.73,0:18:29.31,Default,Nanami,0,0,0,,I see.
+Dialogue: 0,0:18:29.31,0:18:33.29,Default,Nanami,0,0,0,,But there's nothing else \Nwritten in the recipe...
+Dialogue: 0,0:18:34.18,0:18:35.16,Default,Nanami,0,0,0,,What's this?
+Dialogue: 0,0:18:35.62,0:18:36.95,Default,Shiroha,0,0,0,,A generator?
+Dialogue: 0,0:18:36.95,0:18:38.65,Default,Nanami,0,0,0,,You recognize that, huh?
+Dialogue: 0,0:18:38.65,0:18:41.58,Default,Nanami,0,0,0,,But I think it's more like...
+Dialogue: 0,0:18:41.58,0:18:43.74,Default,Nanami,0,0,0,,The sun, maybe, I think.
+Dialogue: 0,0:18:43.74,0:18:46.45,Default,Shiroha,0,0,0,,How do you put the sun in?
+Dialogue: 0,0:18:46.45,0:18:47.84,Default,Nanami,0,0,0,,I don't know.
+Dialogue: 0,0:18:47.84,0:18:51.44,Default,Nanami,0,0,0,,But this has to be some kind \Nof hint for an ingredient.
+Dialogue: 0,0:18:51.44,0:18:52.54,Default,Nanami,0,0,0,,And so...
+Dialogue: 0,0:18:53.10,0:18:56.08,Default,Nanami,0,0,0,,Off we go to find the sun!
+Dialogue: 0,0:18:56.08,0:18:57.55,Default,Shiroha,0,0,0,,Whoo!
+Dialogue: 0,0:19:23.65,0:19:26.91,Main - Italics,Nanami,0,0,0,,We thought of so many places\N that might be close to the sun,
+Dialogue: 0,0:19:26.91,0:19:29.56,Main - Italics,Nanami,0,0,0,,but not one had anything\N that seemed like an ingredient.
+Dialogue: 0,0:19:31.51,0:19:33.29,Default,Ao,0,0,0,,Hey, Shiroha!
+Dialogue: 0,0:19:37.05,0:19:38.60,Default,Ao,0,0,0,,Long time!
+Dialogue: 0,0:19:38.60,0:19:39.38,Default,Ao,0,0,0,,How've you been?
+Dialogue: 0,0:19:39.68,0:19:43.51,Default,Ai,0,0,0,,We haven't seen you since summer \Nbreak started. We missed you.
+Dialogue: 0,0:19:44.67,0:19:45.70,Default,Nanami,0,0,0,,Oh, right.
+Dialogue: 0,0:19:45.70,0:19:48.45,Default,Nanami,0,0,0,,I have a question for you all.
+Dialogue: 0,0:19:49.29,0:19:52.89,Default,Ao,0,0,0,,Somewhere on the island that might \Nhave something to do with the sun?
+Dialogue: 0,0:19:54.46,0:19:55.77,Default,Ao,0,0,0,,Ai-chan, any ideas?
+Dialogue: 0,0:19:55.77,0:19:57.94,Default,Ai,0,0,0,,You're my sun, Ao-chan.
+Dialogue: 0,0:19:58.52,0:19:59.93,Default,Ryoichi,0,0,0,,The sun...
+Dialogue: 0,0:20:00.09,0:20:01.32,Default,Ryoichi,0,0,0,,The sun...
+Dialogue: 0,0:20:01.83,0:20:06.49,Default,Miki,0,0,0,,Actually, Shiroha-san, haven't you \Nsaid something like that before?
+Dialogue: 0,0:20:06.49,0:20:08.91,Default,Miki,0,0,0,,Something about the sun being...
+Dialogue: 0,0:20:10.56,0:20:11.76,Default,Nanami,0,0,0,,What's up?
+Dialogue: 0,0:20:11.76,0:20:13.63,Default,Nanami,0,0,0,,Does something come to mind?
+Dialogue: 0,0:20:13.63,0:20:16.25,Default,Shiroha,0,0,0,,I might have said something.
+Dialogue: 0,0:20:16.25,0:20:17.04,Default,Nanami,0,0,0,,Really?
+Dialogue: 0,0:20:23.84,0:20:26.56,Default,Nanami,0,0,0,,So {\i1}this{\i0} is what the sun meant!
+Dialogue: 0,0:20:28.33,0:20:30.93,Default,Nanami,0,0,0,,Grind these up, and...
+Dialogue: 0,0:20:32.42,0:20:34.44,Default,Nanami,0,0,0,,Yup, it's slightly sweet.
+Dialogue: 0,0:20:34.81,0:20:36.86,Default,Nanami,0,0,0,,We found it, Shiroha-chan.
+Dialogue: 0,0:20:36.86,0:20:39.52,Default,Nanami,0,0,0,,The final ingredient\N to the fried fan you remember.
+Dialogue: 0,0:20:40.07,0:20:41.65,Default,Shiroha,0,0,0,,This is my first time here...
+Dialogue: 0,0:20:42.54,0:20:43.95,Default,Nanami,0,0,0,,You said you were here before.
+Dialogue: 0,0:20:45.12,0:20:49.95,Default,Shiroha,0,0,0,,It's the first time since my mom went away.
+Dialogue: 0,0:20:50.54,0:20:52.70,Default,Nanami,0,0,0,,Shiroha-chan...
+Dialogue: 0,0:20:53.59,0:20:55.27,Default,Shiroha,0,0,0,,I want to go back...
+Dialogue: 0,0:20:55.27,0:20:56.72,Default,Shiroha,0,0,0,,to a year ago.
+Dialogue: 0,0:20:57.19,0:20:58.88,Default,Shiroha,0,0,0,,I want to go back.
+Dialogue: 0,0:20:58.88,0:21:01.70,Default,Shiroha,0,0,0,,She isn't here anymore.
+Dialogue: 0,0:21:01.70,0:21:06.14,Default,Shiroha,0,0,0,,She used to carry me on her back here.
+Dialogue: 0,0:21:06.91,0:21:10.97,Default,Shiroha,0,0,0,,We'd go back to the shop, \Nand Dad would be cooking.
+Dialogue: 0,0:21:11.55,0:21:13.46,Default,Shiroha,0,0,0,,The three of us ate together.
+Dialogue: 0,0:21:13.46,0:21:15.29,Default,Shiroha,0,0,0,,It was warm.
+Dialogue: 0,0:21:15.29,0:21:17.14,Default,Shiroha,0,0,0,,But they're gone.
+Dialogue: 0,0:21:17.14,0:21:18.96,Default,Shiroha,0,0,0,,They aren't here this year.
+Dialogue: 0,0:21:28.10,0:21:31.50,Main - Italics,Nanami,0,0,0,,I wanted to bring back \Nwhat Shiroha-chan wanted.
+Dialogue: 0,0:21:32.27,0:21:35.75,Main - Italics,Nanami,0,0,0,,But what she really wanted is...
+Dialogue: 0,0:21:39.11,0:21:40.61,Main - Italics,Nanami,0,0,0,,I remember.
+Dialogue: 0,0:21:40.61,0:21:44.63,Main - Italics,Nanami,0,0,0,,I was looking up at big flowers \Nthe same way with someone.
+Dialogue: 0,0:21:47.36,0:21:48.39,Main - Italics,Nanami,0,0,0,,And yet...
+Dialogue: 0,0:21:48.91,0:21:50.43,Main - Italics,Nanami,0,0,0,,I can't remember.
+Dialogue: 0,0:21:51.11,0:21:52.10,Default,Nanami,0,0,0,,Sorry.
+Dialogue: 0,0:21:52.69,0:21:53.94,Default,Nanami,0,0,0,,I'm sorry.
+Dialogue: 0,0:21:54.49,0:21:58.01,Main - Italics,Nanami,0,0,0,,I shouldn't have made Shiroha-chan \Nsuffer through this.
+Dialogue: 0,0:21:58.60,0:21:59.94,Main - Italics,Nanami,0,0,0,,So I want...
+Dialogue: 0,0:22:02.29,0:22:07.54,Main - Italics,Nanami,0,0,0,,I want to make sure Shiroha-chan \Nis smiling while I'm here.
+Dialogue: 0,0:22:13.41,0:22:17.08,Default,CREDITS,0,0,0,,{\fnTimes New Roman\fs12\shad0\bord1\fad(500,500)\an4\pos(325,290)\3c&HC7AB89&}Rei Miyasaka \NHenry Lin \NRiley Dalton \NWilliam Haggard
+Dialogue: 0,0:22:13.41,0:22:17.08,Default,CREDITS,0,0,0,,{\shad0\fad(500,500)\fnTimes New Roman\fs12\shad0\bord1\an6\pos(315,290)\3c&HC7AB89&}Translation:\NTiming:\NEditing:\NQuality Check:
+

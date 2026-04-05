@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NAND Simulator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>NAND Simulator</h1>
+    <div id="controls">
+        <button id="reset-btn" onclick="resetGame()">Reset Circuit</button>
+        <button onclick="addIntermediateNode()">Add Intermediate Node</button>
+        <button id="play-btn" onclick="playAnimation()">Play Animation</button>
+        <button id="submit-btn" onclick="submitCircuit()">Submit Circuit</button>
+    </div>
+    <div class="game-wrapper">
+        <div id="game-container">
+            <div class="goal-display"></div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let selectedNode = null;
+        let nodes = [];
+        let connections = [];
+        let tooltip = null;
+        let nextNodeId = 2; // Start from 2 since output is 1
+        let outputNodes = [];
+        let isDragging = false;
+        let dragTarget = null;
+        let currentX, currentY, initialX, initialY;
+        let ballArrivals = new Map();
+
+        // Constants
+        const GOALS = {
+            flip: {
+                description: 'Flip the outputs!'
+            }
+        };
+
+        // Node Creation and Management
+        function createNode(x, y, value, type) {
+            const node = document.createElement('div');
+            node.className = `node ${type}-node`;
+            node.style.left = x + 'px';
+            node.style.top = y + 'px';
+            node.dataset.x = x;
+            node.dataset.y = y;
+            node.dataset.value = value;
+            node.dataset.type = type;
+            node.id = 'node-' + Math.random().toString(36).substr(2, 9);
+            
+            if (type === 'output') {
+                node.dataset.nodeId = (outputNodes.length + 1).toString();
+            } else {
+                node.dataset.nodeId = nextNodeId.toString();
+                nextNodeId++;
+            }
+            node.textContent = node.dataset.nodeId;
+            
+            node.addEventListener('mousedown', startDragging);
+            node.addEventListener('click', () => handleNodeClick(node));
+            node.addEventListener('mousemove', (e) => showTooltip(node, e));
+            node.addEventListener('mouseout', hideTooltip);
+            
+            document.getElementById('game-container').appendChild(node);
+            (type === 'output' ? outputNodes : nodes).push(node);
+            return node;
+        }
+
+        function addIntermediateNode() {
+            const x = Math.random() * 800 + 50;
+            const y = Math.random() * 100 + 50;
+            return createNode(x, y, '1', 'nand');
+        }
+
+        function createOutputNodes() {
+            const containerWidth = 900;
+            const containerHeight = 600;
+            const spacing = 150;
+            const startX = containerWidth/2 - (spacing * 1.5);
+            for (let i = 0; i < 4; i++) {
+                createNode(startX + (i * spacing), containerHeight - 150, '?', 'output');
+            }
+        }
+
+        // Node Value Updates
+        function updateNandValue(nandNode) {
+            const input1 = nodes.find(n => n.id === nandNode.dataset.input1);
+            const input2 = nodes.find(n => n.id === nandNode.dataset.input2);
+            
+            if (input1 && input2) {
+                const val1 = parseInt(input1.dataset.value);
+                const val2 = parseInt(input2.dataset.value);
+                const nandResult = ~(val1 & val2) & 1;
+                nandNode.dataset.value = nandResult;
+                
+                // Propagate updates
+                nodes.forEach(node => {
+                    if ((node.dataset.input1 === nandNode.id || node.dataset.input2 === nandNode.id) && 
+                        node.dataset.type === 'nand') {
+                        updateNandValue(node);
+                    }
+                });
+                
+                outputNodes.forEach(node => {
+                    if (node.dataset.input1 === nandNode.id || node.dataset.input2 === nandNode.id) {
+                        node.dataset.value = nandNode.dataset.value;
+                    }
+                });
+            }
+        }
+
+        // Connection Management
+        function drawConnection(from, to) {
+            const connection = document.createElement('div');
+            connection.className = 'connection';
+            connection.dataset.fromId = from.id;
+            connection.dataset.toId = to.id;
+            
+            const fromX = parseFloat(from.dataset.x) + from.offsetWidth/2;
+            const fromY = parseFloat(from.dataset.y) + from.offsetHeight/2;
+            const toX = parseFloat(to.dataset.x) + to.offsetWidth/2;
+            const toY = parseFloat(to.dataset.y) + to.offsetHeight/2;
+            
+            const dx = toX - fromX;
+            const dy = toY - fromY;
+            const length = Math.sqrt(dx * dx + dy * dy);
+            const angle = Math.atan2(dy, dx) * 180 / Math.PI;
+            
+            connection.style.width = length + 'px';
+            connection.style.left = fromX + 'px';
+            connection.style.top = fromY + 'px';
+            connection.style.transform = `rotate(${angle}deg)`;
+            
+            document.getElementById('game-container').appendChild(connection);
+            connections.push(connection);
+        }
+
+        function updateConnections() {
+            connections.forEach(conn => conn.remove());
+            connections = [];
+            
+            const findNodeById = (id) => nodes.find(n => n.id === id) || outputNodes.find(n => n.id === id);
+            
+            // Draw all connections
+            [...nodes, ...outputNodes].forEach(node => {
+                if (node.dataset.input1) {
+                    const input1 = findNodeById(node.dataset.input1);
+                    if (input1) drawConnection(input1, node);
+                }
+                if (node.dataset.input2) {
+                    const input2 = findNodeById(node.dataset.input2);
+                    if (input2) drawConnection(input2, node);
+                }
+            });
+        }
+
+        // Node Interaction
+        function handleNodeClick(node) {
+            if (!selectedNode) {
+                if (node.dataset.type === 'output') return;
+                selectedNode = node;
+                node.classList.add('selected');
+            } else if (selectedNode !== node) {
+                const existingInputs = [];
+                if (node.dataset.input1) existingInputs.push(node.dataset.input1);
+                if (node.dataset.input2) existingInputs.push(node.dataset.input2);
+                
+                if (!existingInputs.includes(selectedNode.id) && existingInputs.length < 2) {
+                    if (!node.dataset.input1) {
+                        node.dataset.input1 = selectedNode.id;
+                    } else {
+                        node.dataset.input2 = selectedNode.id;
+                    }
+                    
+                    drawConnection(selectedNode, node);
+                    if (node.dataset.type === 'nand') {
+                        updateNandValue(node);
+                    } else {
+                        node.dataset.value = selectedNode.dataset.value;
+                    }
+                }
+                
+                selectedNode.classList.remove('selected');
+                selectedNode = null;
+            }
+        }
+
+        // Drag and Drop
+        function startDragging(e) {
+            dragTarget = e.target;
+            isDragging = true;
+            
+            const containerRect = document.getElementById('game-container').getBoundingClientRect();
+            const nodeRect = dragTarget.getBoundingClientRect();
+            
+            initialX = e.clientX - nodeRect.left;
+            initialY = e.clientY - nodeRect.top;
+            
+            dragTarget.classList.add('dragging');
+            
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', stopDragging);
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            
+            const containerRect = document.getElementById('game-container').getBoundingClientRect();
+            
+            currentX = e.clientX - containerRect.left - initialX;
+            currentY = e.clientY - containerRect.top - initialY;
+            
+            currentX = Math.max(0, Math.min(currentX, containerRect.width - dragTarget.offsetWidth));
+            currentY = Math.max(0, Math.min(currentY, containerRect.height - dragTarget.offsetHeight));
+            
+            dragTarget.style.left = currentX + 'px';
+            dragTarget.style.top = currentY + 'px';
+            dragTarget.dataset.x = currentX;
+            dragTarget.dataset.y = currentY;
+            
+            updateConnections();
+        }
+
+        function stopDragging() {
+            isDragging = false;
+            if (dragTarget) {
+                dragTarget.classList.remove('dragging');
+                dragTarget = null;
+            }
+            document.removeEventListener('mousemove', drag);
+            document.removeEventListener('mouseup', stopDragging);
+        }
+
+        // UI Updates
+        function updateCircuitSerialization() {
+            const serializationDiv = document.getElementById('circuit-serialization');
+            let serialization = '';
+            
+            const findNodeById = (id) => nodes.find(n => n.id === id) || outputNodes.find(n => n.id === id);
+            
+            nodes.filter(n => n.dataset.type === 'nand' && n.dataset.input1 && n.dataset.input2).forEach(nand => {
+                const input1 = findNodeById(nand.dataset.input1);
+                const input2 = findNodeById(nand.dataset.input2);
+                if (input1 && input2) {
+                    serialization += `${input1.dataset.nodeId} ${input2.dataset.nodeId} ${nand.dataset.nodeId}<br>`;
+                }
+            });
+            
+            outputNodes.forEach(output => {
+                if (output.dataset.input1 && output.dataset.input2) {
+                    const input1 = findNodeById(output.dataset.input1);
+                    const input2 = findNodeById(output.dataset.input2);
+                    if (input1 && input2) {
+                        serialization += `${input1.dataset.nodeId} ${input2.dataset.nodeId} 1<br>`;
+                    }
+                }
+            });
+            
+            serializationDiv.innerHTML = serialization;
+        }
+
+        function updateTruthTable() {
+            const table = document.getElementById('truth-table-content');
+            const goal = GOALS.xor;
+            
+            let html = '<table><tr><th>Input A</th><th>Input B</th><th>Target</th><th>Current</th></tr>';
+            
+            const inputNodes = nodes.filter(n => n.dataset.type === 'input')
+                                   .sort((a, b) => parseFloat(a.dataset.x) - parseFloat(b.dataset.x));
+            const outputNode = outputNodes[0];
+            
+            goal.truthTable.forEach(entry => {
+                const isCurrentRow = inputNodes.length === 2 && 
+                                   parseInt(inputNodes[0].dataset.value) === entry.inputs[0] && 
+                                   parseInt(inputNodes[1].dataset.value) === entry.inputs[1];
+                
+                const currentOutput = isCurrentRow ? (outputNode ? outputNode.dataset.value : '?') : '-';
+                
+                html += `<tr class="${isCurrentRow ? 'current' : ''}">
+                    <td>${entry.inputs[0]}</td>
+                    <td>${entry.inputs[1]}</td>
+                    <td>${entry.output}</td>
+                    <td>${currentOutput}</td>
+                </tr>`;
+            });
+            
+            html += '</table>';
+            table.innerHTML = html;
+        }
+
+        function checkCircuit() {
+            const outputNode = outputNodes[0];
+            if (!outputNode || outputNode.dataset.value === '?') return;
+
+            const goal = GOALS.xor;
+            const inputs = nodes.filter(n => n.dataset.type === 'input')
+                              .map(n => parseInt(n.dataset.value));
+            
+            const entry = goal.truthTable.find(e => 
+                e.inputs.every((val, idx) => val === inputs[idx])
+            );
+
+            if (entry && parseInt(outputNode.dataset.value) === entry.output) {
+                outputNode.classList.add('correct');
+            } else {
+                outputNode.classList.remove('correct');
+            }
+            
+            updateTruthTable();
+        }
+
+        // Tooltip Management
+        function createTooltip() {
+            tooltip = document.createElement('div');
+            tooltip.className = 'tooltip';
+            document.body.appendChild(tooltip);
+        }
+
+        function showTooltip(node, event) {
+            const type = node.dataset.type === 'input' ? 'Input' : 
+                        node.dataset.type === 'output' ? 'Target Output' : 'NAND';
+            tooltip.textContent = `${type} Node: ${node.dataset.value}`;
+            tooltip.style.left = event.pageX + 10 + 'px';
+            tooltip.style.top = event.pageY + 10 + 'px';
+            tooltip.style.opacity = '1';
+        }
+
+        function hideTooltip() {
+            if (tooltip) tooltip.style.opacity = '0';
+        }
+
+        // Animation
+        async function playAnimation() {
+            const playBtn = document.getElementById('play-btn');
+            playBtn.disabled = true;
+            
+            try {
+                ballArrivals.clear();
+                nodes.filter(n => n.dataset.type === 'nand')
+                     .forEach(nand => ballArrivals.set(nand.id, new Set()));
+                
+                const inputNodes = nodes.filter(n => n.dataset.type === 'input');
+                await Promise.all(inputNodes.map(node => sendBallFromNode(node)));
+            } catch (error) {
+                console.error('Animation error:', error);
+            } finally {
+                playBtn.disabled = false;
+            }
+        }
+
+        async function sendBallFromNode(node) {
+            node.style.transform = 'scale(1.2)';
+            await new Promise(resolve => setTimeout(resolve, 100));
+            node.style.transform = '';
+            
+            const children = findChildNodes(node);
+            await Promise.all(children.map(async (child) => {
+                const ball = createBall(node);
+                await animateBallToNode(ball, node, child);
+                
+                if (child.dataset.type === 'nand') {
+                    const arrivals = ballArrivals.get(child.id);
+                    arrivals.add(node.id);
+                    
+                    if (arrivals.has(child.dataset.input1) && arrivals.has(child.dataset.input2)) {
+                        const input1 = nodes.find(n => n.id === child.dataset.input1);
+                        const input2 = nodes.find(n => n.id === child.dataset.input2);
+                        updateNandValue(child);
+                        await sendBallFromNode(child);
+                    }
+                }
+                
+                ball.remove();
+            }));
+        }
+
+        function findChildNodes(node) {
+            if (node.dataset.type === 'input' || node.dataset.type === 'nand') {
+                return [...nodes, ...outputNodes].filter(n => 
+                    n.dataset.input1 === node.id || n.dataset.input2 === node.id
+                );
+            }
+            return [];
+        }
+
+        async function animateBallToNode(ball, fromNode, toNode) {
+            const startX = parseFloat(fromNode.dataset.x) + fromNode.offsetWidth/2 - 6;
+            const startY = parseFloat(fromNode.dataset.y) + fromNode.offsetHeight/2 - 6;
+            ball.style.left = startX + 'px';
+            ball.style.top = startY + 'px';
+            
+            await new Promise(resolve => setTimeout(resolve, 100));
+            
+            const endX = parseFloat(toNode.dataset.x) + toNode.offsetWidth/2 - 6;
+            const endY = parseFloat(toNode.dataset.y) + toNode.offsetHeight/2 - 6;
+            ball.style.transition = 'all 0.5s ease-in-out';
+            ball.style.left = endX + 'px';
+            ball.style.top = endY + 'px';
+            
+            await new Promise(resolve => setTimeout(resolve, 500));
+            
+            toNode.style.transform = 'scale(1.2)';
+            await new Promise(resolve => setTimeout(resolve, 100));
+            toNode.style.transform = '';
+        }
+
+        function createBall(startNode) {
+            const ball = document.createElement('div');
+            ball.className = 'ball';
+            const x = parseFloat(startNode.dataset.x) + startNode.offsetWidth/2 - 6;
+            const y = parseFloat(startNode.dataset.y) + startNode.offsetHeight/2 - 6;
+            ball.style.left = x + 'px';
+            ball.style.top = y + 'px';
+            document.getElementById('game-container').appendChild(ball);
+            return ball;
+        }
+
+        // Game Management
+        function resetGame() {
+            nodes.forEach(node => node.remove());
+            outputNodes.forEach(node => node.remove());
+            connections.forEach(conn => conn.remove());
+            nodes = [];
+            outputNodes = [];
+            connections = [];
+            selectedNode = null;
+            nextNodeId = 5; // Start after output nodes (1-4)
+
+            const spacing = 150;
+            const startX = 100;
+            for (let i = 0; i < 4; i++) {
+                const x = startX + (i * spacing);
+                const y = Math.random() * 100 + 50;
+                const value = Math.round(Math.random());
+                createNode(x, y, value, 'input');
+            }
+            createOutputNodes();
+            updateGoalDisplay();
+        }
+
+        function updateGoalDisplay() {
+            const goalDisplay = document.querySelector('.goal-display');
+            goalDisplay.textContent = GOALS.xor.description;
+        }
+
+        // Event Listeners
+        document.getElementById('game-container').addEventListener('click', function(e) {
+            if (e.target === this && selectedNode) {
+                selectedNode.classList.remove('selected');
+                selectedNode = null;
+            }
+        });
+
+        // Initialize
+        createTooltip();
+        resetGame();
+
+        async function submitCircuit() {
+            // Convert nodes to circuit format
+            const circuit = [];
+            
+            // Add NAND gates
+            nodes.forEach(node => {
+                if (node.dataset.input1 && node.dataset.input2) {
+                    circuit.push({
+                        input1: parseInt(nodes.find(n => n.id === node.dataset.input1)?.dataset.nodeId),
+                        input2: parseInt(nodes.find(n => n.id === node.dataset.input2)?.dataset.nodeId),
+                        output: parseInt(node.dataset.nodeId)
+                    });
+                }
+            });
+
+            // Add all output nodes
+            outputNodes.forEach((outputNode, index) => {
+                if (outputNode.dataset.input1 && outputNode.dataset.input2) {
+                    circuit.push({
+                        input1: parseInt(nodes.find(n => n.id === outputNode.dataset.input1)?.dataset.nodeId),
+                        input2: parseInt(nodes.find(n => n.id === outputNode.dataset.input2)?.dataset.nodeId),
+                        output: index + 1  // Output nodes are numbered 1-4
+                    });
+                }
+            });
+
+            try {
+                const response = await fetch('/check', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ circuit })
+                });
+
+                const result = await response.json();
+                if (result.flag) {
+                    alert('Congratulations! Flag: ' + result.flag);
+                } else {
+                    alert('Circuit submitted successfully!');
+                }
+            } catch (error) {
+                console.error('Error submitting circuit:', error);
+                alert('Error submitting circuit. Please try again.');
+            }
+        }
+    </script>
+</body>
+</html>  

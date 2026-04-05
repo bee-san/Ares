@@ -1,0 +1,315 @@
+[Script Info]
+Title: English (US)
+Original Translation: 
+Original Editing: 
+Original Timing: 
+Synch Point: 
+Script Updated By: 
+Update Details: 
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 640
+PlayResY: 360
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Main - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Flashback,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+Style: Flashback - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:02.10,0:00:07.73,Main - Italics,Nanami,0,0,0,,Ever since the parent volunteer day at school,\N Shiroha-chan's barely left her room.
+Dialogue: 0,0:00:08.91,0:00:10.76,Main - Italics,Nanami,0,0,0,,An all-too-quiet house...
+Dialogue: 0,0:00:11.26,0:00:14.42,Main - Italics,Nanami,0,0,0,,I'm familiar with this atmosphere.
+Dialogue: 0,0:00:15.08,0:00:19.01,Main - Italics,Nanami,0,0,0,,It really impresses upon you \Nthat you have nowhere you belong.
+Dialogue: 0,0:00:19.72,0:00:24.39,Main - Italics,Nanami,0,0,0,,Not every day of this \Nlong summer has been fun.
+Dialogue: 0,0:00:24.80,0:00:30.65,Main - Italics,Nanami,0,0,0,,But I've already known \Na summer that was like that.
+Dialogue: 0,0:00:31.45,0:00:36.75,Main - Italics,Nanami,0,0,0,,I remember a brilliant summer that\N the three of us spent together as a family.
+Dialogue: 0,0:00:36.75,0:00:38.91,Main - Italics,Nanami,0,0,0,,Precious memories that are all mine.
+Dialogue: 0,0:00:41.79,0:00:46.75,Main - Italics,Nanami,0,0,0,,I need to share them with Shiroha-chan.
+Dialogue: 0,0:00:48.89,0:00:53.06,Main - Italics,Nanami,0,0,0,,And to that end, there's \Nsomething I have to know.
+Dialogue: 0,0:00:54.71,0:00:56.01,Default,Kyouko,0,0,0,,Coming!
+Dialogue: 0,0:00:57.37,0:00:58.05,Default,Kyouko,0,0,0,,Oh my.
+Dialogue: 0,0:00:58.59,0:01:00.05,Default,Nanami,0,0,0,,Hello there.
+Dialogue: 0,0:02:32.57,0:02:35.55,Default,Nanami,0,0,0,,So, about what we were \Ntalking about before...
+Dialogue: 0,0:02:35.55,0:02:36.23,Default,Kyouko,0,0,0,,Uh-huh.
+Dialogue: 0,0:02:36.23,0:02:38.86,Default,Nanami,0,0,0,,There's something that's been bugging me.
+Dialogue: 0,0:02:39.62,0:02:42.94,Default,Nanami,0,0,0,,You said the woman becomes a butterfly \Nand gains the ability to fly free,
+Dialogue: 0,0:02:42.94,0:02:45.23,Default,Nanami,0,0,0,,but that she loses everything in exchange.
+Dialogue: 0,0:02:45.23,0:02:46.74,Default,Nanami,0,0,0,,Why is that?
+Dialogue: 0,0:02:48.41,0:02:51.30,Default,Kyouko,0,0,0,,Say you have wings that \Ncan take you anywhere.
+Dialogue: 0,0:02:51.30,0:02:53.83,Default,Kyouko,0,0,0,,Even into the past and the future.
+Dialogue: 0,0:02:55.13,0:02:58.36,Default,Kyouko,0,0,0,,What do you think happens \Nwhen the boundary
+Dialogue: 0,0:02:58.36,0:03:03.64,Default,Kyouko,0,0,0,,between the past, the future, \Nand everything else disappears?
+Dialogue: 0,0:03:04.91,0:03:06.91,Default,Kyouko,0,0,0,,Is that really freedom?
+Dialogue: 0,0:03:07.52,0:03:10.81,Default,Kyouko,0,0,0,,Or does it just mean you're stuck?
+Dialogue: 0,0:03:12.06,0:03:17.82,Default,Kyouko,0,0,0,,For me, I envision being trapped \Ninside something invisible.
+Dialogue: 0,0:03:18.50,0:03:20.32,Default,Kyouko,0,0,0,,It's no different from summer.
+Dialogue: 0,0:03:20.86,0:03:24.45,Default,Kyouko,0,0,0,,Summer break starts in late July\N and ends in August.
+Dialogue: 0,0:03:25.52,0:03:26.89,Default,Kyouko,0,0,0,,That makes it special.
+Dialogue: 0,0:03:27.65,0:03:31.41,Default,Kyouko,0,0,0,,But what if I told you that \Nsummer break would go on forever?
+Dialogue: 0,0:03:33.55,0:03:35.56,Default,Kyouko,0,0,0,,You might think you were free,
+Dialogue: 0,0:03:35.56,0:03:41.63,Default,Kyouko,0,0,0,,but it might not be any different\Nfrom being locked inside a giant cage.
+Dialogue: 0,0:03:44.72,0:03:52.56,Default,Nanami,0,0,0,,Say you lost someone you loved \Nand you had the power to go back in time...
+Dialogue: 0,0:03:53.06,0:03:54.98,Default,Nanami,0,0,0,,If you were desperate to see them
+Dialogue: 0,0:03:54.98,0:03:57.56,Default,Nanami,0,0,0,,and you'd give up everything\N to be able to do it...
+Dialogue: 0,0:03:57.56,0:03:59.57,Default,Kyouko,0,0,0,,What would I do in that situation?
+Dialogue: 0,0:04:01.49,0:04:02.28,Default,Kyouko,0,0,0,,I'd go.
+Dialogue: 0,0:04:04.10,0:04:07.73,Default,Kyouko,0,0,0,,I know I'm kind of contradicting \Nwhat I just said.
+Dialogue: 0,0:04:08.58,0:04:09.87,Default,Kyouko,0,0,0,,But I'm sure I'd go.
+Dialogue: 0,0:04:11.87,0:04:16.04,Default,Kyouko,0,0,0,,Not that I have that kind of power, sadly.
+Dialogue: 0,0:04:20.86,0:04:22.13,Default,Nanami,0,0,0,,Thank you for having me.
+Dialogue: 0,0:04:26.90,0:04:28.15,Default,Kyouko,0,0,0,,It's strange.
+Dialogue: 0,0:04:29.89,0:04:31.86,Default,Kyouko,0,0,0,,You're suffering from amnesia,
+Dialogue: 0,0:04:31.86,0:04:34.44,Default,Kyouko,0,0,0,,but you're more curious about\Nthe island than yourself, huh?
+Dialogue: 0,0:04:34.44,0:04:35.71,Default,Nanami,0,0,0,,Nah...
+Dialogue: 0,0:04:36.90,0:04:40.27,Default,Nanami,0,0,0,,I just thought I might learn something \Nif I found out more about the island.
+Dialogue: 0,0:04:40.58,0:04:42.10,Default,Kyouko,0,0,0,,Yeah?
+Dialogue: 0,0:04:42.10,0:04:45.99,Default,Kyouko,0,0,0,,I'm sure you know everything already, though.
+Dialogue: 0,0:04:46.57,0:04:50.28,Default,Kyouko,0,0,0,,This isn't the first time \Nwe've had this conversation.
+Dialogue: 0,0:04:55.75,0:04:57.33,Default,Kyouko,0,0,0,,We did just the other day, remember?
+Dialogue: 0,0:04:59.86,0:05:01.59,Default,Nanami,0,0,0,,Sorry to keep bothering you.
+Dialogue: 0,0:05:02.76,0:05:03.76,Default,Kyouko,0,0,0,,It's fine.
+Dialogue: 0,0:05:04.16,0:05:06.07,Default,Nanami,0,0,0,,Well, I'll be going.
+Dialogue: 0,0:05:12.90,0:05:15.39,Default,Kyouko,0,0,0,,Summer break's almost over...
+Dialogue: 0,0:05:16.03,0:05:17.01,Default,Kyouko,0,0,0,,Hitomi.
+Dialogue: 0,0:05:19.94,0:05:22.13,Main - Italics,Nanami,0,0,0,,Kyouko-san is right.
+Dialogue: 0,0:05:22.13,0:05:28.91,Main - Italics,Nanami,0,0,0,,I don't think anyone could resist using that\N power if it meant seeing someone they missed.
+Dialogue: 0,0:05:29.66,0:05:31.96,Main - Italics,Nanami,0,0,0,,There's no denying that.
+Dialogue: 0,0:05:32.50,0:05:37.33,Main - Italics,Nanami,0,0,0,,Maybe I don't have the right to stop\N anyone from using such a power.
+Dialogue: 0,0:05:38.58,0:05:44.66,Main - Italics,Nanami,0,0,0,,Still... I learned so much repeating \Nthat summer over and over.
+Dialogue: 0,0:05:45.86,0:05:49.12,Main - Italics,Nanami,0,0,0,,And I know that there isn't just one future.
+Dialogue: 0,0:05:51.22,0:05:57.86,Main - Italics,Nanami,0,0,0,,But Shiroha-chan's power will \Nsew the future shut.
+Dialogue: 0,0:06:00.59,0:06:02.23,Default,Shiroha,0,0,0,,Look at all the stalls.
+Dialogue: 0,0:06:02.95,0:06:05.62,Default,Nanami,0,0,0,,Your grandpa gave us some spending money.
+Dialogue: 0,0:06:05.62,0:06:07.23,Default,Nanami,0,0,0,,We can get whatever you want.
+Dialogue: 0,0:06:07.23,0:06:08.49,Default,Shiroha,0,0,0,,Yay!
+Dialogue: 0,0:06:08.49,0:06:10.29,Default,Shiroha,0,0,0,,Then I want grilled squid.
+Dialogue: 0,0:06:11.06,0:06:12.31,Main - Italics,Nanami,0,0,0,,Thank goodness.
+Dialogue: 0,0:06:12.75,0:06:14.49,Main - Italics,Nanami,0,0,0,,She's in better spirits.
+Dialogue: 0,0:06:17.86,0:06:18.77,Default,Nanami,0,0,0,,Like it?
+Dialogue: 0,0:06:18.77,0:06:19.57,Default,Shiroha,0,0,0,,Yeah.
+Dialogue: 0,0:06:19.57,0:06:20.74,Default,Shiroha,0,0,0,,It's good.
+Dialogue: 0,0:06:20.74,0:06:23.17,Main - Italics,Nanami,0,0,0,,Maybe if we could keep \Nhaving moments like these,
+Dialogue: 0,0:06:23.65,0:06:27.29,Main - Italics,Nanami,0,0,0,,Shiroha-chan wouldn't be tempted\N to use her power.
+Dialogue: 0,0:06:28.19,0:06:32.01,Main - Italics,Nanami,0,0,0,,She was supposed to spend this summer alone.
+Dialogue: 0,0:06:32.33,0:06:38.52,Main - Italics,Nanami,0,0,0,,If my being here and spending time \Nwith her can help her stay strong...
+Dialogue: 0,0:06:39.23,0:06:42.77,Main - Italics,Nanami,0,0,0,,If, after all my summers, \NI've saved someone...
+Dialogue: 0,0:06:42.77,0:06:45.31,Main - Italics,Nanami,0,0,0,,If that someone is Shiroha-chan...
+Dialogue: 0,0:06:45.31,0:06:47.28,Main - Italics,Nanami,0,0,0,,I'll be satisfied.
+Dialogue: 0,0:06:47.57,0:06:52.65,Main - Italics,Nanami,0,0,0,,It would mean that my long, \Nlong journey had a purpose.
+Dialogue: 0,0:06:52.65,0:06:53.88,Default,Shiroha,0,0,0,,Nanami?
+Dialogue: 0,0:06:56.37,0:06:58.42,Default,Nanami,0,0,0,,I'm okay.
+Dialogue: 0,0:06:58.42,0:06:59.82,Default,Nanami,0,0,0,,Don't mind me.
+Dialogue: 0,0:07:02.56,0:07:03.50,Default,Nanami,0,0,0,,Let's go.
+Dialogue: 0,0:07:05.92,0:07:13.31,Main - Italics,Nanami,0,0,0,,Getting to walk together like this must be\Nthe last little bit of happiness I'm granted.
+Dialogue: 0,0:07:49.55,0:07:50.51,Default,Nanami,0,0,0,,What's wrong?
+Dialogue: 0,0:07:50.95,0:07:56.53,Default,Shiroha,0,0,0,,When Dad died, I cried every day.
+Dialogue: 0,0:07:57.78,0:08:01.64,Default,Shiroha,0,0,0,,That's when I heard a voice.
+Dialogue: 0,0:08:01.64,0:08:02.52,Default,Nanami,0,0,0,,A voice?
+Dialogue: 0,0:08:03.19,0:08:06.86,Default,Shiroha,0,0,0,,It told me I could have the power\N to meet him again.
+Dialogue: 0,0:08:08.26,0:08:11.87,Default,Shiroha,0,0,0,,So, um, I could go see him.
+Dialogue: 0,0:08:11.87,0:08:16.09,Default,Shiroha,0,0,0,,I told Mom about it too.
+Dialogue: 0,0:08:16.73,0:08:21.25,Default,Shiroha,0,0,0,,That we might be able to go see Dad.
+Dialogue: 0,0:08:21.72,0:08:24.55,Default,Shiroha,0,0,0,,She was really shocked.
+Dialogue: 0,0:08:24.55,0:08:29.25,Default,Shiroha,0,0,0,,She must have figured it out \Nand gone by herself.
+Dialogue: 0,0:08:29.75,0:08:31.34,Default,Shiroha,0,0,0,,To see Dad again.
+Dialogue: 0,0:08:32.84,0:08:36.86,Default,Shiroha,0,0,0,,I've been thinking about it \Nall the time these days.
+Dialogue: 0,0:08:36.86,0:08:40.51,Default,Shiroha,0,0,0,,So what should I do?
+Dialogue: 0,0:08:50.75,0:08:52.27,Default,Shiroha,0,0,0,,Sorry, Nanami...
+Dialogue: 0,0:08:53.04,0:08:54.82,Default,Shiroha,0,0,0,,I have to go.
+Dialogue: 0,0:08:55.58,0:08:57.11,Default,Nanami,0,0,0,,Wh-Where?
+Dialogue: 0,0:08:57.38,0:09:00.21,Default,Shiroha,0,0,0,,I'm going to see Mom.
+Dialogue: 0,0:09:00.21,0:09:01.61,Default,Nanami,0,0,0,,To see her?
+Dialogue: 0,0:09:01.61,0:09:04.02,Default,Shiroha,0,0,0,,See? It's here to take me.
+Dialogue: 0,0:09:04.02,0:09:05.46,Default,Nanami,0,0,0,,Shiroha-chan, that's...
+Dialogue: 0,0:09:10.38,0:09:11.96,Default,Shiroha,0,0,0,,I'm going now.
+Dialogue: 0,0:09:13.32,0:09:13.96,Default,Nanami,0,0,0,,Wait!
+Dialogue: 0,0:09:18.76,0:09:20.18,Default,Nanami,0,0,0,,Shiroha-chan!
+Dialogue: 0,0:09:20.18,0:09:21.81,Default,Nanami,0,0,0,,Sorry, please let me through.
+Dialogue: 0,0:09:23.81,0:09:25.31,Default,Nanami,0,0,0,,Shiroha-chan!
+Dialogue: 0,0:09:25.80,0:09:27.31,Default,Nanami,0,0,0,,Wait!
+Dialogue: 0,0:09:27.70,0:09:29.19,Default,Nanami,0,0,0,,Shiroha-chan!
+Dialogue: 0,0:09:40.22,0:09:41.83,Default,Nanami,0,0,0,,Shiroha-chan!
+Dialogue: 0,0:09:43.76,0:09:45.15,Default,Nanami,0,0,0,,Shiroha-chan!
+Dialogue: 0,0:09:56.51,0:09:57.47,Default,Nanami,0,0,0,,What...
+Dialogue: 0,0:10:18.52,0:10:19.79,Default,Nanami,0,0,0,,Shiroha-chan!
+Dialogue: 0,0:10:20.98,0:10:22.17,Default,Shiroha,0,0,0,,Nanami.
+Dialogue: 0,0:10:22.60,0:10:23.87,Default,Shiroha,0,0,0,,Why did you come?
+Dialogue: 0,0:10:26.02,0:10:29.55,Default,Shiroha,0,0,0,,You can't go any further.
+Dialogue: 0,0:10:29.55,0:10:33.33,Default,Shiroha,0,0,0,,You have to have the special power to go.
+Dialogue: 0,0:10:34.50,0:10:37.13,Default,Nanami,0,0,0,,Special power?
+Dialogue: 0,0:10:37.13,0:10:38.14,Default,Shiroha,0,0,0,,Yeah.
+Dialogue: 0,0:10:38.14,0:10:41.70,Default,Shiroha,0,0,0,,I think Mom came here.
+Dialogue: 0,0:10:41.70,0:10:44.39,Default,Shiroha,0,0,0,,And she went to see Dad.
+Dialogue: 0,0:10:44.93,0:10:47.44,Default,Nanami,0,0,0,,By seeing your dad, you mean...
+Dialogue: 0,0:10:47.90,0:10:49.64,Default,Shiroha,0,0,0,,She went into the past.
+Dialogue: 0,0:10:50.22,0:10:54.77,Default,Shiroha,0,0,0,,Mom and I shared that power.
+Dialogue: 0,0:10:55.48,0:10:59.40,Default,Shiroha,0,0,0,,If I make a wish, I can go back.
+Dialogue: 0,0:11:00.75,0:11:02.43,Default,Shiroha,0,0,0,,You did it too, didn't you?
+Dialogue: 0,0:11:02.43,0:11:05.23,Default,Shiroha,0,0,0,,You came here from another time, right?
+Dialogue: 0,0:11:05.23,0:11:06.44,Default,Nanami,0,0,0,,Well...
+Dialogue: 0,0:11:11.37,0:11:13.75,Default,Shiroha,0,0,0,,Thanks for playing with me.
+Dialogue: 0,0:11:13.75,0:11:18.51,Default,Shiroha,0,0,0,,I wish we could play more, \Nbut I have to go to my mom.
+Dialogue: 0,0:11:19.12,0:11:20.51,Default,Nanami,0,0,0,,And where is that?
+Dialogue: 0,0:11:22.53,0:11:24.01,Default,Shiroha,0,0,0,,It's taking me now.
+Dialogue: 0,0:11:27.43,0:11:28.37,Default,Nanami,0,0,0,,No!
+Dialogue: 0,0:11:28.37,0:11:29.52,Default,Nanami,0,0,0,,You can't go!
+Dialogue: 0,0:11:51.54,0:11:54.80,Default,Shiroha,0,0,0,,I can finally have the power.
+Dialogue: 0,0:11:55.43,0:11:57.75,Default,Shiroha,0,0,0,,And with my power,
+Dialogue: 0,0:11:58.42,0:12:00.61,Default,Shiroha,0,0,0,,I'll go see Mom.
+Dialogue: 0,0:12:02.27,0:12:03.05,Default,Nanami,0,0,0,,Don't!
+Dialogue: 0,0:12:14.55,0:12:15.79,Default,Nanami,0,0,0,,Don't.
+Dialogue: 0,0:12:15.79,0:12:17.17,Default,Nanami,0,0,0,,You can't go.
+Dialogue: 0,0:12:17.17,0:12:20.86,Default,Nanami,0,0,0,,If you do, you'll lose \Nmore than you can imagine.
+Dialogue: 0,0:12:22.33,0:12:23.57,Default,Shiroha,0,0,0,,More than I can imagine?
+Dialogue: 0,0:12:23.57,0:12:29.74,Default,Nanami,0,0,0,,Use that power, and you'll lose \Nso many other precious moments.
+Dialogue: 0,0:12:30.18,0:12:31.47,Default,Shiroha,0,0,0,,I don't get it.
+Dialogue: 0,0:12:31.47,0:12:37.04,Default,Shiroha,0,0,0,,Was my dad dying and my mom disappearing \Nsome kind of price I paid?
+Dialogue: 0,0:12:37.58,0:12:39.04,Default,Nanami,0,0,0,,I don't...
+Dialogue: 0,0:12:39.30,0:12:43.31,Default,Nanami,0,0,0,,What's going to happen \Nto your grandpa if you go away?
+Dialogue: 0,0:12:43.31,0:12:45.86,Default,Shiroha,0,0,0,,Grandpa doesn't want me around.
+Dialogue: 0,0:12:45.86,0:12:47.43,Default,Nanami,0,0,0,,Do you really think that?
+Dialogue: 0,0:12:47.78,0:12:49.73,Default,Nanami,0,0,0,,It's not just him, either.
+Dialogue: 0,0:12:49.73,0:12:54.14,Default,Nanami,0,0,0,,Lots of other people, lots of other \Nhappy summers are waiting for you.
+Dialogue: 0,0:12:55.39,0:12:58.27,Default,Nanami,0,0,0,,Your memories are waiting for you.
+Dialogue: 0,0:12:58.27,0:12:59.54,Default,Shiroha,0,0,0,,You're lying!
+Dialogue: 0,0:12:59.54,0:13:01.48,Default,Shiroha,0,0,0,,I'm all alone!
+Dialogue: 0,0:13:01.48,0:13:03.43,Default,Shiroha,0,0,0,,My mom abandoned me!
+Dialogue: 0,0:13:03.43,0:13:04.25,Default,Nanami,0,0,0,,You're wrong!
+Dialogue: 0,0:13:04.69,0:13:07.45,Default,Nanami,0,0,0,,She never abandoned you.
+Dialogue: 0,0:13:07.90,0:13:10.29,Default,Nanami,0,0,0,,She did all this for you.
+Dialogue: 0,0:13:15.17,0:13:16.95,Default,Nanami,0,0,0,,I can tell.
+Dialogue: 0,0:13:16.95,0:13:18.21,Default,Nanami,0,0,0,,Trust me.
+Dialogue: 0,0:13:18.72,0:13:21.44,Default,Nanami,0,0,0,,She didn't go to see your dad.
+Dialogue: 0,0:13:21.44,0:13:24.97,Default,Nanami,0,0,0,,She had a much more important purpose.
+Dialogue: 0,0:13:25.45,0:13:28.73,Default,Nanami,0,0,0,,And it was for your sake.
+Dialogue: 0,0:13:31.37,0:13:33.72,Default,Nanami,0,0,0,,She put her life on the line for you.
+Dialogue: 0,0:13:33.72,0:13:36.36,Default,Nanami,0,0,0,,That's what mothers do.
+Dialogue: 0,0:13:38.98,0:13:43.02,Default,Shiroha,0,0,0,,Still, I wanted to be with her!
+Dialogue: 0,0:13:45.49,0:13:49.88,Default,Shiroha,0,0,0,,I've always been alone since she vanished.
+Dialogue: 0,0:13:49.88,0:13:53.79,Default,Shiroha,0,0,0,,Every day I wake up, it's silent at home.
+Dialogue: 0,0:13:54.19,0:13:57.02,Default,Shiroha,0,0,0,,I can cook for myself,
+Dialogue: 0,0:13:57.02,0:13:59.92,Default,Shiroha,0,0,0,,but it doesn't taste any good eating alone.
+Dialogue: 0,0:14:00.41,0:14:05.67,Default,Shiroha,0,0,0,,No one's there to see me off \Nwhen I go to school.
+Dialogue: 0,0:14:07.79,0:14:09.69,Default,Shiroha,0,0,0,,And it's never going to change.
+Dialogue: 0,0:14:10.34,0:14:12.93,Default,Shiroha,0,0,0,,I'm always going to be alone.
+Dialogue: 0,0:14:15.62,0:14:16.82,Default,Nanami,0,0,0,,Shiroha-chan.
+Dialogue: 0,0:14:20.51,0:14:22.65,Default,Nanami,0,0,0,,Did you have fun this summer?
+Dialogue: 0,0:14:25.65,0:14:29.40,Default,Nanami,0,0,0,,Next summer's going to be even more fun.
+Dialogue: 0,0:14:33.05,0:14:34.26,Default,Shiroha,0,0,0,,You're lying.
+Dialogue: 0,0:14:34.26,0:14:35.42,Default,Nanami,0,0,0,,No.
+Dialogue: 0,0:14:35.42,0:14:36.58,Default,Nanami,0,0,0,,It's true.
+Dialogue: 0,0:14:42.74,0:14:44.67,Default,Nanami,0,0,0,,I'll show you.
+Dialogue: 0,0:14:48.34,0:14:49.94,Default,Nanami,0,0,0,,Don't worry.
+Dialogue: 0,0:14:49.94,0:14:51.30,Default,Nanami,0,0,0,,I told you, remember?
+Dialogue: 0,0:14:51.75,0:14:54.30,Default,Nanami,0,0,0,,There are people waiting for you.
+Dialogue: 0,0:15:10.01,0:15:12.74,Default,Shiroha,0,0,0,,Is this a dream?
+Dialogue: 0,0:15:12.74,0:15:15.37,Default,Nanami,0,0,0,,No, these are memories.
+Dialogue: 0,0:15:15.37,0:15:16.83,Default,Shiroha,0,0,0,,Memories?
+Dialogue: 0,0:15:17.11,0:15:18.80,Default,Shiroha,0,0,0,,They can't be.
+Dialogue: 0,0:15:18.80,0:15:21.21,Default,Shiroha,0,0,0,,I don't remember having this much fun.
+Dialogue: 0,0:15:21.21,0:15:23.52,Default,Nanami,0,0,0,,It all really happened.
+Dialogue: 0,0:15:24.04,0:15:26.72,Default,Nanami,0,0,0,,No, it all {\i1}could{\i0} happen.
+Dialogue: 0,0:15:27.34,0:15:32.22,Default,Nanami,0,0,0,,All sorts of people and all sorts \Nof fun are waiting for you.
+Dialogue: 0,0:15:32.88,0:15:35.64,Default,Nanami,0,0,0,,Next year and the year after.
+Dialogue: 0,0:15:46.59,0:15:48.02,Default,Shiroha,0,0,0,,Nanami...
+Dialogue: 0,0:15:48.02,0:15:49.83,Default,Shiroha,0,0,0,,Who are you?
+Dialogue: 0,0:15:54.18,0:15:55.19,Default,Nanami,0,0,0,,I'm...
+Dialogue: 0,0:16:00.50,0:16:02.71,Default,Nanami,0,0,0,,Let's go home, Shiroha-chan.
+Dialogue: 0,0:16:03.62,0:16:05.76,Default,Nanami,0,0,0,,We shouldn't be here anymore.
+Dialogue: 0,0:16:06.70,0:16:09.67,Default,Nanami,0,0,0,,You've got to move on\Nto the future you just saw.
+Dialogue: 0,0:16:45.84,0:16:47.06,Main - Italics,Hitomi,0,0,0,,Thank you.
+Dialogue: 0,0:16:54.10,0:16:57.30,Default,Nanami,0,0,0,,Thank you, Grandma.
+Dialogue: 0,0:17:01.50,0:17:03.59,Default,Shiroha,0,0,0,,We made it back?
+Dialogue: 0,0:17:03.59,0:17:04.81,Default,Nanami,0,0,0,,Looks like it.
+Dialogue: 0,0:17:10.02,0:17:11.30,Default,Shiroha,0,0,0,,It's pretty.
+Dialogue: 0,0:17:11.30,0:17:11.98,Default,Nanami,0,0,0,,Yeah.
+Dialogue: 0,0:17:14.58,0:17:16.22,Default,Shiroha,0,0,0,,Glowing butterflies...
+Dialogue: 0,0:17:25.21,0:17:26.37,Default,Shiroha,0,0,0,,Nanami!
+Dialogue: 0,0:17:26.37,0:17:28.02,Default,Shiroha,0,0,0,,Your hand's fading!
+Dialogue: 0,0:17:28.02,0:17:29.01,Default,Nanami,0,0,0,,My hand?
+Dialogue: 0,0:17:29.01,0:17:30.84,Default,Nanami,0,0,0,,Oh, you're right.
+Dialogue: 0,0:17:31.71,0:17:32.83,Main - Italics,Nanami,0,0,0,,Yeah...
+Dialogue: 0,0:17:33.36,0:17:37.84,Main - Italics,Nanami,0,0,0,,I had a feeling, but I guess \Nthat was pretty reckless.
+Dialogue: 0,0:17:38.26,0:17:43.35,Main - Italics,Nanami,0,0,0,,I was born as a weave of\Ncountless memories.
+Dialogue: 0,0:17:44.08,0:17:47.48,Main - Italics,Nanami,0,0,0,,Give them to Shiroha-chan, \Nand I come undone.
+Dialogue: 0,0:17:48.39,0:17:50.98,Main - Italics,Nanami,0,0,0,,I can't be sewn back.
+Dialogue: 0,0:17:51.38,0:17:54.19,Main - Italics,Nanami,0,0,0,,I'm out of time.
+Dialogue: 0,0:17:56.34,0:17:58.15,Default,Shiroha,0,0,0,,Wh-Why?
+Dialogue: 0,0:17:58.49,0:18:03.16,Default,Nanami,0,0,0,,Shiroha-chan, I came here\N so I could see someone dear to me.
+Dialogue: 0,0:18:03.79,0:18:05.18,Default,Nanami,0,0,0,,And I did.
+Dialogue: 0,0:18:06.60,0:18:09.04,Default,Nanami,0,0,0,,That's why I'm disappearing.
+Dialogue: 0,0:18:10.48,0:18:12.29,Default,Nanami,0,0,0,,I'm going happy.
+Dialogue: 0,0:18:13.31,0:18:16.07,Default,Shiroha,0,0,0,,Nanami... You're happy?
+Dialogue: 0,0:18:16.07,0:18:17.19,Default,Nanami,0,0,0,,That's right.
+Dialogue: 0,0:18:17.19,0:18:19.26,Default,Shiroha,0,0,0,,You're happy even though you're vanishing?!
+Dialogue: 0,0:18:19.26,0:18:20.17,Default,Nanami,0,0,0,,Yup.
+Dialogue: 0,0:18:21.79,0:18:23.76,Default,Nanami,0,0,0,,This is where we say goodbye.
+Dialogue: 0,0:18:24.18,0:18:27.60,Default,Nanami,0,0,0,,I'm going home with those lanterns.
+Dialogue: 0,0:18:28.02,0:18:29.10,Default,Shiroha,0,0,0,,No...
+Dialogue: 0,0:18:29.95,0:18:30.97,Default,Shiroha,0,0,0,,Not again.
+Dialogue: 0,0:18:30.97,0:18:33.11,Default,Shiroha,0,0,0,,I'm going to be alone again.
+Dialogue: 0,0:18:33.58,0:18:37.22,Default,Shiroha,0,0,0,,I'm going to be by myself again!
+Dialogue: 0,0:18:37.82,0:18:42.49,Default,Nanami,0,0,0,,You're going to spend lots of happy \Ntime with people in the future.
+Dialogue: 0,0:18:42.49,0:18:46.84,Default,Shiroha,0,0,0,,But... But you won't be there!
+Dialogue: 0,0:18:48.51,0:18:50.63,Default,Nanami,0,0,0,,Nothing you can do about me, I guess.
+Dialogue: 0,0:18:50.63,0:18:52.05,Default,Shiroha,0,0,0,,Why?
+Dialogue: 0,0:18:52.05,0:18:57.59,Default,Shiroha,0,0,0,,You did so much for me, \Neven though we just met this summer.
+Dialogue: 0,0:18:58.26,0:19:01.14,Default,Shiroha,0,0,0,,Who are you really?
+Dialogue: 0,0:19:03.14,0:19:04.10,Default,Nanami,0,0,0,,I'm...
+Dialogue: 0,0:19:12.70,0:19:14.77,Default,Nanami,0,0,0,,I'm Nanami.
+Dialogue: 0,0:19:16.58,0:19:17.78,Default,Shiroha,0,0,0,,Nanami...
+Dialogue: 0,0:19:18.18,0:19:19.36,Default,Nanami,0,0,0,,Farewell.
+Dialogue: 0,0:19:31.78,0:19:32.80,Default,Shiroha; Shiroha 17,0,0,0,,Wait!
+Dialogue: 0,0:19:34.92,0:19:35.67,Default,Shiroha; Shiroha 17,0,0,0,,I...
+Dialogue: 0,0:19:37.63,0:19:39.17,Default,Shiroha; Shiroha 17,0,0,0,,I know you.
+Dialogue: 0,0:19:39.99,0:19:41.17,Main - Italics,Shiroha 17,0,0,0,,Umi.
+Dialogue: 0,0:20:00.84,0:20:02.11,Default,Shiroha 17,0,0,0,,Umi-chan...
+Dialogue: 0,0:20:02.41,0:20:03.15,Default,Shiroha 17,0,0,0,,Right?
+Dialogue: 0,0:20:03.58,0:20:04.82,Main - Italics,Nanami,0,0,0,,How?
+Dialogue: 0,0:20:05.60,0:20:07.87,Main - Italics,Nanami,0,0,0,,I look different right now.
+Dialogue: 0,0:20:09.61,0:20:12.21,Default,Shiroha 17,0,0,0,,Why, Umi-chan?!
+Dialogue: 0,0:20:12.21,0:20:14.12,Default,Nanami,0,0,0,,Shiroha-chan?
+Dialogue: 0,0:20:14.62,0:20:16.79,Default,Shiroha 17,0,0,0,,Why would you...
+Dialogue: 0,0:20:16.79,0:20:18.38,Default,Shiroha 17,0,0,0,,Why did you come here?!
+Dialogue: 0,0:20:21.06,0:20:22.63,Default,Nanami,0,0,0,,Mom...
+Dialogue: 0,0:20:23.14,0:20:24.38,Default,Shiroha 17,0,0,0,,Silly!
+Dialogue: 0,0:20:24.38,0:20:29.89,Default,Shiroha 17,0,0,0,,You gained that ability \Nto grant your own wishes!
+Dialogue: 0,0:20:30.74,0:20:33.61,Default,Shiroha 17,0,0,0,,So that you could have a fun summer break!
+Dialogue: 0,0:20:33.61,0:20:36.80,Default,Shiroha 17,0,0,0,,It was for you to find happiness...
+Dialogue: 0,0:20:37.46,0:20:38.77,Default,Shiroha 17,0,0,0,,So why?
+Dialogue: 0,0:20:39.80,0:20:42.18,Default,Nanami,0,0,0,,You already made me happy.
+Dialogue: 0,0:20:43.39,0:20:46.28,Default,Nanami,0,0,0,,I got to spend a wonderful summer with you.
+Dialogue: 0,0:20:47.23,0:20:49.10,Default,Nanami,0,0,0,,Really, it was so much fun.
+Dialogue: 0,0:20:49.73,0:20:51.79,Default,Nanami,0,0,0,,Dad was there with us.
+Dialogue: 0,0:20:51.79,0:20:54.69,Default,Nanami,0,0,0,,It was the summer I always wanted.
+Dialogue: 0,0:20:54.69,0:20:57.29,Default,Nanami,0,0,0,,It was such a happy summer break.
+Dialogue: 0,0:20:57.29,0:21:00.26,Default,Shiroha 17,0,0,0,,So why did you go this far?!
+Dialogue: 0,0:21:00.26,0:21:01.97,Default,Shiroha 17,0,0,0,,This is too much!
+Dialogue: 0,0:21:01.97,0:21:03.63,Default,Shiroha 17,0,0,0,,You even changed yourself!
+Dialogue: 0,0:21:03.94,0:21:06.76,Default,Nanami,0,0,0,,I wanted to help you, Mom.
+Dialogue: 0,0:21:06.76,0:21:08.53,Default,Shiroha 17,0,0,0,,Still!
+Dialogue: 0,0:21:08.53,0:21:12.85,Default,Shiroha 17,0,0,0,,Everything's going to change because of this!
+Dialogue: 0,0:21:14.47,0:21:17.35,Default,Shiroha 17,0,0,0,,The summer I was supposed to spend\Nwith you won't happen anymore.
+Dialogue: 0,0:21:18.32,0:21:22.19,Default,Shiroha 17,0,0,0,,I'm going to grow into a different person.
+Dialogue: 0,0:21:22.74,0:21:29.45,Default,Shiroha 17,0,0,0,,And if I don't get my power,\NI'll never cross paths with you, Umi-chan.
+Dialogue: 0,0:21:30.19,0:21:32.51,Default,Shiroha 17,0,0,0,,You won't exist!
+Dialogue: 0,0:21:32.51,0:21:33.75,Default,Nanami,0,0,0,,I know.
+Dialogue: 0,0:21:33.75,0:21:34.87,Default,Nanami,0,0,0,,I knew that.
+Dialogue: 0,0:21:34.87,0:21:36.29,Default,Shiroha 17,0,0,0,,So why?!
+Dialogue: 0,0:21:36.78,0:21:47.43,Default,Shiroha 17,0,0,0,,This power's like a curse, but even so,\NI was happy as long as it brought me to you.
+Dialogue: 0,0:21:47.43,0:21:52.35,Default,Nanami,0,0,0,,Because there's something \NI wanted to tell you.
+Dialogue: 0,0:21:54.60,0:22:03.86,Default,Nanami,0,0,0,,What I never got a chance\N to say to you that day.
+Dialogue: 0,0:22:07.53,0:22:09.20,Default,Umi,0,0,0,,Good morning.
+Dialogue: 0,0:22:13.49,0:22:17.08,Default,CREDITS,0,0,0,,{\fnTimes New Roman\fs12\shad0\bord1\fad(500,500)\an4\pos(325,290)\3c&HC7AB89&}Rei Miyasaka \NHenry Lin \NRiley Dalton \NWilliam Haggard
+Dialogue: 0,0:22:13.49,0:22:17.08,Default,CREDITS,0,0,0,,{\shad0\fad(500,500)\fnTimes New Roman\fs12\shad0\bord1\an6\pos(315,290)\3c&HC7AB89&}Translation:\NTiming:\NEditing:\NQuality Check:
+

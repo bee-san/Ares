@@ -1,0 +1,384 @@
+[Script Info]
+Title: English (US)
+Original Translation: 
+Original Editing: 
+Original Timing: 
+Synch Point: 
+Script Updated By: 
+Update Details: 
+ScriptType: v4.00+
+Collisions: Normal
+PlayResX: 640
+PlayResY: 360
+WrapStyle: 0
+ScaledBorderAndShadow: yes
+
+[V4+ Styles]
+Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding
+Style: Default,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,0
+Style: Main - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Main - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,8,20,20,23,0
+Style: Flashback,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,-1,0,0,100,100,0,0,1,1.3,0,2,20,20,23,1
+Style: Flashback - Top,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+Style: Flashback - Top + Italics,Roboto Medium,26,&H00FFFFFF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,1.3,0,8,20,20,23,1
+Style: Lyrics,Trebuchet MS,24,&H001EC4CF,&H000000FF,&H00000000,&H00000000,0,0,0,0,100,100,0,0,1,2,2,2,10,10,18,0
+
+[Events]
+Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text
+Dialogue: 0,0:00:07.75,0:00:08.82,Main - Italics,Hitomi,0,0,0,,Get up.
+Dialogue: 0,0:00:08.82,0:00:10.63,Main - Italics,Hitomi,0,0,0,,No sleeping on the job.
+Dialogue: 0,0:00:15.18,0:00:17.84,Default,Kyouko,0,0,0,,Hey, it's Hitomi.
+Dialogue: 0,0:00:17.84,0:00:20.51,Main - Italics,Hitomi,0,0,0,,Dozing off again, Kyouko?
+Dialogue: 0,0:00:20.51,0:00:23.22,Default,Kyouko,0,0,0,,Huh? Was I sleeping?
+Dialogue: 0,0:00:23.22,0:00:24.77,Main - Italics,Hitomi,0,0,0,,You were out cold.
+Dialogue: 0,0:00:28.21,0:00:31.28,Default,Kyouko,0,0,0,,It's getting hard to tell\Nwhether I'm awake or asleep.
+Dialogue: 0,0:00:32.31,0:00:34.92,Default,Kyouko,0,0,0,,Whether I'm a butterfly or a person...
+Dialogue: 0,0:00:34.92,0:00:36.48,Main - Italics,Hitomi,0,0,0,,Say what?
+Dialogue: 0,0:00:36.48,0:00:38.69,Default,Kyouko,0,0,0,,Never heard of that? It's from a legend.
+Dialogue: 0,0:00:38.69,0:00:42.72,Main - Italics,Hitomi,0,0,0,,Nope, nor do I care about \Nyour bookworm trivia.
+Dialogue: 0,0:00:42.72,0:00:44.19,Default,Kyouko,0,0,0,,Sheesh.
+Dialogue: 0,0:00:44.19,0:00:46.40,Default,Kyouko,0,0,0,,You're so rude, Hitomi.
+Dialogue: 0,0:00:47.67,0:00:50.01,Default,Kyouko,0,0,0,,So, what brings you here?
+Dialogue: 0,0:00:50.01,0:00:52.59,Main - Italics,Hitomi,0,0,0,,Oh, I wanted to ask you for a favor.
+Dialogue: 0,0:00:53.59,0:00:57.18,Main - Italics,Hitomi,0,0,0,,You're going to meet a girl someday.
+Dialogue: 0,0:00:57.18,0:00:59.66,Default,Kyouko,0,0,0,,A girl? Someday?
+Dialogue: 0,0:00:59.66,0:01:01.24,Default,Kyouko,0,0,0,,That's pretty vague.
+Dialogue: 0,0:01:01.24,0:01:04.91,Main - Italics,Hitomi,0,0,0,,You'll know who I'm talking \Nabout as soon as you meet her.
+Dialogue: 0,0:01:04.91,0:01:06.64,Default,Kyouko,0,0,0,,Okay. Got it.
+Dialogue: 0,0:01:06.64,0:01:10.34,Default,Kyouko,0,0,0,,I'll meet a girl, \Nand I'll know when I see her.
+Dialogue: 0,0:01:22.24,0:01:23.24,Default,Umi,0,0,0,,Um...
+Dialogue: 0,0:01:24.19,0:01:25.16,Default,Kyouko,0,0,0,,Welcome.
+Dialogue: 0,0:01:26.76,0:01:28.50,Default,Kyouko,0,0,0,,Let's see... What's your name?
+Dialogue: 0,0:01:30.18,0:01:31.00,Default,Umi,0,0,0,,Umi.
+Dialogue: 0,0:01:31.00,0:01:32.49,Default,Kyouko,0,0,0,,Umi-chan it is.
+Dialogue: 0,0:01:33.33,0:01:34.76,Default,Kyouko,0,0,0,,Well, come on in.
+Dialogue: 0,0:01:35.18,0:01:36.82,Flashback - Italics,Hitomi,0,0,0,,And one more thing.
+Dialogue: 0,0:01:36.82,0:01:40.23,Flashback - Italics,Hitomi,0,0,0,,You'll likely meet a boy too.
+Dialogue: 0,0:01:40.23,0:01:41.77,Default,Hairi,0,0,0,,I'm Takahara Hairi.
+Dialogue: 0,0:01:41.77,0:01:42.92,Default,Hairi,0,0,0,,Nice to meet you.
+Dialogue: 0,0:01:44.42,0:01:46.28,Default,Kyouko,0,0,0,,It's nice to meet you too.
+Dialogue: 0,0:01:46.28,0:01:47.77,Default,Kyouko,0,0,0,,I'm Misaki Kyouko.
+Dialogue: 0,0:01:49.78,0:01:53.77,Flashback - Italics,Hitomi,0,0,0,,I want you to take care of them both.
+Dialogue: 0,0:03:30.45,0:03:34.75,Default,Kyouko,0,0,0,,Umi-chan's name is written with the\N characters for "wing" and "future."
+Dialogue: 0,0:03:32.75,0:03:34.75,Default,Text,0,0,0,,{\fnArial\fs20\shad0\bord0\an8\c&H454545&\pos(253.44,56.673)\frz29.15}Umi
+Dialogue: 0,0:03:34.75,0:03:36.01,Default,Hairi,0,0,0,,Wow.
+Dialogue: 0,0:03:36.01,0:03:37.71,Default,Hairi,0,0,0,,That's a pretty cool name.
+Dialogue: 0,0:03:37.71,0:03:39.60,Default,Hairi,0,0,0,,Nice to meet you, Umi-chan.
+Dialogue: 0,0:03:39.60,0:03:40.99,Default,Umi,0,0,0,,Don't call me "-chan."
+Dialogue: 0,0:03:40.99,0:03:43.14,Default,Hairi,0,0,0,,What? So I'm the only one who can't?
+Dialogue: 0,0:03:43.14,0:03:43.88,Default,Umi,0,0,0,,Don't.
+Dialogue: 0,0:03:45.64,0:03:47.63,Default,Kyouko,0,0,0,,Hey, come to think of it...
+Dialogue: 0,0:03:49.52,0:03:52.94,Default,Text,0,0,0,,{\fnArial\fs20\shad0\bord2\an8\c&H454545&\pos(253.44,56.673)\frz29.15\3c&HE3E3E3&}Umi\NHairi
+Dialogue: 0,0:03:50.02,0:03:52.94,Default,Kyouko,0,0,0,,You both have "wing" in your name.
+Dialogue: 0,0:03:53.23,0:03:54.90,Default,Hairi,0,0,0,,Okay, well...
+Dialogue: 0,0:03:54.90,0:03:55.81,Default,Hairi,0,0,0,,Umi?
+Dialogue: 0,0:03:56.50,0:03:57.56,Default,Umi,0,0,0,,Yeah.
+Dialogue: 0,0:03:59.25,0:04:01.36,Default,Hairi,0,0,0,,Guess we're hanging out for the summer, huh?
+Dialogue: 0,0:04:13.03,0:04:16.47,Default,Hairi,0,0,0,,That's, uh, a lot of stuff.
+Dialogue: 0,0:04:16.47,0:04:19.04,Default,Kyouko,0,0,0,,Grandma was a pretty serious pack rat.
+Dialogue: 0,0:04:19.54,0:04:23.38,Default,Kyouko,0,0,0,,She had a habit of holding on \Nto anything that looked rare.
+Dialogue: 0,0:04:23.38,0:04:26.66,Default,Hairi,0,0,0,,Which is why I've been called to help.
+Dialogue: 0,0:04:26.66,0:04:28.96,Default,Kyouko,0,0,0,,Thanks so much for coming.
+Dialogue: 0,0:04:30.79,0:04:33.18,Default,Kyouko,0,0,0,,Oh, is it time for dinner already?
+Dialogue: 0,0:04:33.52,0:04:39.57,Default,Kyouko,0,0,0,,I'm sorry, though. My cooking is \Ntoo unique to serve to anyone else.
+Dialogue: 0,0:04:39.57,0:04:42.65,Default,Kyouko,0,0,0,,There's a dining hall down the hill.
+Dialogue: 0,0:04:42.65,0:04:45.07,Default,Kyouko,0,0,0,,Could I ask you to take Umi-chan?
+Dialogue: 0,0:04:51.11,0:04:52.14,Default,Shop,0,0,0,,Thanks.
+Dialogue: 0,0:04:55.29,0:04:56.96,Default,Hairi,0,0,0,,Well, shall we head home?
+Dialogue: 0,0:05:04.75,0:05:06.68,Default,Hairi,0,0,0,,Hang on tight.
+Dialogue: 0,0:05:07.77,0:05:09.22,Default,Kyouko,0,0,0,,Off we go!
+Dialogue: 0,0:05:19.16,0:05:19.97,Default,Hairi,0,0,0,,Uh-oh.
+Dialogue: 0,0:05:24.22,0:05:26.62,Default,Hairi,0,0,0,,I can't believe we ran out of gas.
+Dialogue: 0,0:05:31.62,0:05:33.37,Default,Hairi,0,0,0,,We really are in the middle of nowhere.
+Dialogue: 0,0:05:34.38,0:05:35.41,Default,Umi,0,0,0,,You mean the stars?
+Dialogue: 0,0:05:35.41,0:05:37.22,Default,Hairi,0,0,0,,Yeah, the stars.
+Dialogue: 0,0:05:37.22,0:05:39.02,Default,Hairi,0,0,0,,Look at all of them.
+Dialogue: 0,0:05:39.02,0:05:40.29,Default,Umi,0,0,0,,I see them.
+Dialogue: 0,0:05:47.23,0:05:48.05,Default,Shiroha,0,0,0,,Who are you?
+Dialogue: 0,0:05:48.05,0:05:51.06,Default,Hairi,0,0,0,,Uh, I'm Takahara Hairi.
+Dialogue: 0,0:05:51.06,0:05:52.10,Default,Hairi,0,0,0,,And this is...
+Dialogue: 0,0:05:52.58,0:05:53.31,Default,Umi,0,0,0,,Umi.
+Dialogue: 0,0:05:53.78,0:05:54.72,Default,Shiroha,0,0,0,,Umi?
+Dialogue: 0,0:05:55.05,0:05:55.74,Default,Umi,0,0,0,,Yeah.
+Dialogue: 0,0:05:56.42,0:05:57.23,Default,Hairi,0,0,0,,You?
+Dialogue: 0,0:05:58.40,0:05:59.48,Default,Shiroha,0,0,0,,Shiroha.
+Dialogue: 0,0:05:59.48,0:06:02.56,Default,Hairi,0,0,0,,Shiroha? That your first name or last?
+Dialogue: 0,0:06:03.91,0:06:04.90,Default,Umi; Shiroha,0,0,0,,First name.
+Dialogue: 0,0:06:07.10,0:06:08.57,Default,Shiroha,0,0,0,,How did you know?
+Dialogue: 0,0:06:08.57,0:06:10.07,Default,Hairi,0,0,0,,You could guess?
+Dialogue: 0,0:06:15.00,0:06:17.01,Default,Hairi,0,0,0,,So, Shiroha, right?
+Dialogue: 0,0:06:17.01,0:06:18.83,Default,Hairi,0,0,0,,What are you doing here?
+Dialogue: 0,0:06:19.22,0:06:20.43,Default,Shiroha,0,0,0,,I'm swimming.
+Dialogue: 0,0:06:20.43,0:06:22.74,Default,Hairi,0,0,0,,I mean, I can see that part.
+Dialogue: 0,0:06:22.74,0:06:24.26,Default,Hairi,0,0,0,,But why at this hour?
+Dialogue: 0,0:06:24.96,0:06:27.42,Default,Hairi,0,0,0,,It's not well lit. I think it's dangerous.
+Dialogue: 0,0:06:27.42,0:06:30.55,Default,Hairi,0,0,0,,What if you get a leg cramp\Nwhen no one's here?
+Dialogue: 0,0:06:30.55,0:06:33.10,Default,Hairi,0,0,0,,You should at least come when \Nother people are around.
+Dialogue: 0,0:06:31.92,0:06:33.10,Main - Top,Shiroha,0,0,0,,Dosukoi.
+Dialogue: 0,0:06:33.10,0:06:33.80,Default,Hairi,0,0,0,,Huh?
+Dialogue: 0,0:06:33.80,0:06:34.81,Default,Shiroha,0,0,0,,Dosukoi!
+Dialogue: 0,0:06:41.70,0:06:43.52,Default,Hairi,0,0,0,,She was a weird one, huh?
+Dialogue: 0,0:06:45.21,0:06:46.53,Default,Umi,0,0,0,,She was pretty.
+Dialogue: 0,0:06:47.98,0:06:49.28,Default,Hairi,0,0,0,,True enough.
+Dialogue: 0,0:06:49.69,0:06:53.87,Main - Italics,Hairi,0,0,0,,I'd come to Torishirojima to help sort \Nthrough my grandmother's belongings.
+Dialogue: 0,0:06:53.87,0:06:57.93,Main - Italics,Hairi,0,0,0,,That was how my summer break\Nstarted when I was seventeen.
+Dialogue: 0,0:07:02.37,0:07:03.54,Default,Umi,0,0,0,,I'm hungry.
+Dialogue: 0,0:07:03.86,0:07:05.65,Default,Hairi,0,0,0,,Want me to make something?
+Dialogue: 0,0:07:05.65,0:07:06.88,Default,Hairi,0,0,0,,Any requests?
+Dialogue: 0,0:07:09.82,0:07:11.13,Default,Umi,0,0,0,,Fried rice.
+Dialogue: 0,0:07:11.13,0:07:12.55,Default,Umi; Hairi,0,0,0,,Time to eat.
+Dialogue: 0,0:07:15.39,0:07:17.14,Default,Hairi,0,0,0,,Well? Like it?
+Dialogue: 0,0:07:19.54,0:07:20.48,Default,Umi,0,0,0,,Seven points.
+Dialogue: 0,0:07:20.48,0:07:23.54,Default,Hairi,0,0,0,,Huh? Out of how many?
+Dialogue: 0,0:07:23.54,0:07:24.63,Default,Umi,0,0,0,,A hundred.
+Dialogue: 0,0:07:24.63,0:07:26.52,Default,Hairi,0,0,0,,That's devastatingly low.
+Dialogue: 0,0:07:26.97,0:07:28.32,Default,Umi,0,0,0,,I don't want it.
+Dialogue: 0,0:07:37.39,0:07:40.03,Default,Kyouko,0,0,0,,I'm sorry, it's still not ready.
+Dialogue: 0,0:07:40.03,0:07:42.25,Default,Hairi,0,0,0,,No harm in waiting a little longer.
+Dialogue: 0,0:07:42.25,0:07:43.46,Default,Kyouko,0,0,0,,I know!
+Dialogue: 0,0:07:43.46,0:07:46.65,Default,Kyouko,0,0,0,,Why don't you play with Umi-chan \Nfor me, if you don't mind?
+Dialogue: 0,0:07:46.65,0:07:47.41,Default,Hairi,0,0,0,,Sure.
+Dialogue: 0,0:07:48.13,0:07:52.58,Main - Italics,Hairi,0,0,0,,Without anything to do anymore, \NI explored the island with Umi.
+Dialogue: 0,0:07:53.38,0:07:57.72,Main - Italics,Hairi,0,0,0,,In just a few days, I met lots of people.
+Dialogue: 0,0:07:58.05,0:08:02.23,Main - Italics,Hairi,0,0,0,,They were all a little eccentric,\Nbut everyone was friendly.
+Dialogue: 0,0:08:02.23,0:08:04.98,Main - Italics,Hairi,0,0,0,,A new place, new friends...
+Dialogue: 0,0:08:05.54,0:08:07.15,Main - Italics,Hairi,0,0,0,,A new summer.
+Dialogue: 0,0:08:07.81,0:08:11.61,Main - Italics,Hairi,0,0,0,,I thought maybe I could become\N a new person here.
+Dialogue: 0,0:08:40.90,0:08:43.35,Default,Hairi,0,0,0,,Umi, behold my fried rice rematch.
+Dialogue: 0,0:08:43.75,0:08:45.10,Default,Umi; Hairi,0,0,0,,Let's eat.
+Dialogue: 0,0:08:51.10,0:08:52.11,Default,Umi,0,0,0,,Eight points.
+Dialogue: 0,0:08:54.25,0:08:55.07,Default,Hairi,0,0,0,,Ugh.
+Dialogue: 0,0:08:58.02,0:09:00.37,Default,Ao,0,0,0,,You wanna know how to make fried rice?
+Dialogue: 0,0:09:00.37,0:09:01.62,Default,Miki,0,0,0,,Let me think.
+Dialogue: 0,0:09:01.62,0:09:03.70,Default,Miki,0,0,0,,From what I remember...
+Dialogue: 0,0:09:03.70,0:09:06.25,Default,Miki,0,0,0,,Shiroha's fried rice was the best.
+Dialogue: 0,0:09:07.14,0:09:08.88,Default,Shiroha,0,0,0,,Shiroha's fried rice?
+Dialogue: 0,0:09:08.88,0:09:12.12,Default,Ryoichi,0,0,0,,Shiroha's parents used to run a diner.
+Dialogue: 0,0:09:12.12,0:09:12.88,Default,Tenzen,0,0,0,,Right.
+Dialogue: 0,0:09:13.27,0:09:16.79,Default,Tenzen,0,0,0,,That's where Shiroha got her flavors from.
+Dialogue: 0,0:09:16.79,0:09:18.10,Default,Hairi,0,0,0,,It's so peaceful here.
+Dialogue: 0,0:09:20.76,0:09:22.01,Default,Umi,0,0,0,,Hello.
+Dialogue: 0,0:09:24.50,0:09:27.08,Default,Hairi,0,0,0,,I never took you for the fishing type.
+Dialogue: 0,0:09:29.44,0:09:32.72,Default,Shiroha,0,0,0,,The tides aren't working for me today.
+Dialogue: 0,0:09:33.34,0:09:35.03,Default,Hairi,0,0,0,,What'll you do with your catch?
+Dialogue: 0,0:09:35.46,0:09:37.78,Default,Shiroha,0,0,0,,Eat it. As you should.
+Dialogue: 0,0:09:38.78,0:09:40.09,Default,Umi,0,0,0,,You've got a tug.
+Dialogue: 0,0:09:40.51,0:09:41.53,Default,Shiroha,0,0,0,,Here we go!
+Dialogue: 0,0:09:49.67,0:09:50.90,Default,Umi,0,0,0,,You're going to eat that?
+Dialogue: 0,0:09:50.90,0:09:52.44,Default,Shiroha,0,0,0,,I-It's the right thing to do.
+Dialogue: 0,0:09:52.44,0:09:53.63,Default,Hairi,0,0,0,,Don't force yourself.
+Dialogue: 0,0:09:53.63,0:09:55.86,Default,Shiroha,0,0,0,,S-Sea hare is a delicacy.
+Dialogue: 0,0:09:55.86,0:09:58.95,Default,Shiroha,0,0,0,,It tastes like abalone if \Nyou simmer it for an hour.
+Dialogue: 0,0:09:58.95,0:10:00.05,Default,Shiroha,0,0,0,,I hope.
+Dialogue: 0,0:10:00.36,0:10:01.83,Main - Italics,Hairi,0,0,0,,You {\i0}hope{\i1}, huh?
+Dialogue: 0,0:10:02.48,0:10:04.31,Default,Hairi,0,0,0,,Could you lend me your rod?
+Dialogue: 0,0:10:05.81,0:10:08.73,Default,Shiroha,0,0,0,,Don't underestimate the waters of Torishiro.
+Dialogue: 0,0:10:09.31,0:10:12.18,Default,Shiroha,0,0,0,,This isn't exactly an easy spot for a novice.
+Dialogue: 0,0:10:12.18,0:10:13.06,Default,Hairi,0,0,0,,Got one.
+Dialogue: 0,0:10:15.98,0:10:16.95,Default,Shiroha,0,0,0,,Are you a pro?
+Dialogue: 0,0:10:16.95,0:10:18.68,Default,Hairi,0,0,0,,No, I'm a beginner.
+Dialogue: 0,0:10:22.10,0:10:23.78,Default,Hairi,0,0,0,,Wanna give it a try?
+Dialogue: 0,0:10:30.74,0:10:31.92,Default,Umi,0,0,0,,Got one.
+Dialogue: 0,0:10:40.17,0:10:41.22,Default,Shiroha,0,0,0,,God?
+Dialogue: 0,0:10:41.22,0:10:42.42,Default,Umi,0,0,0,,My name's Umi.
+Dialogue: 0,0:10:43.45,0:10:44.43,Default,Shiroha,0,0,0,,It's ready.
+Dialogue: 0,0:10:50.10,0:10:53.52,Default,Hairi,0,0,0,,It's so incredibly firm yet chewy!
+Dialogue: 0,0:10:53.52,0:10:55.20,Default,Shiroha,0,0,0,,It's fresh out of the sea.
+Dialogue: 0,0:10:55.75,0:10:57.03,Default,Hairi,0,0,0,,Like it, Umi?
+Dialogue: 0,0:10:59.36,0:11:00.74,Default,Umi,0,0,0,,Ninety-five points!
+Dialogue: 0,0:11:02.03,0:11:04.18,Default,Shiroha,0,0,0,,I'm glad you like it.
+Dialogue: 0,0:11:04.18,0:11:05.74,Default,Hairi,0,0,0,,Oh, yeah.
+Dialogue: 0,0:11:05.74,0:11:08.65,Default,Hairi,0,0,0,,Could you teach us how to make fried rice?
+Dialogue: 0,0:11:08.65,0:11:10.46,Default,Shiroha,0,0,0,,What? That's rather sudden.
+Dialogue: 0,0:11:10.46,0:11:13.63,Default,Hairi,0,0,0,,I want to make fried rice \Nthat'll impress Umi.
+Dialogue: 0,0:11:15.90,0:11:18.76,Default,Shiroha,0,0,0,,The most important part \Nof fried rice is heat.
+Dialogue: 0,0:11:18.76,0:11:20.45,Default,Shiroha,0,0,0,,First, you need a wok, and...
+Dialogue: 0,0:11:20.45,0:11:21.33,Default,Hairi,0,0,0,,Wait.
+Dialogue: 0,0:11:21.33,0:11:24.55,Default,Hairi,0,0,0,,We only have a normal frying pan.
+Dialogue: 0,0:11:24.55,0:11:25.57,Default,Shiroha,0,0,0,,You're out of luck.
+Dialogue: 0,0:11:26.39,0:11:28.19,Default,Shiroha,0,0,0,,Fried rice is serious business.
+Dialogue: 0,0:11:29.43,0:11:31.14,Default,Umi,0,0,0,,I want to eat with my family...
+Dialogue: 0,0:11:31.43,0:11:33.15,Default,Shiroha,0,0,0,,Huh? What about family?
+Dialogue: 0,0:11:33.73,0:11:36.11,Default,Umi,0,0,0,,You know, like when everyone gets together.
+Dialogue: 0,0:11:39.14,0:11:41.94,Default,Shiroha,0,0,0,,I wouldn't know what that's like.
+Dialogue: 0,0:11:41.94,0:11:43.74,Default,Shiroha,0,0,0,,I don't have parents.
+Dialogue: 0,0:11:45.35,0:11:47.01,Default,Umi,0,0,0,,Let's go home.
+Dialogue: 0,0:11:48.10,0:11:49.12,Default,Hairi,0,0,0,,Yeah?
+Dialogue: 0,0:11:49.12,0:11:50.33,Default,Hairi,0,0,0,,Guess we should get going.
+Dialogue: 0,0:11:55.42,0:11:58.50,Default,Hairi,0,0,0,,Well, Shiroha, thanks for the fish.
+Dialogue: 0,0:11:58.50,0:11:59.27,Default,Shiroha,0,0,0,,Yeah.
+Dialogue: 0,0:11:59.27,0:12:00.32,Default,Shiroha,0,0,0,,Bye.
+Dialogue: 0,0:12:06.33,0:12:10.43,Default,Hairi,0,0,0,,Hey, are you sure you didn't want \Nto hang out with Shiroha a little longer?
+Dialogue: 0,0:12:10.43,0:12:11.54,Default,Umi,0,0,0,,It's fine.
+Dialogue: 0,0:12:11.54,0:12:15.56,Default,Hairi,0,0,0,,You're a kid. You ought \Nto ask for things you want.
+Dialogue: 0,0:12:15.92,0:12:18.80,Default,Hairi,0,0,0,,Kids don't need to hold back.
+Dialogue: 0,0:12:18.80,0:12:19.60,Default,Umi,0,0,0,,Okay.
+Dialogue: 0,0:12:40.34,0:12:41.22,Default,Hairi,0,0,0,,Kyouko-san?
+Dialogue: 0,0:12:41.22,0:12:42.38,Default,Hairi,0,0,0,,Is something wrong?
+Dialogue: 0,0:12:42.87,0:12:44.04,Default,Kyouko,0,0,0,,Hairi-kun.
+Dialogue: 0,0:12:44.04,0:12:45.01,Default,Kyouko,0,0,0,,Are you by yourself?
+Dialogue: 0,0:12:45.01,0:12:46.93,Default,Hairi,0,0,0,,Yeah. Just taking a walk.
+Dialogue: 0,0:12:47.25,0:12:49.02,Default,Hairi,0,0,0,,Is something the matter?
+Dialogue: 0,0:12:49.02,0:12:50.60,Default,Kyouko,0,0,0,,Umi-chan's missing.
+Dialogue: 0,0:13:05.44,0:13:06.99,Main - Italics,Umi,0,0,0,,My house is always quiet.
+Dialogue: 0,0:13:07.86,0:13:11.13,Main - Italics,Umi,0,0,0,,It's been a while since Dad said\N"I'm home" when he gets back.
+Dialogue: 0,0:13:11.13,0:13:13.12,Main - Italics,Umi,0,0,0,,I don't know how long.
+Dialogue: 0,0:13:14.59,0:13:19.60,Main - Italics,Umi,0,0,0,,Those words only ever make things lonelier.
+Dialogue: 0,0:13:29.54,0:13:31.64,Default,Hairi,0,0,0,,There you are.
+Dialogue: 0,0:13:31.64,0:13:32.56,Default,Umi,0,0,0,,Dad?
+Dialogue: 0,0:13:32.56,0:13:33.97,Default,Hairi,0,0,0,,Nope.
+Dialogue: 0,0:13:33.97,0:13:35.43,Default,Hairi,0,0,0,,I'm not your dad.
+Dialogue: 0,0:13:38.22,0:13:40.04,Default,Hairi,0,0,0,,Do you miss him?
+Dialogue: 0,0:13:40.65,0:13:43.53,Default,Umi,0,0,0,,He's busy.
+Dialogue: 0,0:13:43.53,0:13:46.90,Default,Hairi,0,0,0,,Well, dads have to work.\NHe's just doing his job.
+Dialogue: 0,0:13:47.96,0:13:48.69,Default,Umi,0,0,0,,Yeah.
+Dialogue: 0,0:13:49.28,0:13:52.62,Default,Umi,0,0,0,,Dad told me a long time ago...
+Dialogue: 0,0:13:52.62,0:13:57.29,Default,Umi,0,0,0,,He used to work really hard on something,\Nbut he failed.
+Dialogue: 0,0:13:57.29,0:14:01.23,Default,Umi,0,0,0,,He told me he regretted running away.
+Dialogue: 0,0:14:02.15,0:14:03.23,Default,Hairi,0,0,0,,He ran?
+Dialogue: 0,0:14:04.25,0:14:06.41,Default,Umi,0,0,0,,I ran too.
+Dialogue: 0,0:14:07.22,0:14:10.43,Default,Umi,0,0,0,,There were people who were kind to me.
+Dialogue: 0,0:14:10.43,0:14:13.22,Default,Umi,0,0,0,,People who worried about me.
+Dialogue: 0,0:14:13.22,0:14:14.66,Default,Umi,0,0,0,,But I ran.
+Dialogue: 0,0:14:14.66,0:14:17.27,Default,Umi,0,0,0,,That's why I'm here.
+Dialogue: 0,0:14:17.27,0:14:21.69,Default,Umi,0,0,0,,I want to apologize, but I can't now.
+Dialogue: 0,0:14:31.36,0:14:34.03,Default,Umi,0,0,0,,I don't want to run anymore.
+Dialogue: 0,0:14:35.55,0:14:36.50,Default,Hairi,0,0,0,,Umi...
+Dialogue: 0,0:14:38.08,0:14:40.00,Default,Hairi,0,0,0,,Yeah, you're right.
+Dialogue: 0,0:14:42.25,0:14:45.00,Default,Hairi,0,0,0,,We shouldn't run from summer anymore.
+Dialogue: 0,0:14:49.01,0:14:50.32,Default,Hairi,0,0,0,,Let's go home.
+Dialogue: 0,0:14:50.32,0:14:52.03,Default,Hairi,0,0,0,,Kyouko-san's worried.
+Dialogue: 0,0:14:55.03,0:14:57.49,Default,Hairi,0,0,0,,What were you even doing out?
+Dialogue: 0,0:14:58.50,0:15:00.64,Default,Umi,0,0,0,,Dad wasn't at home.
+Dialogue: 0,0:15:01.02,0:15:03.65,Default,Hairi,0,0,0,,Don't call me that.
+Dialogue: 0,0:15:03.65,0:15:06.14,Default,Hairi,0,0,0,,Wait, you were looking for me?
+Dialogue: 0,0:15:07.55,0:15:08.86,Default,Hairi,0,0,0,,How come?
+Dialogue: 0,0:15:12.38,0:15:14.97,Default,Umi,0,0,0,,Because I don't want to run.
+Dialogue: 0,0:15:14.97,0:15:17.48,Default,Umi,0,0,0,,I want to stay with you.
+Dialogue: 0,0:15:18.20,0:15:19.37,Default,Hairi,0,0,0,,Okay.
+Dialogue: 0,0:15:32.42,0:15:33.51,Default,Hairi,0,0,0,,Everyone's here.
+Dialogue: 0,0:15:33.51,0:15:34.84,Default,Kyouko,0,0,0,,Umi-chan!
+Dialogue: 0,0:15:37.93,0:15:39.10,Default,Kyouko,0,0,0,,Thank goodness.
+Dialogue: 0,0:15:39.60,0:15:42.10,Default,Umi,0,0,0,,Sorry for worrying you.
+Dialogue: 0,0:15:42.10,0:15:44.35,Default,Kyouko,0,0,0,,I'm just glad you're safe.
+Dialogue: 0,0:15:45.87,0:15:48.51,Default,Hairi,0,0,0,,Everyone, thanks for looking for Umi.
+Dialogue: 0,0:15:54.72,0:15:55.81,Default,Hairi,0,0,0,,Hey...
+Dialogue: 0,0:15:55.81,0:15:57.72,Default,Hairi,0,0,0,,Is there anything you want to do?
+Dialogue: 0,0:15:57.72,0:15:59.08,Default,Umi,0,0,0,,Anything I want to do?
+Dialogue: 0,0:15:59.08,0:16:02.03,Default,Hairi,0,0,0,,It's not every day you get \Nto come to an island like this.
+Dialogue: 0,0:16:02.03,0:16:04.80,Default,Hairi,0,0,0,,Let's do something \Nto make the summer memorable.
+Dialogue: 0,0:16:04.80,0:16:06.71,Default,Umi,0,0,0,,Something I want to do?
+Dialogue: 0,0:16:07.21,0:16:08.70,Default,Umi,0,0,0,,Mom...
+Dialogue: 0,0:16:09.28,0:16:10.98,Default,Hairi,0,0,0,,Playing house, huh?
+Dialogue: 0,0:16:10.98,0:16:14.19,Default,Hairi,0,0,0,,I dunno if I can do that at my age.
+Dialogue: 0,0:16:14.19,0:16:15.43,Default,Umi,0,0,0,,No.
+Dialogue: 0,0:16:15.74,0:16:19.06,Default,Umi,0,0,0,,There's something I want to do with my mom.
+Dialogue: 0,0:16:19.06,0:16:20.28,Default,Hairi,0,0,0,,All right.
+Dialogue: 0,0:16:20.28,0:16:24.51,Default,Hairi,0,0,0,,Shall we get Kyouko-san to call her\Nand ask her to come to the island?
+Dialogue: 0,0:16:26.02,0:16:26.86,Default,Umi,0,0,0,,No.
+Dialogue: 0,0:16:27.84,0:16:28.81,Default,Umi,0,0,0,,I don't have one.
+Dialogue: 0,0:16:29.32,0:16:31.86,Default,Umi,0,0,0,,I don't have a mom anymore.
+Dialogue: 0,0:16:33.14,0:16:34.36,Default,Hairi,0,0,0,,Oh.
+Dialogue: 0,0:16:37.08,0:16:38.59,Default,Hairi,0,0,0,,Wanna look for one?
+Dialogue: 0,0:16:39.60,0:16:41.70,Default,Hairi,0,0,0,,Wanna look for a mom?
+Dialogue: 0,0:16:42.14,0:16:43.33,Default,Umi,0,0,0,,Look for one?
+Dialogue: 0,0:16:43.62,0:16:46.46,Default,Hairi,0,0,0,,Let's find someone who'll be your mom.
+Dialogue: 0,0:16:55.04,0:16:56.09,Default,Shiroha,0,0,0,,You again.
+Dialogue: 0,0:16:56.09,0:16:57.33,Default,Hairi,0,0,0,,Um...
+Dialogue: 0,0:16:57.80,0:16:59.68,Default,Hairi,0,0,0,,Could you hear me out?
+Dialogue: 0,0:17:01.60,0:17:03.56,Default,Hairi,0,0,0,,Uh...
+Dialogue: 0,0:17:05.14,0:17:05.98,Default,Shiroha,0,0,0,,I see.
+Dialogue: 0,0:17:05.98,0:17:08.40,Default,Shiroha,0,0,0,,Umi-chan doesn't have a mom either.
+Dialogue: 0,0:17:08.40,0:17:11.15,Default,Hairi,0,0,0,,Sorry. This was insensitive.
+Dialogue: 0,0:17:11.15,0:17:13.99,Default,Shiroha,0,0,0,,Listen, why are you going to so much trouble?
+Dialogue: 0,0:17:15.11,0:17:19.04,Default,Hairi,0,0,0,,She says she doesn't want to run away.
+Dialogue: 0,0:17:19.04,0:17:20.72,Default,Shiroha,0,0,0,,She doesn't want to run?
+Dialogue: 0,0:17:20.72,0:17:24.00,Default,Hairi,0,0,0,,I never asked from what or anything.
+Dialogue: 0,0:17:25.07,0:17:29.75,Default,Hairi,0,0,0,,But I fled to this island\Nafter something happened back home.
+Dialogue: 0,0:17:30.07,0:17:32.53,Default,Hairi,0,0,0,,I came here to get my mind off stuff.
+Dialogue: 0,0:17:33.76,0:17:38.15,Default,Hairi,0,0,0,,Meanwhile, here's this little kid\Nsaying she doesn't want to run.
+Dialogue: 0,0:17:38.15,0:17:40.13,Default,Hairi,0,0,0,,So I want to help her.
+Dialogue: 0,0:17:42.21,0:17:43.48,Default,Shiroha,0,0,0,,A watermelon bar.
+Dialogue: 0,0:17:44.44,0:17:47.41,Default,Shiroha,0,0,0,,Bring me one whenever I ask.
+Dialogue: 0,0:17:47.41,0:17:48.93,Default,Hairi,0,0,0,,And if I do?
+Dialogue: 0,0:17:48.93,0:17:51.38,Default,Shiroha,0,0,0,,You'll get one watermelon\N bar's worth of mothering.
+Dialogue: 0,0:17:51.38,0:17:53.11,Default,Shiroha,0,0,0,,That'll be our deal.
+Dialogue: 0,0:17:53.11,0:17:53.88,Default,Shiroha,0,0,0,,Well?
+Dialogue: 0,0:17:56.32,0:17:57.56,Default,Hairi,0,0,0,,Thank you!
+Dialogue: 0,0:17:59.42,0:18:00.62,Default,Hairi,0,0,0,,Get this, Umi!
+Dialogue: 0,0:18:00.62,0:18:03.46,Default,Hairi,0,0,0,,Shiroha says she'll be your mom!
+Dialogue: 0,0:18:03.46,0:18:05.29,Default,Shiroha,0,0,0,,H-Hello.
+Dialogue: 0,0:18:05.29,0:18:06.38,Default,Umi,0,0,0,,Oop?
+Dialogue: 0,0:18:06.38,0:18:07.71,Default,Hairi,0,0,0,,Come on, now.
+Dialogue: 0,0:18:07.71,0:18:10.30,Default,Hairi,0,0,0,,What do you say when someone says hello?
+Dialogue: 0,0:18:10.30,0:18:11.29,Default,Umi,0,0,0,,Oop...
+Dialogue: 0,0:18:12.11,0:18:15.34,Default,Hairi,0,0,0,,Sorry, looks like she's being shy again.
+Dialogue: 0,0:18:15.34,0:18:17.63,Default,Hairi,0,0,0,,Huh? Shiroha?
+Dialogue: 0,0:18:17.63,0:18:18.97,Default,Shiroha,0,0,0,,Oop...
+Dialogue: 0,0:18:18.97,0:18:20.53,Default,Hairi,0,0,0,,Are you nervous?
+Dialogue: 0,0:18:20.53,0:18:23.12,Default,Shiroha,0,0,0,,I-I'm not nervous.
+Dialogue: 0,0:18:23.12,0:18:26.93,Default,Shiroha,0,0,0,,I just don't know how to talk to kids.
+Dialogue: 0,0:18:29.19,0:18:30.35,Default,Text,0,0,0,,{\fad(520,1)\fnArial\fs12\b1\shad0\pos(333.653,241.336)\frz17.51\c&H494C51&\3c&HE2D6DE&}Picture Diary
+Dialogue: 1,0:18:29.19,0:18:30.35,Default,Hairi,0,0,0,,This one.
+Dialogue: 0,0:18:30.35,0:18:32.88,Default,Ao,0,0,0,,That'll be 189 yen.
+Dialogue: 0,0:18:32.88,0:18:35.77,Default,Ao,0,0,0,,But together with this set\Nof twelve colored pencils,
+Dialogue: 0,0:18:35.77,0:18:38.05,Default,Ao,0,0,0,,I'll sell you both for 1,000 yen.
+Dialogue: 0,0:18:38.05,0:18:39.11,Default,Hairi,0,0,0,,Sold!
+Dialogue: 0,0:18:39.11,0:18:40.24,Default,Ao,0,0,0,,Pleasure doing business!
+Dialogue: 0,0:18:42.11,0:18:43.68,Default,Hairi,0,0,0,,Thanks, Ao.
+Dialogue: 0,0:18:45.92,0:18:48.88,Default,Ao,0,0,0,,Look at him, going all-out.
+Dialogue: 0,0:18:48.88,0:18:51.12,Default,Ao,0,0,0,,Dad's working so hard.
+Dialogue: 0,0:18:51.12,0:18:54.63,Default,Hairi,0,0,0,,Shall we kick off our fun summer break, Umi?
+Dialogue: 0,0:18:55.38,0:18:57.79,Default,Hairi,0,0,0,,This is a magic picture diary.
+Dialogue: 0,0:18:55.38,0:19:02.64,Default,Text,0,0,0,,{\an4\fnArial\fs10\t(\fs12)\fax-.1\b1\shad0\c&H494C51&\3c&HD8D9D3&\frz338.6\move(443.253,220.379,405.707,255.64)}Picture Diary\N{\fnComic Sans MS}Umi
+Dialogue: 1,0:18:57.79,0:19:01.74,Default,Hairi,0,0,0,,Write about what you want \Nto do, and it'll come true.
+Dialogue: 0,0:19:01.74,0:19:02.64,Default,Umi,0,0,0,,Wow!
+Dialogue: 0,0:19:02.91,0:19:05.48,Default,Shiroha,0,0,0,,Y-You can actually buy a magic picture diary?
+Dialogue: 0,0:19:05.48,0:19:06.31,Default,Hairi,0,0,0,,Huh?
+Dialogue: 0,0:19:09.01,0:19:11.01,Default,Hairi,0,0,0,,August 1st.
+Dialogue: 0,0:19:11.01,0:19:15.70,Default,Umi; Text,0,0,0,,Dad sang a song while pretending \Nto be Quetzalcoatl.
+Dialogue: 0,0:19:15.70,0:19:16.98,Default,Umi; Text,0,0,0,,It was so much fun.
+Dialogue: 0,0:19:19.19,0:19:22.02,Default,Umi,0,0,0,,Wow, it really is a magic picture diary!
+Dialogue: 0,0:19:22.02,0:19:23.38,Default,Shiroha,0,0,0,,Whoa.
+Dialogue: 0,0:19:25.20,0:19:26.41,Default,Hairi,0,0,0,,Say, Umi...
+Dialogue: 0,0:19:27.13,0:19:30.18,Default,Hairi,0,0,0,,Don't you want to see Mom be Quetzalcoatl?
+Dialogue: 0,0:19:34.71,0:19:39.84,Default,Text; Umi,0,0,0,,Mom pretended to be Quetzalcoatl \Nand sang a song for me.
+Dialogue: 0,0:19:45.38,0:19:48.49,Default,Hairi,0,0,0,,Well, why don't you fill in the rest \Nof the diary for tomorrow onward?
+Dialogue: 0,0:19:48.49,0:19:49.35,Default,Umi,0,0,0,,Okay!
+Dialogue: 0,0:19:49.35,0:19:51.06,Default,Umi; Text,0,0,0,,August 2nd.
+Dialogue: 0,0:19:51.06,0:19:54.55,Default,Umi; Text,0,0,0,,I made origami with Mom.
+Dialogue: 0,0:19:54.55,0:19:58.07,Default,Umi; Text,0,0,0,,She's really good at it.
+Dialogue: 0,0:19:58.07,0:20:00.02,Default,Shiroha,0,0,0,,Hold this part.
+Dialogue: 0,0:20:00.02,0:20:00.90,Default,Umi,0,0,0,,Okay.
+Dialogue: 0,0:20:00.90,0:20:03.60,Default,Shiroha,0,0,0,,Now close your eyes for a second.
+Dialogue: 0,0:20:06.77,0:20:07.51,Default,Shiroha,0,0,0,,There.
+Dialogue: 0,0:20:07.51,0:20:08.58,Default,Shiroha,0,0,0,,You can open them.
+Dialogue: 0,0:20:12.57,0:20:13.65,Default,Shiroha,0,0,0,,Mysterious, right?
+Dialogue: 0,0:20:13.65,0:20:15.14,Default,Umi,0,0,0,,It's magic!
+Dialogue: 0,0:20:15.93,0:20:17.02,Default,Shiroha,0,0,0,,Maybe it is.
+Dialogue: 0,0:20:17.02,0:20:19.26,Default,Umi,0,0,0,,Teach me magic, Mo—
+Dialogue: 0,0:20:22.81,0:20:26.14,Default,Umi,0,0,0,,Can I call you Mom?
+Dialogue: 0,0:20:31.64,0:20:33.05,Default,Umi,0,0,0,,Mom...
+Dialogue: 0,0:20:40.73,0:20:42.07,Default,Umi,0,0,0,,That went far!
+Dialogue: 0,0:20:42.07,0:20:45.77,Default,Hairi,0,0,0,,The trick to throwing them\Nis to be gentle and steady.
+Dialogue: 0,0:20:45.77,0:20:48.53,Default,Umi,0,0,0,,I've never seen one fly so long.
+Dialogue: 0,0:20:48.53,0:20:49.67,Default,Hairi,0,0,0,,Best ever?
+Dialogue: 0,0:20:49.67,0:20:51.12,Default,Umi,0,0,0,,Yeah, best ever!
+Dialogue: 0,0:20:57.33,0:21:00.11,Default,Hairi,0,0,0,,Mom's paper airplane is awesome!
+Dialogue: 0,0:21:00.11,0:21:05.17,Default,Shiroha,0,0,0,,My Hyper Mustang Special Dimension \NIV Mk III flies better.
+Dialogue: 0,0:21:12.95,0:21:13.64,Default,Hairi,0,0,0,,Ha.
+Dialogue: 0,0:21:13.64,0:21:15.44,Default,Shiroha,0,0,0,,Snap!
+Dialogue: 0,0:21:16.35,0:21:20.38,Default,Shiroha,0,0,0,,I still have my Super Mustang \NFire Cosmic Mode Level 7.
+Dialogue: 0,0:21:20.38,0:21:23.15,Default,Hairi,0,0,0,,I haven't shown you my true power yet.
+Dialogue: 0,0:21:26.18,0:21:27.36,Default,Umi,0,0,0,,Um...
+Dialogue: 0,0:21:27.36,0:21:29.98,Default,Umi,0,0,0,,I want to be friendly.
+Dialogue: 0,0:21:30.74,0:21:35.75,Default,Umi,0,0,0,,I want to throw paper \Nairplanes without fighting.
+Dialogue: 0,0:21:42.25,0:21:44.87,Default,Hairi,0,0,0,,Not competing, but cooperating.
+Dialogue: 0,0:21:44.87,0:21:46.08,Default,Hairi,0,0,0,,All of us together.
+Dialogue: 0,0:21:46.81,0:21:47.76,Default,Umi,0,0,0,,Yeah!
+Dialogue: 0,0:21:47.76,0:21:52.90,Default,Umi,0,0,0,,Ultra Pork Horizon Wee Explosion Four!
+Dialogue: 0,0:21:55.52,0:21:56.89,Default,Hairi; Shiroha,0,0,0,,Ready and...
+Dialogue: 0,0:21:57.19,0:21:59.36,Default,All,0,0,0,,Takeoff!
+

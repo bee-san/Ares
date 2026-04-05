@@ -1,0 +1,270 @@
+!This program cannot be run in DOS mode.
+x~Fx
+xRich~
+UPX0
+UPX1
+.rsrc
+4.21
+UPX!
+kxvx+
+g&0K(u(H,^
+`{L%
+#3!L
+%tgk
+:~|!
+pR0r
+URx
+co7
+t8T)
+alw%W*@s
+CHjM5
+3'+8U
+<M'|l
+RjgF
+;BW
+j-g}
+6x. 
+Cr/p0
+' R 
+wo_7
+jWS]l
+t%j@
+1@n!
+l@Y2
+) cI
+%hYY
+bVPW
+qDYY
+Y_^[
+p;Jr
+wm d
+u"!S
+3 2y
+?t x1E
+hR'
+>csm
+(y,V
+SVWpP
+uV^
+12Pa2l
+ YYC
+!28s
+Genu
+5ineIV
+ntel
+SuCF%
+t#=`
+ty%O
+6KT
+U3T$
+%dddl!0
+$ ,dddd(
+4HddddD
+>@d`
+DFFF
+Lddddt
+o<t*
+|h\J<5M
+  +(_)%
+|_?__| 
+'_ \
+==+|
+:+.__/|_|\ 
+elcome to the YaraRules0x100 cha
+llenge!^S.,,
+l./(%a
+.*Z('
+,*%%#(
+&@%'
+'%&@@Yz
+?!  ,,
+*/(/
+  .ll
+(2&,
+*lX 
+NtQuery
+InformationProcess/
+eMaWeQ 
+b_]T
+f[i%
+O;eCPgo
+asYP
+wrEn%
+%wm,
+cYeOt
+e+p_-!
+b3mC
+;eCk)i\
+qnEg[
+meQt) 
+N; ke
+o-G)
+PkDOKz
+w#d4|
+s|ar)
+W%ws %d
+okITOo
+7SoX
+;DxAIk
+z5nIOn?
+iUu+
+-KfL
+9/(/x
+n1Mx
+Sci1s
+7Boci
+ }%M{
+CM;l
+pEs/
+Unknown excep
+bad alloc
+rray new s
+PlacwG4
+P ;G
+8K _
+GCTL#&
+.text$div
+.idata$5
+.00cfg
+RT$XCA#
+Cg84'r
+=sx*
+voltm
+zzzdbZ
+ HG&l
+tc$IA
+p'6
+3b:p
+.rsrc$0q
+d'Kv
+a+!U
+.?AVbad_
+@std@9
+_new_&
+%_type_info[
+{A|`
+wM#{
+N0GCS7
+7gL-
+.d+,/
+27H(
+HGHW
+GSOXT!
+P*#r
+p?aN
+u]ap
+GetCurrent`Id
+Terminate
+&ExitCo9
+Cre"Th
+eModuleFileNameWR
+Handl
+MultiByteToWO
+ideChar
+leep
+=932Firstc
+{ONex
+Startup
+Y SetUnh
+IsDebuggerP
+InitializeSListHea
+oystemTimeAsXe
+nceCoun
+EComm
+(kMutex
+WaitFor
+SingleObject`LastErro
+Closez|
+Activ
+utput
+=Strt
+Toolhelp3x
+2Snapsho
+.ur`es1
+LookupPriv
+geVal
+AdjustTokH
+atoi
+free
+newh
+0X_configt
+n_6us
+atherr
+#seh_fil
+_exle
+3-hi
+"_on _tabb
+_r/vv
+eg3er_z_{Iw
+backRcrt
+ontrolfp_
+wH_win
+main
+U_lV
+_app_
+Xde_argv
+,tenvironm
+9t_f
+__st
+on_vsp^tfK_p>
+Col
+Delet
+SolidBrush
+aToA
+?Desk
+Wind>
+Load
+ageBo
+Tran
+Rmx7`
+sZEndDPog
+@Param
+Show
+Draw
+spatch
+ivDefd
+PostQuit
+rClas
+^_des
+N-py
+ Cxx
+9x@.re
+XPTPSW
+<?xml version='1.0' encoding='UTF-8' standalone='yes'?>
+<assembly xmlns='urn:schemas-microsoft-com:asm.v1' manifestVersion='1.0'>
+  <trustInfo xmlns="urn:schemas-microsoft-com:asm.v3">
+    <security>
+      <requestedPrivileges>
+        <requestedExecutionLevel level='asInvoker' uiAccess='false' />
+      </requestedPrivileges>
+    </security>
+  </trustInfo>
+</assembly>
+ADVAPI32.dll
+api-ms-win-crt-convert-l1-1-0.dll
+api-ms-win-crt-heap-l1-1-0.dll
+api-ms-win-crt-locale-l1-1-0.dll
+api-ms-win-crt-math-l1-1-0.dll
+api-ms-win-crt-runtime-l1-1-0.dll
+api-ms-win-crt-stdio-l1-1-0.dll
+GDI32.dll
+KERNEL32.DLL
+SHELL32.dll
+USER32.dll
+VCRUNTIME140.dll
+OpenProcessToken
+atoi
+free
+_configthreadlocale
+__setusermatherr
+exit
+_set_fmode
+TextOutW
+ExitProcess
+GetProcAddress
+LoadLibraryA
+VirtualProtect
+CommandLineToArgvW
+FillRect
+memset
+b3`5d5l5
