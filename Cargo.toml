@@ -54,7 +54,7 @@ rand = "0.10"  # Required for candle-core compatibility
 half = "=2.7.1"  # Forced for compatibility with candle-core
 
 # Dependencies used for decoding
-base64 = "0.22.1"
+base64 = "0.23.0"
 base65536 = "1.0.1"
 base91 = "0.1.0"
 bs58 = "0.5.0"
