@@ -121,6 +121,7 @@ fn has_valid_base64_padding(text: &str) -> bool {
     }
 }
 
+/// helper function for padded and unpadded base64 engines
 fn decode_with_padded_or_unpadded_engine(
     text: &str,
     padded_engine: &impl Engine,
