@@ -5,7 +5,7 @@
 
 use crate::checkers::CheckerTypes;
 use crate::decoders::interface::check_string_success;
-use base64::{engine::general_purpose, Engine as _};
+use base64::{engine::general_purpose, Engine};
 
 use super::crack_results::CrackResult;
 use super::interface::Crack;
@@ -107,28 +107,61 @@ impl Crack for Decoder<Base64Decoder> {
     }
 }
 
+/// Returns false when padding is missing, leading, non-terminal, or excessive.
+fn has_valid_base64_padding(text: &str) -> bool {
+    match text.find('=') {
+        None => true,
+        Some(first_pad) => {
+            if first_pad == 0 {
+                return false;
+            }
+            let padding = &text[first_pad..];
+            padding.chars().all(|c| c == '=') && padding.len() <= 2
+        }
+    }
+}
+
+/// helper function for padded and unpadded base64 engines
+fn decode_with_padded_or_unpadded_engine(
+    text: &str,
+    padded_engine: &impl Engine,
+    unpadded_engine: &impl Engine,
+    is_valid_char: impl Fn(char) -> bool,
+) -> Option<String> {
+    if text.is_empty() || !text.chars().all(is_valid_char) {
+        return None;
+    }
+    if !has_valid_base64_padding(text) {
+        return None;
+    }
+
+    let decoded = if text.contains('=') {
+        padded_engine.decode(text.as_bytes()).ok()?
+    } else {
+        unpadded_engine.decode(text.as_bytes()).ok()?
+    };
+
+    String::from_utf8(decoded).ok()
+}
+
 /// helper function for standard base64
 fn decode_base64_no_error_handling(text: &str) -> Option<String> {
-    // Strip all padding
-    let text = text.replace('=', "");
-    // Runs the code to decode base64
-    // Doesn't perform error handling, call from_base64
-    general_purpose::STANDARD_NO_PAD
-        .decode(text.as_bytes())
-        .ok()
-        .map(|inner| String::from_utf8(inner).ok())?
+    decode_with_padded_or_unpadded_engine(
+        text,
+        &general_purpose::STANDARD,
+        &general_purpose::STANDARD_NO_PAD,
+        |c| c.is_ascii_alphanumeric() || c == '+' || c == '/' || c == '=',
+    )
 }
 
 /// helper function for url-safe base64
 fn decode_base64_url_no_error_handling(text: &str) -> Option<String> {
-    // Strip all padding
-    let text = text.replace('=', "");
-
-    // Use URL_SAFE_NO_PAD engine to decode URL-safe Base64
-    general_purpose::URL_SAFE_NO_PAD
-        .decode(text.as_bytes())
-        .ok()
-        .map(|inner| String::from_utf8(inner).ok())?
+    decode_with_padded_or_unpadded_engine(
+        text,
+        &general_purpose::URL_SAFE,
+        &general_purpose::URL_SAFE_NO_PAD,
+        |c| c.is_ascii_alphanumeric() || c == '-' || c == '_' || c == '=',
+    )
 }
 
 #[cfg(test)]
@@ -216,6 +249,42 @@ mod tests {
         assert!(
             result.is_none(),
             "Decode_base64 should return None for emoji input"
+        );
+    }
+
+    #[test]
+    fn base64_rejects_excess_padding() {
+        let base64_decoder = Decoder::<Base64Decoder>::new();
+        let result = base64_decoder
+            .crack("SGVsbG8====", &get_athena_checker())
+            .unencrypted_text;
+        assert!(
+            result.is_none(),
+            "Base64 should fail when padding is invalid"
+        );
+    }
+
+    #[test]
+    fn base64_rejects_padding_only_input() {
+        let base64_decoder = Decoder::<Base64Decoder>::new();
+        let result = base64_decoder
+            .crack("====", &get_athena_checker())
+            .unencrypted_text;
+        assert!(
+            result.is_none(),
+            "Base64 should fail for padding-only input"
+        );
+    }
+
+    #[test]
+    fn base64_rejects_non_alphabet_characters() {
+        let base64_decoder = Decoder::<Base64Decoder>::new();
+        let result = base64_decoder
+            .crack("SGVsbG8!@#", &get_athena_checker())
+            .unencrypted_text;
+        assert!(
+            result.is_none(),
+            "Base64 should fail when the alphabet is invalid"
         );
     }
 
